@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { DownOutlined } from "@ant-design/icons";
 
 export interface Option {
   label: React.ReactNode;
@@ -160,22 +161,13 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
               placeholder
             )}
           </span>
-          <div className="absolute top-1/2 right-3 -translate-y-1/2 flex items-center scale-[1.5]">
+          <div className="absolute top-1/2 right-3 -translate-y-1/2 flex items-center">
             <span
-              className={`w-4 h-4 flex-shrink-0 inline-flex items-center justify-center transform transition-transform ${
+              className={`flex items-center justify-center transform transition-transform ${
                 isOpenListSelect ? "rotate-180" : "rotate-0"
               }`}
             >
-              <svg
-                className="block"
-                xmlns="http://www.w3.org/2000/svg"
-                height="24px"
-                viewBox="0 -960 960 960"
-                width="24px"
-                fill="#1f1f1f"
-              >
-                <path d="M480-345 240-585l56-56 184 183 184-183 56 56-240 240Z" />
-              </svg>
+              <DownOutlined style={{ fontSize: "14px", color: "#1f1f1f" }} />
             </span>
           </div>
         </button>

@@ -1,5 +1,6 @@
 import NotificationBell from "./NotificationBell";
 import UserAvatarDropdown from "./UserAvatarDropdown";
+import { MenuFoldOutlined } from "@ant-design/icons";
 
 interface TopNavbarProps {
   onToggleSidebar?: () => void;
@@ -15,7 +16,7 @@ const TopNavbar = ({ onToggleSidebar, title = "ERP SYSTEM" }: TopNavbarProps) =>
           onClick={onToggleSidebar}
           className="rounded-md border border-white/30 px-2 py-1 hover:bg-white/10"
         >
-          ?
+          <MenuFoldOutlined style={{ fontSize: '1.2rem' }} />
         </button>
         <div>
           <p className="font-semibold">{title}</p>

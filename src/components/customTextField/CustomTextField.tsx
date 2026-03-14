@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 
 interface CustomTextFieldProps {
   title?: string;
@@ -64,10 +65,11 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
 
         {isPassword && (
           <span
-            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer select-none text-[#00000073]"
+            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer select-none text-[#00000073] flex items-center justify-center"
             onClick={() => setShowPassword(!showPassword)}
+            style={{ fontSize: '1rem' }}
           >
-            {showPassword ? "🙈" : "👁️"}
+            {showPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
           </span>
         )}
       </div>

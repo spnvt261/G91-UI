@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { BellOutlined } from "@ant-design/icons";
 
 interface NotificationItem {
   id: number;
@@ -35,7 +36,7 @@ const NotificationBell = () => {
         className="relative rounded-full p-2 text-white hover:bg-white/10"
         onClick={() => setOpen((prev) => !prev)}
       >
-        <span className="text-lg">??</span>
+        <BellOutlined style={{ fontSize: '1.25rem' }} />
         <span className="absolute -right-1 -top-1 rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">{count}</span>
       </button>
 

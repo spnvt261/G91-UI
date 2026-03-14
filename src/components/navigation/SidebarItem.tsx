@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { DownOutlined } from "@ant-design/icons";
 
 export interface SidebarNode {
   id: string;
@@ -53,10 +54,12 @@ const SidebarItem = ({
         }`}
         style={{ paddingLeft: `${12 + depth * 16}px` }}
       >
-        <span className="shrink-0">{item.icon ?? <span className="text-xs">•</span>}</span>
+        <span className="shrink-0">{item.icon}</span>
         {!collapsed ? <span className="flex-1 truncate text-sm font-medium">{item.label}</span> : null}
         {hasChildren && !collapsed ? (
-          <span className={`text-xs transition ${open ? "rotate-180" : ""}`}>?</span>
+          <span className={`text-xs transition ${open ? "rotate-180" : ""}`}>
+            <DownOutlined style={{ fontSize: '0.75rem' }} />
+          </span>
         ) : null}
       </button>
 

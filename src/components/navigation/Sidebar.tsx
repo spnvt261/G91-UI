@@ -1,6 +1,15 @@
 import { useMemo, useState } from "react";
 import SidebarItem, { type SidebarNode } from "./SidebarItem";
 import { ROUTE_URL } from "../../const/route_url.const";
+import {
+  HomeOutlined,
+  ShoppingOutlined,
+  FileTextOutlined,
+  UserOutlined,
+  ProjectOutlined,
+  DollarOutlined,
+  BarChartOutlined,
+} from "@ant-design/icons";
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -9,20 +18,12 @@ interface SidebarProps {
   className?: string;
 }
 
-const HomeIcon = () => <span>??</span>;
-const BoxIcon = () => <span>??</span>;
-const ContractIcon = () => <span>??</span>;
-const UserIcon = () => <span>??</span>;
-const ProjectIcon = () => <span>???</span>;
-const PaymentIcon = () => <span>??</span>;
-const ReportIcon = () => <span>??</span>;
-
 const menuItems: SidebarNode[] = [
-  { id: "dashboard", label: "Dashboard", icon: <HomeIcon />, path: ROUTE_URL.DASHBOARD },
+  { id: "dashboard", label: "Dashboard", icon: <HomeOutlined />, path: ROUTE_URL.DASHBOARD },
   {
     id: "products",
     label: "Products",
-    icon: <BoxIcon />,
+    icon: <ShoppingOutlined />,
     children: [
       { id: "product-list", label: "Product List", path: ROUTE_URL.PRODUCT_LIST },
     ],
@@ -30,7 +31,7 @@ const menuItems: SidebarNode[] = [
   {
     id: "quotation-contract",
     label: "Quotation & Contract",
-    icon: <ContractIcon />,
+    icon: <FileTextOutlined />,
     children: [
       { id: "create-quotation", label: "Create Quotation", path: ROUTE_URL.QUOTATION_CREATE },
       { id: "manage-quotations", label: "Manage Quotations", path: ROUTE_URL.QUOTATION_LIST },
@@ -41,7 +42,7 @@ const menuItems: SidebarNode[] = [
   {
     id: "customers",
     label: "Customers",
-    icon: <UserIcon />,
+    icon: <UserOutlined />,
     children: [
       { id: "customer-list", label: "Customer List", path: ROUTE_URL.CUSTOMER_LIST },
       { id: "customer-create", label: "Create Customer", path: ROUTE_URL.CUSTOMER_CREATE },
@@ -50,7 +51,7 @@ const menuItems: SidebarNode[] = [
   {
     id: "projects",
     label: "Projects",
-    icon: <ProjectIcon />,
+    icon: <ProjectOutlined />,
     children: [
       { id: "project-list", label: "Project List", path: ROUTE_URL.PROJECT_LIST },
       { id: "project-create", label: "Create Project", path: ROUTE_URL.PROJECT_CREATE },
@@ -59,7 +60,7 @@ const menuItems: SidebarNode[] = [
   {
     id: "payments",
     label: "Payments",
-    icon: <PaymentIcon />,
+    icon: <DollarOutlined />,
     children: [
       { id: "payment-list", label: "Invoices", path: ROUTE_URL.PAYMENT_LIST },
     ],
@@ -67,7 +68,7 @@ const menuItems: SidebarNode[] = [
   {
     id: "reports",
     label: "Reports",
-    icon: <ReportIcon />,
+    icon: <BarChartOutlined />,
     children: [
       { id: "dashboard-report", label: "Dashboard Report", path: ROUTE_URL.REPORT_DASHBOARD },
       { id: "sales-report", label: "Sales Report", path: ROUTE_URL.REPORT_SALES },
