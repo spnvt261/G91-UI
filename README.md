@@ -1,189 +1,492 @@
 ﻿# G91-UI
 
-Frontend cho hệ thống ERP ngành thép, xây dựng bằng `React + TypeScript + Vite + TailwindCSS`.
+Frontend cho he thong ERP Steel Business Management, xay dung voi `React + TypeScript + Vite + TailwindCSS`.
 
-README này mô tả đúng hiện trạng code ở thời điểm hiện tại: UI nào đã có, UI nào mới dừng ở mức component/service, và cách chạy dự án.
+README nay mo ta dung hien trang source code tai thoi diem hien tai, bao gom:
+- Toan bo pages va routes dang co
+- Cau truc thu muc
+- Page nao goi service/API nao
+- Trang thai Redux, Axios, va layout/component dung chung
 
-## 1. Mục tiêu dự án
+## 1. Cong nghe su dung
 
-- Xây dựng nền tảng UI cho hệ thống quản lý kinh doanh thép (sản phẩm, báo giá, hợp đồng, dự án, thanh toán, báo cáo).
-- Chuẩn hóa lớp `models`, `services`, `API constants` để sẵn sàng nối backend.
-- Dựng bộ component tái sử dụng cho các trang ERP.
+- React 18
+- TypeScript
+- Vite
+- TailwindCSS
+- Redux Toolkit + React Redux
+- React Router DOM
+- Axios
 
-## 2. Công nghệ đang dùng
+## 2. Cai dat va chay du an
 
-- `React 18`
-- `TypeScript`
-- `Vite`
-- `TailwindCSS`
-- `Redux Toolkit`
-- `React Router`
-- `Axios`
+### 2.1 Yeu cau
 
-## 3. Chạy dự án
+- Node.js >= 18
+- npm
 
-### 3.1 Yêu cầu
-
-- `Node.js` >= 18
-- `npm`
-
-### 3.2 Cài đặt và chạy
+### 2.2 Cai dependencies
 
 ```bash
 npm install
+```
+
+### 2.3 Chay moi truong dev
+
+```bash
 npm run dev
 ```
 
-Mặc định Vite chạy tại `http://localhost:5173`.
-
-### 3.3 Các lệnh khác
+### 2.4 Build production
 
 ```bash
 npm run build
+```
+
+### 2.5 Preview build
+
+```bash
 npm run preview
+```
+
+### 2.6 Lint
+
+```bash
 npm run lint
 ```
 
-## 4. Cấu hình môi trường
+## 3. Bien moi truong
 
-File `.env.development` / `.env.example`:
+Tao file `.env.development` (hoac `.env`) nhu sau:
 
 ```env
 VITE_API_BASE_URL=http://localhost:8080/api
 ```
 
-`src/apiConfig/axiosConfig.ts` đang:
+`src/apiConfig/axiosConfig.ts` su dung bien nay lam `baseURL`.
 
-- Dùng `VITE_API_BASE_URL` làm base URL.
-- Tự gắn `Authorization: Bearer <token>` nếu có `access_token` trong localStorage.
-- Có cơ chế refresh token khi gặp `401`.
+## 4. Kien truc tong quan
 
-## 5. Routing hiện tại (UI đang chạy thực tế)
+- `src/models/*`: dinh nghia kieu du lieu cho tung domain
+- `src/services/*`: lop goi API theo domain
+- `src/api/URL_const.ts`: tap trung endpoint constants
+- `src/pages/*`: UI theo module nghiep vu
+- `src/components/*`: component tai su dung
+- `src/store/*`: Redux store (hien co auth slice)
+- `src/const/route_url.const.ts`: khai bao toan bo route URL
 
-Trong `src/App.tsx` hiện chỉ có 3 route:
+Luong render chinh trong `src/main.tsx`:
+- `Provider` (Redux)
+- `BrowserRouter`
+- `NotificationProvider`
+- `App`
 
-- `/` -> `TestPage` (trang showcase UI/component)
-- `/test` -> `TestPage`
+## 5. Routing hien tai
+
+### 5.1 Auth routes (khong dung AppLayout)
+
+- `/login` -> `LoginPage`
+- `/register` -> `RegisterPage`
+- `/forgot-password` -> `ForgotPasswordPage`
+- `/reset-password` -> `ResetPasswordPage`
+
+### 5.2 Authenticated routes (dung `AppLayout`)
+
+- `/dashboard` -> `DashboardPage`
+
+#### Products
+- `/products` -> `ProductListPage`
+- `/products/:id` -> `ProductDetailPage`
+
+#### Quotations
+- `/quotations` -> `QuotationListPage`
+- `/quotations/create` -> `QuotationCreatePage`
+- `/quotations/:id` -> `QuotationDetailPage`
+
+#### Contracts
+- `/contracts` -> `ContractListPage`
+- `/contracts/create/:quotationId` -> `ContractCreatePage`
+- `/contracts/:id` -> `ContractDetailPage`
+- `/contracts/:id/edit` -> `ContractEditPage`
+- `/contracts/:id/tracking` -> `ContractTrackingPage`
+
+#### Approvals
+- `/approvals/contracts` -> `ContractApprovalListPage`
+- `/approvals/contracts/:id` -> `ContractApprovalDetailPage`
+
+#### Customers
+- `/customers` -> `CustomerListPage`
+- `/customers/create` -> `CustomerCreatePage`
+- `/customers/:id` -> `CustomerDetailPage`
+- `/customers/:id/edit` -> `CustomerEditPage`
+
+#### Projects
+- `/projects` -> `ProjectListPage`
+- `/projects/create` -> `ProjectCreatePage`
+- `/projects/:id` -> `ProjectDetailPage`
+- `/projects/:id/edit` -> `ProjectEditPage`
+- `/projects/:id/assign-warehouse` -> `ProjectAssignWarehousePage`
+
+#### Payments
+- `/payments` -> `PaymentListPage`
+- `/payments/:id` -> `PaymentDetailPage`
+- `/payments/:id/record` -> `RecordPaymentPage`
+
+#### Reports
+- `/reports/dashboard` -> `DashboardReportPage`
+- `/reports/sales` -> `SalesReportPage`
+- `/reports/inventory` -> `InventoryReportPage`
+- `/reports/financial` -> `FinancialReportPage`
+
+### 5.3 Utility routes
+
+- `/` -> redirect sang `/login`
+- `/test` -> `TestPage` (showcase component)
 - `*` -> `NotFoundPage`
 
-Lưu ý: chưa có route nghiệp vụ riêng cho từng module (products, quotations, contracts...) dù menu/sidebar đã có placeholder path.
+## 6. Danh sach pages theo module
 
-## 6. UI hiện tại đang có gì
+Tong cong co cac page sau trong `src/pages`:
 
-### 6.1 Trang Showcase (`/` hoặc `/test`)
+### Auth (4)
+- `LoginPage`
+- `RegisterPage`
+- `ForgotPasswordPage`
+- `ResetPasswordPage`
 
-Trang `src/pages/404/test.page.tsx` đang demo trực tiếp:
+### Dashboard (1)
+- `DashboardPage`
 
-- Cụm Auth UI:
-  - Card Đăng ký
-  - Card Đăng nhập
-  - Card Quên mật khẩu
-  - Card Đặt lại mật khẩu
-- Cụm layout ERP:
-  - `AppLayout` (Sidebar + TopNavbar + Footer)
-  - `PageHeader`
-- Cụm dashboard:
-  - `StatsGrid`
-  - `ChartCard`
-- Cụm danh sách dữ liệu:
-  - `TableFilterBar` (search + filter)
-  - `DataTable`
-  - `Pagination`
-- Cụm form:
-  - `FormSectionCard`
-  - `StockConfigTable`
-  - `ImageUploadCard`
-- Modal:
-  - `DeleteConfirmModal`
+### Products (2)
+- `ProductListPage`
+- `ProductDetailPage`
 
-### 6.2 Trang 404
+### Quotations (3)
+- `QuotationListPage`
+- `QuotationCreatePage`
+- `QuotationDetailPage`
 
-`src/pages/404/NotFound.Page.tsx` đã có UI 404 đầy đủ:
+### Contracts (5)
+- `ContractListPage`
+- `ContractCreatePage`
+- `ContractDetailPage`
+- `ContractEditPage`
+- `ContractTrackingPage`
 
-- Nút về trang chủ
-- Nút thử lại
-- Nút báo lỗi (handler chưa triển khai)
+### Approvals (2)
+- `ContractApprovalListPage`
+- `ContractApprovalDetailPage`
 
-### 6.3 Hệ component dùng lại
+### Customers (4)
+- `CustomerListPage`
+- `CustomerCreatePage`
+- `CustomerDetailPage`
+- `CustomerEditPage`
 
-Đã có bộ component tương đối đầy đủ cho admin UI:
+### Projects (5)
+- `ProjectListPage`
+- `ProjectCreatePage`
+- `ProjectDetailPage`
+- `ProjectEditPage`
+- `ProjectAssignWarehousePage`
 
-- `auth`: `AuthCard`, `AuthHeader`, `AuthFooter`
-- `layout`: `AppLayout`, `PageHeader`, `ContentWrapper`, `AppFooter`
-- `navigation`: `Sidebar`, `TopNavbar`, `NotificationBell`, `UserAvatarDropdown`
-- `cards`: `BaseCard`, `InfoCard`
-- `table`: `DataTable`, `TableFilterBar`, `Pagination`
-- `forms`: `FormSectionCard`, `ImageUploadCard`, `StockConfigTable`
-- `modals`: `ConfirmModal`, `DeleteConfirmModal`
-- `shared`: `CustomButton`, `CustomTextField`, `CustomSelect`, `CustomSearchBar`, `Loading`
-- `notification`: `notify.provider.tsx` + `Notifycation.tsx`
+### Payments (3)
+- `PaymentListPage`
+- `PaymentDetailPage`
+- `RecordPaymentPage`
 
-Chi tiết hơn xem thêm file `COMPONENTS_CATALOG.md`.
+### Reports (4)
+- `DashboardReportPage`
+- `SalesReportPage`
+- `InventoryReportPage`
+- `FinancialReportPage`
 
-## 7. Trạng thái nghiệp vụ ERP trong code hiện tại
+### Khac
+- `NotFoundPage`
+- `TestPage`
+- `AuthPageShell` (shared)
 
-### 7.1 Đã có lớp dữ liệu và gọi API
+## 7. Mapping page -> service -> API
 
-Các module bên dưới đã có:
+### 7.1 Auth
 
-- `models/*`
-- `services/*`
-- endpoint trong `src/api/URL_const.ts`
+- `LoginPage`
+  - `authService.login`
+  - `POST /api/auth/login`
+- `RegisterPage`
+  - `authService.register`
+  - `POST /api/auth/register`
+- `ForgotPasswordPage`
+  - `authService.forgotPassword`
+  - `POST /api/auth/forgot-password`
+- `ResetPasswordPage`
+  - `authService.resetPassword`
+  - `POST /api/auth/reset-password`
 
-Module hiện có:
+### 7.2 Dashboard
 
-- `auth`
-- `product`
-- `quotation`
-- `contract`
-- `customer`
-- `project`
-- `payment`
-- `report`
+- `DashboardPage`
+  - `reportService.getDashboard`
+  - `GET /api/reports/dashboard`
 
-### 7.2 Chưa hoàn tất ở tầng UI trang nghiệp vụ
+### 7.3 Products
 
-- Chưa có các page nghiệp vụ tách riêng theo module trong `src/pages/**`.
-- Chưa gắn routing thật theo luồng ERP.
-- Hiện tại mới là nền tảng component + service, và một trang demo tổng hợp.
+- `ProductListPage`
+  - `productService.getList`
+  - `GET /api/products`
+- `ProductDetailPage`
+  - `productService.getDetail`
+  - `GET /api/products/{id}`
 
-## 8. Redux hiện tại
+### 7.4 Quotations
 
-Store đang có `authSlice` với state:
+- `QuotationListPage`
+  - `quotationService.getList`
+  - `GET /api/quotations`
+- `QuotationCreatePage`
+  - `productService.getList` -> `GET /api/products`
+  - `quotationService.create` -> `POST /api/quotations`
+- `QuotationDetailPage`
+  - `quotationService.getDetail`
+  - `GET /api/quotations/{id}`
 
-- `accessToken`
-- `user`
-- `isAuthenticated`
+### 7.5 Contracts
 
-Action:
+- `ContractListPage`
+  - `contractService.getList`
+  - `GET /api/contracts`
+- `ContractCreatePage`
+  - `quotationService.getDetail` -> `GET /api/quotations/{id}`
+  - `contractService.create` -> `POST /api/contracts`
+- `ContractDetailPage`
+  - `contractService.getDetail`
+  - `GET /api/contracts/{id}`
+- `ContractEditPage`
+  - `contractService.getDetail` -> `GET /api/contracts/{id}`
+  - `contractService.update` -> `PUT /api/contracts/{id}`
+- `ContractTrackingPage`
+  - `contractService.track`
+  - `GET /api/contracts/{id}/track`
 
+### 7.6 Approvals
+
+- `ContractApprovalListPage`
+  - `contractService.getList` (loc `PENDING`)
+  - `GET /api/contracts`
+- `ContractApprovalDetailPage`
+  - `contractService.getDetail` -> `GET /api/contracts/{id}`
+  - `contractService.approve` -> `POST /api/contracts/{id}/approve`
+  - `contractService.reject` -> `POST /api/contracts/{id}/reject`
+
+### 7.7 Customers
+
+- `CustomerListPage`
+  - `customerService.getList`
+  - `GET /api/customers`
+- `CustomerCreatePage`
+  - `customerService.create`
+  - `POST /api/customers`
+- `CustomerDetailPage`
+  - `customerService.getDetail`
+  - `GET /api/customers/{id}`
+- `CustomerEditPage`
+  - `customerService.getDetail` -> `GET /api/customers/{id}`
+  - `customerService.update` -> `PUT /api/customers/{id}`
+
+### 7.8 Projects
+
+- `ProjectListPage`
+  - `projectService.getList`
+  - `GET /api/projects`
+- `ProjectCreatePage`
+  - `projectService.create`
+  - `POST /api/projects`
+- `ProjectDetailPage`
+  - `projectService.getDetail`
+  - `GET /api/projects/{id}`
+- `ProjectEditPage`
+  - `projectService.getDetail` -> `GET /api/projects/{id}`
+  - `projectService.update` -> `PUT /api/projects/{id}`
+  - `projectService.updateProgress` -> `PATCH /api/projects/{id}/progress`
+- `ProjectAssignWarehousePage`
+  - `projectService.assignWarehouse`
+  - `PATCH /api/projects/{id}/assign-warehouse`
+
+### 7.9 Payments
+
+- `PaymentListPage`
+  - `paymentService.getInvoiceList` -> `GET /api/invoices`
+  - `paymentService.getDebtStatus` -> `GET /api/debts`
+- `PaymentDetailPage`
+  - `paymentService.getInvoiceDetail`
+  - `GET /api/invoices/{id}`
+- `RecordPaymentPage`
+  - `paymentService.recordPayment`
+  - `POST /api/invoices/{id}/payments`
+
+### 7.10 Reports
+
+- `DashboardReportPage`
+  - `reportService.getDashboard`
+  - `GET /api/reports/dashboard`
+- `SalesReportPage`
+  - `reportService.getSalesReport`
+  - `GET /api/reports/sales`
+- `InventoryReportPage`
+  - `reportService.getInventoryReport`
+  - `GET /api/reports/inventory`
+- `FinancialReportPage`
+  - `reportService.getProjectReport` -> `GET /api/reports/projects`
+  - `reportService.getDashboard` -> `GET /api/reports/dashboard`
+
+### 7.11 Pages khong goi API truc tiep
+
+- `NotFoundPage`
+- `TestPage`
+
+## 8. Services va endpoints ho tro them (chua duoc UI goi het)
+
+Mot so ham service da co san nhung chua duoc page hien tai su dung truc tiep:
+
+- `authService.logout` -> `POST /api/auth/logout`
+- `authService.changePassword` -> `POST /api/auth/change-password`
+- `authService.getProfile` -> `GET /api/users/me`
+- `authService.updateProfile` -> `PUT /api/users/me`
+- `productService.create` -> `POST /api/products`
+- `productService.update` -> `PUT /api/products/{id}`
+- `productService.updateStatus` -> `PATCH /api/products/{id}/status`
+- `quotationService.update` -> `PUT /api/quotations/{id}`
+- `quotationService.submit` -> `POST /api/quotations/{id}/submit`
+- `contractService.submit` -> `POST /api/contracts/{id}/submit`
+
+Ngoai ra `API.ACCOUNT` va `API.PRICING` da khai bao trong `URL_const.ts` nhung hien chua co service/page tuong ung.
+
+## 9. Redux
+
+Hien store co 1 slice chinh: `authSlice`.
+
+State:
+- `accessToken: string | null`
+- `user: UserModel | null`
+- `isAuthenticated: boolean`
+
+Actions:
 - `loginSuccess`
 - `logout`
 - `setUser`
 
-## 9. Cấu trúc thư mục chính
+`LoginPage` dang dispatch `loginSuccess` va luu `access_token` vao `localStorage`.
+
+## 10. Axios va co che auth token
+
+`src/apiConfig/axiosConfig.ts`:
+
+- Tu dong gan `Authorization: Bearer <access_token>` cho request
+- Chuan hoa URL de tranh trung `/api/api/...`
+- Co interceptor xu ly `401`:
+  - Goi `POST /auth/refresh` voi `refresh_token`
+  - Cap nhat lai `access_token`
+  - Retry request cu
+
+## 11. Component system
+
+Cac nhom component chinh:
+
+- `components/auth`: `AuthCard`, `AuthHeader`, `AuthFooter`
+- `components/layout`: `AppLayout`, `TopNavbar`, `Sidebar`, `PageHeader`, `ContentWrapper`, `AppFooter`
+- `components/table`: `DataTable`, `TableFilterBar`, `Pagination`
+- `components/forms`: `FormSectionCard`, `ImageUploadCard`, `StockConfigTable`
+- `components/custom*`: `CustomButton`, `CustomTextField`, `CustomSelect`, `CustomSearchBar`
+- `components/dashboard`: `StatsGrid`, `ChartCard`
+- `components/modals`: `ConfirmModal`, `DeleteConfirmModal`
+- `components/loading`: `Loading`
+- `components/notifycation`: `Notifycation`
+
+## 12. Cau truc thu muc
 
 ```text
 src/
-  api/                # API endpoint constants
-  apiConfig/          # axios config + interceptors
-  components/         # UI components tái sử dụng
-  context/            # notification context/provider
-  hooks/              # hooks dùng chung
-  models/             # model theo từng module nghiệp vụ
-  pages/              # hiện chủ yếu 404 + test showcase
-  services/           # service gọi API theo từng module
-  store/              # redux store
+  api/
+    URL_const.ts
+  apiConfig/
+    axiosConfig.ts
+  assets/
+  components/
+    auth/
+    cards/
+    customButton/
+    customSearchBar/
+    customSelect/
+    customTextField/
+    dashboard/
+    forms/
+    layout/
+    loading/
+    modals/
+    navigation/
+    notifycation/
+    table/
+  const/
+    route_url.const.ts
+  context/
+    notify.provider.tsx
+    notifyContext.tsx
+  hooks/
+    usePageSearchParams.ts
+    useValidateUUID.ts
+  models/
+    auth/
+    common/
+    contract/
+    customer/
+    payment/
+    product/
+    project/
+    quotation/
+    report/
+  pages/
+    404/
+    approvals/
+    auth/
+    contracts/
+    customers/
+    dashboard/
+    payments/
+    products/
+    projects/
+    quotations/
+    reports/
+    shared/
+  services/
+    auth/
+    contract/
+    customer/
+    payment/
+    product/
+    project/
+    quotation/
+    report/
+  store/
+    authSlice.ts
+    index.ts
+  utils/
+    formatDate.ts
+  App.tsx
+  App.css
+  index.css
+  main.tsx
 ```
 
-## 10. Ghi chú hiện trạng và đề xuất bước tiếp theo
+## 13. Ghi chu hien trang
 
-- Một số text tiếng Việt trong vài file đang lỗi encoding.
-- Tên thư mục `notifycation` đang sai chính tả (`notification` chuẩn hơn).
-- Sidebar đang có menu đầy đủ nhưng mới ở mức UI/placeholder path.
+- Hau het page da co service integration co ban theo module.
+- Chua co route guard (phan quyen/dang nhap) o muc router.
+- Nhieu page dang o muc CRUD skeleton de noi API va layout, chua phai UI/business cuoi cung.
+- Thu muc `notifycation` dang sai chinh ta (theo code hien tai).
 
-Bước tiếp theo khuyến nghị:
+## 14. De xuat buoc tiep theo
 
-1. Tạo bộ page thật cho từng module (list/detail/create/update).
-2. Nối page với service tương ứng.
-3. Chuẩn hóa encoding UTF-8 và đặt lại tên thư mục `notifycation`.
+1. Them `PrivateRoute` + role-based route guard (Customer/Accountant/Owner/Warehouse).
+2. Bo sung loading skeleton, empty state, error boundary thong nhat toan app.
+3. Chuan hoa i18n text va encoding tieng Viet.
+4. Hoan thien luong nghiep vu nang cao (submit quotation/contract, profile, pricing/account modules).
