@@ -1,0 +1,462 @@
+SYSTEM
+ERP Steel Business System
+Frontend: React + TypeScript + Vite + Tailwind
+Base project: BaseReactTs
+
+The project already contains:
+
+models/*
+services/*
+api/URL_const.ts
+redux store
+components library
+
+DO NOT create new services or API endpoints.
+
+Use existing services from:
+
+src/services/*
+
+----------------------------------------------------
+
+GOAL
+
+Generate all ERP pages based on system specification.
+
+The pages must connect to existing services.
+
+Each module should have its own folder under:
+
+src/pages/
+
+----------------------------------------------------
+
+ROUTING
+
+Create file:
+
+src/const/route_url.const.ts
+
+Example:
+
+export const ROUTE_URL = {
+
+LOGIN: "/login",
+REGISTER: "/register",
+FORGOT_PASSWORD: "/forgot-password",
+RESET_PASSWORD: "/reset-password",
+
+DASHBOARD: "/dashboard",
+
+PRODUCT_LIST: "/products",
+PRODUCT_DETAIL: "/products/:id",
+
+QUOTATION_LIST: "/quotations",
+QUOTATION_CREATE: "/quotations/create",
+QUOTATION_DETAIL: "/quotations/:id",
+
+CONTRACT_LIST: "/contracts",
+CONTRACT_CREATE: "/contracts/create/:quotationId",
+CONTRACT_DETAIL: "/contracts/:id",
+
+CONTRACT_APPROVAL_LIST: "/approvals/contracts",
+CONTRACT_APPROVAL_DETAIL: "/approvals/contracts/:id",
+
+CUSTOMER_LIST: "/customers",
+CUSTOMER_DETAIL: "/customers/:id",
+
+PROJECT_LIST: "/projects",
+PROJECT_DETAIL: "/projects/:id",
+
+PAYMENT_LIST: "/payments",
+PAYMENT_DETAIL: "/payments/:id",
+
+REPORT_DASHBOARD: "/reports/dashboard",
+REPORT_SALES: "/reports/sales",
+REPORT_INVENTORY: "/reports/inventory",
+REPORT_FINANCIAL: "/reports/financial"
+
+}
+
+----------------------------------------------------
+
+ROUTER CONFIG
+
+Update App.tsx
+
+Use React Router.
+
+Add routes for all pages.
+
+Use AppLayout for authenticated pages.
+
+Auth pages must NOT use AppLayout.
+
+----------------------------------------------------
+
+PAGE STRUCTURE
+
+Each page must follow this structure:
+
+PageHeader
+ContentWrapper
+BaseCard
+
+Use components from:
+
+src/components/*
+
+Use:
+
+DataTable
+TableFilterBar
+Pagination
+FormSectionCard
+CustomTextField
+CustomSelect
+CustomButton
+
+----------------------------------------------------
+
+AUTH MODULE
+
+Create folder
+
+pages/auth
+
+Pages
+
+LoginPage
+RegisterPage
+ForgotPasswordPage
+ResetPasswordPage
+
+Use:
+
+AuthCard
+AuthHeader
+AuthFooter
+
+Call:
+
+auth.service.ts
+
+On login success
+
+dispatch loginSuccess
+
+redirect to dashboard
+
+----------------------------------------------------
+
+DASHBOARD
+
+pages/dashboard
+
+DashboardPage
+
+Use
+
+StatsGrid
+ChartCard
+
+Show placeholder stats:
+
+Total Sales
+Total Contracts
+Pending Quotations
+Inventory Value
+
+----------------------------------------------------
+
+PRODUCT MODULE
+
+pages/products
+
+Pages
+
+ProductListPage
+ProductDetailPage
+
+Use
+
+product.service.ts
+
+Features
+
+Search products
+Filter by type
+Pagination
+View product detail
+
+Use DataTable
+
+----------------------------------------------------
+
+QUOTATION MODULE
+
+pages/quotations
+
+Pages
+
+QuotationListPage
+QuotationCreatePage
+QuotationDetailPage
+
+Flow
+
+Customer selects product
+Creates quotation request
+
+Fields
+
+quantity
+project reference
+delivery requirement
+
+Use
+
+quotation.service.ts
+
+----------------------------------------------------
+
+CONTRACT MODULE
+
+pages/contracts
+
+Pages
+
+ContractListPage
+ContractCreatePage
+ContractDetailPage
+ContractEditPage
+
+Purpose
+
+Accountant converts quotation to contract.
+
+Use
+
+contract.service.ts
+
+Fields
+
+items
+prices
+payment terms
+delivery address
+
+----------------------------------------------------
+
+APPROVAL MODULE
+
+pages/approvals
+
+Pages
+
+ContractApprovalListPage
+ContractApprovalDetailPage
+
+Role
+
+Owner approves contract.
+
+Buttons
+
+Approve
+Reject
+Request modification
+
+----------------------------------------------------
+
+CONTRACT TRACKING
+
+pages/contracts
+
+Page
+
+ContractTrackingPage
+
+Show timeline
+
+Order Confirmed
+Inventory Reserved
+Picked
+Shipped
+Delivered
+
+----------------------------------------------------
+
+CUSTOMER MODULE
+
+pages/customers
+
+Pages
+
+CustomerListPage
+CustomerDetailPage
+CustomerCreatePage
+CustomerEditPage
+
+Use
+
+customer.service.ts
+
+----------------------------------------------------
+
+PROJECT MODULE
+
+pages/projects
+
+Pages
+
+ProjectListPage
+ProjectDetailPage
+ProjectCreatePage
+ProjectEditPage
+ProjectAssignWarehousePage
+
+Use
+
+project.service.ts
+
+----------------------------------------------------
+
+PAYMENT MODULE
+
+pages/payments
+
+Pages
+
+PaymentListPage
+PaymentDetailPage
+RecordPaymentPage
+
+Use
+
+payment.service.ts
+
+----------------------------------------------------
+
+REPORT MODULE
+
+pages/reports
+
+Pages
+
+DashboardReportPage
+SalesReportPage
+InventoryReportPage
+FinancialReportPage
+
+Use
+
+report.service.ts
+
+----------------------------------------------------
+
+COMMON PAGE RULES
+
+All list pages must include:
+
+PageHeader
+TableFilterBar
+DataTable
+Pagination
+
+All form pages must include:
+
+FormSectionCard
+CustomTextField
+CustomSelect
+CustomButton
+
+----------------------------------------------------
+
+AUTHORIZATION
+
+Customer
+
+Product Catalog
+Create quotation
+Track contract
+
+Accountant
+
+Create contract
+Edit contract
+
+Owner
+
+Approve contract
+View reports
+
+Warehouse
+
+Inventory management
+
+----------------------------------------------------
+
+EXPECTED PAGE COUNT
+
+Auth
+
+4 pages
+
+Dashboard
+
+1 page
+
+Products
+
+2 pages
+
+Quotations
+
+3 pages
+
+Contracts
+
+4 pages
+
+Approvals
+
+2 pages
+
+Customers
+
+4 pages
+
+Projects
+
+5 pages
+
+Payments
+
+3 pages
+
+Reports
+
+4 pages
+
+TOTAL ≈ 32 pages
+
+----------------------------------------------------
+
+IMPORTANT
+
+Do not implement full business logic.
+
+Focus on:
+
+page structure
+service integration
+form layout
+table layout
+routing
+
+All API calls must use existing services.
+
+----------------------------------------------------
+
+END

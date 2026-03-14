@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import AppFooter from "./AppFooter";
 import Sidebar from "../navigation/Sidebar";
 import TopNavbar from "../navigation/TopNavbar";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -10,11 +11,17 @@ interface AppLayoutProps {
 const AppLayout = ({ children }: AppLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <div className="relative flex min-h-screen bg-gray-100">
       <div className="hidden lg:block">
-        <Sidebar collapsed={sidebarCollapsed} />
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          activePath={location.pathname}
+          onNavigate={(path) => navigate(path)}
+        />
       </div>
 
       {mobileOpen ? (
@@ -25,7 +32,14 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             aria-hidden
           />
           <div className="fixed inset-y-0 left-0 z-50 lg:hidden">
-            <Sidebar className="h-full" />
+            <Sidebar
+              className="h-full"
+              activePath={location.pathname}
+              onNavigate={(path) => {
+                navigate(path);
+                setMobileOpen(false);
+              }}
+            />
           </div>
         </>
       ) : null}

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import SidebarItem, { type SidebarNode } from "./SidebarItem";
+import { ROUTE_URL } from "../../const/route_url.const";
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -10,33 +11,20 @@ interface SidebarProps {
 
 const HomeIcon = () => <span>??</span>;
 const BoxIcon = () => <span>??</span>;
-const WarehouseIcon = () => <span>??</span>;
 const ContractIcon = () => <span>??</span>;
 const UserIcon = () => <span>??</span>;
 const ProjectIcon = () => <span>???</span>;
 const PaymentIcon = () => <span>??</span>;
 const ReportIcon = () => <span>??</span>;
-const SettingIcon = () => <span>??</span>;
 
 const menuItems: SidebarNode[] = [
-  { id: "dashboard", label: "Dashboard", icon: <HomeIcon />, path: "/dashboard" },
+  { id: "dashboard", label: "Dashboard", icon: <HomeIcon />, path: ROUTE_URL.DASHBOARD },
   {
     id: "products",
     label: "Products",
     icon: <BoxIcon />,
     children: [
-      { id: "product-list", label: "Product List", path: "/products" },
-      { id: "add-product", label: "Add Product", path: "/products/add" },
-    ],
-  },
-  {
-    id: "inventory",
-    label: "Inventory",
-    icon: <WarehouseIcon />,
-    children: [
-      { id: "import-stock", label: "Import Stock", path: "/inventory/import" },
-      { id: "export-stock", label: "Export Stock", path: "/inventory/export" },
-      { id: "stock-history", label: "Stock History", path: "/inventory/history" },
+      { id: "product-list", label: "Product List", path: ROUTE_URL.PRODUCT_LIST },
     ],
   },
   {
@@ -44,9 +32,10 @@ const menuItems: SidebarNode[] = [
     label: "Quotation & Contract",
     icon: <ContractIcon />,
     children: [
-      { id: "create-quotation", label: "Create Quotation", path: "/quotations/create" },
-      { id: "manage-quotations", label: "Manage Quotations", path: "/quotations" },
-      { id: "contracts", label: "Contracts", path: "/contracts" },
+      { id: "create-quotation", label: "Create Quotation", path: ROUTE_URL.QUOTATION_CREATE },
+      { id: "manage-quotations", label: "Manage Quotations", path: ROUTE_URL.QUOTATION_LIST },
+      { id: "contracts", label: "Contracts", path: ROUTE_URL.CONTRACT_LIST },
+      { id: "approvals", label: "Contract Approvals", path: ROUTE_URL.CONTRACT_APPROVAL_LIST },
     ],
   },
   {
@@ -54,8 +43,8 @@ const menuItems: SidebarNode[] = [
     label: "Customers",
     icon: <UserIcon />,
     children: [
-      { id: "customer-list", label: "Customer List", path: "/customers" },
-      { id: "customer-detail", label: "Customer Details", path: "/customers/detail" },
+      { id: "customer-list", label: "Customer List", path: ROUTE_URL.CUSTOMER_LIST },
+      { id: "customer-create", label: "Create Customer", path: ROUTE_URL.CUSTOMER_CREATE },
     ],
   },
   {
@@ -63,8 +52,8 @@ const menuItems: SidebarNode[] = [
     label: "Projects",
     icon: <ProjectIcon />,
     children: [
-      { id: "project-list", label: "Project List", path: "/projects" },
-      { id: "project-detail", label: "Project Details", path: "/projects/detail" },
+      { id: "project-list", label: "Project List", path: ROUTE_URL.PROJECT_LIST },
+      { id: "project-create", label: "Create Project", path: ROUTE_URL.PROJECT_CREATE },
     ],
   },
   {
@@ -72,8 +61,7 @@ const menuItems: SidebarNode[] = [
     label: "Payments",
     icon: <PaymentIcon />,
     children: [
-      { id: "payment-records", label: "Payment Records", path: "/payments/records" },
-      { id: "debt-management", label: "Debt Management", path: "/payments/debts" },
+      { id: "payment-list", label: "Invoices", path: ROUTE_URL.PAYMENT_LIST },
     ],
   },
   {
@@ -81,19 +69,10 @@ const menuItems: SidebarNode[] = [
     label: "Reports",
     icon: <ReportIcon />,
     children: [
-      { id: "sales-report", label: "Sales Report", path: "/reports/sales" },
-      { id: "inventory-report", label: "Inventory Report", path: "/reports/inventory" },
-      { id: "financial-report", label: "Financial Report", path: "/reports/financial" },
-    ],
-  },
-  {
-    id: "settings",
-    label: "Settings",
-    icon: <SettingIcon />,
-    children: [
-      { id: "users", label: "Users", path: "/settings/users" },
-      { id: "permissions", label: "Permissions", path: "/settings/permissions" },
-      { id: "system-settings", label: "System Settings", path: "/settings/system" },
+      { id: "dashboard-report", label: "Dashboard Report", path: ROUTE_URL.REPORT_DASHBOARD },
+      { id: "sales-report", label: "Sales Report", path: ROUTE_URL.REPORT_SALES },
+      { id: "inventory-report", label: "Inventory Report", path: ROUTE_URL.REPORT_INVENTORY },
+      { id: "financial-report", label: "Financial Report", path: ROUTE_URL.REPORT_FINANCIAL },
     ],
   },
 ];

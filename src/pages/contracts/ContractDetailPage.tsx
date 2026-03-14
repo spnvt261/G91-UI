@@ -1,0 +1,91 @@
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import BaseCard from "../../components/cards/BaseCard";
+import CustomButton from "../../components/customButton/CustomButton";
+import PageHeader from "../../components/layout/PageHeader";
+import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
+import { ROUTE_URL } from "../../const/route_url.const";
+import type { ContractItemModel, ContractModel } from "../../models/contract/contract.model";
+import { contractService } from "../../services/contract/contract.service";
+import { getErrorMessage, toCurrency } from "../shared/page.utils";
+
+const ContractDetailPage = () => {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const [contract, setContract] = useState<ContractModel | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const load = async () => {
+      if (!id) {
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError("");
+        const detail = await contractService.getDetail(id);
+        setContract(detail);
+      } catch (err) {
+        setError(getErrorMessage(err, "Cannot load contract detail"));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void load();
+  }, [id]);
+
+  const columns = useMemo<DataTableColumn<ContractItemModel>[]>(
+    () => [
+      { key: "productCode", header: "Ma SP" },
+      { key: "productName", header: "Ten San Pham" },
+      { key: "quantity", header: "So Luong" },
+      { key: "unitPrice", header: "Don Gia", render: (row) => toCurrency(row.unitPrice) },
+      { key: "amount", header: "Thanh Tien", render: (row) => toCurrency(row.amount) },
+    ],
+    [],
+  );
+
+  return (
+    <div className="space-y-4">
+      <PageHeader
+        title="Chi Tiet Hop Dong"
+        rightActions={
+          <div className="flex gap-2">
+            <CustomButton
+              label="Theo Doi"
+              onClick={() => navigate(ROUTE_URL.CONTRACT_TRACKING.replace(":id", contract?.id ?? ""))}
+              disabled={!contract}
+            />
+            <CustomButton
+              label="Chinh Sua"
+              onClick={() => navigate(ROUTE_URL.CONTRACT_EDIT.replace(":id", contract?.id ?? ""))}
+              disabled={!contract}
+            />
+          </div>
+        }
+      />
+      <BaseCard>
+        {loading ? <p className="mb-3 text-sm text-slate-500">Loading contract...</p> : null}
+        {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
+        {contract ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+              <p><span className="font-semibold">So Hop Dong:</span> {contract.id}</p>
+              <p><span className="font-semibold">Bao Gia:</span> {contract.quotationId}</p>
+              <p><span className="font-semibold">Khach Hang:</span> {contract.customerId}</p>
+              <p><span className="font-semibold">Trang Thai:</span> {contract.status}</p>
+              <p><span className="font-semibold">Payment Terms:</span> {contract.paymentTerms ?? "-"}</p>
+              <p><span className="font-semibold">Tong Tien:</span> {toCurrency(contract.totalAmount)}</p>
+            </div>
+            <DataTable columns={columns} data={contract.items} />
+          </div>
+        ) : null}
+      </BaseCard>
+    </div>
+  );
+};
+
+export default ContractDetailPage;
