@@ -57,6 +57,12 @@ api.interceptors.request.use(
       config.headers.set("Authorization", `Bearer ${token}`);
     }
 
+    const requestUrl = config.url ?? "";
+    const normalizedBaseUrl = config.baseURL?.replace(/\/+$/, "");
+    if (normalizedBaseUrl?.endsWith("/api") && requestUrl.startsWith("/api/")) {
+      config.url = requestUrl.replace(/^\/api/, "");
+    }
+
     return config;
   },
   (error) => Promise.reject(error),

@@ -1,0 +1,583 @@
+SYSTEM NAME
+ERP System – Steel Business Management
+
+FRONTEND STACK
+React 18
+TypeScript
+Vite
+TailwindCSS
+Redux Toolkit
+
+BASE PROJECT
+BaseReactTs
+
+IMPORTANT RULES
+
+1. DO NOT create page UI yet.
+2. Only create:
+   - service files
+   - model files
+   - redux store for auth
+3. APIs must be defined in URL_const.ts
+4. Each page has:
+   - its own service
+   - its own models
+5. All service functions call APIs defined in URL_const.ts
+
+-----------------------------------------------------
+
+FOLDER STRUCTURE
+
+src
+ ├── api
+ │    └── URL_const.ts
+ │
+ ├── models
+ │    ├── auth
+ │    ├── product
+ │    ├── quotation
+ │    ├── contract
+ │    ├── customer
+ │    ├── project
+ │    ├── payment
+ │    └── report
+ │
+ ├── services
+ │    ├── auth
+ │    ├── product
+ │    ├── quotation
+ │    ├── contract
+ │    ├── customer
+ │    ├── project
+ │    ├── payment
+ │    └── report
+ │
+ ├── store
+ │    ├── index.ts
+ │    └── authSlice.ts
+ │
+ └── pages (EMPTY FOR NOW)
+
+-----------------------------------------------------
+
+API CONSTANT FILE
+
+File
+api/URL_const.ts
+
+Purpose
+Central place for all API endpoints.
+
+Example
+
+export const API = {
+
+  AUTH: {
+    LOGIN: "/api/auth/login",
+    REGISTER: "/api/auth/register",
+    LOGOUT: "/api/auth/logout",
+    CHANGE_PASSWORD: "/api/auth/change-password",
+    FORGOT_PASSWORD: "/api/auth/forgot-password",
+    RESET_PASSWORD: "/api/auth/reset-password"
+  },
+
+  USER: {
+    ME: "/api/users/me",
+    UPDATE_PROFILE: "/api/users/me"
+  },
+
+  PRODUCT: {
+    LIST: "/api/products",
+    DETAIL: "/api/products/{id}",
+    CREATE: "/api/products",
+    UPDATE: "/api/products/{id}",
+    STATUS: "/api/products/{id}/status"
+  },
+
+  QUOTATION: {
+    CREATE: "/api/quotations",
+    LIST: "/api/quotations",
+    DETAIL: "/api/quotations/{id}"
+  },
+
+  CONTRACT: {
+    CREATE: "/api/contracts",
+    UPDATE: "/api/contracts/{id}",
+    LIST: "/api/contracts",
+    DETAIL: "/api/contracts/{id}",
+    APPROVE: "/api/contracts/{id}/approve",
+    SUBMIT: "/api/contracts/{id}/submit",
+    TRACK: "/api/contracts/{id}/track"
+  }
+
+}
+
+-----------------------------------------------------
+
+REDUX STORE
+
+User authentication must use Redux.
+
+File
+store/authSlice.ts
+
+State
+
+authState {
+
+  accessToken: string | null
+  user: UserModel | null
+  isAuthenticated: boolean
+
+}
+
+Actions
+
+loginSuccess
+logout
+setUser
+
+-----------------------------------------------------
+
+AUTH MODELS
+
+models/auth
+
+UserModel
+
+id
+fullName
+email
+role
+status
+
+LoginRequest
+
+email
+password
+
+LoginResponse
+
+accessToken
+tokenType
+user
+
+RegisterRequest
+
+fullName
+email
+password
+confirmPassword
+
+-----------------------------------------------------
+
+AUTH SERVICE
+
+services/auth/auth.service.ts
+
+Functions
+
+login(request: LoginRequest)
+
+register(request: RegisterRequest)
+
+logout()
+
+changePassword()
+
+forgotPassword()
+
+resetPassword()
+
+getProfile()
+
+updateProfile()
+
+-----------------------------------------------------
+
+SYSTEM ROLES
+
+Guest
+Customer
+Accountant
+Warehouse
+Owner
+
+-----------------------------------------------------
+
+CORE BUSINESS FLOW
+
+Customer
+→ View Product Catalog
+→ Request Quotation
+
+Accountant
+→ Convert Quotation to Contract
+
+Owner
+→ Approve Contract (if required)
+
+Customer
+→ Track Contract Status
+
+This flow is defined in system UI flow documentation. :contentReference[oaicite:4]{index=4}
+
+-----------------------------------------------------
+
+MAIN UI PAGES
+
+The system contains the following logical pages.
+
+-----------------------------------------------------
+
+1. AUTH PAGES
+
+Pages
+
+Login
+Register
+Forgot Password
+Reset Password
+
+Purpose
+
+Authenticate users and create accounts.
+
+Service
+
+auth.service.ts
+
+Models
+
+LoginRequest
+RegisterRequest
+UserModel
+
+-----------------------------------------------------
+
+2. PRODUCT CATALOG
+
+Pages
+
+Product Catalog
+Product Detail
+
+Purpose
+
+Allow customers and guests to browse products.
+
+Features
+
+Search
+Filter
+View product details
+
+Service
+
+product.service.ts
+
+Models
+
+ProductModel
+
+Fields
+
+id
+productCode
+productName
+type
+size
+thickness
+unit
+referenceWeight
+status
+
+-----------------------------------------------------
+
+3. QUOTATION MODULE
+
+Pages
+
+Quotation Request
+Quotation Preview
+Quotation List
+Quotation Detail
+
+Purpose
+
+Customer submits quotation request for selected products.
+
+Flow
+
+Select product
+Enter quantity
+Enter project reference
+Preview quotation
+Submit
+
+Status
+
+Draft
+Pending
+Approved
+Rejected
+
+Service
+
+quotation.service.ts
+
+Models
+
+QuotationModel
+
+Fields
+
+id
+customerId
+items
+quantity
+totalAmount
+status
+createdAt
+
+-----------------------------------------------------
+
+4. CONTRACT MANAGEMENT
+
+Pages
+
+Create Contract
+Update Contract
+Contract List
+Contract Detail
+
+Purpose
+
+Accountant converts quotation into contract.
+
+Features
+
+Edit product list
+Edit prices
+Edit payment terms
+Save draft contract
+
+Service
+
+contract.service.ts
+
+Models
+
+ContractModel
+
+Fields
+
+id
+quotationId
+customerId
+items
+totalAmount
+status
+createdAt
+
+-----------------------------------------------------
+
+5. CONTRACT APPROVAL
+
+Pages
+
+Approve Contract
+Pending Approval List
+
+Purpose
+
+Owner reviews contracts and approves them.
+
+Actions
+
+Approve
+Reject
+Request modification
+
+Service
+
+contract.service.ts
+
+-----------------------------------------------------
+
+6. CONTRACT TRACKING
+
+Pages
+
+Track Contract Status
+View Contract Detail
+
+Purpose
+
+Customer tracks order lifecycle.
+
+Status Timeline
+
+Order Confirmed
+Inventory Reserved
+Picked
+Shipped
+Delivered
+
+-----------------------------------------------------
+
+7. CUSTOMER MANAGEMENT
+
+Pages
+
+Customer List
+Customer Detail
+Create Customer
+Update Customer
+
+Service
+
+customer.service.ts
+
+Models
+
+CustomerModel
+
+-----------------------------------------------------
+
+8. PROJECT MANAGEMENT
+
+Pages
+
+Project List
+Project Detail
+Create Project
+Update Project
+Assign Warehouse
+Update Project Progress
+
+Service
+
+project.service.ts
+
+Models
+
+ProjectModel
+
+-----------------------------------------------------
+
+9. PAYMENT & DEBT
+
+Pages
+
+Invoice List
+Invoice Detail
+Record Payment
+Debt Status
+
+Service
+
+payment.service.ts
+
+Models
+
+InvoiceModel
+DebtModel
+
+-----------------------------------------------------
+
+10. REPORTING
+
+Pages
+
+Sales Report
+Inventory Report
+Project Report
+Dashboard
+
+Service
+
+report.service.ts
+
+Models
+
+ReportModel
+
+-----------------------------------------------------
+
+TOTAL UI PAGE COUNT
+
+Auth
+
+4 pages
+
+Products
+
+2 pages
+
+Quotation
+
+4 pages
+
+Contract
+
+4 pages
+
+Approval
+
+2 pages
+
+Tracking
+
+1 page
+
+Customer
+
+4 pages
+
+Project
+
+6 pages
+
+Payment
+
+4 pages
+
+Report
+
+4 pages
+
+TOTAL
+
+≈ 31 pages
+
+-----------------------------------------------------
+
+SECURITY RULES
+
+Customer
+
+Can create quotation
+Can view contract
+Can track contract
+
+Accountant
+
+Can create contract
+Can update contract
+
+Owner
+
+Can approve contract
+Can manage pricing
+Can view reports
+
+Warehouse
+
+Manage inventory
+
+These permissions follow the SRS role definition. :contentReference[oaicite:5]{index=5}
+
+-----------------------------------------------------
+
+END OF SPEC

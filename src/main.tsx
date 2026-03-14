@@ -4,11 +4,15 @@ import "./index.css";
 import App from "./App.tsx";
 import { BrowserRouter } from "react-router-dom";
 import { NotificationProvider } from "./context/notify.provider.tsx";
+import { Provider } from "react-redux";
+import { store } from "./store";
 
 createRoot(document.getElementById("root")!).render(
-  <BrowserRouter>
-    <NotificationProvider>
-      <App />
-    </NotificationProvider>
-  </BrowserRouter>
+  <Provider store={store}>
+    <BrowserRouter>
+      <NotificationProvider>
+        <App />
+      </NotificationProvider>
+    </BrowserRouter>
+  </Provider>
 );
