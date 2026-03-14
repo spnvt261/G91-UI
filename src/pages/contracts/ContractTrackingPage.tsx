@@ -41,8 +41,8 @@ const ContractTrackingPage = () => {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Theo Doi Hop Dong"
-        rightActions={<CustomButton label="Quay Lai" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CONTRACT_LIST)} />}
+        title="Theo Dõi Hợp Đồng"
+        rightActions={<CustomButton label="Quay Lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CONTRACT_LIST)} />}
       />
       <BaseCard>
         {loading ? <p className="mb-3 text-sm text-slate-500">Loading tracking timeline...</p> : null}

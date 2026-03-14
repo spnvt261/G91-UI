@@ -34,21 +34,21 @@ const PaymentDetailPage = () => {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Chi Tiet Hoa Don"
-        rightActions={<CustomButton label="Ghi Nhan Thanh Toan" onClick={() => navigate(ROUTE_URL.PAYMENT_RECORD.replace(":id", id ?? ""))} />}
+        title="Chi Tiết Hóa Đơn"
+        rightActions={<CustomButton label="Ghi Nhận Thanh Toán" onClick={() => navigate(ROUTE_URL.PAYMENT_RECORD.replace(":id", id ?? ""))} />}
       />
       <BaseCard>
         {error ? <p className="text-sm text-red-500">{error}</p> : null}
         {invoice ? (
           <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-            <p><span className="font-semibold">So Hoa Don:</span> {invoice.id}</p>
-            <p><span className="font-semibold">Hop Dong:</span> {invoice.contractId}</p>
-            <p><span className="font-semibold">Khach Hang:</span> {invoice.customerId}</p>
-            <p><span className="font-semibold">Tong Tien:</span> {toCurrency(invoice.totalAmount)}</p>
-            <p><span className="font-semibold">Da Thanh Toan:</span> {toCurrency(invoice.paidAmount)}</p>
-            <p><span className="font-semibold">Con Lai:</span> {toCurrency(invoice.dueAmount)}</p>
-            <p><span className="font-semibold">Han Thanh Toan:</span> {invoice.dueDate ?? "-"}</p>
-            <p><span className="font-semibold">Trang Thai:</span> {invoice.status}</p>
+            <p><span className="font-semibold">Số Hóa Đơn:</span> {invoice.id}</p>
+            <p><span className="font-semibold">Hợp Đồng:</span> {invoice.contractId}</p>
+            <p><span className="font-semibold">Khách Hàng:</span> {invoice.customerId}</p>
+            <p><span className="font-semibold">Tổng Tiền:</span> {toCurrency(invoice.totalAmount)}</p>
+            <p><span className="font-semibold">Đã Thanh Toán:</span> {toCurrency(invoice.paidAmount)}</p>
+            <p><span className="font-semibold">Còn Lại:</span> {toCurrency(invoice.dueAmount)}</p>
+            <p><span className="font-semibold">Hạn Thanh Toán:</span> {invoice.dueDate ?? "-"}</p>
+            <p><span className="font-semibold">Trạng Thái:</span> {invoice.status}</p>
           </div>
         ) : (
           <p className="text-sm text-slate-500">Loading invoice...</p>

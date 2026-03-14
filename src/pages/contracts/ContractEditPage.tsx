@@ -80,23 +80,23 @@ const ContractEditPage = () => {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Chinh Sua Hop Dong" />
-      <FormSectionCard title="Thong Tin Hop Dong">
+      <PageHeader title="Chỉnh Sửa Hợp Đồng" />
+      <FormSectionCard title="Thông Tin Hợp Đồng">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <CustomTextField title="Bao Gia" value={quotationId} onChange={(event) => setQuotationId(event.target.value)} />
-          <CustomTextField title="Khach Hang" value={customerId} onChange={(event) => setCustomerId(event.target.value)} />
+          <CustomTextField title="Báo Giá" value={quotationId} onChange={(event) => setQuotationId(event.target.value)} />
+          <CustomTextField title="Khách Hàng" value={customerId} onChange={(event) => setCustomerId(event.target.value)} />
           <CustomTextField title="Product ID" value={productId} onChange={(event) => setProductId(event.target.value)} />
-          <CustomTextField title="So Luong" type="number" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
-          <CustomTextField title="Don Gia" type="number" value={unitPrice} onChange={(event) => setUnitPrice(event.target.value)} />
-          <CustomTextField title="Trang Thai" value={status} onChange={(event) => setStatus(event.target.value)} />
+          <CustomTextField title="Số Lượng" type="number" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
+          <CustomTextField title="Don Giá" type="number" value={unitPrice} onChange={(event) => setUnitPrice(event.target.value)} />
+          <CustomTextField title="Trạng Thái" value={status} onChange={(event) => setStatus(event.target.value)} />
         </div>
       </FormSectionCard>
-      <FormSectionCard title="Dieu Khoan Thanh Toan">
+      <FormSectionCard title="Điều Khoản Thanh Toán">
         <CustomTextField title="Payment Terms" value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} />
         {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
         <div className="mt-4 flex gap-3">
-          <CustomButton label={loading ? "Dang luu..." : "Luu Thay Doi"} onClick={handleSave} disabled={loading} />
-          <CustomButton label="Quay Lai" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CONTRACT_LIST)} />
+          <CustomButton label={loading ? "Đang lưu..." : "Lưu Thay Đổi"} onClick={handleSave} disabled={loading} />
+          <CustomButton label="Quay Lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CONTRACT_LIST)} />
         </div>
       </FormSectionCard>
     </div>

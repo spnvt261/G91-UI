@@ -34,11 +34,11 @@ const CustomerDetailPage = () => {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Chi Tiet Khach Hang"
+        title="Chi Tiết Khách Hàng"
         rightActions={
           <div className="flex gap-2">
-            <CustomButton label="Chinh Sua" onClick={() => navigate(ROUTE_URL.CUSTOMER_EDIT.replace(":id", id ?? ""))} />
-            <CustomButton label="Quay Lai" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)} />
+            <CustomButton label="Chỉnh Sửa" onClick={() => navigate(ROUTE_URL.CUSTOMER_EDIT.replace(":id", id ?? ""))} />
+            <CustomButton label="Quay Lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)} />
           </div>
         }
       />
@@ -51,7 +51,7 @@ const CustomerDetailPage = () => {
             <p><span className="font-semibold">Email:</span> {customer.email ?? "-"}</p>
             <p><span className="font-semibold">Phone:</span> {customer.phone ?? "-"}</p>
             <p><span className="font-semibold">Dia Chi:</span> {customer.address ?? "-"}</p>
-            <p><span className="font-semibold">Trang Thai:</span> {customer.status ?? "-"}</p>
+            <p><span className="font-semibold">Trạng Thái:</span> {customer.status ?? "-"}</p>
           </div>
         ) : (
           <p className="text-sm text-slate-500">Loading customer...</p>

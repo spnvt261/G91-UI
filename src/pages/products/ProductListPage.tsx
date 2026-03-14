@@ -48,20 +48,20 @@ const ProductListPage = () => {
 
   const columns = useMemo<DataTableColumn<ProductModel>[]>(
     () => [
-      { key: "productCode", header: "Ma SP" },
-      { key: "productName", header: "Ten San Pham", className: "font-semibold text-blue-900" },
-      { key: "type", header: "Loai" },
-      { key: "size", header: "Kich Thuoc" },
-      { key: "thickness", header: "Be Day" },
-      { key: "unit", header: "Don Vi" },
-      { key: "status", header: "Trang Thai" },
+      { key: "productCode", header: "Mã SP" },
+      { key: "productName", header: "Tên Sản Phẩm", className: "font-semibold text-blue-900" },
+      { key: "type", header: "Loại" },
+      { key: "size", header: "Kích Thưức" },
+      { key: "thickness", header: "Bề Dày" },
+      { key: "unit", header: "Don Vị" },
+      { key: "status", header: "Trạng Thái" },
     ],
     [],
   );
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Danh Sach San Pham" />
+      <PageHeader title="Danh Sách Sản Phẩm" />
       <BaseCard>
         <TableFilterBar
           searchValue={keyword}
@@ -72,7 +72,7 @@ const ProductListPage = () => {
           filters={[
             {
               key: "type",
-              placeholder: "Loai",
+              placeholder: "Loại",
               options: [
                 { label: "Ton", value: "Ton" },
                 { label: "Thep Tam", value: "Thep Tam" },
@@ -92,7 +92,7 @@ const ProductListPage = () => {
           data={items}
           actions={(row) => (
             <CustomButton
-              label="Xem Chi Tiet"
+              label="Xem Chi Tiết"
               className="px-2 py-1 text-sm"
               onClick={() => navigate(ROUTE_URL.PRODUCT_DETAIL.replace(":id", row.id))}
             />

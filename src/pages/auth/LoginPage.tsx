@@ -43,27 +43,27 @@ const LoginPage = () => {
 
   return (
     <AuthPageShell>
-      <AuthCard title="Dang Nhap" subtitle="Chao mung ban quay lai! Dang nhap de tiep tuc." footer={<AuthFooter />}>
+      <AuthCard title="Đăng Nhập" subtitle="Chào mừng bạn quay lại! Đăng nhập để tiếp tục." footer={<AuthFooter />}>
         <div className="space-y-4">
           <CustomTextField title="Email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" />
           <CustomTextField
-            title="Mat Khau"
+            title="Mật Khẩu"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             type="password"
-            placeholder="Nhap mat khau"
+            placeholder="Nhập mật khẩu"
           />
           {error ? <p className="text-sm text-red-500">{error}</p> : null}
-          <CustomButton label={loading ? "Dang xu ly..." : "Dang Nhap"} className="w-full" onClick={handleSubmit} disabled={loading} />
+          <CustomButton label={loading ? "Đang xử lý..." : "Đăng Nhập"} className="w-full" onClick={handleSubmit} disabled={loading} />
           <div className="text-center text-sm text-slate-600">
             <Link to={ROUTE_URL.FORGOT_PASSWORD} className="text-blue-600 hover:underline">
-              Quen mat khau?
+              Quên mật khẩu?
             </Link>
           </div>
           <div className="text-center text-sm text-slate-600">
-            Chua co tai khoan?{" "}
+            Chưa có tài khoản?{" "}
             <Link to={ROUTE_URL.REGISTER} className="text-blue-600 hover:underline">
-              Dang ky
+              Đăng ký
             </Link>
           </div>
         </div>

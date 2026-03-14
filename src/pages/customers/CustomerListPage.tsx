@@ -44,17 +44,17 @@ const CustomerListPage = () => {
   const columns = useMemo<DataTableColumn<CustomerModel>[]>(
     () => [
       { key: "id", header: "ID", className: "font-semibold text-blue-900" },
-      { key: "fullName", header: "Ten Khach Hang" },
+      { key: "fullName", header: "Tên Khách Hàng" },
       { key: "email", header: "Email" },
-      { key: "phone", header: "So Dien Thoai" },
-      { key: "status", header: "Trang Thai" },
+      { key: "phone", header: "Số Điện Thoại" },
+      { key: "status", header: "Trạng Thái" },
     ],
     [],
   );
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Quan Ly Khach Hang" rightActions={<CustomButton label="Tao Khach Hang" onClick={() => navigate(ROUTE_URL.CUSTOMER_CREATE)} />} />
+      <PageHeader title="Quản Lý Khách Hàng" rightActions={<CustomButton label="Tạo Khách Hàng" onClick={() => navigate(ROUTE_URL.CUSTOMER_CREATE)} />} />
       <BaseCard>
         <TableFilterBar
           searchValue={keyword}
@@ -65,7 +65,7 @@ const CustomerListPage = () => {
           filters={[
             {
               key: "status",
-              placeholder: "Trang Thai",
+              placeholder: "Trạng Thái",
               options: [
                 { label: "Active", value: "ACTIVE" },
                 { label: "Inactive", value: "INACTIVE" },

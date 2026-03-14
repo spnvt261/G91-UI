@@ -22,7 +22,7 @@ const ResetPasswordPage = () => {
 
   const handleSubmit = async () => {
     if (newPassword !== confirmNewPassword) {
-      setError("Xac nhan mat khau khong khop");
+      setError("Xác nhận mật khẩu không khớp");
       return;
     }
 
@@ -44,28 +44,28 @@ const ResetPasswordPage = () => {
 
   return (
     <AuthPageShell>
-      <AuthCard title="Dat Mat Khau Moi" subtitle="Tao mat khau moi cho tai khoan cua ban" footer={<AuthFooter />}>
+      <AuthCard title="Đặt Mật Khẩu Mới" subtitle="Tạo mật khẩu mới cho tài khoản của bạn" footer={<AuthFooter />}>
         <div className="space-y-4">
           <CustomTextField title="Reset Token" value={token} onChange={(event) => setToken(event.target.value)} placeholder="Nhap token" />
           <CustomTextField
-            title="Mat Khau Moi"
+            title="Mật Khẩu Mới"
             value={newPassword}
             onChange={(event) => setNewPassword(event.target.value)}
             type="password"
-            placeholder="It nhat 6 ky tu"
+            placeholder="Ít nhất 6 ký tự"
           />
           <CustomTextField
-            title="Xac Nhan Mat Khau"
+            title="Xác Nhận Mật Khẩu"
             value={confirmNewPassword}
             onChange={(event) => setConfirmNewPassword(event.target.value)}
             type="password"
-            placeholder="Nhap lai mat khau"
+            placeholder="Nhập lại mật khẩu"
           />
           {error ? <p className="text-sm text-red-500">{error}</p> : null}
-          <CustomButton label={loading ? "Dang xu ly..." : "Dat Mat Khau"} className="w-full" onClick={handleSubmit} disabled={loading} />
+          <CustomButton label={loading ? "Đang xử lý..." : "Đặt Mật Khẩu"} className="w-full" onClick={handleSubmit} disabled={loading} />
           <div className="text-center text-sm text-slate-600">
             <Link to={ROUTE_URL.LOGIN} className="text-blue-600 hover:underline">
-              Quay lai dang nhap
+              Quay lại đăng nhập
             </Link>
           </div>
         </div>

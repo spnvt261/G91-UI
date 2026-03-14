@@ -39,21 +39,21 @@ const CustomerCreatePage = () => {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Tao Khach Hang" />
-      <FormSectionCard title="Thong Tin Khach Hang">
+      <PageHeader title="Tạo Khách Hàng" />
+      <FormSectionCard title="Thông Tin Khách Hàng">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <CustomTextField title="Ten Khach Hang" value={fullName} onChange={(event) => setFullName(event.target.value)} />
+          <CustomTextField title="Tên Khách Hàng" value={fullName} onChange={(event) => setFullName(event.target.value)} />
           <CustomTextField title="Email" value={email} onChange={(event) => setEmail(event.target.value)} />
-          <CustomTextField title="So Dien Thoai" value={phone} onChange={(event) => setPhone(event.target.value)} />
-          <CustomTextField title="Trang Thai" value={status} onChange={(event) => setStatus(event.target.value)} />
+          <CustomTextField title="Số Điện Thoại" value={phone} onChange={(event) => setPhone(event.target.value)} />
+          <CustomTextField title="Trạng Thái" value={status} onChange={(event) => setStatus(event.target.value)} />
         </div>
         <div className="mt-4">
-          <CustomTextField title="Dia Chi" value={address} onChange={(event) => setAddress(event.target.value)} />
+          <CustomTextField title="Địa Chỉ" value={address} onChange={(event) => setAddress(event.target.value)} />
         </div>
         {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
         <div className="mt-4 flex gap-3">
-          <CustomButton label={loading ? "Dang tao..." : "Luu Khach Hang"} onClick={handleCreate} disabled={loading} />
-          <CustomButton label="Quay Lai" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)} />
+          <CustomButton label={loading ? "Đang tạo..." : "Lưu Khách Hàng"} onClick={handleCreate} disabled={loading} />
+          <CustomButton label="Quay Lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)} />
         </div>
       </FormSectionCard>
     </div>

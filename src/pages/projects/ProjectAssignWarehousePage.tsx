@@ -34,13 +34,13 @@ const ProjectAssignWarehousePage = () => {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Gan Kho Cho Du An" />
+      <PageHeader title="Gán Kho Cho Dự Án" />
       <FormSectionCard title="Assign Warehouse">
         <CustomTextField title="Warehouse ID" value={warehouseId} onChange={(event) => setWarehouseId(event.target.value)} placeholder="WH-001" />
         {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
         <div className="mt-4 flex gap-3">
-          <CustomButton label={loading ? "Dang gan..." : "Xac Nhan"} onClick={handleAssign} disabled={loading || !warehouseId} />
-          <CustomButton label="Quay Lai" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)} />
+          <CustomButton label={loading ? "Đang gán..." : "Xác Nhận"} onClick={handleAssign} disabled={loading || !warehouseId} />
+          <CustomButton label="Quay Lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)} />
         </div>
       </FormSectionCard>
     </div>

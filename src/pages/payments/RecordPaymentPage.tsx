@@ -43,18 +43,18 @@ const RecordPaymentPage = () => {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Ghi Nhan Thanh Toan" />
-      <FormSectionCard title="Payment Information">
+      <PageHeader title="Ghi Nhận Thanh Toán" />
+      <FormSectionCard title="Thông Tin Thanh Toán">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <CustomTextField title="So Tien" type="number" value={amount} onChange={(event) => setAmount(event.target.value)} />
-          <CustomTextField title="Ngay Thanh Toan" value={paidAt} onChange={(event) => setPaidAt(event.target.value)} />
-          <CustomTextField title="Hinh Thuc" value={method} onChange={(event) => setMethod(event.target.value)} />
-          <CustomTextField title="Ghi Chu" value={note} onChange={(event) => setNote(event.target.value)} />
+          <CustomTextField title="Số Tiền" type="number" value={amount} onChange={(event) => setAmount(event.target.value)} />
+          <CustomTextField title="Ngày Thanh Toán" value={paidAt} onChange={(event) => setPaidAt(event.target.value)} />
+          <CustomTextField title="Hình Thức" value={method} onChange={(event) => setMethod(event.target.value)} />
+          <CustomTextField title="Ghi Chú" value={note} onChange={(event) => setNote(event.target.value)} />
         </div>
         {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
         <div className="mt-4 flex gap-3">
-          <CustomButton label={loading ? "Dang ghi nhan..." : "Xac Nhan"} onClick={handleRecord} disabled={loading || !amount} />
-          <CustomButton label="Quay Lai" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.PAYMENT_LIST)} />
+          <CustomButton label={loading ? "Đang ghi nhận..." : "Xác Nhận"} onClick={handleRecord} disabled={loading || !amount} />
+          <CustomButton label="Quay Lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.PAYMENT_LIST)} />
         </div>
       </FormSectionCard>
     </div>

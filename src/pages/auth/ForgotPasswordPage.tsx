@@ -21,7 +21,7 @@ const ForgotPasswordPage = () => {
       setError("");
       setMessage("");
       await authService.forgotPassword({ email });
-      setMessage("Yeu cau dat lai mat khau da duoc gui");
+      setMessage("Yêu cầu đặt lại mật khẩu đã được gửi");
     } catch (err) {
       setError(getErrorMessage(err, "Cannot process forgot password"));
     } finally {
@@ -31,15 +31,15 @@ const ForgotPasswordPage = () => {
 
   return (
     <AuthPageShell>
-      <AuthCard title="Quen Mat Khau" subtitle="Nhap email dang ky de nhan huong dan dat lai mat khau" footer={<AuthFooter />}>
+      <AuthCard title="Quên Mật Khẩu" subtitle="Nhập email đăng ký để nhận hướng dẫn đặt lại mật khẩu" footer={<AuthFooter />}>
         <div className="space-y-4">
           <CustomTextField title="Email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="email@company.com" />
           {error ? <p className="text-sm text-red-500">{error}</p> : null}
           {message ? <p className="text-sm text-green-600">{message}</p> : null}
-          <CustomButton label={loading ? "Dang gui..." : "Gui Yeu Cau"} className="w-full" onClick={handleSubmit} disabled={loading} />
+          <CustomButton label={loading ? "Đang gửi..." : "Gửi Yêu Cầu"} className="w-full" onClick={handleSubmit} disabled={loading} />
           <div className="text-center text-sm text-slate-600">
             <Link to={ROUTE_URL.LOGIN} className="text-blue-600 hover:underline">
-              Quay lai dang nhap
+              Quay lại đăng nhập
             </Link>
           </div>
         </div>

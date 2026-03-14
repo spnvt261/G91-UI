@@ -35,12 +35,12 @@ const productData: ProductRow[] = [
 ];
 
 const tableColumns: DataTableColumn<ProductRow>[] = [
-  { key: "sku", header: "Ma SP" },
-  { key: "name", header: "Ten San Pham" },
-  { key: "category", header: "Loai" },
-  { key: "thickness", header: "Be Day" },
-  { key: "size", header: "Kich Thuoc" },
-  { key: "inventory", header: "Ton Kho", className: "font-semibold text-blue-700" },
+  { key: "sku", header: "Mã SP" },
+  { key: "name", header: "Tên Sản Phẩm" },
+  { key: "category", header: "Loại" },
+  { key: "thickness", header: "Bề Dày" },
+  { key: "size", header: "Kích Thưức" },
+  { key: "inventory", header: "Tốn Kho", className: "font-semibold text-blue-700" },
 ];
 
 const TestPage = () => {
@@ -71,37 +71,37 @@ const TestPage = () => {
         <section>
           <h2 className="mb-4 text-2xl font-bold text-slate-800">Auth Components Showcase</h2>
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-4">
-            <AuthCard title="Tao Tai Khoan Khach Hang" subtitle="Dang ky tai khoan de quan ly bao gia, don hang va theo doi no." footer={<AuthFooter />}>
+            <AuthCard title="Tạo Tài Khoản Khách Hàng" subtitle="Đăng ký tài khoản để quản lý báo giá, đơn hàng và theo dõi nó." footer={<AuthFooter />}>
               <div className="space-y-3">
-                <CustomTextField title="Ten Cong Ty" placeholder="Ten Cong Ty" />
-                <CustomTextField title="Ma So Thue" placeholder="Ma So Thue" />
-                <CustomTextField title="So Dien Thoai" placeholder="0900 000 000" />
-                <CustomTextField title="Mat Khau" placeholder="It nhat 6 ky tu" type="password" />
-                <CustomTextField title="Xac Nhan Mat Khau" placeholder="It nhat 6 ky tu" type="password" />
-                <CustomButton label="Dang Ky" className="w-full" />
+                <CustomTextField title="Tên Công Ty" placeholder="Tên Công Ty" />
+                <CustomTextField title="Mã Số Thuế" placeholder="Mã Số Thuế" />
+                <CustomTextField title="Số Điện Thoại" placeholder="0900 000 000" />
+                <CustomTextField title="Mật Khẩu" placeholder="Ít nhất 6 ký tự" type="password" />
+                <CustomTextField title="Xác Nhận Mật Khẩu" placeholder="Ít nhất 6 ký tự" type="password" />
+                <CustomButton label="Đăng Ký" className="w-full" />
               </div>
             </AuthCard>
 
-            <AuthCard title="Dang Nhap" subtitle="Chao mung ban quay lai! Dang nhap de tiep tuc." footer={<AuthFooter />}>
+            <AuthCard title="Đăng Nhập" subtitle="Chào mừng bạn quay lại! Đăng nhập để tiếp tục." footer={<AuthFooter />}>
               <div className="space-y-3">
                 <CustomTextField title="Email" placeholder="Email" />
-                <CustomTextField title="Mat Khau" placeholder="Nhap mat khau" type="password" />
-                <CustomButton label="Dang Nhap" className="w-full" />
+                <CustomTextField title="Mật Khẩu" placeholder="Nhập mật khẩu" type="password" />
+                <CustomButton label="Đăng Nhập" className="w-full" />
               </div>
             </AuthCard>
 
-            <AuthCard title="Quen Mat Khau" subtitle="Nhap email dang ky cua ban de lay lai mat khau." footer={<AuthFooter />}>
+            <AuthCard title="Quên Mật Khẩu" subtitle="Nhập email đăng ký của bạn để lạy lại mật khẩu." footer={<AuthFooter />}>
               <div className="space-y-3">
                 <CustomTextField title="Email" placeholder="Email" />
-                <CustomButton label="Gui Yeu Cau" className="w-full" />
+                <CustomButton label="Gửi Yêu Cầu" className="w-full" />
               </div>
             </AuthCard>
 
-            <AuthCard title="Dat Mat Khau Moi" subtitle="Tao mat khau moi cho tai khoan cua ban" footer={<AuthFooter />}>
+            <AuthCard title="Đặt Mật Khẩu Mới" subtitle="Tạo mật khẩu mới cho tài khoản của bạn" footer={<AuthFooter />}>
               <div className="space-y-3">
-                <CustomTextField title="Mat Khau Moi" placeholder="It nhat 6 ky tu" type="password" />
-                <CustomTextField title="Xac Nhan Mat Khau" placeholder="It nhat 6 ky tu" type="password" />
-                <CustomButton label="Dat Mat Khau" className="w-full" />
+                <CustomTextField title="Mật Khẩu Mới" placeholder="Ít nhất 6 ký tự" type="password" />
+                <CustomTextField title="Xác Nhận Mật Khẩu" placeholder="Ít nhất 6 ký tự" type="password" />
+                <CustomButton label="Đặt Mật Khẩu" className="w-full" />
               </div>
             </AuthCard>
           </div>
@@ -110,7 +110,7 @@ const TestPage = () => {
         <section className="overflow-hidden rounded-2xl border border-blue-100 shadow-xl">
           <AppLayout>
             <div className="space-y-6">
-              <PageHeader title="Quan Ly San Pham" rightActions={<CustomButton label="Them San Pham" />} />
+              <PageHeader title="Quản Lý Sản Phẩm" rightActions={<CustomButton label="Thêm Sản Phẩm" />} />
 
               <StatsGrid
                 items={[
@@ -120,7 +120,7 @@ const TestPage = () => {
                 ]}
               />
 
-              <BaseCard title="Danh Sach San Pham">
+              <BaseCard title="Danh Sách Sản Phẩm">
                 <TableFilterBar
                   searchValue={searchValue}
                   onSearchChange={(value) => {
@@ -182,7 +182,7 @@ const TestPage = () => {
                 <div className="space-y-6 xl:col-span-2">
                   <FormSectionCard title="Product Information">
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <CustomTextField title="Ten San Pham" placeholder="Ton Ma Kem G90 1.5mm" />
+                      <CustomTextField title="Tên Sản Phẩm" placeholder="Thếp Mã Kem G90 1.5mm" />
                       <CustomTextField title="Ma SP" placeholder="SP000523" />
                       <CustomTextField title="Be Day" placeholder="1.5 mm" />
                       <CustomTextField title="Kich Thuoc" placeholder="200 mm" />

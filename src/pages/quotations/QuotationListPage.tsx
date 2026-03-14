@@ -43,15 +43,15 @@ const QuotationListPage = () => {
 
   const columns = useMemo<DataTableColumn<QuotationModel>[]>(
     () => [
-      { key: "id", header: "So Bao Gia", className: "font-semibold text-blue-900" },
-      { key: "customerId", header: "Khach Hang" },
-      { key: "status", header: "Trang Thai" },
+      { key: "id", header: "Số Báo Giá", className: "font-semibold text-blue-900" },
+      { key: "customerId", header: "Khách Hàng" },
+      { key: "status", header: "Trạng Thái" },
       {
         key: "totalAmount",
-        header: "Tong Tien",
+        header: "Tổng Tiền",
         render: (row) => toCurrency(row.totalAmount),
       },
-      { key: "createdAt", header: "Ngay Tao" },
+      { key: "createdAt", header: "Ngày Tạo" },
     ],
     [],
   );
@@ -59,8 +59,8 @@ const QuotationListPage = () => {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Quan Ly Bao Gia"
-        rightActions={<CustomButton label="Tao Yeu Cau" onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)} />}
+        title="Quản Lý Báo Giá"
+        rightActions={<CustomButton label="Tạo Yêu Cầu" onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)} />}
       />
       <BaseCard>
         <TableFilterBar
@@ -72,7 +72,7 @@ const QuotationListPage = () => {
           filters={[
             {
               key: "status",
-              placeholder: "Trang Thai",
+              placeholder: "Trạng Thái",
               options: [
                 { label: "Draft", value: "DRAFT" },
                 { label: "Pending", value: "PENDING" },
@@ -94,7 +94,7 @@ const QuotationListPage = () => {
           data={pagedItems}
           actions={(row) => (
             <CustomButton
-              label="Xem Chi Tiet"
+              label="Xem Chi Tiết"
               className="px-2 py-1 text-sm"
               onClick={() => navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", row.id))}
             />

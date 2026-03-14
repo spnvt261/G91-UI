@@ -42,18 +42,18 @@ const ContractApprovalListPage = () => {
 
   const columns = useMemo<DataTableColumn<ContractModel>[]>(
     () => [
-      { key: "id", header: "So Hop Dong", className: "font-semibold text-blue-900" },
-      { key: "customerId", header: "Khach Hang" },
-      { key: "quotationId", header: "Bao Gia" },
-      { key: "totalAmount", header: "Tong Tien", render: (row) => toCurrency(row.totalAmount) },
-      { key: "createdAt", header: "Ngay Tao" },
+      { key: "id", header: "Số Hợp Đồng", className: "font-semibold text-blue-900" },
+      { key: "customerId", header: "Khách Hàng" },
+      { key: "quotationId", header: "Báo Giá" },
+      { key: "totalAmount", header: "Tổng Tiền", render: (row) => toCurrency(row.totalAmount) },
+      { key: "createdAt", header: "Ngày Tạo" },
     ],
     [],
   );
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Danh Sach Cho Phe Duyet" />
+      <PageHeader title="Danh Sách Chờ Phê Duyệt" />
       <BaseCard>
         <TableFilterBar
           searchValue={keyword}
@@ -69,7 +69,7 @@ const ContractApprovalListPage = () => {
           data={pagedItems}
           actions={(row) => (
             <CustomButton
-              label="Phe Duyet"
+              label="Phê Duyệt"
               className="px-2 py-1 text-sm"
               onClick={() => navigate(ROUTE_URL.CONTRACT_APPROVAL_DETAIL.replace(":id", row.id))}
             />

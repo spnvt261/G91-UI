@@ -35,14 +35,14 @@ const FinancialReportPage = () => {
   return (
     <div className="space-y-4">
       <PageHeader title="Financial Report" />
-      <BaseCard title="Tong Quan Tai Chinh">
+      <BaseCard title="Tổng Quán Tài Chínác">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="rounded-lg bg-slate-50 p-4">
-            <p className="text-sm text-slate-500">Tong doanh thu</p>
+            <p className="text-sm text-slate-500">Tổng doanh thu</p>
             <p className="text-2xl font-semibold text-blue-900">{toCurrency(summaryRevenue)}</p>
           </div>
           <div className="rounded-lg bg-slate-50 p-4">
-            <p className="text-sm text-slate-500">Tong cong no</p>
+            <p className="text-sm text-slate-500">Tổng còng nợ</p>
             <p className="text-2xl font-semibold text-red-500">{toCurrency(summaryDebt)}</p>
           </div>
         </div>

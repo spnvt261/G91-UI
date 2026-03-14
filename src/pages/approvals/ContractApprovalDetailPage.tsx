@@ -56,15 +56,15 @@ const ContractApprovalDetailPage = () => {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Phe Duyet Hop Dong" />
+      <PageHeader title="Phê Duyệt Hợp Đồng" />
       <BaseCard>
         {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
         {contract ? (
           <div className="space-y-4">
-            <p><span className="font-semibold">So Hop Dong:</span> {contract.id}</p>
-            <p><span className="font-semibold">Khach Hang:</span> {contract.customerId}</p>
-            <p><span className="font-semibold">Trang Thai:</span> {contract.status}</p>
-            <p><span className="font-semibold">Tong Tien:</span> {toCurrency(contract.totalAmount)}</p>
+            <p><span className="font-semibold">Số Hợp Đồng:</span> {contract.id}</p>
+            <p><span className="font-semibold">Khách Hàng:</span> {contract.customerId}</p>
+            <p><span className="font-semibold">Trạng Thái:</span> {contract.status}</p>
+            <p><span className="font-semibold">Tổng Tiền:</span> {toCurrency(contract.totalAmount)}</p>
             <div className="flex flex-wrap gap-3">
               <CustomButton label="Approve" onClick={() => handleDecision("APPROVE")} disabled={actionLoading} />
               <CustomButton label="Reject" className="bg-red-500 hover:bg-red-600" onClick={() => handleDecision("REJECT")} disabled={actionLoading} />

@@ -39,11 +39,11 @@ const QuotationDetailPage = () => {
 
   const columns = useMemo<DataTableColumn<QuotationItemModel>[]>(
     () => [
-      { key: "productCode", header: "Ma SP" },
-      { key: "productName", header: "Ten San Pham" },
-      { key: "quantity", header: "So Luong" },
-      { key: "unitPrice", header: "Don Gia", render: (row) => toCurrency(row.unitPrice) },
-      { key: "amount", header: "Thanh Tien", render: (row) => toCurrency(row.amount) },
+      { key: "productCode", header: "Mã SP" },
+      { key: "productName", header: "Tên Sản Phẩm" },
+      { key: "quantity", header: "Số Lượng" },
+      { key: "unitPrice", header: "Don Giá", render: (row) => toCurrency(row.unitPrice) },
+      { key: "amount", header: "Thành Tiền", render: (row) => toCurrency(row.amount) },
     ],
     [],
   );
@@ -51,16 +51,16 @@ const QuotationDetailPage = () => {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Chi Tiet Bao Gia"
+        title="Chi Tiết Báo Giá"
         rightActions={
           <div className="flex gap-2">
             <CustomButton
-              label="Tao Hop Dong"
+              label="Tạo Hợp Đồng"
               onClick={() => navigate(ROUTE_URL.CONTRACT_CREATE.replace(":quotationId", quotation?.id ?? ""))}
               disabled={!quotation}
             />
             <CustomButton
-              label="Quay Lai"
+              label="Quay Lại"
               className="bg-slate-200 text-slate-700 hover:bg-slate-300"
               onClick={() => navigate(ROUTE_URL.QUOTATION_LIST)}
             />
@@ -73,10 +73,10 @@ const QuotationDetailPage = () => {
         {quotation ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-              <p><span className="font-semibold">So Bao Gia:</span> {quotation.id}</p>
-              <p><span className="font-semibold">Khach Hang:</span> {quotation.customerId}</p>
-              <p><span className="font-semibold">Trang Thai:</span> {quotation.status}</p>
-              <p><span className="font-semibold">Tong Tien:</span> {toCurrency(quotation.totalAmount)}</p>
+              <p><span className="font-semibold">Số Báo Giá:</span> {quotation.id}</p>
+              <p><span className="font-semibold">Khách Hàng:</span> {quotation.customerId}</p>
+              <p><span className="font-semibold">Trạng Thái:</span> {quotation.status}</p>
+              <p><span className="font-semibold">Tổng Tiền:</span> {toCurrency(quotation.totalAmount)}</p>
             </div>
             <DataTable columns={columns} data={quotation.items} />
           </div>

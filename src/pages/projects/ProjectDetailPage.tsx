@@ -34,11 +34,11 @@ const ProjectDetailPage = () => {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Chi Tiet Du An"
+        title="Chi Tiết Dự Án"
         rightActions={
           <div className="flex gap-2">
-            <CustomButton label="Cap Nhat" onClick={() => navigate(ROUTE_URL.PROJECT_EDIT.replace(":id", id ?? ""))} />
-            <CustomButton label="Gan Kho" onClick={() => navigate(ROUTE_URL.PROJECT_ASSIGN_WAREHOUSE.replace(":id", id ?? ""))} />
+            <CustomButton label="Cập Nhật" onClick={() => navigate(ROUTE_URL.PROJECT_EDIT.replace(":id", id ?? ""))} />
+            <CustomButton label="Gán Kho" onClick={() => navigate(ROUTE_URL.PROJECT_ASSIGN_WAREHOUSE.replace(":id", id ?? ""))} />
           </div>
         }
       />
@@ -47,12 +47,12 @@ const ProjectDetailPage = () => {
         {project ? (
           <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
             <p><span className="font-semibold">ID:</span> {project.id}</p>
-            <p><span className="font-semibold">Ma Du An:</span> {project.code ?? "-"}</p>
-            <p><span className="font-semibold">Ten Du An:</span> {project.name}</p>
-            <p><span className="font-semibold">Khach Hang:</span> {project.customerId}</p>
+            <p><span className="font-semibold">Mã Dự Án:</span> {project.code ?? "-"}</p>
+            <p><span className="font-semibold">Tên Dự Án:</span> {project.name}</p>
+            <p><span className="font-semibold">Khách Hàng:</span> {project.customerId}</p>
             <p><span className="font-semibold">Kho:</span> {project.warehouseId ?? "-"}</p>
-            <p><span className="font-semibold">Trang Thai:</span> {project.status}</p>
-            <p><span className="font-semibold">Tien Do:</span> {project.progress ?? 0}%</p>
+            <p><span className="font-semibold">Trạng Thái:</span> {project.status}</p>
+            <p><span className="font-semibold">Tiến Độ:</span> {project.progress ?? 0}%</p>
           </div>
         ) : (
           <p className="text-sm text-slate-500">Loading project...</p>

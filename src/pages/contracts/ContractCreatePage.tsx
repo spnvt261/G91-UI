@@ -17,7 +17,7 @@ const ContractCreatePage = () => {
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [unitPrice, setUnitPrice] = useState("0");
-  const [paymentTerms, setPaymentTerms] = useState("Thanh toan trong 30 ngay");
+  const [paymentTerms, setPaymentTerms] = useState("Thanh toán trong 30 ngày");
   const [deliveryAddress, setDeliveryAddress] = useState("Ha Noi");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -70,19 +70,19 @@ const ContractCreatePage = () => {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Tao Hop Dong" />
-      <FormSectionCard title="Thong Tin Co Ban">
+      <PageHeader title="Tạo Hợp Đồng" />
+      <FormSectionCard title="Thông Tin Cơ Bản">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <CustomTextField title="Bao Gia" value={quotationId ?? "manual"} disabled />
-          <CustomTextField title="Khach Hang" value={customerId} onChange={(event) => setCustomerId(event.target.value)} />
+          <CustomTextField title="Báo Giá" value={quotationId ?? "manual"} disabled />
+          <CustomTextField title="Khách Hàng" value={customerId} onChange={(event) => setCustomerId(event.target.value)} />
         </div>
       </FormSectionCard>
 
-      <FormSectionCard title="Chi Tiet Hang Hoa">
+      <FormSectionCard title="Chi Tiết Hàng Hoá">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <CustomTextField title="Product ID" value={productId} onChange={(event) => setProductId(event.target.value)} />
-          <CustomTextField title="So Luong" type="number" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
-          <CustomTextField title="Don Gia" type="number" value={unitPrice} onChange={(event) => setUnitPrice(event.target.value)} />
+          <CustomTextField title="Số Lượng" type="number" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
+          <CustomTextField title="Don Giá" type="number" value={unitPrice} onChange={(event) => setUnitPrice(event.target.value)} />
         </div>
       </FormSectionCard>
 
@@ -93,8 +93,8 @@ const ContractCreatePage = () => {
         </div>
         {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
         <div className="mt-4 flex gap-3">
-          <CustomButton label={loading ? "Dang tao..." : "Luu Hop Dong"} onClick={handleCreate} disabled={loading} />
-          <CustomButton label="Quay Lai" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CONTRACT_LIST)} />
+          <CustomButton label={loading ? "Đang tạo..." : "Lưu Hợp Đồng"} onClick={handleCreate} disabled={loading} />
+          <CustomButton label="Quay Lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CONTRACT_LIST)} />
         </div>
       </FormSectionCard>
     </div>

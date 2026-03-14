@@ -44,18 +44,18 @@ const ProjectListPage = () => {
   const columns = useMemo<DataTableColumn<ProjectModel>[]>(
     () => [
       { key: "id", header: "ID", className: "font-semibold text-blue-900" },
-      { key: "code", header: "Ma Du An" },
-      { key: "name", header: "Ten Du An" },
-      { key: "customerId", header: "Khach Hang" },
-      { key: "status", header: "Trang Thai" },
-      { key: "progress", header: "Tien Do" },
+      { key: "code", header: "Mã Dự Án" },
+      { key: "name", header: "Tên Dự Án" },
+      { key: "customerId", header: "Khách Hàng" },
+      { key: "status", header: "Trạng Thái" },
+      { key: "progress", header: "Tiến Độ" },
     ],
     [],
   );
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Quan Ly Du An" rightActions={<CustomButton label="Tao Du An" onClick={() => navigate(ROUTE_URL.PROJECT_CREATE)} />} />
+      <PageHeader title="Quản Lý Dự Án" rightActions={<CustomButton label="Tạo Dự Án" onClick={() => navigate(ROUTE_URL.PROJECT_CREATE)} />} />
       <BaseCard>
         <TableFilterBar
           searchValue={keyword}
@@ -66,7 +66,7 @@ const ProjectListPage = () => {
           filters={[
             {
               key: "status",
-              placeholder: "Trang Thai",
+              placeholder: "Trạng Thái",
               options: [
                 { label: "NEW", value: "NEW" },
                 { label: "IN_PROGRESS", value: "IN_PROGRESS" },

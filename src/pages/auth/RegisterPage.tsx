@@ -20,7 +20,7 @@ const RegisterPage = () => {
 
   const handleRegister = async () => {
     if (password !== confirmPassword) {
-      setError("Xac nhan mat khau khong khop");
+      setError("Xác nhận mật khẩu không khớp");
       return;
     }
 
@@ -43,30 +43,30 @@ const RegisterPage = () => {
 
   return (
     <AuthPageShell>
-      <AuthCard title="Tao Tai Khoan" subtitle="Dang ky tai khoan de quan ly bao gia va don hang" footer={<AuthFooter />}>
+      <AuthCard title="Tạo Tài Khoản" subtitle="Đăng ký tài khoản để quản lý báo giá và đơn hàng" footer={<AuthFooter />}>
         <div className="space-y-4">
-          <CustomTextField title="Ho Va Ten" value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="Cong ty An Phat" />
+          <CustomTextField title="Họ và Tên" value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="Công ty An Phát" />
           <CustomTextField title="Email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="email@company.com" />
           <CustomTextField
-            title="Mat Khau"
+            title="Mật Khẩu"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             type="password"
-            placeholder="It nhat 6 ky tu"
+            placeholder="Ít nhất 6 ký tự"
           />
           <CustomTextField
-            title="Xac Nhan Mat Khau"
+            title="Xác Nhận Mật Khẩu"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
             type="password"
-            placeholder="Nhap lai mat khau"
+            placeholder="Nhập lại mật khẩu"
           />
           {error ? <p className="text-sm text-red-500">{error}</p> : null}
-          <CustomButton label={loading ? "Dang xu ly..." : "Dang Ky"} className="w-full" onClick={handleRegister} disabled={loading} />
+          <CustomButton label={loading ? "Đang xử lý..." : "Đăng Ký"} className="w-full" onClick={handleRegister} disabled={loading} />
           <div className="text-center text-sm text-slate-600">
-            Da co tai khoan?{" "}
+            Đã có tài khoản?{" "}
             <Link to={ROUTE_URL.LOGIN} className="text-blue-600 hover:underline">
-              Dang nhap
+              Đăng nhập
             </Link>
           </div>
         </div>

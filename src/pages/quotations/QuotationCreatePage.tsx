@@ -39,7 +39,7 @@ const QuotationCreatePage = () => {
   }, []);
 
   const selectedProductName = useMemo(() => {
-    return productOptions.find((option) => option.value === productId[0])?.label ?? "Chua chon san pham";
+    return productOptions.find((option) => option.value === productId[0])?.label ?? "Chưa chọn sản phẩm";
   }, [productId, productOptions]);
 
   const handleCreate = async () => {
@@ -67,47 +67,47 @@ const QuotationCreatePage = () => {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Tao Yeu Cau Bao Gia" />
-      <FormSectionCard title="Danh Sach San Pham">
+      <PageHeader title="Tạo Yêu Cầu Báo Giá" />
+      <FormSectionCard title="Danh Sách Sản Phẩm">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <CustomSelect
-            title="San Pham"
+            title="Sản Phẩm"
             options={productOptions}
             value={productId}
             onChange={setProductId}
-            placeholder="Chon san pham"
+            placeholder="Chọn sản phẩm"
             classNameSelect="w-full text-left"
             classNameOptions="w-full left-0"
           />
-          <CustomTextField title="So Luong" type="number" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
+          <CustomTextField title="Số Lượng" type="number" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
         </div>
-        <p className="mt-4 text-sm text-slate-600">San pham dang chon: {selectedProductName}</p>
+        <p className="mt-4 text-sm text-slate-600">Sản phẩm đang chọn: {selectedProductName}</p>
       </FormSectionCard>
 
-      <FormSectionCard title="Thong Tin Bao Gia">
+      <FormSectionCard title="Thông Tin Báo Giá">
         <div className="space-y-4">
           <CustomTextField
-            title="Du An / Project Reference"
+            title="Dự Án / Project Reference"
             value={projectReference}
             onChange={(event) => setProjectReference(event.target.value)}
-            placeholder="Nha xuong Bac Ninh"
+            placeholder="Nhà xưởng Bắc Ninh"
           />
           <CustomTextField
-            title="Yeu Cau Giao Hang"
+            title="Yêu Cầu Giao Hàng"
             type="textarea"
             value={deliveryRequirement}
             onChange={(event) => setDeliveryRequirement(event.target.value)}
-            placeholder="Nhap yeu cau giao hang"
+            placeholder="Nhập yêu cầu giao hàng"
           />
           {error ? <p className="text-sm text-red-500">{error}</p> : null}
           <div className="flex items-center gap-3">
             <CustomButton
-              label={loading ? "Dang tao..." : "Gui Yeu Cau"}
+              label={loading ? "Đang tạo..." : "Gửi Yêu Cầu"}
               onClick={handleCreate}
               disabled={loading || !productId[0]}
             />
             <CustomButton
-              label="Quay Lai"
+              label="Quay Lại"
               className="bg-slate-200 text-slate-700 hover:bg-slate-300"
               onClick={() => navigate(ROUTE_URL.QUOTATION_LIST)}
             />

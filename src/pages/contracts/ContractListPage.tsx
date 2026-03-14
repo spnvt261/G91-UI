@@ -43,19 +43,19 @@ const ContractListPage = () => {
 
   const columns = useMemo<DataTableColumn<ContractModel>[]>(
     () => [
-      { key: "id", header: "So Hop Dong", className: "font-semibold text-blue-900" },
-      { key: "quotationId", header: "Bao Gia" },
-      { key: "customerId", header: "Khach Hang" },
-      { key: "status", header: "Trang Thai" },
-      { key: "totalAmount", header: "Tong Tien", render: (row) => toCurrency(row.totalAmount) },
-      { key: "createdAt", header: "Ngay Tao" },
+      { key: "id", header: "Số Hợp Đồng", className: "font-semibold text-blue-900" },
+      { key: "quotationId", header: "Báo Giá" },
+      { key: "customerId", header: "Khách Hàng" },
+      { key: "status", header: "Trạng Thái" },
+      { key: "totalAmount", header: "Tổng Tiền", render: (row) => toCurrency(row.totalAmount) },
+      { key: "createdAt", header: "Ngày Tạo" },
     ],
     [],
   );
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Quan Ly Hop Dong" />
+      <PageHeader title="Quản Lý Hợp Đồng" />
       <BaseCard>
         <TableFilterBar
           searchValue={keyword}
@@ -66,7 +66,7 @@ const ContractListPage = () => {
           filters={[
             {
               key: "status",
-              placeholder: "Trang Thai",
+              placeholder: "Trạng Thái",
               options: [
                 { label: "Draft", value: "DRAFT" },
                 { label: "Pending", value: "PENDING" },
@@ -91,12 +91,12 @@ const ContractListPage = () => {
           actions={(row) => (
             <div className="flex gap-2">
               <CustomButton
-                label="Chi Tiet"
+                label="Chi Tiết"
                 className="px-2 py-1 text-sm"
                 onClick={() => navigate(ROUTE_URL.CONTRACT_DETAIL.replace(":id", row.id))}
               />
               <CustomButton
-                label="Sua"
+                label="Sửa"
                 className="px-2 py-1 text-sm"
                 onClick={() => navigate(ROUTE_URL.CONTRACT_EDIT.replace(":id", row.id))}
               />

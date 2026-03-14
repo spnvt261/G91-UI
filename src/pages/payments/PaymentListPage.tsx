@@ -48,19 +48,19 @@ const PaymentListPage = () => {
 
   const columns = useMemo<DataTableColumn<InvoiceModel>[]>(
     () => [
-      { key: "id", header: "So Hoa Don", className: "font-semibold text-blue-900" },
-      { key: "contractId", header: "Hop Dong" },
-      { key: "customerId", header: "Khach Hang" },
-      { key: "totalAmount", header: "Tong Tien", render: (row) => toCurrency(row.totalAmount) },
-      { key: "dueAmount", header: "Con No", render: (row) => toCurrency(row.dueAmount) },
-      { key: "status", header: "Trang Thai" },
+      { key: "id", header: "Số Hóa Đơn", className: "font-semibold text-blue-900" },
+      { key: "contractId", header: "Hợp Đồng" },
+      { key: "customerId", header: "Khách Hàng" },
+      { key: "totalAmount", header: "Tổng Tiền", render: (row) => toCurrency(row.totalAmount) },
+      { key: "dueAmount", header: "Còn Nợ", render: (row) => toCurrency(row.dueAmount) },
+      { key: "status", header: "Trạng Thái" },
     ],
     [],
   );
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Quan Ly Thanh Toan" />
+      <PageHeader title="Quản Lý Thanh Toán" />
       <BaseCard>
         <TableFilterBar
           searchValue={keyword}
@@ -71,7 +71,7 @@ const PaymentListPage = () => {
           filters={[
             {
               key: "status",
-              placeholder: "Trang Thai",
+              placeholder: "Trạng Thái",
               options: [
                 { label: "UNPAID", value: "UNPAID" },
                 { label: "PARTIAL", value: "PARTIAL" },
@@ -92,8 +92,8 @@ const PaymentListPage = () => {
           data={pagedItems}
           actions={(row) => (
             <div className="flex gap-2">
-              <CustomButton label="Chi Tiet" className="px-2 py-1 text-sm" onClick={() => navigate(ROUTE_URL.PAYMENT_DETAIL.replace(":id", row.id))} />
-              <CustomButton label="Ghi Nhan" className="px-2 py-1 text-sm" onClick={() => navigate(ROUTE_URL.PAYMENT_RECORD.replace(":id", row.id))} />
+              <CustomButton label="Chi Tiết" className="px-2 py-1 text-sm" onClick={() => navigate(ROUTE_URL.PAYMENT_DETAIL.replace(":id", row.id))} />
+              <CustomButton label="Ghi Nhận" className="px-2 py-1 text-sm" onClick={() => navigate(ROUTE_URL.PAYMENT_RECORD.replace(":id", row.id))} />
             </div>
           )}
         />

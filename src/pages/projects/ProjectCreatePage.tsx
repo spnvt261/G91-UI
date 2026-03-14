@@ -41,20 +41,20 @@ const ProjectCreatePage = () => {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Tao Du An" />
-      <FormSectionCard title="Thong Tin Du An">
+      <PageHeader title="Tạo Dự Án" />
+      <FormSectionCard title="Thông Tin Dự Án">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <CustomTextField title="Ma Du An" value={code} onChange={(event) => setCode(event.target.value)} />
-          <CustomTextField title="Ten Du An" value={name} onChange={(event) => setName(event.target.value)} />
+          <CustomTextField title="Mã Dự Án" value={code} onChange={(event) => setCode(event.target.value)} />
+          <CustomTextField title="Tên Dự Án" value={name} onChange={(event) => setName(event.target.value)} />
           <CustomTextField title="Customer ID" value={customerId} onChange={(event) => setCustomerId(event.target.value)} />
           <CustomTextField title="Warehouse ID" value={warehouseId} onChange={(event) => setWarehouseId(event.target.value)} />
-          <CustomTextField title="Trang Thai" value={status} onChange={(event) => setStatus(event.target.value)} />
-          <CustomTextField title="Tien Do" type="number" value={progress} onChange={(event) => setProgress(event.target.value)} />
+          <CustomTextField title="Trạng Thái" value={status} onChange={(event) => setStatus(event.target.value)} />
+          <CustomTextField title="Tiến Độ" type="number" value={progress} onChange={(event) => setProgress(event.target.value)} />
         </div>
         {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
         <div className="mt-4 flex gap-3">
-          <CustomButton label={loading ? "Dang tao..." : "Luu Du An"} onClick={handleCreate} disabled={loading} />
-          <CustomButton label="Quay Lai" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)} />
+          <CustomButton label={loading ? "Đang tạo..." : "Lưu Dự Án"} onClick={handleCreate} disabled={loading} />
+          <CustomButton label="Quay Lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)} />
         </div>
       </FormSectionCard>
     </div>

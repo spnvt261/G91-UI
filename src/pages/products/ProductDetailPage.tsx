@@ -39,22 +39,22 @@ const ProductDetailPage = () => {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Chi Tiet San Pham"
-        rightActions={<CustomButton label="Quay Lai" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.PRODUCT_LIST)} />}
+        title="Chi Tiết Sản Phẩm"
+        rightActions={<CustomButton label="Quay Lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.PRODUCT_LIST)} />}
       />
       <BaseCard>
         {loading ? <p className="text-sm text-slate-500">Loading detail...</p> : null}
         {error ? <p className="text-sm text-red-500">{error}</p> : null}
         {product ? (
           <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-            <p><span className="font-semibold">Ma SP:</span> {product.productCode}</p>
-            <p><span className="font-semibold">Ten San Pham:</span> {product.productName}</p>
-            <p><span className="font-semibold">Loai:</span> {product.type}</p>
-            <p><span className="font-semibold">Kich Thuoc:</span> {product.size}</p>
-            <p><span className="font-semibold">Be Day:</span> {product.thickness}</p>
-            <p><span className="font-semibold">Don Vi:</span> {product.unit}</p>
-            <p><span className="font-semibold">Khoi Luong:</span> {product.referenceWeight ?? "-"}</p>
-            <p><span className="font-semibold">Trang Thai:</span> {product.status}</p>
+            <p><span className="font-semibold">Mã SP:</span> {product.productCode}</p>
+            <p><span className="font-semibold">Tên Sản Phẩm:</span> {product.productName}</p>
+            <p><span className="font-semibold">Loại:</span> {product.type}</p>
+            <p><span className="font-semibold">Kích Thưức:</span> {product.size}</p>
+            <p><span className="font-semibold">Bề Dày:</span> {product.thickness}</p>
+            <p><span className="font-semibold">Don Vị:</span> {product.unit}</p>
+            <p><span className="font-semibold">Khối Lượng:</span> {product.referenceWeight ?? "-"}</p>
+            <p><span className="font-semibold">Trạng Thái:</span> {product.status}</p>
           </div>
         ) : null}
       </BaseCard>

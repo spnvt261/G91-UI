@@ -42,10 +42,10 @@ const InventoryReportPage = () => {
         {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
         <DataTable
           columns={[
-            { key: "productCode", header: "Ma SP" },
-            { key: "productName", header: "Ten San Pham" },
-            { key: "availableQty", header: "Ton Kha Dung" },
-            { key: "reservedQty", header: "Da Giu Cho" },
+            { key: "productCode", header: "Mã SP" },
+            { key: "productName", header: "Tên Sản Phẩm" },
+            { key: "availableQty", header: "Tốn Khả Dùng" },
+            { key: "reservedQty", header: "Dã Giữu Cho" },
           ]}
           data={filtered}
         />
