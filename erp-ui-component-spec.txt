@@ -1,0 +1,570 @@
+SYSTEM NAME
+ERP System – G90 Steel Business Management
+
+PROJECT BASE
+BaseReactTs (React 18 + TypeScript + Vite + Tailwind)
+
+IMPORTANT
+This specification is only for building reusable UI components and layout structure.
+Do NOT implement business logic.
+Do NOT implement API calls.
+Do NOT implement pages yet.
+
+All components must be reusable and follow BaseReactTs structure.
+
+----------------------------------------------------
+
+PROJECT STRUCTURE EXTENSION
+
+Create the following new component folders:
+
+src/components/layout
+src/components/navigation
+src/components/table
+src/components/cards
+src/components/forms
+src/components/dashboard
+src/components/auth
+
+----------------------------------------------------
+
+GLOBAL UI PRINCIPLES
+
+Use Tailwind CSS.
+
+Color theme:
+
+Primary Blue
+White
+Light Gray
+
+Design style:
+
+Rounded cards
+Soft shadows
+Modern admin UI
+Clean spacing
+
+----------------------------------------------------
+
+LAYOUT COMPONENTS
+
+----------------------------------------------------
+
+1. APP LAYOUT WRAPPER
+
+File:
+components/layout/AppLayout.tsx
+
+Purpose:
+Main layout wrapper for authenticated pages.
+
+Structure:
+
+AppLayout
+ ├── Sidebar
+ ├── MainSection
+ │    ├── TopNavbar
+ │    ├── ContentArea
+ │    └── Footer
+
+Responsibilities:
+
+Render Sidebar
+Render TopNavbar
+Wrap page content
+
+Props:
+
+children: ReactNode
+
+----------------------------------------------------
+
+2. CONTENT WRAPPER
+
+File:
+components/layout/ContentWrapper.tsx
+
+Purpose:
+Provide consistent padding and width for all pages.
+
+Features:
+
+max width container
+padding
+background gray
+
+Structure:
+
+<div class="p-6 bg-gray-100 min-h-screen">
+  children
+</div>
+
+----------------------------------------------------
+
+3. PAGE HEADER
+
+File:
+components/layout/PageHeader.tsx
+
+Used for page titles and top action buttons.
+
+Example:
+
+Product Management       [ Add Product ]
+
+Props:
+
+title: string
+rightActions?: ReactNode
+
+----------------------------------------------------
+
+NAVIGATION COMPONENTS
+
+----------------------------------------------------
+
+4. SIDEBAR
+
+File:
+components/navigation/Sidebar.tsx
+
+Dark blue vertical navigation menu.
+
+Features:
+
+Logo section
+Navigation links
+Collapsible width
+
+Sections:
+
+Dashboard
+
+Products
+ - Product List
+ - Add Product
+
+Inventory
+ - Import Stock
+ - Export Stock
+ - Stock History
+
+Quotation & Contract
+ - Create Quotation
+ - Manage Quotations
+ - Contracts
+
+Customers
+ - Customer List
+ - Customer Details
+
+Projects
+ - Project List
+ - Project Details
+
+Payments
+ - Payment Records
+ - Debt Management
+
+Reports
+ - Sales Report
+ - Inventory Report
+ - Financial Report
+
+Settings
+ - Users
+ - Permissions
+ - System Settings
+
+Each menu item uses:
+
+SidebarItem component
+
+----------------------------------------------------
+
+5. SIDEBAR ITEM
+
+File:
+components/navigation/SidebarItem.tsx
+
+Props:
+
+icon: ReactNode
+label: string
+path?: string
+children?: SidebarItem[]
+
+Features:
+
+Expandable submenus
+Active state highlight
+Icon support
+
+----------------------------------------------------
+
+6. TOP NAVBAR
+
+File:
+components/navigation/TopNavbar.tsx
+
+Structure:
+
+Left side
+
+Sidebar toggle button
+System title or logo
+
+Right side
+
+NotificationBell
+UserAvatarDropdown
+
+----------------------------------------------------
+
+7. NOTIFICATION BELL
+
+File:
+components/navigation/NotificationBell.tsx
+
+Features:
+
+Bell icon
+Notification count badge
+
+Click opens dropdown list.
+
+Dummy list only for now.
+
+----------------------------------------------------
+
+8. USER AVATAR DROPDOWN
+
+File:
+components/navigation/UserAvatarDropdown.tsx
+
+Avatar + username
+
+Dropdown items:
+
+Profile
+Settings
+Logout
+
+----------------------------------------------------
+
+CARD COMPONENTS
+
+----------------------------------------------------
+
+9. BASE CARD
+
+File:
+components/cards/BaseCard.tsx
+
+Reusable container card.
+
+Props:
+
+title?: string
+actions?: ReactNode
+children: ReactNode
+
+Style:
+
+rounded-lg
+shadow
+white background
+
+----------------------------------------------------
+
+10. INFO CARD
+
+File:
+components/cards/InfoCard.tsx
+
+Used for dashboard metrics.
+
+Example:
+
+Total Revenue
+Total Orders
+Inventory Value
+
+Props:
+
+title
+value
+icon
+trend
+
+----------------------------------------------------
+
+TABLE COMPONENTS
+
+----------------------------------------------------
+
+11. DATA TABLE
+
+File:
+components/table/DataTable.tsx
+
+Reusable table component.
+
+Props:
+
+columns
+data
+actions?
+
+Features:
+
+striped rows
+hover highlight
+
+----------------------------------------------------
+
+12. TABLE HEADER FILTER BAR
+
+File:
+components/table/TableFilterBar.tsx
+
+Contains:
+
+Search input (CustomSearchBar)
+Filters (CustomSelect)
+
+Example usage:
+
+Search
+Product Type
+Size Filter
+
+Props:
+
+searchValue
+onSearchChange
+filters
+
+----------------------------------------------------
+
+13. PAGINATION
+
+File:
+components/table/Pagination.tsx
+
+Features:
+
+Previous
+Next
+Page numbers
+
+Props:
+
+page
+pageSize
+total
+
+----------------------------------------------------
+
+FORM COMPONENTS
+
+----------------------------------------------------
+
+14. FORM SECTION CARD
+
+File:
+components/forms/FormSectionCard.tsx
+
+Used to group form fields.
+
+Example:
+
+Product Information
+
+Props:
+
+title
+children
+
+----------------------------------------------------
+
+15. IMAGE UPLOAD CARD
+
+File:
+components/forms/ImageUploadCard.tsx
+
+Used for product image upload.
+
+Features:
+
+Upload button
+Preview image placeholder
+
+----------------------------------------------------
+
+16. STOCK CONFIG TABLE
+
+File:
+components/forms/StockConfigTable.tsx
+
+Used in Add Product page.
+
+Columns:
+
+Batch Code
+Production Date
+Weight
+Stock Quantity
+
+Features:
+
+Add row
+Remove row
+
+----------------------------------------------------
+
+AUTH COMPONENTS
+
+----------------------------------------------------
+
+17. AUTH CARD
+
+File:
+components/auth/AuthCard.tsx
+
+Used for login/register/forgot/reset pages.
+
+Structure:
+
+Blue header with logo
+Form content
+Footer
+
+Props:
+
+title
+subtitle
+children
+
+----------------------------------------------------
+
+18. AUTH FOOTER
+
+File:
+components/auth/AuthFooter.tsx
+
+Displays:
+
+© 2024 G90 Steel. Hanoi - Vietnam
+
+----------------------------------------------------
+
+19. AUTH HEADER
+
+File:
+components/auth/AuthHeader.tsx
+
+Blue header area with logo.
+
+----------------------------------------------------
+
+MODAL COMPONENTS
+
+----------------------------------------------------
+
+20. DELETE CONFIRM MODAL
+
+Use existing:
+
+components/modals/ConfirmModal
+
+But create wrapper:
+
+File:
+
+components/modals/DeleteConfirmModal.tsx
+
+Pre-configured text:
+
+"Are you sure you want to delete this item?"
+
+Buttons:
+
+Delete
+Cancel
+
+----------------------------------------------------
+
+DASHBOARD COMPONENTS
+
+----------------------------------------------------
+
+21. DASHBOARD STATS GRID
+
+File:
+components/dashboard/StatsGrid.tsx
+
+Grid layout of InfoCards.
+
+----------------------------------------------------
+
+22. CHART CARD
+
+File:
+components/dashboard/ChartCard.tsx
+
+Placeholder container for charts.
+
+----------------------------------------------------
+
+FOOTER COMPONENT
+
+----------------------------------------------------
+
+23. APP FOOTER
+
+File:
+components/layout/AppFooter.tsx
+
+Displays:
+
+© 2024 G90 Steel. Hanoi - Vietnam
+
+----------------------------------------------------
+
+STYLE GUIDELINES
+
+Use Tailwind classes.
+
+Cards:
+
+rounded-lg
+shadow-sm
+p-4
+
+Tables:
+
+border
+hover:bg-gray-50
+
+Primary buttons:
+
+bg-blue-600
+hover:bg-blue-700
+
+----------------------------------------------------
+
+RESPONSIVE BEHAVIOR
+
+Desktop first design.
+
+Sidebar collapses on tablet.
+
+Mobile:
+
+Sidebar becomes drawer.
+
+----------------------------------------------------
+
+END OF SPEC
