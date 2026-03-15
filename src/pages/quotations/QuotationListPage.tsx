@@ -15,7 +15,8 @@ const PAGE_SIZE = 8;
 
 const QuotationListPage = () => {
   const navigate = useNavigate();
-  const [allItems, setAllItems] = useState<QuotationModel[]>([]);
+  const [items, setItems] = useState<QuotationModel[]>([]);
+  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState<string[]>([]);
@@ -27,8 +28,26 @@ const QuotationListPage = () => {
       try {
         setLoading(true);
         setError("");
-        const items = await quotationService.getList({ keyword, status: status[0] as QuotationModel["status"] | undefined });
-        setAllItems(items);
+        const response = await quotationService.getCustomerList({
+          page,
+          pageSize: PAGE_SIZE,
+          keyword: keyword || undefined,
+          status: status[0] as QuotationModel["status"] | undefined,
+        });
+
+        setItems(
+          response.items.map((item) => ({
+            id: item.id,
+            quotationNumber: item.quotationNumber,
+            customerId: "",
+            items: [],
+            totalAmount: item.totalAmount,
+            status: item.status,
+            validUntil: item.validUntil,
+            createdAt: item.createdAt,
+          })),
+        );
+        setTotal(response.pagination.totalItems);
       } catch (err) {
         setError(getErrorMessage(err, "Cannot load quotations"));
       } finally {
@@ -37,21 +56,24 @@ const QuotationListPage = () => {
     };
 
     void load();
-  }, [keyword, status]);
-
-  const pagedItems = useMemo(() => allItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [allItems, page]);
+  }, [keyword, page, status]);
 
   const columns = useMemo<DataTableColumn<QuotationModel>[]>(
     () => [
-      { key: "id", header: "Số Báo Giá", className: "font-semibold text-blue-900" },
-      { key: "customerId", header: "Khách Hàng" },
-      { key: "status", header: "Trạng Thái" },
+      {
+        key: "quotationNumber",
+        header: "Quotation No",
+        className: "font-semibold text-blue-900",
+        render: (row) => row.quotationNumber || row.id,
+      },
+      { key: "status", header: "Status" },
       {
         key: "totalAmount",
-        header: "Tổng Tiền",
+        header: "Total",
         render: (row) => toCurrency(row.totalAmount),
       },
-      { key: "createdAt", header: "Ngày Tạo" },
+      { key: "validUntil", header: "Valid Until" },
+      { key: "createdAt", header: "Created At" },
     ],
     [],
   );
@@ -59,8 +81,8 @@ const QuotationListPage = () => {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Quản Lý Báo Giá"
-        rightActions={<CustomButton label="Tạo Yêu Cầu" onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)} />}
+        title="Quotation Management"
+        rightActions={<CustomButton label="Create Quotation" onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)} />}
       />
       <BaseCard>
         <TableFilterBar
@@ -72,11 +94,11 @@ const QuotationListPage = () => {
           filters={[
             {
               key: "status",
-              placeholder: "Trạng Thái",
+              placeholder: "Status",
               options: [
                 { label: "Draft", value: "DRAFT" },
                 { label: "Pending", value: "PENDING" },
-                { label: "Approved", value: "APPROVED" },
+                { label: "Converted", value: "CONVERTED" },
                 { label: "Rejected", value: "REJECTED" },
               ],
               value: status,
@@ -91,16 +113,16 @@ const QuotationListPage = () => {
         {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
         <DataTable
           columns={columns}
-          data={pagedItems}
+          data={items}
           actions={(row) => (
             <CustomButton
-              label="Xem Chi Tiết"
+              label="View"
               className="px-2 py-1 text-sm"
               onClick={() => navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", row.id))}
             />
           )}
         />
-        <Pagination page={page} pageSize={PAGE_SIZE} total={allItems.length} onChange={setPage} />
+        <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={setPage} />
       </BaseCard>
     </div>
   );

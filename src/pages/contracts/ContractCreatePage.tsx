@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import FormSectionCard from "../../components/forms/FormSectionCard";
 import CustomButton from "../../components/customButton/CustomButton";
@@ -7,17 +7,16 @@ import PageHeader from "../../components/layout/PageHeader";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { contractService } from "../../services/contract/contract.service";
 import { quotationService } from "../../services/quotation/quotation.service";
-import { getErrorMessage } from "../shared/page.utils";
+import { getErrorMessage, toCurrency } from "../shared/page.utils";
 
 const ContractCreatePage = () => {
   const navigate = useNavigate();
   const { quotationId } = useParams();
 
+  const [quotationNumber, setQuotationNumber] = useState("");
   const [customerId, setCustomerId] = useState("");
-  const [productId, setProductId] = useState("");
-  const [quantity, setQuantity] = useState("1");
-  const [unitPrice, setUnitPrice] = useState("0");
-  const [paymentTerms, setPaymentTerms] = useState("Thanh toán trong 30 ngày");
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [paymentTerms, setPaymentTerms] = useState("Thanh toan trong 30 ngay");
   const [deliveryAddress, setDeliveryAddress] = useState("Ha Noi");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -29,40 +28,37 @@ const ContractCreatePage = () => {
       }
 
       try {
-        const quotation = await quotationService.getDetail(quotationId);
-        setCustomerId(quotation.customerId);
-        setProductId(quotation.items[0]?.productId ?? "");
-        setQuantity(String(quotation.items[0]?.quantity ?? 1));
-        setUnitPrice(String(quotation.items[0]?.unitPrice ?? 0));
+        const detail = await quotationService.getDetail(quotationId);
+        setQuotationNumber(detail.quotationNumber || detail.id);
+        setCustomerId(detail.customerId);
+        setTotalAmount(detail.totalAmount);
       } catch {
-        // Keep form editable even if quotation prefill fails.
+        // Keep form editable even if prefill fails.
       }
     };
 
     void loadQuotation();
   }, [quotationId]);
 
+  const canCreate = useMemo(() => Boolean(quotationId && paymentTerms.trim() && deliveryAddress.trim()), [deliveryAddress, paymentTerms, quotationId]);
+
   const handleCreate = async () => {
+    if (!quotationId) {
+      setError("Quotation id is required.");
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
-      const created = await contractService.create({
-        quotationId: quotationId ?? "manual-quotation",
-        customerId,
-        items: [
-          {
-            productId,
-            quantity: Number(quantity),
-            unitPrice: Number(unitPrice),
-          },
-        ],
-        totalAmount: Number(quantity) * Number(unitPrice),
-        paymentTerms: `${paymentTerms} | ${deliveryAddress}`,
-        status: "DRAFT",
+      const created = await contractService.createFromQuotation(quotationId, {
+        paymentTerms,
+        deliveryAddress,
       });
-      navigate(ROUTE_URL.CONTRACT_DETAIL.replace(":id", created.id));
+
+      navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", created.contract.quotationId));
     } catch (err) {
-      setError(getErrorMessage(err, "Cannot create contract"));
+      setError(getErrorMessage(err, "Cannot create contract from quotation"));
     } finally {
       setLoading(false);
     }
@@ -70,31 +66,29 @@ const ContractCreatePage = () => {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Tạo Hợp Đồng" />
-      <FormSectionCard title="Thông Tin Cơ Bản">
+      <PageHeader title="Create Contract From Quotation" />
+      <FormSectionCard title="Quotation Info">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <CustomTextField title="Báo Giá" value={quotationId ?? "manual"} disabled />
-          <CustomTextField title="Khách Hàng" value={customerId} onChange={(event) => setCustomerId(event.target.value)} />
+          <CustomTextField title="Quotation ID" value={quotationId ?? ""} disabled />
+          <CustomTextField title="Quotation Number" value={quotationNumber} disabled />
+          <CustomTextField title="Customer" value={customerId} disabled />
+          <CustomTextField title="Total Amount" value={toCurrency(totalAmount)} disabled />
         </div>
       </FormSectionCard>
 
-      <FormSectionCard title="Chi Tiết Hàng Hoá">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <CustomTextField title="Product ID" value={productId} onChange={(event) => setProductId(event.target.value)} />
-          <CustomTextField title="Số Lượng" type="number" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
-          <CustomTextField title="Don Giá" type="number" value={unitPrice} onChange={(event) => setUnitPrice(event.target.value)} />
-        </div>
-      </FormSectionCard>
-
-      <FormSectionCard title="Dieu Khoan">
+      <FormSectionCard title="Contract Terms">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <CustomTextField title="Payment Terms" value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} />
           <CustomTextField title="Delivery Address" value={deliveryAddress} onChange={(event) => setDeliveryAddress(event.target.value)} />
         </div>
         {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
         <div className="mt-4 flex gap-3">
-          <CustomButton label={loading ? "Đang tạo..." : "Lưu Hợp Đồng"} onClick={handleCreate} disabled={loading} />
-          <CustomButton label="Quay Lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CONTRACT_LIST)} />
+          <CustomButton label={loading ? "Creating..." : "Create Contract"} onClick={handleCreate} disabled={loading || !canCreate} />
+          <CustomButton
+            label="Back"
+            className="bg-slate-200 text-slate-700 hover:bg-slate-300"
+            onClick={() => navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", quotationId ?? ""))}
+          />
         </div>
       </FormSectionCard>
     </div>

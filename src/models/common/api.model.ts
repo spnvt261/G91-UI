@@ -1,7 +1,8 @@
-﻿export interface ApiResponse<T> {
+export interface ApiResponse<T> {
   code: string;
   message: string;
   data: T;
+  errors?: ApiValidationErrorItem[];
 }
 
 export interface ApiValidationErrorItem {
@@ -22,3 +23,4 @@ export interface PageableListResponse<T> {
   size: number;
   totalElements: number;
 }
+

@@ -1,0 +1,438 @@
+You are a senior React + TypeScript engineer.
+
+Your task is to **refactor the entire frontend codebase (G91-UI)** so that it correctly integrates with the **new backend API version (39 APIs)** described below.
+
+The current frontend was written for an older backend version and therefore:
+
+* Some endpoints no longer exist
+* Some DTOs have changed
+* Many new APIs were added
+* Response structure has changed
+
+You must update the entire codebase accordingly.
+
+---
+
+# 1. PROJECT CONTEXT
+
+Frontend stack:
+
+* React 18
+* TypeScript
+* Vite
+* TailwindCSS
+* Redux Toolkit
+* Axios
+* React Router DOM
+
+Project structure:
+
+src/
+api/
+apiConfig/
+components/
+const/
+context/
+hooks/
+models/
+pages/
+services/
+store/
+utils/
+
+Important files:
+
+* src/api/URL_const.ts
+* src/apiConfig/axiosConfig.ts
+* src/services/*
+* src/models/*
+* src/pages/*
+
+---
+
+# 2. GLOBAL API RESPONSE FORMAT (NEW)
+
+All backend APIs now return a unified envelope:
+
+{
+"code": "SUCCESS",
+"message": "...",
+"data": {},
+"errors": []
+}
+
+Rules:
+
+SUCCESS response:
+
+code = "SUCCESS"
+data contains payload
+
+Error response:
+
+code != SUCCESS
+errors may contain field validation messages
+
+You must update axios interceptors and service parsing to match this format.
+
+---
+
+# 3. REQUIRED GLOBAL CHANGES
+
+You must implement the following changes across the entire project.
+
+---
+
+3.1 Update Axios Response Handling
+
+Current FE expects:
+
+{
+code,
+message,
+data
+}
+
+New BE response:
+
+{
+code,
+message,
+data,
+errors
+}
+
+Tasks:
+
+Update axios response interceptor to:
+
+* return response.data.data when code == SUCCESS
+* throw error otherwise
+
+When errors exist:
+
+map them to UI notifications.
+
+---
+
+3.2 Update URL constants
+
+Edit:
+
+src/api/URL_const.ts
+
+Ensure all endpoints match the new backend API specification.
+
+Add missing modules:
+
+AUTH
+USER
+ACCOUNTS
+PRODUCTS
+PRICE_LISTS
+PRICE_LIST_ITEMS
+CUSTOMER
+QUOTATIONS
+CONTRACTS
+
+---
+
+3.3 Update DTO models
+
+Edit all files inside:
+
+src/models/
+
+Update models to match backend DTOs exactly.
+
+Example:
+
+LoginResponseData
+
+{
+accessToken: string
+tokenType: string
+user: {
+id: string
+fullName: string
+email: string
+role: string
+status: string
+}
+}
+
+Quotation responses contain nested structures:
+
+summary
+items
+promotion
+tracking
+history
+actions
+
+Create new models where missing.
+
+---
+
+3.4 Update services layer
+
+Edit:
+
+src/services/*
+
+Ensure each service method:
+
+* calls correct endpoint
+* uses correct request DTO
+* parses response DTO
+
+Example:
+
+quotationService.preview()
+
+POST /api/quotations/preview
+
+quotationService.saveDraft()
+
+POST /api/quotations/draft
+
+quotationService.submit()
+
+POST /api/quotations
+
+quotationService.submitExisting()
+
+POST /api/quotations/{id}/submit
+
+---
+
+# 4. NEW API MODULES
+
+The backend now contains new modules that FE must support.
+
+---
+
+4.1 Customer Quotation APIs
+
+Endpoints:
+
+GET /api/customer/quotation-form-init
+
+GET /api/customer/quotations
+
+GET /api/customer/quotations/summary
+
+Update:
+
+QuotationCreatePage
+
+Flow:
+
+1 Load form init data
+2 Select project
+3 Select products
+4 Apply promotion
+5 Preview quotation
+
+---
+
+4.2 Quotation Core APIs
+
+Endpoints:
+
+POST /api/quotations/preview
+POST /api/quotations
+POST /api/quotations/draft
+POST /api/quotations/submit
+GET /api/quotations/{id}/preview
+PUT /api/quotations/{id}
+POST /api/quotations/{id}/submit
+GET /api/quotations/{id}
+GET /api/quotations/{id}/history
+
+Update pages:
+
+QuotationListPage
+QuotationCreatePage
+QuotationDetailPage
+
+Add support for:
+
+draft
+preview
+submit
+history
+tracking
+
+---
+
+4.3 Contract APIs
+
+New endpoint:
+
+POST /api/contracts/from-quotation/{quotationId}
+
+Update:
+
+ContractCreatePage
+
+Flow:
+
+Load quotation detail
+Create contract from quotation
+
+---
+
+4.4 Pricing APIs
+
+Ensure these services exist:
+
+priceListService
+
+Endpoints:
+
+POST /api/price-lists
+GET /api/price-lists
+GET /api/price-lists/{id}
+PUT /api/price-lists/{id}
+DELETE /api/price-lists/{id}
+
+priceListItemService
+
+POST /api/price-lists/{id}/items
+PUT /api/price-list-items/{id}
+DELETE /api/price-list-items/{id}
+
+---
+
+4.5 Account Management
+
+Endpoints:
+
+POST /api/accounts
+GET /api/accounts
+GET /api/accounts/{id}
+PUT /api/accounts/{id}
+PATCH /api/accounts/{id}/deactivate
+
+Create service:
+
+accountService.ts
+
+---
+
+# 5. PAGE ADJUSTMENTS
+
+Ensure these pages call the correct APIs:
+
+Auth:
+
+LoginPage
+RegisterPage
+ForgotPasswordPage
+ResetPasswordPage
+
+Products:
+
+ProductListPage
+ProductDetailPage
+
+Quotations:
+
+QuotationListPage
+QuotationCreatePage
+QuotationDetailPage
+
+Contracts:
+
+ContractCreatePage
+ContractDetailPage
+
+---
+
+# 6. SECURITY AND ROLE SUPPORT
+
+Backend roles:
+
+CUSTOMER
+ACCOUNTANT
+OWNER
+WAREHOUSE
+
+Ensure UI hides or disables actions based on role.
+
+Example:
+
+Customer:
+
+quotation APIs
+
+Accountant/Owner:
+
+contract creation
+
+Owner only:
+
+account management
+pricing management
+
+---
+
+# 7. PAGINATION RULE DIFFERENCE
+
+Important:
+
+Product API:
+
+page starts from 1
+
+Account/Pricing APIs:
+
+page starts from 0
+
+Ensure frontend pagination logic handles both cases.
+
+---
+
+# 8. DO NOT BREAK EXISTING COMPONENTS
+
+Do NOT modify reusable components unless required:
+
+DataTable
+Pagination
+FormSectionCard
+CustomTextField
+CustomSelect
+
+Only update data mapping if DTO changed.
+
+---
+
+# 9. FINAL GOAL
+
+After refactoring:
+
+Frontend must:
+
+* compile successfully
+* call all backend APIs correctly
+* match DTO schema
+* support new quotation flow
+* support contract creation
+* support pricing and account APIs
+
+---
+
+# 10. IMPORTANT
+
+Do NOT rewrite the project.
+
+Only refactor:
+
+* services
+* models
+* api constants
+* pages API calls
+* axios interceptors
+
+Maintain current architecture.

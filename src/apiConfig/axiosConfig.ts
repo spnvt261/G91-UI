@@ -1,49 +1,40 @@
-import axios, {
-  AxiosError,
-  AxiosHeaders,
-  type AxiosRequestConfig,
-  type InternalAxiosRequestConfig,
-} from "axios";
+import axios, { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from "axios";
+import type { ApiResponse, ApiValidationErrorItem } from "../models/common/api.model";
 
-type RetryableRequestConfig = AxiosRequestConfig & { _retry?: boolean };
-type QueuePromise = {
-  resolve: (token: string) => void;
-  reject: (error: unknown) => void;
-};
+export class ApiClientError extends Error {
+  code?: string;
+  errors?: ApiValidationErrorItem[];
+
+  constructor(message: string, options?: { code?: string; errors?: ApiValidationErrorItem[] }) {
+    super(message);
+    this.name = "ApiClientError";
+    this.code = options?.code;
+    this.errors = options?.errors;
+  }
+}
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 5000,
-});
-
-const refreshClient = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 5000,
+  timeout: 10000,
 });
 
 const getToken = () => localStorage.getItem("access_token");
-const setToken = (token: string) => localStorage.setItem("access_token", token);
 
-let isRefreshing = false;
-let failedQueue: QueuePromise[] = [];
+const extractValidationMessage = (errors?: ApiValidationErrorItem[]) => {
+  if (!errors?.length) {
+    return "";
+  }
 
-const processQueue = (error: unknown, token: string | null = null) => {
-  failedQueue.forEach(({ resolve, reject }) => {
-    if (error) {
-      reject(error);
-      return;
-    }
-
-    if (token) {
-      resolve(token);
-      return;
-    }
-
-    reject(new Error("Token refresh failed"));
-  });
-  failedQueue = [];
+  return errors
+    .map((item) => {
+      if (!item.field) {
+        return item.message;
+      }
+      return `${item.field}: ${item.message}`;
+    })
+    .join("; ");
 };
 
 api.interceptors.request.use(
@@ -69,42 +60,35 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError & { config?: RetryableRequestConfig }) => {
-    const originalRequest = error.config;
+  (response) => {
+    const payload = response.data as ApiResponse<unknown> | unknown;
 
-    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise<string>((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then((token) => {
-          const headers = AxiosHeaders.from(originalRequest.headers);
-          headers.set("Authorization", `Bearer ${token}`);
-          originalRequest.headers = headers;
+    if (!payload || typeof payload !== "object" || !("code" in payload)) {
+      return response;
+    }
 
-          return api(originalRequest);
-        });
-      }
+    const apiResponse = payload as ApiResponse<unknown>;
+    if (apiResponse.code === "SUCCESS") {
+      response.data = apiResponse.data;
+      return response;
+    }
 
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        const refreshToken = localStorage.getItem("refresh_token");
-        const res = await refreshClient.post<{ accessToken: string }>("/auth/refresh", { refreshToken });
-        const newToken = res.data.accessToken;
-
-        setToken(newToken);
-        api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
-        processQueue(null, newToken);
-
-        return api(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
+    const validationMessage = extractValidationMessage(apiResponse.errors);
+    throw new ApiClientError(validationMessage || apiResponse.message || "Request failed", {
+      code: apiResponse.code,
+      errors: apiResponse.errors,
+    });
+  },
+  (error: AxiosError) => {
+    const payload = error.response?.data as ApiResponse<unknown> | undefined;
+    if (payload?.code) {
+      const validationMessage = extractValidationMessage(payload.errors);
+      return Promise.reject(
+        new ApiClientError(validationMessage || payload.message || error.message || "Request failed", {
+          code: payload.code,
+          errors: payload.errors,
+        }),
+      );
     }
 
     return Promise.reject(error);

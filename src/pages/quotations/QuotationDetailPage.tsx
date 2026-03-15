@@ -5,7 +5,7 @@ import CustomButton from "../../components/customButton/CustomButton";
 import PageHeader from "../../components/layout/PageHeader";
 import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
 import { ROUTE_URL } from "../../const/route_url.const";
-import type { QuotationItemModel, QuotationModel } from "../../models/quotation/quotation.model";
+import type { QuotationHistoryResponseData, QuotationItemModel, QuotationModel } from "../../models/quotation/quotation.model";
 import { quotationService } from "../../services/quotation/quotation.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
 
@@ -13,8 +13,23 @@ const QuotationDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [quotation, setQuotation] = useState<QuotationModel | null>(null);
+  const [deliveryRequirements, setDeliveryRequirements] = useState<string | undefined>();
+  const [history, setHistory] = useState<QuotationHistoryResponseData["events"]>([]);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  const loadData = async (quotationId: string) => {
+    const [detail, rawDetail, historyResponse] = await Promise.all([
+      quotationService.getDetail(quotationId),
+      quotationService.getRawDetail(quotationId),
+      quotationService.getHistory(quotationId),
+    ]);
+
+    setQuotation(detail);
+    setDeliveryRequirements(rawDetail.deliveryRequirements);
+    setHistory(historyResponse.events ?? []);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -25,8 +40,7 @@ const QuotationDetailPage = () => {
       try {
         setLoading(true);
         setError("");
-        const detail = await quotationService.getDetail(id);
-        setQuotation(detail);
+        await loadData(id);
       } catch (err) {
         setError(getErrorMessage(err, "Cannot load quotation detail"));
       } finally {
@@ -37,13 +51,30 @@ const QuotationDetailPage = () => {
     void load();
   }, [id]);
 
+  const handleSubmitDraft = async () => {
+    if (!id) {
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError("");
+      await quotationService.submit(id);
+      await loadData(id);
+    } catch (err) {
+      setError(getErrorMessage(err, "Cannot submit draft quotation"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const columns = useMemo<DataTableColumn<QuotationItemModel>[]>(
     () => [
-      { key: "productCode", header: "Mã SP" },
-      { key: "productName", header: "Tên Sản Phẩm" },
-      { key: "quantity", header: "Số Lượng" },
-      { key: "unitPrice", header: "Don Giá", render: (row) => toCurrency(row.unitPrice) },
-      { key: "amount", header: "Thành Tiền", render: (row) => toCurrency(row.amount) },
+      { key: "productCode", header: "Product Code" },
+      { key: "productName", header: "Product Name" },
+      { key: "quantity", header: "Quantity" },
+      { key: "unitPrice", header: "Unit Price", render: (row) => toCurrency(row.unitPrice) },
+      { key: "amount", header: "Amount", render: (row) => toCurrency(row.amount) },
     ],
     [],
   );
@@ -51,16 +82,21 @@ const QuotationDetailPage = () => {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Chi Tiết Báo Giá"
+        title="Quotation Detail"
         rightActions={
           <div className="flex gap-2">
             <CustomButton
-              label="Tạo Hợp Đồng"
+              label={submitting ? "Submitting..." : "Submit Draft"}
+              onClick={handleSubmitDraft}
+              disabled={!quotation || quotation.status !== "DRAFT" || submitting}
+            />
+            <CustomButton
+              label="Create Contract"
               onClick={() => navigate(ROUTE_URL.CONTRACT_CREATE.replace(":quotationId", quotation?.id ?? ""))}
               disabled={!quotation}
             />
             <CustomButton
-              label="Quay Lại"
+              label="Back"
               className="bg-slate-200 text-slate-700 hover:bg-slate-300"
               onClick={() => navigate(ROUTE_URL.QUOTATION_LIST)}
             />
@@ -73,12 +109,41 @@ const QuotationDetailPage = () => {
         {quotation ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-              <p><span className="font-semibold">Số Báo Giá:</span> {quotation.id}</p>
-              <p><span className="font-semibold">Khách Hàng:</span> {quotation.customerId}</p>
-              <p><span className="font-semibold">Trạng Thái:</span> {quotation.status}</p>
-              <p><span className="font-semibold">Tổng Tiền:</span> {toCurrency(quotation.totalAmount)}</p>
+              <p>
+                <span className="font-semibold">Quotation:</span> {quotation.quotationNumber || quotation.id}
+              </p>
+              <p>
+                <span className="font-semibold">Status:</span> {quotation.status}
+              </p>
+              <p>
+                <span className="font-semibold">Total:</span> {toCurrency(quotation.totalAmount)}
+              </p>
+              <p>
+                <span className="font-semibold">Valid Until:</span> {quotation.validUntil || "-"}
+              </p>
+              <p className="sm:col-span-2">
+                <span className="font-semibold">Delivery Requirements:</span> {deliveryRequirements || "-"}
+              </p>
             </div>
+
             <DataTable columns={columns} data={quotation.items} />
+
+            <div>
+              <h3 className="mb-2 text-sm font-semibold text-slate-700">History</h3>
+              <div className="space-y-2">
+                {history.length === 0 ? (
+                  <p className="text-sm text-slate-500">No history yet.</p>
+                ) : (
+                  history.map((event) => (
+                    <div key={event.id} className="rounded border border-slate-200 px-3 py-2 text-sm">
+                      <p className="font-medium text-slate-800">{event.action}</p>
+                      <p className="text-slate-500">{event.createdAt}</p>
+                      {event.note ? <p className="text-slate-600">{event.note}</p> : null}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         ) : null}
       </BaseCard>
