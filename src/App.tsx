@@ -1,5 +1,5 @@
 import "./App.css";
-import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
 import { ROUTE_URL } from "./const/route_url.const";
 import NotFoundPage from "./pages/404/NotFound.Page";
@@ -31,8 +31,23 @@ import DashboardReportPage from "./pages/reports/DashboardReportPage";
 import FinancialReportPage from "./pages/reports/FinancialReportPage";
 import InventoryReportPage from "./pages/reports/InventoryReportPage";
 import SalesReportPage from "./pages/reports/SalesReportPage";
+import UserProfilePage from "./pages/profile/UserProfilePage";
+import { canAccessPathByRole, getDefaultRouteByRole } from "./const/authz.const";
+import { getStoredAccessToken, getStoredUserRole } from "./utils/authSession";
 
 const AppAuthenticatedLayout = () => {
+  const location = useLocation();
+  const token = getStoredAccessToken();
+  const role = getStoredUserRole();
+
+  if (!token || !role) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (!canAccessPathByRole(role, location.pathname)) {
+    return <Navigate to={getDefaultRouteByRole(role)} replace />;
+  }
+
   return (
     <AppLayout>
       <Outlet />
@@ -41,18 +56,22 @@ const AppAuthenticatedLayout = () => {
 };
 
 function App() {
+  const token = getStoredAccessToken();
+  const userRole = getStoredUserRole();
+
   return (
     <div className="min-h-screen w-full">
       <Routes>
-        <Route path="/" element={<Navigate to={ROUTE_URL.LOGIN} replace />} />
+        <Route path="/" element={<Navigate to={token && userRole ? getDefaultRouteByRole(userRole) : ROUTE_URL.LOGIN} replace />} />
 
-        <Route path={ROUTE_URL.LOGIN} element={<LoginPage />} />
-        <Route path={ROUTE_URL.REGISTER} element={<RegisterPage />} />
-        <Route path={ROUTE_URL.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
-        <Route path={ROUTE_URL.RESET_PASSWORD} element={<ResetPasswordPage />} />
+        <Route path={ROUTE_URL.LOGIN} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <LoginPage />} />
+        <Route path={ROUTE_URL.REGISTER} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <RegisterPage />} />
+        <Route path={ROUTE_URL.FORGOT_PASSWORD} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <ForgotPasswordPage />} />
+        <Route path={ROUTE_URL.RESET_PASSWORD} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <ResetPasswordPage />} />
 
         <Route element={<AppAuthenticatedLayout />}>
           <Route path={ROUTE_URL.DASHBOARD} element={<DashboardPage />} />
+          <Route path={ROUTE_URL.PROFILE} element={<UserProfilePage />} />
 
           <Route path={ROUTE_URL.PRODUCT_LIST} element={<ProductListPage />} />
           <Route path={ROUTE_URL.PRODUCT_DETAIL} element={<ProductDetailPage />} />

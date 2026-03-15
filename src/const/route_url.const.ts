@@ -5,6 +5,7 @@ export const ROUTE_URL = {
   RESET_PASSWORD: "/reset-password",
 
   DASHBOARD: "/dashboard",
+  PROFILE: "/profile",
 
   PRODUCT_LIST: "/products",
   PRODUCT_DETAIL: "/products/:id",

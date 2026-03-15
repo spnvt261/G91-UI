@@ -10,6 +10,8 @@ import {
   DollarOutlined,
   BarChartOutlined,
 } from "@ant-design/icons";
+import { getStoredUserRole } from "../../utils/authSession";
+import type { UserRole } from "../../models/auth/auth.model";
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -76,10 +78,78 @@ const menuItems: SidebarNode[] = [
   },
 ];
 
+const ROLE_MENU_IDS: Record<UserRole, string[]> = {
+  GUEST: [],
+  CUSTOMER: [
+    "dashboard",
+    "products",
+    "product-list",
+    "quotation-contract",
+    "create-quotation",
+    "manage-quotations",
+    "projects",
+    "project-list",
+    "payments",
+    "payment-list",
+  ],
+  ACCOUNTANT: [
+    "dashboard",
+    "quotation-contract",
+    "manage-quotations",
+    "customers",
+    "customer-list",
+    "customer-create",
+    "projects",
+    "project-list",
+    "project-create",
+    "payments",
+    "payment-list",
+    "reports",
+    "dashboard-report",
+    "sales-report",
+    "financial-report",
+  ],
+  WAREHOUSE: [
+    "dashboard",
+    "products",
+    "product-list",
+    "projects",
+    "project-list",
+    "reports",
+    "inventory-report",
+  ],
+  OWNER: menuItems.flatMap((item) => [item.id, ...(item.children?.map((child) => child.id) ?? [])]),
+};
+
+const filterMenuByRole = (items: SidebarNode[], role: UserRole): SidebarNode[] => {
+  const allowedIds = new Set(ROLE_MENU_IDS[role]);
+
+  return items
+    .map((item) => {
+      if (!allowedIds.has(item.id)) {
+        return null;
+      }
+
+      if (!item.children?.length) {
+        return item;
+      }
+
+      const children = item.children.filter((child) => allowedIds.has(child.id));
+      if (!children.length && !item.path) {
+        return null;
+      }
+
+      return { ...item, children };
+    })
+    .filter((item): item is SidebarNode => Boolean(item));
+};
+
 const Sidebar = ({ collapsed = false, activePath, onNavigate, className = "" }: SidebarProps) => {
   const [selectedPath, setSelectedPath] = useState(activePath ?? "/products");
+  const role = getStoredUserRole() ?? "CUSTOMER";
 
   const currentPath = useMemo(() => activePath ?? selectedPath, [activePath, selectedPath]);
+  const visibleMenuItems = useMemo(() => filterMenuByRole(menuItems, role), [role]);
 
   return (
     <aside
@@ -106,7 +176,7 @@ const Sidebar = ({ collapsed = false, activePath, onNavigate, className = "" }: 
 
       <nav className="flex-1 overflow-y-auto p-3">
         <ul className="space-y-1">
-          {menuItems.map((item) => (
+          {visibleMenuItems.map((item) => (
             <SidebarItem
               key={item.id}
               item={item}

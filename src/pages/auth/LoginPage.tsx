@@ -11,6 +11,8 @@ import { loginSuccess } from "../../store/authSlice";
 import type { AppDispatch } from "../../store";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { getErrorMessage } from "../shared/page.utils";
+import { getDefaultRouteByRole } from "../../const/authz.const";
+import { persistAuthSession } from "../../utils/authSession";
 
 const LoginPage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -26,14 +28,14 @@ const LoginPage = () => {
       setLoading(true);
       setError("");
       const response = await authService.login({ email, password });
-      localStorage.setItem("access_token", response.accessToken);
+      persistAuthSession(response.accessToken, response.user.role);
       dispatch(
         loginSuccess({
           accessToken: response.accessToken,
           user: response.user,
         }),
       );
-      navigate(ROUTE_URL.DASHBOARD);
+      navigate(getDefaultRouteByRole(response.user.role));
     } catch (err) {
       setError(getErrorMessage(err, "Login failed"));
     } finally {
