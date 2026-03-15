@@ -13,21 +13,18 @@ const QuotationDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [quotation, setQuotation] = useState<QuotationModel | null>(null);
-  const [deliveryRequirements, setDeliveryRequirements] = useState<string | undefined>();
   const [history, setHistory] = useState<QuotationHistoryResponseData["events"]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   const loadData = async (quotationId: string) => {
-    const [detail, rawDetail, historyResponse] = await Promise.all([
+    const [detail, historyResponse] = await Promise.all([
       quotationService.getDetail(quotationId),
-      quotationService.getRawDetail(quotationId),
       quotationService.getHistory(quotationId),
     ]);
 
     setQuotation(detail);
-    setDeliveryRequirements(rawDetail.deliveryRequirements);
     setHistory(historyResponse.events ?? []);
   };
 
@@ -74,7 +71,7 @@ const QuotationDetailPage = () => {
       { key: "productName", header: "Product Name" },
       { key: "quantity", header: "Quantity" },
       { key: "unitPrice", header: "Unit Price", render: (row) => toCurrency(row.unitPrice) },
-      { key: "amount", header: "Amount", render: (row) => toCurrency(row.amount) },
+      { key: "amount", header: "Amount", render: (row) => toCurrency(row.amount ?? row.totalPrice) },
     ],
     [],
   );
@@ -93,7 +90,7 @@ const QuotationDetailPage = () => {
             <CustomButton
               label="Create Contract"
               onClick={() => navigate(ROUTE_URL.CONTRACT_CREATE.replace(":quotationId", quotation?.id ?? ""))}
-              disabled={!quotation}
+              disabled={!quotation || !quotation.actions?.accountantCanCreateContract}
             />
             <CustomButton
               label="Back"
@@ -116,13 +113,16 @@ const QuotationDetailPage = () => {
                 <span className="font-semibold">Status:</span> {quotation.status}
               </p>
               <p>
+                <span className="font-semibold">Customer:</span> {quotation.customerName || quotation.customerId || "-"}
+              </p>
+              <p>
                 <span className="font-semibold">Total:</span> {toCurrency(quotation.totalAmount)}
               </p>
               <p>
                 <span className="font-semibold">Valid Until:</span> {quotation.validUntil || "-"}
               </p>
               <p className="sm:col-span-2">
-                <span className="font-semibold">Delivery Requirements:</span> {deliveryRequirements || "-"}
+                <span className="font-semibold">Delivery Requirements:</span> {quotation.deliveryRequirements || "-"}
               </p>
             </div>
 

@@ -9,15 +9,21 @@ import type {
   QuotationHistoryResponseData,
   QuotationListQuery,
   QuotationModel,
+  QuotationSaveResponseData,
   QuotationPreviewResponseData,
   QuotationRequest,
   QuotationSubmitResponseData,
 } from "../../models/quotation/quotation.model";
 
+const toQuotationItems = (items: QuotationDetailResponseData["items"]): QuotationModel["items"] =>
+  items.map((item) => ({
+    ...item,
+    amount: item.amount ?? item.totalPrice,
+  }));
+
 const toQuotationModelFromSummary = (item: CustomerQuotationListResponseData["items"][number]): QuotationModel => ({
   id: item.id,
   quotationNumber: item.quotationNumber,
-  customerId: "",
   items: [],
   totalAmount: item.totalAmount,
   status: item.status,
@@ -28,13 +34,18 @@ const toQuotationModelFromSummary = (item: CustomerQuotationListResponseData["it
 const toQuotationModelFromDetail = (detail: QuotationDetailResponseData): QuotationModel => ({
   id: detail.quotation.id,
   quotationNumber: detail.quotation.quotationNumber,
-  customerId: detail.quotation.customerId,
-  projectId: detail.quotation.projectId,
-  items: detail.items,
+  customerId: detail.customer?.id,
+  customerName: detail.customer?.companyName,
+  projectId: detail.project?.id,
+  projectName: detail.project?.name,
+  items: toQuotationItems(detail.items),
   totalAmount: detail.quotation.totalAmount,
   status: detail.quotation.status,
   validUntil: detail.quotation.validUntil,
   createdAt: detail.quotation.createdAt,
+  deliveryRequirements: detail.deliveryRequirements,
+  promotionCode: detail.pricing?.promotionCode,
+  actions: detail.actions,
 });
 
 const toQuotationModelFromSubmit = (payload: QuotationSubmitResponseData): QuotationModel => ({
@@ -47,6 +58,23 @@ const toQuotationModelFromSubmit = (payload: QuotationSubmitResponseData): Quota
   status: payload.quotation.status,
   validUntil: payload.quotation.validUntil,
   createdAt: payload.quotation.createdAt,
+});
+
+const toQuotationModelFromSave = (payload: QuotationSaveResponseData): QuotationModel => ({
+  id: payload.quotation.id,
+  quotationNumber: payload.quotation.quotationNumber,
+  customerId: payload.quotation.customerId,
+  projectId: payload.quotation.projectId,
+  items: payload.items.map((item) => ({
+    ...item,
+    amount: item.amount ?? item.totalPrice,
+  })),
+  totalAmount: payload.quotation.totalAmount,
+  status: payload.quotation.status,
+  validUntil: payload.quotation.validUntil,
+  createdAt: payload.quotation.createdAt,
+  deliveryRequirements: payload.metadata?.deliveryRequirements,
+  promotionCode: payload.metadata?.promotionCode,
 });
 
 export const quotationService = {
@@ -82,8 +110,8 @@ export const quotationService = {
   },
 
   async saveDraft(request: QuotationRequest): Promise<QuotationModel> {
-    const response = await api.post<QuotationSubmitResponseData>(API.QUOTATIONS.DRAFT, request);
-    return toQuotationModelFromSubmit(response.data);
+    const response = await api.post<QuotationSaveResponseData>(API.QUOTATIONS.DRAFT, request);
+    return toQuotationModelFromSave(response.data);
   },
 
   async submit(idOrRequest: string | QuotationRequest): Promise<void | QuotationModel> {
@@ -112,8 +140,8 @@ export const quotationService = {
   },
 
   async update(id: string, request: QuotationRequest): Promise<QuotationModel> {
-    const response = await api.put<QuotationSubmitResponseData>(withId(API.QUOTATIONS.UPDATE, id), request);
-    return toQuotationModelFromSubmit(response.data);
+    const response = await api.put<QuotationSaveResponseData>(withId(API.QUOTATIONS.UPDATE, id), request);
+    return toQuotationModelFromSave(response.data);
   },
 
   async getHistory(id: string): Promise<QuotationHistoryResponseData> {

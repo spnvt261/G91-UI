@@ -89,15 +89,10 @@ const QuotationCreatePage = () => {
 
   const buildItemsPayload = (): QuotationItemModel[] =>
     quotationItems.map((item) => {
-      const product = productsById.get(item.productId);
-      const amount = item.quantity * item.unitPrice;
       return {
         productId: item.productId,
-        productCode: product?.productCode,
-        productName: product?.productName,
         quantity: item.quantity,
         unitPrice: item.unitPrice || undefined,
-        amount: amount > 0 ? amount : undefined,
       };
     });
 

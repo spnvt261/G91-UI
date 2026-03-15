@@ -8,20 +8,31 @@ export interface QuotationItemModel {
   productName?: string;
   quantity: number;
   unitPrice?: number;
+  totalPrice?: number;
   amount?: number;
+}
+
+export interface QuotationActionModel {
+  customerCanEdit: boolean;
+  accountantCanCreateContract: boolean;
 }
 
 export interface QuotationModel {
   id: string;
   quotationNumber?: string;
-  customerId: string;
+  customerId?: string;
+  customerName?: string;
   projectId?: string;
+  projectName?: string;
   items: QuotationItemModel[];
   quantity?: number;
   totalAmount: number;
   status: QuotationStatus;
   validUntil?: string;
   createdAt?: string;
+  deliveryRequirements?: string;
+  promotionCode?: string;
+  actions?: QuotationActionModel;
 }
 
 export interface QuotationListQuery {
@@ -125,6 +136,7 @@ export interface CustomerQuotationSummaryResponseData {
 export interface QuotationPreviewResponseData {
   project?: {
     id?: string;
+    projectCode?: string;
     name?: string;
   };
   items: QuotationItemModel[];
@@ -140,6 +152,10 @@ export interface QuotationPreviewResponseData {
   };
   deliveryRequirements?: string;
   validUntil?: string;
+  validation?: {
+    valid: boolean;
+    messages: string[];
+  };
 }
 
 export interface QuotationSubmitResponseData {
@@ -159,6 +175,35 @@ export interface QuotationDetailResponseData {
   quotation: {
     id: string;
     quotationNumber?: string;
+    status: QuotationStatus;
+    totalAmount: number;
+    validUntil?: string;
+    createdAt?: string;
+  };
+  customer?: {
+    id: string;
+    companyName?: string;
+  };
+  project?: {
+    id: string;
+    name?: string;
+    projectCode?: string;
+  };
+  items: QuotationItemModel[];
+  pricing?: {
+    subTotal?: number;
+    discountAmount?: number;
+    totalAmount?: number;
+    promotionCode?: string;
+  };
+  deliveryRequirements?: string;
+  actions?: QuotationActionModel;
+}
+
+export interface QuotationSaveResponseData {
+  quotation: {
+    id: string;
+    quotationNumber?: string;
     customerId: string;
     projectId?: string;
     totalAmount: number;
@@ -167,7 +212,10 @@ export interface QuotationDetailResponseData {
     createdAt?: string;
   };
   items: QuotationItemModel[];
-  deliveryRequirements?: string;
+  metadata?: {
+    deliveryRequirements?: string;
+    promotionCode?: string;
+  };
 }
 
 export interface QuotationHistoryResponseData {

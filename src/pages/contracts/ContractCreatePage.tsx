@@ -16,6 +16,7 @@ const ContractCreatePage = () => {
   const [quotationNumber, setQuotationNumber] = useState("");
   const [customerId, setCustomerId] = useState("");
   const [totalAmount, setTotalAmount] = useState(0);
+  const [canCreateFromQuotation, setCanCreateFromQuotation] = useState(false);
   const [paymentTerms, setPaymentTerms] = useState("Thanh toan trong 30 ngay");
   const [deliveryAddress, setDeliveryAddress] = useState("Ha Noi");
   const [loading, setLoading] = useState(false);
@@ -30,8 +31,9 @@ const ContractCreatePage = () => {
       try {
         const detail = await quotationService.getDetail(quotationId);
         setQuotationNumber(detail.quotationNumber || detail.id);
-        setCustomerId(detail.customerId);
+        setCustomerId(detail.customerName || detail.customerId || "");
         setTotalAmount(detail.totalAmount);
+        setCanCreateFromQuotation(Boolean(detail.actions?.accountantCanCreateContract));
       } catch {
         // Keep form editable even if prefill fails.
       }
@@ -40,7 +42,10 @@ const ContractCreatePage = () => {
     void loadQuotation();
   }, [quotationId]);
 
-  const canCreate = useMemo(() => Boolean(quotationId && paymentTerms.trim() && deliveryAddress.trim()), [deliveryAddress, paymentTerms, quotationId]);
+  const canCreate = useMemo(
+    () => Boolean(quotationId && canCreateFromQuotation && paymentTerms.trim() && deliveryAddress.trim()),
+    [canCreateFromQuotation, deliveryAddress, paymentTerms, quotationId],
+  );
 
   const handleCreate = async () => {
     if (!quotationId) {
@@ -81,6 +86,9 @@ const ContractCreatePage = () => {
           <CustomTextField title="Payment Terms" value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} />
           <CustomTextField title="Delivery Address" value={deliveryAddress} onChange={(event) => setDeliveryAddress(event.target.value)} />
         </div>
+        {!canCreateFromQuotation ? (
+          <p className="mt-3 text-sm text-amber-600">Quotation này chưa đủ điều kiện chuyển thành contract theo nghiệp vụ backend.</p>
+        ) : null}
         {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
         <div className="mt-4 flex gap-3">
           <CustomButton label={loading ? "Creating..." : "Create Contract"} onClick={handleCreate} disabled={loading || !canCreate} />

@@ -4,17 +4,11 @@ import AppLayout from "./components/layout/AppLayout";
 import { ROUTE_URL } from "./const/route_url.const";
 import NotFoundPage from "./pages/404/NotFound.Page";
 import TestPage from "./pages/404/test.page";
-import ContractApprovalDetailPage from "./pages/approvals/ContractApprovalDetailPage";
-import ContractApprovalListPage from "./pages/approvals/ContractApprovalListPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import ContractCreatePage from "./pages/contracts/ContractCreatePage";
-import ContractDetailPage from "./pages/contracts/ContractDetailPage";
-import ContractEditPage from "./pages/contracts/ContractEditPage";
-import ContractListPage from "./pages/contracts/ContractListPage";
-import ContractTrackingPage from "./pages/contracts/ContractTrackingPage";
 import CustomerCreatePage from "./pages/customers/CustomerCreatePage";
 import CustomerDetailPage from "./pages/customers/CustomerDetailPage";
 import CustomerEditPage from "./pages/customers/CustomerEditPage";
@@ -67,14 +61,13 @@ function App() {
           <Route path={ROUTE_URL.QUOTATION_CREATE} element={<QuotationCreatePage />} />
           <Route path={ROUTE_URL.QUOTATION_DETAIL} element={<QuotationDetailPage />} />
 
-          <Route path={ROUTE_URL.CONTRACT_LIST} element={<ContractListPage />} />
           <Route path={ROUTE_URL.CONTRACT_CREATE} element={<ContractCreatePage />} />
-          <Route path={ROUTE_URL.CONTRACT_DETAIL} element={<ContractDetailPage />} />
-          <Route path={ROUTE_URL.CONTRACT_EDIT} element={<ContractEditPage />} />
-          <Route path={ROUTE_URL.CONTRACT_TRACKING} element={<ContractTrackingPage />} />
-
-          <Route path={ROUTE_URL.CONTRACT_APPROVAL_LIST} element={<ContractApprovalListPage />} />
-          <Route path={ROUTE_URL.CONTRACT_APPROVAL_DETAIL} element={<ContractApprovalDetailPage />} />
+          <Route path={ROUTE_URL.CONTRACT_LIST} element={<Navigate to={ROUTE_URL.QUOTATION_LIST} replace />} />
+          <Route path={ROUTE_URL.CONTRACT_DETAIL} element={<Navigate to={ROUTE_URL.QUOTATION_LIST} replace />} />
+          <Route path={ROUTE_URL.CONTRACT_EDIT} element={<Navigate to={ROUTE_URL.QUOTATION_LIST} replace />} />
+          <Route path={ROUTE_URL.CONTRACT_TRACKING} element={<Navigate to={ROUTE_URL.QUOTATION_LIST} replace />} />
+          <Route path={ROUTE_URL.CONTRACT_APPROVAL_LIST} element={<Navigate to={ROUTE_URL.QUOTATION_LIST} replace />} />
+          <Route path={ROUTE_URL.CONTRACT_APPROVAL_DETAIL} element={<Navigate to={ROUTE_URL.QUOTATION_LIST} replace />} />
 
           <Route path={ROUTE_URL.CUSTOMER_LIST} element={<CustomerListPage />} />
           <Route path={ROUTE_URL.CUSTOMER_DETAIL} element={<CustomerDetailPage />} />

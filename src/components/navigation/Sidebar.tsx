@@ -35,8 +35,6 @@ const menuItems: SidebarNode[] = [
     children: [
       { id: "create-quotation", label: "Create Quotation", path: ROUTE_URL.QUOTATION_CREATE },
       { id: "manage-quotations", label: "Manage Quotations", path: ROUTE_URL.QUOTATION_LIST },
-      { id: "contracts", label: "Contracts", path: ROUTE_URL.CONTRACT_LIST },
-      { id: "approvals", label: "Contract Approvals", path: ROUTE_URL.CONTRACT_APPROVAL_LIST },
     ],
   },
   {
