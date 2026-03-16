@@ -44,7 +44,7 @@ export const API = {
 
   CUSTOMER: {
     QUOTATION_FORM_INIT: "/api/customer/quotation-form-init",
-    QUOTATIONS: "/api/quotations",
+    QUOTATIONS: "/api/customer/quotations",
     QUOTATION_SUMMARY: "/api/customer/quotations/summary",
 
     // Legacy customer management routes kept for compatibility with existing screens.
@@ -55,6 +55,7 @@ export const API = {
   },
 
   QUOTATIONS: {
+    LIST: "/api/quotations",
     PREVIEW: "/api/quotations/preview",
     CREATE: "/api/quotations",
     DRAFT: "/api/quotations/draft",
@@ -67,16 +68,24 @@ export const API = {
   },
 
   CONTRACTS: {
+    FORM_INIT: "/api/contracts/form-init",
+    PREVIEW: "/api/contracts/preview",
     FROM_QUOTATION: "/api/contracts/from-quotation/{id}",
 
     // Legacy contract routes kept for compatibility with existing screens.
     CREATE: "/api/contracts",
     UPDATE: "/api/contracts/{id}",
     LIST: "/api/contracts",
+    APPROVAL_REVIEW: "/api/contracts/{id}/approval-review",
     DETAIL: "/api/contracts/{id}",
+    CANCEL: "/api/contracts/{id}/cancel",
     APPROVE: "/api/contracts/{id}/approve",
     SUBMIT: "/api/contracts/{id}/submit",
     TRACK: "/api/contracts/{id}/tracking",
+    DOCUMENTS: "/api/contracts/{id}/documents",
+    DOCUMENTS_GENERATE: "/api/contracts/{id}/documents/generate",
+    DOCUMENT_EXPORT: "/api/contracts/{id}/documents/{documentId}/export",
+    DOCUMENT_EMAIL: "/api/contracts/{id}/documents/{documentId}/email",
     REJECT: "/api/contracts/{id}/reject",
     REQUEST_MODIFICATION: "/api/contracts/{id}/request-modification",
     APPROVALS_PENDING: "/api/contracts/approvals/pending",
@@ -149,7 +158,7 @@ export const API = {
     DETAIL: "/api/contracts/{id}",
     APPROVE: "/api/contracts/{id}/approve",
     SUBMIT: "/api/contracts/{id}/submit",
-    TRACK: "/api/contracts/{id}/track",
+    TRACK: "/api/contracts/{id}/tracking",
     REJECT: "/api/contracts/{id}/reject",
   },
 } as const;

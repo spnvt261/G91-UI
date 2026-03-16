@@ -86,13 +86,32 @@ export interface ContractApprovalRequest {
 export interface ContractTrackEvent {
   status: string;
   at: string;
+  title?: string;
   note?: string;
+  trackingNumber?: string;
 }
 
 export interface ContractTrackingResponse {
   contractId: string;
   currentStatus: ContractStatus;
   timeline: ContractTrackEvent[];
+}
+
+export interface ContractCreateRequest {
+  customerId: string;
+  quotationId?: string;
+  paymentTerms: string;
+  deliveryAddress: string;
+  deliveryTerms?: string;
+  note?: string;
+  expectedDeliveryDate?: string;
+  confidential?: boolean;
+  items?: Array<{
+    productId: string;
+    quantity: number;
+    unitPrice: number;
+    priceOverrideReason?: string;
+  }>;
 }
 
 export interface ContractListResponseData {
@@ -161,19 +180,35 @@ export interface ContractDetailResponseData {
 }
 
 export interface ContractUpdateRequest {
-  customerId: string;
-  quotationId?: string;
-  paymentTerms: string;
-  deliveryAddress: string;
-  deliveryTerms?: string;
-  note?: string;
-  expectedDeliveryDate?: string;
-  confidential?: boolean;
-  items?: Array<{
-    productId: string;
-    quantity: number;
-    unitPrice: number;
-    priceOverrideReason?: string;
-  }>;
+  customerId: ContractCreateRequest["customerId"];
+  quotationId?: ContractCreateRequest["quotationId"];
+  paymentTerms: ContractCreateRequest["paymentTerms"];
+  deliveryAddress: ContractCreateRequest["deliveryAddress"];
+  deliveryTerms?: ContractCreateRequest["deliveryTerms"];
+  note?: ContractCreateRequest["note"];
+  expectedDeliveryDate?: ContractCreateRequest["expectedDeliveryDate"];
+  confidential?: ContractCreateRequest["confidential"];
+  items?: ContractCreateRequest["items"];
   changeReason: string;
+}
+
+export interface ContractSubmitRequest {
+  scheduledSubmissionAt?: string;
+  submissionNote?: string;
+}
+
+export interface ContractCancelRequest {
+  cancellationReason: string;
+  cancellationNote?: string;
+}
+
+export interface ContractApprovalResponseData {
+  contractId: string;
+  contractNumber?: string;
+  approvalStatus?: string;
+  contractStatus?: string;
+  decision?: string;
+  decidedBy?: string;
+  decidedAt?: string;
+  comment?: string;
 }

@@ -1,12 +1,16 @@
 import api from "../../apiConfig/axiosConfig";
 import { API, withId } from "../../api/URL_const";
 import type {
+  ContractApprovalResponseData,
   ContractApprovalRequest,
+  ContractCancelRequest,
+  ContractCreateRequest,
   ContractDetailResponseData,
   ContractFromQuotationResponseData,
   ContractListQuery,
   ContractListResponseData,
   ContractModel,
+  ContractSubmitRequest,
   ContractTrackingResponse,
   ContractUpdateRequest,
   CreateContractFromQuotationRequest,
@@ -51,30 +55,22 @@ const toContractModelFromDetail = (payload: ContractDetailResponseData): Contrac
   expectedDeliveryDate: payload.contract.expectedDeliveryDate,
 });
 
-const toContractModelFromCreate = (payload: ContractFromQuotationResponseData): ContractModel => ({
-  id: payload.contract.id,
-  contractNumber: payload.contract.contractNumber,
-  quotationId: payload.contract.quotationId,
-  customerId: payload.contract.customerId,
-  items: [],
-  totalAmount: payload.contract.totalAmount,
-  paymentTerms: payload.contract.paymentTerms,
-  deliveryAddress: payload.contract.deliveryAddress,
-  status: payload.contract.status,
-  createdAt: payload.contract.createdAt,
-});
-
-const toUpdateRequest = (request: Omit<ContractModel, "id">): ContractUpdateRequest => ({
+const toCreateRequest = (request: Omit<ContractModel, "id">): ContractCreateRequest => ({
   customerId: request.customerId,
   quotationId: request.quotationId || undefined,
   paymentTerms: request.paymentTerms ?? "",
   deliveryAddress: request.deliveryAddress ?? "",
   deliveryTerms: request.deliveryTerms,
+  expectedDeliveryDate: request.expectedDeliveryDate,
   items: request.items?.map((item) => ({
     productId: item.productId,
     quantity: item.quantity,
     unitPrice: item.unitPrice,
   })),
+});
+
+const toUpdateRequest = (request: Omit<ContractModel, "id">): ContractUpdateRequest => ({
+  ...toCreateRequest(request),
   changeReason: "Updated from UI",
 });
 
@@ -88,12 +84,10 @@ export const contractService = {
   },
 
   // Backward-compatible wrapper used by existing pages.
-  async create(request: Omit<ContractModel, "id">): Promise<ContractModel> {
-    const response = await this.createFromQuotation(request.quotationId, {
-      paymentTerms: request.paymentTerms ?? "",
-      deliveryAddress: request.deliveryAddress ?? "",
-    });
-    return toContractModelFromCreate(response);
+  async create(request: Omit<ContractModel, "id"> | ContractCreateRequest): Promise<ContractModel> {
+    const payload = "status" in request ? toCreateRequest(request) : request;
+    const response = await api.post<ContractDetailResponseData>(API.CONTRACTS.CREATE, payload);
+    return toContractModelFromDetail(response.data);
   },
 
   async update(id: string, request: Omit<ContractModel, "id"> | ContractUpdateRequest): Promise<ContractModel> {
@@ -112,20 +106,29 @@ export const contractService = {
     return toContractModelFromDetail(response.data);
   },
 
-  async approve(id: string, request: ContractApprovalRequest): Promise<void> {
-    await api.post<void>(withId(API.CONTRACTS.APPROVE, id), request);
+  async approve(id: string, request: ContractApprovalRequest): Promise<ContractApprovalResponseData> {
+    const response = await api.post<ContractApprovalResponseData>(withId(API.CONTRACTS.APPROVE, id), request);
+    return response.data;
   },
 
-  async requestModification(id: string, request: ContractApprovalRequest): Promise<void> {
-    await api.post<void>(withId(API.CONTRACTS.REQUEST_MODIFICATION, id), request);
+  async requestModification(id: string, request: ContractApprovalRequest): Promise<ContractApprovalResponseData> {
+    const response = await api.post<ContractApprovalResponseData>(withId(API.CONTRACTS.REQUEST_MODIFICATION, id), request);
+    return response.data;
   },
 
-  async submit(id: string, request?: { scheduledSubmissionAt?: string; submissionNote?: string }): Promise<void> {
-    await api.post<void>(withId(API.CONTRACTS.SUBMIT, id), request ?? {});
+  async submit(id: string, request?: ContractSubmitRequest): Promise<ContractApprovalResponseData> {
+    const response = await api.post<ContractApprovalResponseData>(withId(API.CONTRACTS.SUBMIT, id), request ?? {});
+    return response.data;
   },
 
-  async reject(id: string, request: ContractApprovalRequest): Promise<void> {
-    await api.post<void>(withId(API.CONTRACTS.REJECT, id), request);
+  async reject(id: string, request: ContractApprovalRequest): Promise<ContractApprovalResponseData> {
+    const response = await api.post<ContractApprovalResponseData>(withId(API.CONTRACTS.REJECT, id), request);
+    return response.data;
+  },
+
+  async cancel(id: string, request: ContractCancelRequest): Promise<ContractApprovalResponseData> {
+    const response = await api.post<ContractApprovalResponseData>(withId(API.CONTRACTS.CANCEL, id), request);
+    return response.data;
   },
 
   async track(id: string): Promise<ContractTrackingResponse> {
@@ -133,9 +136,11 @@ export const contractService = {
       contractId: string;
       currentStatus: string;
       events: Array<{
+        title?: string;
         eventStatus?: string;
         eventType?: string;
         note?: string;
+        trackingNumber?: string;
         actualAt?: string;
         expectedAt?: string;
       }>;
@@ -147,7 +152,9 @@ export const contractService = {
       timeline: (response.data.events ?? []).map((event) => ({
         status: event.eventStatus ?? event.eventType ?? "UNKNOWN",
         at: event.actualAt ?? event.expectedAt ?? "",
+        title: event.title,
         note: event.note,
+        trackingNumber: event.trackingNumber,
       })),
     };
   },

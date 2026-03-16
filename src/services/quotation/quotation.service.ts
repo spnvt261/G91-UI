@@ -87,7 +87,7 @@ export const quotationService = {
   },
 
   async getCustomerList(params?: CustomerQuotationListQuery): Promise<CustomerQuotationListResponseData> {
-    const response = await api.get<unknown>(API.CUSTOMER.QUOTATIONS, { params });
+    const response = await api.get<unknown>(API.QUOTATIONS.LIST, { params });
     const data = response.data as Partial<CustomerQuotationListResponseData> | undefined;
 
     return {

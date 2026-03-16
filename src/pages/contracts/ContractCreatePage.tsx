@@ -109,17 +109,41 @@ const ContractCreatePage = () => {
       return;
     }
 
+    if (!quotation?.customerId) {
+      notify("Cannot create contract: missing customerId from quotation detail.", "error");
+      return;
+    }
+
     try {
       setLoading(true);
-      const created = await contractService.createFromQuotation(quotationId as string, {
+      const items = (quotation?.items ?? []).reduce<Array<{ productId: string; quantity: number; unitPrice: number }>>((acc, item) => {
+        const fallbackUnitPrice = item.unitPrice ?? (item.quantity ? (item.totalPrice ?? item.amount ?? 0) / item.quantity : undefined);
+
+        if (!item.productId || item.quantity <= 0 || typeof fallbackUnitPrice !== "number") {
+          return acc;
+        }
+
+        acc.push({
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPrice: fallbackUnitPrice,
+        });
+
+        return acc;
+      }, []);
+
+      const created = await contractService.create({
+        customerId: quotation.customerId,
+        quotationId: quotationId as string,
         paymentTerms: paymentTerms.trim(),
         deliveryAddress: deliveryAddress.trim(),
+        items,
       });
 
-      notify("Contract created successfully from quotation.", "success");
-      navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", created.contract.quotationId));
+      notify("Contract created successfully.", "success");
+      navigate(ROUTE_URL.CONTRACT_DETAIL.replace(":id", created.id));
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot create contract from quotation"), "error");
+      notify(getErrorMessage(err, "Cannot create contract"), "error");
     } finally {
       setLoading(false);
     }
