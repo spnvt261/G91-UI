@@ -1,11 +1,17 @@
-﻿export interface CustomerModel {
+export interface CustomerModel {
   id: string;
   fullName: string;
+  companyName?: string;
+  customerType?: string;
+  contactPerson?: string;
   email?: string;
   phone?: string;
   address?: string;
+  creditLimit?: number;
+  currentDebt?: number;
   status?: "ACTIVE" | "INACTIVE";
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CustomerListQuery {
@@ -15,5 +21,5 @@ export interface CustomerListQuery {
   status?: "ACTIVE" | "INACTIVE";
 }
 
-export type CustomerCreateRequest = Omit<CustomerModel, "id" | "createdAt">;
-export type CustomerUpdateRequest = Omit<CustomerModel, "id" | "createdAt">;
+export type CustomerCreateRequest = Omit<CustomerModel, "id" | "createdAt" | "updatedAt">;
+export type CustomerUpdateRequest = Omit<CustomerModel, "id" | "createdAt" | "updatedAt">;

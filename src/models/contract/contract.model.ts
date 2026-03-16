@@ -18,6 +18,7 @@ export interface ContractItemModel {
   quantity: number;
   unitPrice: number;
   amount?: number;
+  priceOverrideReason?: string;
 }
 
 export interface ContractModel {
@@ -31,6 +32,8 @@ export interface ContractModel {
   paymentTerms?: string;
   deliveryAddress?: string;
   deliveryTerms?: string;
+  note?: string;
+  confidential?: boolean;
   status: ContractStatus;
   approvalStatus?: string;
   createdAt?: string;
@@ -155,6 +158,8 @@ export interface ContractDetailResponseData {
     paymentTerms?: string;
     deliveryAddress?: string;
     deliveryTerms?: string;
+    note?: string;
+    confidential?: boolean;
     expectedDeliveryDate?: string;
     totalAmount: number;
     createdAt?: string;

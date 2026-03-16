@@ -27,6 +27,7 @@ const toContractModelFromListItem = (item: ContractListResponseData["items"][num
   totalAmount: item.totalAmount,
   status: item.status,
   approvalStatus: item.approvalStatus,
+  confidential: item.confidential,
   expectedDeliveryDate: item.expectedDeliveryDate,
   createdAt: item.createdAt,
 });
@@ -49,6 +50,8 @@ const toContractModelFromDetail = (payload: ContractDetailResponseData): Contrac
   paymentTerms: payload.contract.paymentTerms,
   deliveryAddress: payload.contract.deliveryAddress,
   deliveryTerms: payload.contract.deliveryTerms,
+  note: payload.contract.note,
+  confidential: payload.contract.confidential,
   status: payload.contract.status,
   approvalStatus: payload.contract.approvalStatus,
   createdAt: payload.contract.createdAt,
@@ -61,11 +64,14 @@ const toCreateRequest = (request: Omit<ContractModel, "id">): ContractCreateRequ
   paymentTerms: request.paymentTerms ?? "",
   deliveryAddress: request.deliveryAddress ?? "",
   deliveryTerms: request.deliveryTerms,
+  note: request.note,
   expectedDeliveryDate: request.expectedDeliveryDate,
+  confidential: request.confidential,
   items: request.items?.map((item) => ({
     productId: item.productId,
     quantity: item.quantity,
     unitPrice: item.unitPrice,
+    priceOverrideReason: item.priceOverrideReason,
   })),
 });
 

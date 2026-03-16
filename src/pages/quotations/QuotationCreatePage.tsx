@@ -19,7 +19,6 @@ import { getErrorMessage, toCurrency } from "../shared/page.utils";
 interface QuotationItemForm {
   productId: string;
   quantity: number;
-  unitPrice: number;
 }
 
 const MAX_ITEMS = 20;
@@ -33,7 +32,6 @@ const QuotationCreatePage = () => {
   const [selectedProductId, setSelectedProductId] = useState<string[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string[]>([]);
   const [draftQuantity, setDraftQuantity] = useState("1");
-  const [draftUnitPrice, setDraftUnitPrice] = useState("0");
   const [deliveryRequirement, setDeliveryRequirement] = useState("");
   const [selectedPromotionCode, setSelectedPromotionCode] = useState<string[]>([]);
   const [note, setNote] = useState("");
@@ -100,8 +98,11 @@ const QuotationCreatePage = () => {
   }, [projects]);
 
   const totalAmount = useMemo(() => {
-    return quotationItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-  }, [quotationItems]);
+    return quotationItems.reduce((sum, item) => {
+      const referenceUnitPrice = Number(productsById.get(item.productId)?.referenceUnitPrice ?? 0);
+      return sum + item.quantity * referenceUnitPrice;
+    }, 0);
+  }, [productsById, quotationItems]);
 
   useEffect(() => {
     setIsPreviewStale(true);
@@ -120,7 +121,6 @@ const QuotationCreatePage = () => {
       return {
         productId: item.productId,
         quantity: item.quantity,
-        unitPrice: item.unitPrice || undefined,
       };
     });
 
@@ -175,13 +175,10 @@ const QuotationCreatePage = () => {
       return;
     }
 
-    const fallbackPrice = Number(productsById.get(productId)?.referenceUnitPrice ?? 0);
-    const unitPriceInput = parseInputNumber(draftUnitPrice, fallbackPrice);
-    const unitPrice = Math.max(0, unitPriceInput);
     setQuotationItems((previous) => {
       const existingIndex = previous.findIndex((item) => item.productId === productId);
       if (existingIndex === -1) {
-        return [...previous, { productId, quantity, unitPrice }];
+        return [...previous, { productId, quantity }];
       }
 
       const next = [...previous];
@@ -189,33 +186,23 @@ const QuotationCreatePage = () => {
       next[existingIndex] = {
         ...existing,
         quantity: existing.quantity + quantity,
-        unitPrice,
       };
       return next;
     });
 
     setSelectedProductId([]);
     setDraftQuantity("1");
-    setDraftUnitPrice("0");
   };
 
-  const updateItem = (productId: string, field: "quantity" | "unitPrice", rawValue: string) => {
+  const updateItemQuantity = (productId: string, rawValue: string) => {
     setQuotationItems((previous) =>
       previous.map((item) => {
         if (item.productId !== productId) {
           return item;
         }
-
-        if (field === "quantity") {
-          return {
-            ...item,
-            quantity: Math.max(0.01, parseInputNumber(rawValue, 1)),
-          };
-        }
-
         return {
           ...item,
-          unitPrice: Math.max(0, parseInputNumber(rawValue, 0)),
+          quantity: Math.max(0.01, parseInputNumber(rawValue, 1)),
         };
       }),
     );
@@ -323,7 +310,7 @@ const QuotationCreatePage = () => {
       </FormSectionCard>
 
       <FormSectionCard title="Products">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <CustomSelect
             title="Product"
             options={productOptions}
@@ -335,7 +322,6 @@ const QuotationCreatePage = () => {
             search
           />
           <CustomTextField title="Quantity" type="number" value={draftQuantity} onChange={(event) => setDraftQuantity(event.target.value)} />
-          <CustomTextField title="Unit Price" type="number" value={draftUnitPrice} onChange={(event) => setDraftUnitPrice(event.target.value)} />
           <div className="flex items-end">
             <CustomButton label="+ Add Item" className="w-full" onClick={handleAddProduct} disabled={!selectedProductId[0]} />
           </div>
@@ -348,7 +334,7 @@ const QuotationCreatePage = () => {
                 <th className="px-3 py-2">Product</th>
                 <th className="px-3 py-2">Info</th>
                 <th className="px-3 py-2">Qty</th>
-                <th className="px-3 py-2">Unit Price</th>
+                <th className="px-3 py-2">Reference Price</th>
                 <th className="px-3 py-2">Amount</th>
                 <th className="px-3 py-2">Action</th>
               </tr>
@@ -363,7 +349,8 @@ const QuotationCreatePage = () => {
               ) : (
                 quotationItems.map((item) => {
                   const product = productsById.get(item.productId);
-                  const amount = item.quantity * item.unitPrice;
+                  const referenceUnitPrice = Number(product?.referenceUnitPrice ?? 0);
+                  const amount = item.quantity * referenceUnitPrice;
 
                   return (
                     <tr key={item.productId} className="border-t border-slate-200 align-top">
@@ -382,20 +369,12 @@ const QuotationCreatePage = () => {
                           type="number"
                           min={1}
                           value={String(item.quantity)}
-                          onChange={(event) => updateItem(item.productId, "quantity", event.target.value)}
+                          onChange={(event) => updateItemQuantity(item.productId, event.target.value)}
                           className="w-24 rounded border border-slate-300 px-2 py-1"
                         />
                       </td>
-                      <td className="px-3 py-3">
-                        <input
-                          type="number"
-                          min={0}
-                          value={String(item.unitPrice)}
-                          onChange={(event) => updateItem(item.productId, "unitPrice", event.target.value)}
-                          className="w-36 rounded border border-slate-300 px-2 py-1"
-                        />
-                      </td>
-                      <td className="px-3 py-3 font-medium">{toCurrency(amount)}</td>
+                      <td className="px-3 py-3">{referenceUnitPrice > 0 ? toCurrency(referenceUnitPrice) : "-"}</td>
+                      <td className="px-3 py-3 font-medium">{referenceUnitPrice > 0 ? toCurrency(amount) : "-"}</td>
                       <td className="px-3 py-3">
                         <CustomButton label="Remove" onClick={() => removeItem(item.productId)} className="bg-red-500 hover:bg-red-600" />
                       </td>
@@ -411,7 +390,7 @@ const QuotationCreatePage = () => {
           <span>
             Items: {quotationItems.length}/{MAX_ITEMS}
           </span>
-          <span>Estimated total: {toCurrency(totalAmount)}</span>
+          <span>Estimated total (reference): {toCurrency(totalAmount)}</span>
         </div>
       </FormSectionCard>
 
