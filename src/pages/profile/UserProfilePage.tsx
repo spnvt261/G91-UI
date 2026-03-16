@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import PageHeader from "../../components/layout/PageHeader";
 import { authService } from "../../services/auth/auth.service";
 import type { UserProfileModel } from "../../models/auth/auth.model";
 import { getErrorMessage } from "../shared/page.utils";
 import { useNotify } from "../../context/notifyContext";
+import type { AppDispatch } from "../../store";
+import { setUser } from "../../store/authSlice";
 
 const UserProfilePage = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const { notify } = useNotify();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<UserProfileModel | null>(null);
@@ -16,6 +20,7 @@ const UserProfilePage = () => {
         setLoading(true);
         const response = await authService.getProfile();
         setProfile(response);
+        dispatch(setUser(response));
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load profile"), "error");
       } finally {
@@ -24,7 +29,7 @@ const UserProfilePage = () => {
     };
 
     void loadProfile();
-  }, [notify]);
+  }, [dispatch, notify]);
 
   return (
     <div className="space-y-6">

@@ -1,4 +1,5 @@
 import "./App.css";
+import { useEffect } from "react";
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
 import { ROUTE_URL } from "./const/route_url.const";
@@ -33,15 +34,63 @@ import InventoryReportPage from "./pages/reports/InventoryReportPage";
 import SalesReportPage from "./pages/reports/SalesReportPage";
 import UserProfilePage from "./pages/profile/UserProfilePage";
 import { canAccessPathByRole, getDefaultRouteByRole } from "./const/authz.const";
-import { getStoredAccessToken, getStoredUserRole } from "./utils/authSession";
+import { clearAuthSession, getStoredAccessToken, getStoredUserRole, persistAuthSession } from "./utils/authSession";
+import { authService } from "./services/auth/auth.service";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "./store";
+import { loginSuccess, logout as logoutAction } from "./store/authSlice";
 
 const AppAuthenticatedLayout = () => {
   const location = useLocation();
+  const dispatch = useDispatch<AppDispatch>();
   const token = getStoredAccessToken();
   const role = getStoredUserRole();
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+
+  useEffect(() => {
+    if (!token || !role || currentUser) {
+      return;
+    }
+
+    let alive = true;
+
+    const hydrateUser = async () => {
+      try {
+        const profile = await authService.getProfile();
+        if (!alive) {
+          return;
+        }
+
+        dispatch(
+          loginSuccess({
+            accessToken: token,
+            user: profile,
+          }),
+        );
+        persistAuthSession(token, profile.role);
+      } catch {
+        if (!alive) {
+          return;
+        }
+
+        clearAuthSession();
+        dispatch(logoutAction());
+      }
+    };
+
+    void hydrateUser();
+
+    return () => {
+      alive = false;
+    };
+  }, [currentUser, dispatch, role, token]);
 
   if (!token || !role) {
     return <Navigate to="/" replace />;
+  }
+
+  if (!currentUser) {
+    return <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">Loading user...</div>;
   }
 
   if (!canAccessPathByRole(role, location.pathname)) {
