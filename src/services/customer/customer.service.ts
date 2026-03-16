@@ -6,6 +6,7 @@ import type {
   CustomerModel,
   CustomerUpdateRequest,
 } from "../../models/customer/customer.model";
+import { extractList } from "../service.utils";
 
 export const customerService = {
   async create(request: CustomerCreateRequest): Promise<CustomerModel> {
@@ -14,8 +15,8 @@ export const customerService = {
   },
 
   async getList(params?: CustomerListQuery): Promise<CustomerModel[]> {
-    const response = await api.get<CustomerModel[]>(API.CUSTOMER.LIST, { params });
-    return response.data;
+    const response = await api.get<unknown>(API.CUSTOMER.LIST, { params });
+    return extractList<CustomerModel>(response.data);
   },
 
   async getDetail(id: string): Promise<CustomerModel> {

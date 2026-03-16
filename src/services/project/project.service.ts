@@ -11,6 +11,7 @@ import type {
   ProjectUpdateRequest,
   UpdateProjectProgressRequest,
 } from "../../models/project/project.model";
+import { extractList } from "../service.utils";
 
 const toProjectModel = (payload: ProjectModel): ProjectModel => ({
   ...payload,
@@ -94,8 +95,8 @@ export const projectService = {
       pageSize: params?.pageSize ?? params?.size,
       projectName: params?.projectName ?? params?.keyword,
     };
-    const response = await api.get<ProjectListResponseData>(API.PROJECT.LIST, { params: normalizedParams });
-    return (response.data.items ?? []).map(toProjectModel);
+    const response = await api.get<unknown>(API.PROJECT.LIST, { params: normalizedParams });
+    return extractList<ProjectListResponseData["items"][number]>(response.data).map(toProjectModel);
   },
 
   async getDetail(id: string): Promise<ProjectModel> {

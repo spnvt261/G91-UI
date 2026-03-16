@@ -7,11 +7,12 @@ import type {
   InvoiceModel,
   PaymentRecordRequest,
 } from "../../models/payment/payment.model";
+import { extractList } from "../service.utils";
 
 export const paymentService = {
   async getInvoiceList(params?: InvoiceListQuery): Promise<InvoiceModel[]> {
-    const response = await api.get<InvoiceModel[]>(API.PAYMENT.INVOICE_LIST, { params });
-    return response.data;
+    const response = await api.get<unknown>(API.PAYMENT.INVOICE_LIST, { params });
+    return extractList<InvoiceModel>(response.data);
   },
 
   async getInvoiceDetail(id: string): Promise<InvoiceModel> {
@@ -24,7 +25,7 @@ export const paymentService = {
   },
 
   async getDebtStatus(params?: DebtListQuery): Promise<DebtModel[]> {
-    const response = await api.get<DebtModel[]>(API.PAYMENT.DEBT_STATUS, { params });
-    return response.data;
+    const response = await api.get<unknown>(API.PAYMENT.DEBT_STATUS, { params });
+    return extractList<DebtModel>(response.data);
   },
 };

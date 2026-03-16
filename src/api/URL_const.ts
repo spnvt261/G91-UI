@@ -44,7 +44,7 @@ export const API = {
 
   CUSTOMER: {
     QUOTATION_FORM_INIT: "/api/customer/quotation-form-init",
-    QUOTATIONS: "/api/customer/quotations",
+    QUOTATIONS: "/api/quotations",
     QUOTATION_SUMMARY: "/api/customer/quotations/summary",
 
     // Legacy customer management routes kept for compatibility with existing screens.

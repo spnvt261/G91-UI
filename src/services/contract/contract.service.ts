@@ -11,6 +11,7 @@ import type {
   ContractUpdateRequest,
   CreateContractFromQuotationRequest,
 } from "../../models/contract/contract.model";
+import { extractList } from "../service.utils";
 
 const toContractModelFromListItem = (item: ContractListResponseData["items"][number]): ContractModel => ({
   id: item.id,
@@ -102,8 +103,8 @@ export const contractService = {
   },
 
   async getList(params?: ContractListQuery): Promise<ContractModel[]> {
-    const response = await api.get<ContractListResponseData>(API.CONTRACTS.LIST, { params });
-    return (response.data.items ?? []).map(toContractModelFromListItem);
+    const response = await api.get<unknown>(API.CONTRACTS.LIST, { params });
+    return extractList<ContractListResponseData["items"][number]>(response.data).map(toContractModelFromListItem);
   },
 
   async getDetail(id: string): Promise<ContractModel> {

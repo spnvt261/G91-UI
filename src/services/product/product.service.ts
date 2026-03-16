@@ -9,11 +9,23 @@ import type {
   ProductStatusUpdateRequest,
   ProductUpdateRequest,
 } from "../../models/product/product.model";
+import { extractList } from "../service.utils";
 
 export const productService = {
   async getList(params?: ProductListQuery): Promise<ProductListResponse> {
-    const response = await api.get<ProductListResponse>(API.PRODUCTS.LIST, { params });
-    return response.data;
+    const response = await api.get<unknown>(API.PRODUCTS.LIST, { params });
+    const data = response.data as Partial<ProductListResponse> | undefined;
+
+    return {
+      items: extractList<ProductListResponse["items"][number]>(data),
+      pagination: data?.pagination ?? {
+        page: params?.page ?? 1,
+        pageSize: params?.pageSize ?? 0,
+        totalItems: 0,
+        totalPages: 0,
+      },
+      filters: data?.filters ?? {},
+    };
   },
 
   async getDetail(id: string): Promise<ProductModel> {

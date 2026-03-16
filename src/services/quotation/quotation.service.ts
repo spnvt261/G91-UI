@@ -16,6 +16,7 @@ import type {
   QuotationSubmitActionRequest,
   QuotationSubmitResponseData,
 } from "../../models/quotation/quotation.model";
+import { extractList } from "../service.utils";
 
 const toQuotationItems = (items: QuotationDetailResponseData["items"]): QuotationModel["items"] =>
   items.map((item) => ({
@@ -86,8 +87,19 @@ export const quotationService = {
   },
 
   async getCustomerList(params?: CustomerQuotationListQuery): Promise<CustomerQuotationListResponseData> {
-    const response = await api.get<CustomerQuotationListResponseData>(API.CUSTOMER.QUOTATIONS, { params });
-    return response.data;
+    const response = await api.get<unknown>(API.CUSTOMER.QUOTATIONS, { params });
+    const data = response.data as Partial<CustomerQuotationListResponseData> | undefined;
+
+    return {
+      items: extractList<CustomerQuotationListResponseData["items"][number]>(data),
+      pagination: data?.pagination ?? {
+        page: params?.page ?? 1,
+        pageSize: params?.pageSize ?? 0,
+        totalItems: 0,
+        totalPages: 0,
+      },
+      filters: data?.filters,
+    };
   },
 
   // Backward-compatible list for existing pages.
