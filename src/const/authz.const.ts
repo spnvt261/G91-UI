@@ -26,7 +26,6 @@ const ROLE_ALLOWED_PATHS: Record<UserRole, string[]> = {
     ROUTE_URL.PROFILE,
     "/products",
     "/quotations",
-    "/contracts",
     "/projects",
     "/payments",
   ],

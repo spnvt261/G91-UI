@@ -9,6 +9,7 @@ import type { QuotationHistoryResponseData, QuotationItemModel, QuotationModel }
 import { quotationService } from "../../services/quotation/quotation.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
 import { useNotify } from "../../context/notifyContext";
+import { getStoredUserRole } from "../../utils/authSession";
 
 const QuotationDetailPage = () => {
   const navigate = useNavigate();
@@ -18,6 +19,9 @@ const QuotationDetailPage = () => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { notify } = useNotify();
+  const role = getStoredUserRole();
+  const isCustomerRole = role === "CUSTOMER";
+  const canShowCreateContract = role === "ACCOUNTANT";
 
   const loadData = async (quotationId: string) => {
     const [detail, historyResponse] = await Promise.all([
@@ -81,16 +85,20 @@ const QuotationDetailPage = () => {
         title="Quotation Detail"
         rightActions={
           <div className="flex gap-2">
-            <CustomButton
-              label={submitting ? "Submitting..." : "Submit Draft"}
-              onClick={handleSubmitDraft}
-              disabled={!quotation || quotation.status !== "DRAFT" || submitting}
-            />
-            <CustomButton
-              label="Create Contract"
-              onClick={() => navigate(ROUTE_URL.CONTRACT_CREATE.replace(":quotationId", quotation?.id ?? ""))}
-              disabled={!quotation || !quotation.actions?.accountantCanCreateContract}
-            />
+            {!isCustomerRole ? (
+              <CustomButton
+                label={submitting ? "Submitting..." : "Submit Draft"}
+                onClick={handleSubmitDraft}
+                disabled={!quotation || quotation.status !== "DRAFT" || submitting}
+              />
+            ) : null}
+            {canShowCreateContract ? (
+              <CustomButton
+                label="Create Contract"
+                onClick={() => navigate(ROUTE_URL.CONTRACT_CREATE.replace(":quotationId", quotation?.id ?? ""))}
+                disabled={!quotation || !quotation.actions?.accountantCanCreateContract}
+              />
+            ) : null}
             <CustomButton
               label="Back"
               className="bg-slate-200 text-slate-700 hover:bg-slate-300"

@@ -5,18 +5,33 @@ const USER_ROLE_KEY = "user_role";
 
 export const getStoredAccessToken = (): string | null => localStorage.getItem(ACCESS_TOKEN_KEY);
 
-export const getStoredUserRole = (): UserRole | null => {
-  const role = localStorage.getItem(USER_ROLE_KEY);
+const normalizeUserRole = (role: string | null | undefined): UserRole | null => {
   if (!role) {
     return null;
   }
 
-  return role as UserRole;
+  const upperRole = role.trim().toUpperCase();
+
+  if (upperRole === "ACOUNTER") {
+    return "ACCOUNTANT";
+  }
+
+  if (upperRole === "GUEST" || upperRole === "CUSTOMER" || upperRole === "ACCOUNTANT" || upperRole === "WAREHOUSE" || upperRole === "OWNER") {
+    return upperRole;
+  }
+
+  return null;
+};
+
+export const getStoredUserRole = (): UserRole | null => {
+  const role = localStorage.getItem(USER_ROLE_KEY);
+  return normalizeUserRole(role);
 };
 
 export const persistAuthSession = (accessToken: string, role: UserRole) => {
   localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  localStorage.setItem(USER_ROLE_KEY, role);
+  const normalizedRole = normalizeUserRole(role) ?? role;
+  localStorage.setItem(USER_ROLE_KEY, normalizedRole);
 };
 
 export const clearAuthSession = () => {

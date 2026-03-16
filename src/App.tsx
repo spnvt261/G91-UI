@@ -10,6 +10,10 @@ import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import ContractCreatePage from "./pages/contracts/ContractCreatePage";
+import ContractDetailPage from "./pages/contracts/ContractDetailPage";
+import ContractEditPage from "./pages/contracts/ContractEditPage";
+import ContractListPage from "./pages/contracts/ContractListPage";
+import ContractTrackingPage from "./pages/contracts/ContractTrackingPage";
 import CustomerCreatePage from "./pages/customers/CustomerCreatePage";
 import CustomerDetailPage from "./pages/customers/CustomerDetailPage";
 import CustomerEditPage from "./pages/customers/CustomerEditPage";
@@ -130,10 +134,10 @@ function App() {
           <Route path={ROUTE_URL.QUOTATION_DETAIL} element={<QuotationDetailPage />} />
 
           <Route path={ROUTE_URL.CONTRACT_CREATE} element={<ContractCreatePage />} />
-          <Route path={ROUTE_URL.CONTRACT_LIST} element={<Navigate to={ROUTE_URL.QUOTATION_LIST} replace />} />
-          <Route path={ROUTE_URL.CONTRACT_DETAIL} element={<Navigate to={ROUTE_URL.QUOTATION_LIST} replace />} />
-          <Route path={ROUTE_URL.CONTRACT_EDIT} element={<Navigate to={ROUTE_URL.QUOTATION_LIST} replace />} />
-          <Route path={ROUTE_URL.CONTRACT_TRACKING} element={<Navigate to={ROUTE_URL.QUOTATION_LIST} replace />} />
+          <Route path={ROUTE_URL.CONTRACT_LIST} element={<ContractListPage />} />
+          <Route path={ROUTE_URL.CONTRACT_DETAIL} element={<ContractDetailPage />} />
+          <Route path={ROUTE_URL.CONTRACT_EDIT} element={<ContractEditPage />} />
+          <Route path={ROUTE_URL.CONTRACT_TRACKING} element={<ContractTrackingPage />} />
           <Route path={ROUTE_URL.CONTRACT_APPROVAL_LIST} element={<Navigate to={ROUTE_URL.QUOTATION_LIST} replace />} />
           <Route path={ROUTE_URL.CONTRACT_APPROVAL_DETAIL} element={<Navigate to={ROUTE_URL.QUOTATION_LIST} replace />} />
 
