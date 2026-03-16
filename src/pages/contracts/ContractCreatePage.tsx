@@ -4,22 +4,28 @@ import FormSectionCard from "../../components/forms/FormSectionCard";
 import CustomButton from "../../components/customButton/CustomButton";
 import CustomTextField from "../../components/customTextField/CustomTextField";
 import PageHeader from "../../components/layout/PageHeader";
+import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { contractService } from "../../services/contract/contract.service";
 import { quotationService } from "../../services/quotation/quotation.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
 import { useNotify } from "../../context/notifyContext";
+import type { QuotationItemModel, QuotationModel } from "../../models/quotation/quotation.model";
+
+const PAYMENT_TERMS_MAX_LENGTH = 255;
+const DELIVERY_ADDRESS_MAX_LENGTH = 500;
 
 const ContractCreatePage = () => {
   const navigate = useNavigate();
   const { quotationId } = useParams();
 
+  const [quotation, setQuotation] = useState<QuotationModel | null>(null);
   const [quotationNumber, setQuotationNumber] = useState("");
-  const [customerId, setCustomerId] = useState("");
+  const [customerLabel, setCustomerLabel] = useState("");
   const [totalAmount, setTotalAmount] = useState(0);
   const [canCreateFromQuotation, setCanCreateFromQuotation] = useState(false);
-  const [paymentTerms, setPaymentTerms] = useState("Thanh toan trong 30 ngay");
-  const [deliveryAddress, setDeliveryAddress] = useState("Ha Noi");
+  const [paymentTerms, setPaymentTerms] = useState("70% on delivery, 30% within 30 days");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const { notify } = useNotify();
 
@@ -31,36 +37,86 @@ const ContractCreatePage = () => {
 
       try {
         const detail = await quotationService.getDetail(quotationId);
+        setQuotation(detail);
         setQuotationNumber(detail.quotationNumber || detail.id);
-        setCustomerId(detail.customerName || detail.customerId || "");
+        setCustomerLabel(detail.customerName || detail.customerId || "");
         setTotalAmount(detail.totalAmount);
         setCanCreateFromQuotation(Boolean(detail.actions?.accountantCanCreateContract));
       } catch {
-        // Keep form editable even if prefill fails.
+        setQuotation(null);
       }
     };
 
     void loadQuotation();
   }, [quotationId]);
 
-  const canCreate = useMemo(
-    () => Boolean(quotationId && canCreateFromQuotation && paymentTerms.trim() && deliveryAddress.trim()),
-    [canCreateFromQuotation, deliveryAddress, paymentTerms, quotationId],
+  const canCreate = useMemo(() => {
+    if (!quotationId || !canCreateFromQuotation) {
+      return false;
+    }
+
+    const payment = paymentTerms.trim();
+    const delivery = deliveryAddress.trim();
+    if (!payment || !delivery) {
+      return false;
+    }
+
+    return payment.length <= PAYMENT_TERMS_MAX_LENGTH && delivery.length <= DELIVERY_ADDRESS_MAX_LENGTH;
+  }, [canCreateFromQuotation, deliveryAddress, paymentTerms, quotationId]);
+
+  const itemColumns = useMemo<DataTableColumn<QuotationItemModel>[]>(
+    () => [
+      { key: "productCode", header: "Product Code" },
+      { key: "productName", header: "Product Name" },
+      { key: "quantity", header: "Quantity" },
+      { key: "unitPrice", header: "Unit Price", render: (row) => toCurrency(row.unitPrice) },
+      { key: "totalPrice", header: "Amount", render: (row) => toCurrency(row.totalPrice ?? row.amount) },
+    ],
+    [],
   );
 
-  const handleCreate = async () => {
+  const getCreateBlockedReason = () => {
     if (!quotationId) {
-      notify("Quotation id is required.", "error");
+      return "Quotation id is required.";
+    }
+    if (!canCreateFromQuotation) {
+      return "This quotation is not eligible for contract creation (already converted or invalid status).";
+    }
+
+    const payment = paymentTerms.trim();
+    const delivery = deliveryAddress.trim();
+
+    if (!payment) {
+      return "Payment terms is required.";
+    }
+    if (!delivery) {
+      return "Delivery address is required.";
+    }
+    if (payment.length > PAYMENT_TERMS_MAX_LENGTH) {
+      return `Payment terms must be at most ${PAYMENT_TERMS_MAX_LENGTH} characters.`;
+    }
+    if (delivery.length > DELIVERY_ADDRESS_MAX_LENGTH) {
+      return `Delivery address must be at most ${DELIVERY_ADDRESS_MAX_LENGTH} characters.`;
+    }
+
+    return null;
+  };
+
+  const handleCreate = async () => {
+    const blockedReason = getCreateBlockedReason();
+    if (blockedReason) {
+      notify(blockedReason, "error");
       return;
     }
 
     try {
       setLoading(true);
-      const created = await contractService.createFromQuotation(quotationId, {
-        paymentTerms,
-        deliveryAddress,
+      const created = await contractService.createFromQuotation(quotationId as string, {
+        paymentTerms: paymentTerms.trim(),
+        deliveryAddress: deliveryAddress.trim(),
       });
 
+      notify("Contract created successfully from quotation.", "success");
       navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", created.contract.quotationId));
     } catch (err) {
       notify(getErrorMessage(err, "Cannot create contract from quotation"), "error");
@@ -72,13 +128,20 @@ const ContractCreatePage = () => {
   return (
     <div className="space-y-4">
       <PageHeader title="Create Contract From Quotation" />
+
       <FormSectionCard title="Quotation Info">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <CustomTextField title="Quotation ID" value={quotationId ?? ""} disabled />
           <CustomTextField title="Quotation Number" value={quotationNumber} disabled />
-          <CustomTextField title="Customer" value={customerId} disabled />
+          <CustomTextField title="Customer" value={customerLabel} disabled />
           <CustomTextField title="Total Amount" value={toCurrency(totalAmount)} disabled />
+          <CustomTextField title="Quotation Status" value={quotation?.status ?? ""} disabled />
+          <CustomTextField title="Valid Until" value={quotation?.validUntil ?? ""} disabled />
         </div>
+      </FormSectionCard>
+
+      <FormSectionCard title="Quotation Items">
+        <DataTable columns={itemColumns} data={quotation?.items ?? []} />
       </FormSectionCard>
 
       <FormSectionCard title="Contract Terms">
@@ -86,9 +149,14 @@ const ContractCreatePage = () => {
           <CustomTextField title="Payment Terms" value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} />
           <CustomTextField title="Delivery Address" value={deliveryAddress} onChange={(event) => setDeliveryAddress(event.target.value)} />
         </div>
+        <p className="mt-2 text-xs text-slate-500">
+          Payment terms max {PAYMENT_TERMS_MAX_LENGTH} chars. Delivery address max {DELIVERY_ADDRESS_MAX_LENGTH} chars.
+        </p>
+
         {!canCreateFromQuotation ? (
-          <p className="mt-3 text-sm text-amber-600">Quotation này chưa đủ điều kiện chuyển thành contract theo nghiệp vụ backend.</p>
+          <p className="mt-3 text-sm text-amber-600">This quotation does not meet backend policy for contract conversion.</p>
         ) : null}
+
         <div className="mt-4 flex gap-3">
           <CustomButton label={loading ? "Creating..." : "Create Contract"} onClick={handleCreate} disabled={loading || !canCreate} />
           <CustomButton

@@ -11,6 +11,7 @@ import type {
   QuotationFormInitProduct,
   QuotationFormInitProject,
   QuotationItemModel,
+  QuotationPreviewResponseData,
 } from "../../models/quotation/quotation.model";
 import { quotationService } from "../../services/quotation/quotation.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
@@ -21,6 +22,12 @@ interface QuotationItemForm {
   unitPrice: number;
 }
 
+const MAX_ITEMS = 20;
+const MIN_SUBMIT_AMOUNT = 10_000_000;
+const NOTE_MAX_LENGTH = 1000;
+const DELIVERY_MAX_LENGTH = 1000;
+const PROMOTION_MAX_LENGTH = 50;
+
 const QuotationCreatePage = () => {
   const navigate = useNavigate();
   const [selectedProductId, setSelectedProductId] = useState<string[]>([]);
@@ -28,14 +35,21 @@ const QuotationCreatePage = () => {
   const [draftQuantity, setDraftQuantity] = useState("1");
   const [draftUnitPrice, setDraftUnitPrice] = useState("0");
   const [deliveryRequirement, setDeliveryRequirement] = useState("");
-  const [promotionCode, setPromotionCode] = useState("");
+  const [selectedPromotionCode, setSelectedPromotionCode] = useState<string[]>([]);
   const [note, setNote] = useState("");
   const [productOptions, setProductOptions] = useState<{ label: string; value: string }[]>([]);
   const [projectOptions, setProjectOptions] = useState<{ label: string; value: string }[]>([]);
+  const [promotionOptions, setPromotionOptions] = useState<{ label: string; value: string }[]>([]);
   const [products, setProducts] = useState<QuotationFormInitProduct[]>([]);
   const [projects, setProjects] = useState<QuotationFormInitProject[]>([]);
+  const [customerInfo, setCustomerInfo] = useState<{
+    companyName?: string;
+    customerType?: string;
+    status?: string;
+  } | null>(null);
   const [quotationItems, setQuotationItems] = useState<QuotationItemForm[]>([]);
-  const [previewTotal, setPreviewTotal] = useState<number | null>(null);
+  const [previewResult, setPreviewResult] = useState<QuotationPreviewResponseData | null>(null);
+  const [isPreviewStale, setIsPreviewStale] = useState(true);
   const [loading, setLoading] = useState(false);
   const { notify } = useNotify();
 
@@ -43,6 +57,7 @@ const QuotationCreatePage = () => {
     const loadInit = async () => {
       try {
         const response = await quotationService.getFormInit({ page: 1, pageSize: 100 });
+        setCustomerInfo(response.customer ?? null);
         setProducts(response.products ?? []);
         setProjects(response.projects ?? []);
         setProductOptions(
@@ -57,11 +72,19 @@ const QuotationCreatePage = () => {
             value: item.id,
           })),
         );
+        setPromotionOptions(
+          (response.availablePromotions ?? []).map((item) => ({
+            label: `${item.code} - ${item.name}`,
+            value: item.code,
+          })),
+        );
       } catch {
+        setCustomerInfo(null);
         setProducts([]);
         setProjects([]);
         setProductOptions([]);
         setProjectOptions([]);
+        setPromotionOptions([]);
       }
     };
 
@@ -80,6 +103,10 @@ const QuotationCreatePage = () => {
     return quotationItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
   }, [quotationItems]);
 
+  useEffect(() => {
+    setIsPreviewStale(true);
+  }, [deliveryRequirement, note, quotationItems, selectedProjectId, selectedPromotionCode]);
+
   const parseInputNumber = (value: string, fallback = 0) => {
     const parsed = Number(value);
     if (Number.isNaN(parsed) || parsed < 0) {
@@ -97,12 +124,54 @@ const QuotationCreatePage = () => {
       };
     });
 
+  const getValidationError = (mode: "draft" | "preview" | "submit"): string | null => {
+    if (quotationItems.length === 0) {
+      return "Please add at least one item.";
+    }
+    if (quotationItems.length > MAX_ITEMS) {
+      return `Quotation can contain at most ${MAX_ITEMS} items.`;
+    }
+    if (deliveryRequirement.length > DELIVERY_MAX_LENGTH) {
+      return `Delivery requirements must be at most ${DELIVERY_MAX_LENGTH} characters.`;
+    }
+    if (note.length > NOTE_MAX_LENGTH) {
+      return `Note must be at most ${NOTE_MAX_LENGTH} characters.`;
+    }
+    const promotionCode = selectedPromotionCode[0] ?? "";
+    if (promotionCode.length > PROMOTION_MAX_LENGTH) {
+      return `Promotion code must be at most ${PROMOTION_MAX_LENGTH} characters.`;
+    }
+
+    const invalidItem = quotationItems.find((item) => item.quantity <= 0);
+    if (invalidItem) {
+      return "Quantity must be greater than 0 for all items.";
+    }
+
+    if (mode === "submit") {
+      if (!previewResult || isPreviewStale) {
+        return "Please preview quotation before submitting.";
+      }
+      if (!previewResult.validation?.valid) {
+        return "Please resolve preview validation issues before submitting.";
+      }
+      if ((previewResult.summary?.totalAmount ?? 0) < MIN_SUBMIT_AMOUNT) {
+        return `Total amount must be at least ${toCurrency(MIN_SUBMIT_AMOUNT)}.`;
+      }
+    }
+
+    return null;
+  };
+
   const handleAddProduct = () => {
     const productId = selectedProductId[0];
-    const quantity = Math.max(1, Math.floor(parseInputNumber(draftQuantity, 1)));
+    const quantity = Math.max(0.01, parseInputNumber(draftQuantity, 1));
 
     if (!productId) {
       notify("Please select a product.", "error");
+      return;
+    }
+    if (quotationItems.length >= MAX_ITEMS && !quotationItems.some((item) => item.productId === productId)) {
+      notify(`Only ${MAX_ITEMS} items are allowed in one quotation.`, "error");
       return;
     }
 
@@ -140,7 +209,7 @@ const QuotationCreatePage = () => {
         if (field === "quantity") {
           return {
             ...item,
-            quantity: Math.max(1, Math.floor(parseInputNumber(rawValue, 1))),
+            quantity: Math.max(0.01, parseInputNumber(rawValue, 1)),
           };
         }
 
@@ -158,8 +227,9 @@ const QuotationCreatePage = () => {
 
   const handlePreview = async () => {
     try {
-      if (quotationItems.length === 0) {
-        notify("Please add at least one item.", "error");
+      const error = getValidationError("preview");
+      if (error) {
+        notify(error, "error");
         return;
       }
 
@@ -167,11 +237,18 @@ const QuotationCreatePage = () => {
       const preview = await quotationService.preview({
         projectId: selectedProjectId[0] || undefined,
         deliveryRequirements: deliveryRequirement || undefined,
-        promotionCode: promotionCode || undefined,
+        promotionCode: selectedPromotionCode[0] || undefined,
         note: note || undefined,
         items: buildItemsPayload(),
       });
-      setPreviewTotal(preview.summary.totalAmount);
+      setPreviewResult(preview);
+      setIsPreviewStale(false);
+      if ((preview.summary?.totalAmount ?? 0) < MIN_SUBMIT_AMOUNT) {
+        notify(`Quotation total is below minimum ${toCurrency(MIN_SUBMIT_AMOUNT)}.`, "error");
+      }
+      if (preview.validation?.messages?.length) {
+        notify(preview.validation.messages.join("; "), "error");
+      }
     } catch (err) {
       notify(getErrorMessage(err, "Cannot preview quotation"), "error");
     } finally {
@@ -181,8 +258,9 @@ const QuotationCreatePage = () => {
 
   const handleSubmit = async () => {
     try {
-      if (quotationItems.length === 0) {
-        notify("Please add at least one item.", "error");
+      const error = getValidationError("submit");
+      if (error) {
+        notify(error, "error");
         return;
       }
 
@@ -190,7 +268,7 @@ const QuotationCreatePage = () => {
       const created = await quotationService.create({
         projectId: selectedProjectId[0] || undefined,
         deliveryRequirements: deliveryRequirement || undefined,
-        promotionCode: promotionCode || undefined,
+        promotionCode: selectedPromotionCode[0] || undefined,
         note: note || undefined,
         items: buildItemsPayload(),
       });
@@ -204,8 +282,9 @@ const QuotationCreatePage = () => {
 
   const handleSaveDraft = async () => {
     try {
-      if (quotationItems.length === 0) {
-        notify("Please add at least one item.", "error");
+      const error = getValidationError("draft");
+      if (error) {
+        notify(error, "error");
         return;
       }
 
@@ -213,7 +292,7 @@ const QuotationCreatePage = () => {
       const draft = await quotationService.saveDraft({
         projectId: selectedProjectId[0] || undefined,
         deliveryRequirements: deliveryRequirement || undefined,
-        promotionCode: promotionCode || undefined,
+        promotionCode: selectedPromotionCode[0] || undefined,
         note: note || undefined,
         items: buildItemsPayload(),
       });
@@ -228,6 +307,20 @@ const QuotationCreatePage = () => {
   return (
     <div className="space-y-4">
       <PageHeader title="Create Quotation" />
+
+      <FormSectionCard title="Customer Context">
+        <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
+          <p>
+            <span className="font-semibold">Company:</span> {customerInfo?.companyName || "-"}
+          </p>
+          <p>
+            <span className="font-semibold">Customer Type:</span> {customerInfo?.customerType || "-"}
+          </p>
+          <p>
+            <span className="font-semibold">Status:</span> {customerInfo?.status || "-"}
+          </p>
+        </div>
+      </FormSectionCard>
 
       <FormSectionCard title="Products">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
@@ -314,7 +407,12 @@ const QuotationCreatePage = () => {
           </table>
         </div>
 
-        <div className="mt-3 text-right text-sm font-semibold text-slate-700">Estimated total: {toCurrency(totalAmount)}</div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm font-semibold text-slate-700">
+          <span>
+            Items: {quotationItems.length}/{MAX_ITEMS}
+          </span>
+          <span>Estimated total: {toCurrency(totalAmount)}</span>
+        </div>
       </FormSectionCard>
 
       <FormSectionCard title="Quotation Info">
@@ -332,7 +430,16 @@ const QuotationCreatePage = () => {
           {selectedProjectId[0] ? (
             <p className="text-xs text-slate-500">Selected: {projectsById.get(selectedProjectId[0])?.name ?? selectedProjectId[0]}</p>
           ) : null}
-          <CustomTextField title="Promotion Code" value={promotionCode} onChange={(event) => setPromotionCode(event.target.value)} />
+          <CustomSelect
+            title="Promotion"
+            options={promotionOptions}
+            value={selectedPromotionCode}
+            onChange={setSelectedPromotionCode}
+            placeholder="Select promotion (optional)"
+            classNameSelect="w-full text-left"
+            classNameOptions="w-full left-0"
+            search
+          />
           <CustomTextField
             title="Delivery Requirements"
             type="textarea"
@@ -340,8 +447,29 @@ const QuotationCreatePage = () => {
             onChange={(event) => setDeliveryRequirement(event.target.value)}
             placeholder="Enter delivery requirements"
           />
+          <p className="text-xs text-slate-500">Max {DELIVERY_MAX_LENGTH} characters.</p>
           <CustomTextField title="Note" type="textarea" value={note} onChange={(event) => setNote(event.target.value)} />
-          {previewTotal !== null ? <p className="text-sm text-blue-700">Preview total: {toCurrency(previewTotal)}</p> : null}
+          <p className="text-xs text-slate-500">Max {NOTE_MAX_LENGTH} characters.</p>
+          {previewResult ? (
+            <div className="rounded border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+              <p>
+                <span className="font-semibold">Preview total:</span> {toCurrency(previewResult.summary.totalAmount)}
+              </p>
+              <p>
+                <span className="font-semibold">Sub-total:</span> {toCurrency(previewResult.summary.subTotal)}
+              </p>
+              <p>
+                <span className="font-semibold">Discount:</span> {toCurrency(previewResult.summary.discountAmount)}
+              </p>
+              <p>
+                <span className="font-semibold">Valid until:</span> {previewResult.validUntil || "-"}
+              </p>
+              {isPreviewStale ? <p className="font-semibold text-amber-700">Data changed after preview. Please preview again before submit.</p> : null}
+              {previewResult.validation?.messages?.length ? (
+                <p className="font-semibold text-red-700">{previewResult.validation.messages.join("; ")}</p>
+              ) : null}
+            </div>
+          ) : null}
           <div className="flex flex-wrap items-center gap-3">
             <CustomButton label={loading ? "Previewing..." : "Preview"} onClick={handlePreview} disabled={loading || quotationItems.length === 0} />
             <CustomButton label={loading ? "Saving..." : "Save Draft"} onClick={handleSaveDraft} disabled={loading || quotationItems.length === 0} />

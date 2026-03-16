@@ -1,17 +1,19 @@
 import api from "../../apiConfig/axiosConfig";
 import { API, withId } from "../../api/URL_const";
 import type {
+  CustomerQuotationListQuery,
   CustomerQuotationListResponseData,
   CustomerQuotationSummaryResponseData,
   QuotationDetailResponseData,
   QuotationFormInitQuery,
   QuotationFormInitResponseData,
   QuotationHistoryResponseData,
-  QuotationListQuery,
   QuotationModel,
+  QuotationPreviewByIdResponseData,
   QuotationSaveResponseData,
   QuotationPreviewResponseData,
   QuotationRequest,
+  QuotationSubmitActionRequest,
   QuotationSubmitResponseData,
 } from "../../models/quotation/quotation.model";
 
@@ -83,13 +85,13 @@ export const quotationService = {
     return response.data;
   },
 
-  async getCustomerList(params?: QuotationListQuery): Promise<CustomerQuotationListResponseData> {
+  async getCustomerList(params?: CustomerQuotationListQuery): Promise<CustomerQuotationListResponseData> {
     const response = await api.get<CustomerQuotationListResponseData>(API.CUSTOMER.QUOTATIONS, { params });
     return response.data;
   },
 
   // Backward-compatible list for existing pages.
-  async getList(params?: QuotationListQuery): Promise<QuotationModel[]> {
+  async getList(params?: CustomerQuotationListQuery): Promise<QuotationModel[]> {
     const list = await this.getCustomerList(params);
     return list.items.map(toQuotationModelFromSummary);
   },
@@ -114,7 +116,7 @@ export const quotationService = {
     return toQuotationModelFromSave(response.data);
   },
 
-  async submit(idOrRequest: string | QuotationRequest): Promise<void | QuotationModel> {
+  async submit(idOrRequest: string | QuotationSubmitActionRequest): Promise<void | QuotationModel> {
     if (typeof idOrRequest === "string") {
       await api.post<void>(withId(API.QUOTATIONS.SUBMIT_BY_ID, idOrRequest));
       return;
@@ -124,8 +126,8 @@ export const quotationService = {
     return toQuotationModelFromSubmit(response.data);
   },
 
-  async previewById(id: string): Promise<QuotationPreviewResponseData> {
-    const response = await api.get<QuotationPreviewResponseData>(withId(API.QUOTATIONS.PREVIEW_BY_ID, id));
+  async previewById(id: string): Promise<QuotationPreviewByIdResponseData> {
+    const response = await api.get<QuotationPreviewByIdResponseData>(withId(API.QUOTATIONS.PREVIEW_BY_ID, id));
     return response.data;
   },
 

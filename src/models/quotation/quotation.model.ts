@@ -35,7 +35,7 @@ export interface QuotationModel {
   actions?: QuotationActionModel;
 }
 
-export interface QuotationListQuery {
+export interface CustomerQuotationListQuery {
   page?: number;
   pageSize?: number;
   status?: QuotationStatus;
@@ -46,6 +46,8 @@ export interface QuotationListQuery {
   sortDir?: "asc" | "desc";
 }
 
+export type QuotationListQuery = CustomerQuotationListQuery;
+
 export interface QuotationRequest {
   customerId?: string;
   projectId?: string;
@@ -53,6 +55,15 @@ export interface QuotationRequest {
   note?: string;
   deliveryRequirements?: string;
   promotionCode?: string;
+}
+
+export interface QuotationSubmitActionRequest {
+  quotationId?: string;
+  projectId?: string;
+  deliveryRequirements?: string;
+  promotionCode?: string;
+  note?: string;
+  items?: QuotationItemModel[];
 }
 
 export interface QuotationFormInitQuery {
@@ -169,6 +180,10 @@ export interface QuotationSubmitResponseData {
     validUntil?: string;
     createdAt?: string;
   };
+  tracking?: {
+    submittedAt?: string;
+    nextAction?: string;
+  };
 }
 
 export interface QuotationDetailResponseData {
@@ -228,4 +243,30 @@ export interface QuotationHistoryResponseData {
     note?: string;
     createdAt: string;
   }>;
+}
+
+export interface QuotationPreviewByIdResponseData {
+  quotation: {
+    id: string;
+    quotationNumber?: string;
+    status: QuotationStatus;
+    createdAt?: string;
+    validUntil?: string;
+    project?: {
+      id?: string;
+      projectCode?: string;
+      name?: string;
+    };
+    deliveryRequirements?: string;
+    promotion?: {
+      code?: string;
+      name?: string;
+    };
+  };
+  items: QuotationItemModel[];
+  summary: {
+    subTotal: number;
+    discountAmount: number;
+    totalAmount: number;
+  };
 }

@@ -42,9 +42,13 @@ const ContractApprovalDetailPage = () => {
     try {
       setActionLoading(true);
       if (decision === "APPROVE" || decision === "REQUEST_MODIFICATION") {
-        await contractService.approve(id, { decision, note: `Owner decision: ${decision}` });
+        if (decision === "APPROVE") {
+          await contractService.approve(id, { comment: `Owner decision: ${decision}` });
+        } else {
+          await contractService.requestModification(id, { comment: "Requested modification by owner" });
+        }
       } else {
-        await contractService.reject(id, { decision, note: "Rejected by owner" });
+        await contractService.reject(id, { comment: "Rejected by owner" });
       }
       navigate(ROUTE_URL.CONTRACT_APPROVAL_LIST);
     } catch (err) {

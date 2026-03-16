@@ -76,8 +76,10 @@ export const API = {
     DETAIL: "/api/contracts/{id}",
     APPROVE: "/api/contracts/{id}/approve",
     SUBMIT: "/api/contracts/{id}/submit",
-    TRACK: "/api/contracts/{id}/track",
+    TRACK: "/api/contracts/{id}/tracking",
     REJECT: "/api/contracts/{id}/reject",
+    REQUEST_MODIFICATION: "/api/contracts/{id}/request-modification",
+    APPROVALS_PENDING: "/api/contracts/approvals/pending",
   },
 
   PROJECT: {
@@ -85,8 +87,9 @@ export const API = {
     LIST: "/api/projects",
     DETAIL: "/api/projects/{id}",
     UPDATE: "/api/projects/{id}",
-    ASSIGN_WAREHOUSE: "/api/projects/{id}/assign-warehouse",
-    UPDATE_PROGRESS: "/api/projects/{id}/progress",
+    ASSIGN_WAREHOUSE: "/api/projects/{id}/warehouses",
+    ADD_PROGRESS: "/api/projects/{id}/progress",
+    UPDATE_PROGRESS: "/api/projects/{id}/progress/{progressUpdateId}",
   },
 
   PAYMENT: {
@@ -152,3 +155,6 @@ export const API = {
 } as const;
 
 export const withId = (path: string, id: string): string => path.replace("{id}", id);
+
+export const withPathParams = (path: string, params: Record<string, string>): string =>
+  Object.entries(params).reduce((result, [key, value]) => result.replace(`{${key}}`, value), path);
