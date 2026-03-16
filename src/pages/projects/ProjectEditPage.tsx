@@ -7,6 +7,7 @@ import PageHeader from "../../components/layout/PageHeader";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { projectService } from "../../services/project/project.service";
 import { getErrorMessage } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const ProjectEditPage = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const ProjectEditPage = () => {
   const [status, setStatus] = useState("NEW");
   const [progress, setProgress] = useState("0");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
@@ -36,7 +37,7 @@ const ProjectEditPage = () => {
         setStatus(detail.status);
         setProgress(String(detail.progress ?? 0));
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load project for update"));
+        notify(getErrorMessage(err, "Cannot load project for update"), "error");
       } finally {
         setLoading(false);
       }
@@ -52,7 +53,6 @@ const ProjectEditPage = () => {
 
     try {
       setLoading(true);
-      setError("");
       await projectService.update(id, {
         code,
         name,
@@ -67,7 +67,7 @@ const ProjectEditPage = () => {
       });
       navigate(ROUTE_URL.PROJECT_DETAIL.replace(":id", id));
     } catch (err) {
-      setError(getErrorMessage(err, "Cannot update project"));
+      notify(getErrorMessage(err, "Cannot update project"), "error");
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,6 @@ const ProjectEditPage = () => {
           <CustomTextField title="Trạng Thái" value={status} onChange={(event) => setStatus(event.target.value)} />
           <CustomTextField title="Tiến Độ" type="number" value={progress} onChange={(event) => setProgress(event.target.value)} />
         </div>
-        {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
         <div className="mt-4 flex gap-3">
           <CustomButton label={loading ? "Đang lưu..." : "Lưu Cập Nhật"} onClick={handleUpdate} disabled={loading} />
           <CustomButton label="Quay Lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)} />

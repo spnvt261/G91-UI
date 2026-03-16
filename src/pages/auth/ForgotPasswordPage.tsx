@@ -8,22 +8,20 @@ import AuthPageShell from "../shared/AuthPageShell";
 import { authService } from "../../services/auth/auth.service";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { getErrorMessage } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const ForgotPasswordPage = () => {
+  const { notify } = useNotify();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
 
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      setError("");
-      setMessage("");
       await authService.forgotPassword({ email });
-      setMessage("Yêu cầu đặt lại mật khẩu đã được gửi");
+      notify("Yeu cau dat lai mat khau da duoc gui", "success");
     } catch (err) {
-      setError(getErrorMessage(err, "Cannot process forgot password"));
+      notify(getErrorMessage(err, "Cannot process forgot password"), "error");
     } finally {
       setLoading(false);
     }
@@ -31,15 +29,13 @@ const ForgotPasswordPage = () => {
 
   return (
     <AuthPageShell>
-      <AuthCard title="Quên Mật Khẩu" subtitle="Nhập email đăng ký để nhận hướng dẫn đặt lại mật khẩu" footer={<AuthFooter />}>
+      <AuthCard title="Quen Mat Khau" subtitle="Nhap email dang ky de nhan huong dan dat lai mat khau" footer={<AuthFooter />}>
         <div className="space-y-4">
           <CustomTextField title="Email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="email@company.com" />
-          {error ? <p className="text-sm text-red-500">{error}</p> : null}
-          {message ? <p className="text-sm text-green-600">{message}</p> : null}
-          <CustomButton label={loading ? "Đang gửi..." : "Gửi Yêu Cầu"} className="w-full" onClick={handleSubmit} disabled={loading} />
+          <CustomButton label={loading ? "Dang gui..." : "Gui Yeu Cau"} className="w-full" onClick={handleSubmit} disabled={loading} />
           <div className="text-center text-sm text-slate-600">
             <Link to={ROUTE_URL.LOGIN} className="text-blue-600 hover:underline">
-              Quay lại đăng nhập
+              Quay lai dang nhap
             </Link>
           </div>
         </div>

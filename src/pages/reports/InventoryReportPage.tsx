@@ -5,6 +5,7 @@ import DataTable from "../../components/table/DataTable";
 import TableFilterBar from "../../components/table/TableFilterBar";
 import { reportService } from "../../services/report/report.service";
 import { getErrorMessage } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const InventoryReportPage = () => {
   const [items, setItems] = useState<{
@@ -15,7 +16,7 @@ const InventoryReportPage = () => {
     reservedQty?: number;
   }[]>([]);
   const [keyword, setKeyword] = useState("");
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
@@ -23,7 +24,7 @@ const InventoryReportPage = () => {
         const report = await reportService.getInventoryReport();
         setItems(report);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load inventory report"));
+        notify(getErrorMessage(err, "Cannot load inventory report"), "error");
       }
     };
 
@@ -39,7 +40,6 @@ const InventoryReportPage = () => {
       <PageHeader title="Inventory Report" />
       <BaseCard>
         <TableFilterBar searchValue={keyword} onSearchChange={setKeyword} />
-        {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
         <DataTable
           columns={[
             { key: "productCode", header: "Mã SP" },

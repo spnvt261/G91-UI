@@ -4,10 +4,11 @@ import StatsGrid from "../../components/dashboard/StatsGrid";
 import ChartCard from "../../components/dashboard/ChartCard";
 import { reportService } from "../../services/report/report.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const DashboardPage = () => {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
   const [totalSales, setTotalSales] = useState(0);
   const [totalContracts, setTotalContracts] = useState(0);
   const [pendingQuotations, setPendingQuotations] = useState(0);
@@ -17,14 +18,13 @@ const DashboardPage = () => {
     const load = async () => {
       try {
         setLoading(true);
-        setError("");
         const dashboard = await reportService.getDashboard();
         setTotalSales(dashboard.summary.totalRevenue ?? 0);
         setTotalContracts(dashboard.summary.totalContracts ?? 0);
         setPendingQuotations(dashboard.openProjectCount ?? 0);
         setInventoryValue((dashboard.inventoryAlertCount ?? 0) * 1000000);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load dashboard report"));
+        notify(getErrorMessage(err, "Cannot load dashboard report"), "error");
       } finally {
         setLoading(false);
       }
@@ -46,7 +46,6 @@ const DashboardPage = () => {
   return (
     <div className="space-y-6">
       <PageHeader title="Dashboard" />
-      {error ? <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</p> : null}
       {loading ? <p className="text-sm text-slate-500">Loading dashboard...</p> : null}
       <StatsGrid items={stats} />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

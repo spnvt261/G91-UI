@@ -5,13 +5,14 @@ import DataTable from "../../components/table/DataTable";
 import TableFilterBar from "../../components/table/TableFilterBar";
 import { reportService } from "../../services/report/report.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const FinancialReportPage = () => {
   const [projectRows, setProjectRows] = useState<{ projectId: string; projectName: string; progress: number; status: string }[]>([]);
   const [summaryRevenue, setSummaryRevenue] = useState(0);
   const [summaryDebt, setSummaryDebt] = useState(0);
   const [keyword, setKeyword] = useState("");
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
@@ -21,7 +22,7 @@ const FinancialReportPage = () => {
         setSummaryRevenue(dashboard.summary.totalRevenue ?? 0);
         setSummaryDebt(dashboard.summary.totalDebt ?? 0);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load financial report"));
+        notify(getErrorMessage(err, "Cannot load financial report"), "error");
       }
     };
 
@@ -49,7 +50,6 @@ const FinancialReportPage = () => {
       </BaseCard>
       <BaseCard title="Project Financial Status">
         <TableFilterBar searchValue={keyword} onSearchChange={setKeyword} />
-        {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
         <DataTable
           columns={[
             { key: "projectId", header: "Project ID" },

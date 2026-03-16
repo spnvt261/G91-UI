@@ -7,6 +7,7 @@ import PageHeader from "../../components/layout/PageHeader";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { customerService } from "../../services/customer/customer.service";
 import { getErrorMessage } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const CustomerEditPage = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ const CustomerEditPage = () => {
   const [address, setAddress] = useState("");
   const [status, setStatus] = useState("ACTIVE");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
@@ -34,7 +35,7 @@ const CustomerEditPage = () => {
         setAddress(detail.address ?? "");
         setStatus(detail.status ?? "ACTIVE");
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load customer for editing"));
+        notify(getErrorMessage(err, "Cannot load customer for editing"), "error");
       } finally {
         setLoading(false);
       }
@@ -50,7 +51,6 @@ const CustomerEditPage = () => {
 
     try {
       setLoading(true);
-      setError("");
       await customerService.update(id, {
         fullName,
         email,
@@ -60,7 +60,7 @@ const CustomerEditPage = () => {
       });
       navigate(ROUTE_URL.CUSTOMER_DETAIL.replace(":id", id));
     } catch (err) {
-      setError(getErrorMessage(err, "Cannot update customer"));
+      notify(getErrorMessage(err, "Cannot update customer"), "error");
     } finally {
       setLoading(false);
     }
@@ -79,7 +79,6 @@ const CustomerEditPage = () => {
         <div className="mt-4">
           <CustomTextField title="Địa Chỉ" value={address} onChange={(event) => setAddress(event.target.value)} />
         </div>
-        {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
         <div className="mt-4 flex gap-3">
           <CustomButton label={loading ? "Đang lưu..." : "Lưu Thay Đổi"} onClick={handleUpdate} disabled={loading} />
           <CustomButton label="Quay Lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)} />

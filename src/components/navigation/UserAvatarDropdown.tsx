@@ -7,6 +7,7 @@ import { authService } from "../../services/auth/auth.service";
 import { logout as logoutAction } from "../../store/authSlice";
 import { clearAuthSession } from "../../utils/authSession";
 import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
 
 const UserAvatarDropdown = () => {
   const [open, setOpen] = useState(false);
@@ -14,6 +15,7 @@ const UserAvatarDropdown = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+  const { notify } = useNotify();
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const initials = currentUser?.fullName?.trim()?.charAt(0)?.toUpperCase() ?? "U";
@@ -27,8 +29,9 @@ const UserAvatarDropdown = () => {
     try {
       setLoggingOut(true);
       await authService.logout();
+      notify("Dang xuat thanh cong", "success");
     } catch {
-      // Always force local logout, even if API logout fails.
+      notify("Khong the goi API dang xuat, da dang xuat tai client", "warning");
     } finally {
       clearAuthSession();
       dispatch(logoutAction());

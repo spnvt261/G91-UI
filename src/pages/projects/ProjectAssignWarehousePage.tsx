@@ -7,13 +7,14 @@ import PageHeader from "../../components/layout/PageHeader";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { projectService } from "../../services/project/project.service";
 import { getErrorMessage } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const ProjectAssignWarehousePage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [warehouseId, setWarehouseId] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   const handleAssign = async () => {
     if (!id) {
@@ -22,11 +23,10 @@ const ProjectAssignWarehousePage = () => {
 
     try {
       setLoading(true);
-      setError("");
       await projectService.assignWarehouse(id, { warehouseId });
       navigate(ROUTE_URL.PROJECT_DETAIL.replace(":id", id));
     } catch (err) {
-      setError(getErrorMessage(err, "Cannot assign warehouse"));
+      notify(getErrorMessage(err, "Cannot assign warehouse"), "error");
     } finally {
       setLoading(false);
     }
@@ -37,7 +37,6 @@ const ProjectAssignWarehousePage = () => {
       <PageHeader title="Gán Kho Cho Dự Án" />
       <FormSectionCard title="Assign Warehouse">
         <CustomTextField title="Warehouse ID" value={warehouseId} onChange={(event) => setWarehouseId(event.target.value)} placeholder="WH-001" />
-        {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
         <div className="mt-4 flex gap-3">
           <CustomButton label={loading ? "Đang gán..." : "Xác Nhận"} onClick={handleAssign} disabled={loading || !warehouseId} />
           <CustomButton label="Quay Lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)} />

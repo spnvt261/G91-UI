@@ -8,13 +8,14 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import type { ContractItemModel, ContractModel } from "../../models/contract/contract.model";
 import { contractService } from "../../services/contract/contract.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const ContractDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [contract, setContract] = useState<ContractModel | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
@@ -24,11 +25,10 @@ const ContractDetailPage = () => {
 
       try {
         setLoading(true);
-        setError("");
         const detail = await contractService.getDetail(id);
         setContract(detail);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load contract detail"));
+        notify(getErrorMessage(err, "Cannot load contract detail"), "error");
       } finally {
         setLoading(false);
       }
@@ -69,7 +69,6 @@ const ContractDetailPage = () => {
       />
       <BaseCard>
         {loading ? <p className="mb-3 text-sm text-slate-500">Loading contract...</p> : null}
-        {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
         {contract ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">

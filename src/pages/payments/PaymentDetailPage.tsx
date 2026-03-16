@@ -7,12 +7,13 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import type { InvoiceModel } from "../../models/payment/payment.model";
 import { paymentService } from "../../services/payment/payment.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const PaymentDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [invoice, setInvoice] = useState<InvoiceModel | null>(null);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
@@ -24,7 +25,7 @@ const PaymentDetailPage = () => {
         const detail = await paymentService.getInvoiceDetail(id);
         setInvoice(detail);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load invoice detail"));
+        notify(getErrorMessage(err, "Cannot load invoice detail"), "error");
       }
     };
 
@@ -38,7 +39,6 @@ const PaymentDetailPage = () => {
         rightActions={<CustomButton label="Ghi Nhận Thanh Toán" onClick={() => navigate(ROUTE_URL.PAYMENT_RECORD.replace(":id", id ?? ""))} />}
       />
       <BaseCard>
-        {error ? <p className="text-sm text-red-500">{error}</p> : null}
         {invoice ? (
           <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
             <p><span className="font-semibold">Số Hóa Đơn:</span> {invoice.id}</p>

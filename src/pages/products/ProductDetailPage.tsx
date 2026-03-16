@@ -7,13 +7,14 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import type { ProductModel } from "../../models/product/product.model";
 import { productService } from "../../services/product/product.service";
 import { getErrorMessage } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const ProductDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [product, setProduct] = useState<ProductModel | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
@@ -23,11 +24,10 @@ const ProductDetailPage = () => {
 
       try {
         setLoading(true);
-        setError("");
         const detail = await productService.getDetail(id);
         setProduct(detail);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load product detail"));
+        notify(getErrorMessage(err, "Cannot load product detail"), "error");
       } finally {
         setLoading(false);
       }
@@ -44,7 +44,6 @@ const ProductDetailPage = () => {
       />
       <BaseCard>
         {loading ? <p className="text-sm text-slate-500">Loading detail...</p> : null}
-        {error ? <p className="text-sm text-red-500">{error}</p> : null}
         {product ? (
           <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
             <p><span className="font-semibold">Mã SP:</span> {product.productCode}</p>

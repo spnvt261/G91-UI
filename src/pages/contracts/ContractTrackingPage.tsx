@@ -7,6 +7,7 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import type { ContractTrackEvent } from "../../models/contract/contract.model";
 import { contractService } from "../../services/contract/contract.service";
 import { getErrorMessage } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const ContractTrackingPage = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const ContractTrackingPage = () => {
   const [timeline, setTimeline] = useState<ContractTrackEvent[]>([]);
   const [currentStatus, setCurrentStatus] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
@@ -24,12 +25,11 @@ const ContractTrackingPage = () => {
 
       try {
         setLoading(true);
-        setError("");
         const tracking = await contractService.track(id);
         setTimeline(tracking.timeline);
         setCurrentStatus(tracking.currentStatus);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load contract tracking"));
+        notify(getErrorMessage(err, "Cannot load contract tracking"), "error");
       } finally {
         setLoading(false);
       }
@@ -46,7 +46,6 @@ const ContractTrackingPage = () => {
       />
       <BaseCard>
         {loading ? <p className="mb-3 text-sm text-slate-500">Loading tracking timeline...</p> : null}
-        {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
         {currentStatus ? <p className="mb-4 font-semibold text-blue-900">Current status: {currentStatus}</p> : null}
         <ol className="space-y-3">
           {timeline.map((event, index) => (

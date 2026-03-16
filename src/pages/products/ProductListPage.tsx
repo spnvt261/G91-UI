@@ -10,6 +10,7 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import type { ProductModel } from "../../models/product/product.model";
 import { productService } from "../../services/product/product.service";
 import { getErrorMessage } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const PAGE_SIZE = 8;
 
@@ -21,13 +22,12 @@ const ProductListPage = () => {
   const [keyword, setKeyword] = useState("");
   const [typeFilter, setTypeFilter] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
-        setError("");
         const response = await productService.getList({
           page,
           pageSize: PAGE_SIZE,
@@ -37,7 +37,7 @@ const ProductListPage = () => {
         setItems(response.items);
         setTotal(response.pagination.totalItems);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load products"));
+        notify(getErrorMessage(err, "Cannot load products"), "error");
       } finally {
         setLoading(false);
       }
@@ -85,7 +85,6 @@ const ProductListPage = () => {
             },
           ]}
         />
-        {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
         {loading ? <p className="mb-3 text-sm text-slate-500">Loading products...</p> : null}
         <DataTable
           columns={columns}

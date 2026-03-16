@@ -8,6 +8,7 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import { contractService } from "../../services/contract/contract.service";
 import { quotationService } from "../../services/quotation/quotation.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const ContractCreatePage = () => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const ContractCreatePage = () => {
   const [paymentTerms, setPaymentTerms] = useState("Thanh toan trong 30 ngay");
   const [deliveryAddress, setDeliveryAddress] = useState("Ha Noi");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const loadQuotation = async () => {
@@ -49,13 +50,12 @@ const ContractCreatePage = () => {
 
   const handleCreate = async () => {
     if (!quotationId) {
-      setError("Quotation id is required.");
+      notify("Quotation id is required.", "error");
       return;
     }
 
     try {
       setLoading(true);
-      setError("");
       const created = await contractService.createFromQuotation(quotationId, {
         paymentTerms,
         deliveryAddress,
@@ -63,7 +63,7 @@ const ContractCreatePage = () => {
 
       navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", created.contract.quotationId));
     } catch (err) {
-      setError(getErrorMessage(err, "Cannot create contract from quotation"));
+      notify(getErrorMessage(err, "Cannot create contract from quotation"), "error");
     } finally {
       setLoading(false);
     }
@@ -89,7 +89,6 @@ const ContractCreatePage = () => {
         {!canCreateFromQuotation ? (
           <p className="mt-3 text-sm text-amber-600">Quotation này chưa đủ điều kiện chuyển thành contract theo nghiệp vụ backend.</p>
         ) : null}
-        {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
         <div className="mt-4 flex gap-3">
           <CustomButton label={loading ? "Creating..." : "Create Contract"} onClick={handleCreate} disabled={loading || !canCreate} />
           <CustomButton

@@ -7,6 +7,7 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import type { ContractModel } from "../../models/contract/contract.model";
 import { contractService } from "../../services/contract/contract.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const ContractApprovalDetailPage = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const ContractApprovalDetailPage = () => {
 
   const [contract, setContract] = useState<ContractModel | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
@@ -26,7 +27,7 @@ const ContractApprovalDetailPage = () => {
         const detail = await contractService.getDetail(id);
         setContract(detail);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load contract approval detail"));
+        notify(getErrorMessage(err, "Cannot load contract approval detail"), "error");
       }
     };
 
@@ -40,7 +41,6 @@ const ContractApprovalDetailPage = () => {
 
     try {
       setActionLoading(true);
-      setError("");
       if (decision === "APPROVE" || decision === "REQUEST_MODIFICATION") {
         await contractService.approve(id, { decision, note: `Owner decision: ${decision}` });
       } else {
@@ -48,7 +48,7 @@ const ContractApprovalDetailPage = () => {
       }
       navigate(ROUTE_URL.CONTRACT_APPROVAL_LIST);
     } catch (err) {
-      setError(getErrorMessage(err, "Cannot submit contract decision"));
+      notify(getErrorMessage(err, "Cannot submit contract decision"), "error");
     } finally {
       setActionLoading(false);
     }
@@ -58,7 +58,6 @@ const ContractApprovalDetailPage = () => {
     <div className="space-y-4">
       <PageHeader title="Phê Duyệt Hợp Đồng" />
       <BaseCard>
-        {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
         {contract ? (
           <div className="space-y-4">
             <p><span className="font-semibold">Số Hợp Đồng:</span> {contract.id}</p>

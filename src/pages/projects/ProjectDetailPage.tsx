@@ -7,12 +7,13 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import type { ProjectModel } from "../../models/project/project.model";
 import { projectService } from "../../services/project/project.service";
 import { getErrorMessage } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const ProjectDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [project, setProject] = useState<ProjectModel | null>(null);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
@@ -24,7 +25,7 @@ const ProjectDetailPage = () => {
         const detail = await projectService.getDetail(id);
         setProject(detail);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load project detail"));
+        notify(getErrorMessage(err, "Cannot load project detail"), "error");
       }
     };
 
@@ -43,7 +44,6 @@ const ProjectDetailPage = () => {
         }
       />
       <BaseCard>
-        {error ? <p className="text-sm text-red-500">{error}</p> : null}
         {project ? (
           <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
             <p><span className="font-semibold">ID:</span> {project.id}</p>

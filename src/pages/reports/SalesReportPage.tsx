@@ -5,11 +5,12 @@ import DataTable from "../../components/table/DataTable";
 import TableFilterBar from "../../components/table/TableFilterBar";
 import { reportService } from "../../services/report/report.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const SalesReportPage = () => {
   const [items, setItems] = useState<{ period: string; revenue: number }[]>([]);
   const [keyword, setKeyword] = useState("");
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
@@ -17,7 +18,7 @@ const SalesReportPage = () => {
         const report = await reportService.getSalesReport();
         setItems(report);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load sales report"));
+        notify(getErrorMessage(err, "Cannot load sales report"), "error");
       }
     };
 
@@ -31,7 +32,6 @@ const SalesReportPage = () => {
       <PageHeader title="Sales Report" />
       <BaseCard>
         <TableFilterBar searchValue={keyword} onSearchChange={setKeyword} />
-        {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
         <DataTable
           columns={[
             { key: "period", header: "Ky Bao Cao" },

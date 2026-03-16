@@ -7,6 +7,7 @@ import PageHeader from "../../components/layout/PageHeader";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { contractService } from "../../services/contract/contract.service";
 import { getErrorMessage } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const ContractEditPage = () => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const ContractEditPage = () => {
   const [paymentTerms, setPaymentTerms] = useState("");
   const [status, setStatus] = useState("DRAFT");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
@@ -39,7 +40,7 @@ const ContractEditPage = () => {
         setPaymentTerms(detail.paymentTerms ?? "");
         setStatus(detail.status);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load contract for editing"));
+        notify(getErrorMessage(err, "Cannot load contract for editing"), "error");
       } finally {
         setLoading(false);
       }
@@ -55,7 +56,6 @@ const ContractEditPage = () => {
 
     try {
       setLoading(true);
-      setError("");
       await contractService.update(id, {
         quotationId,
         customerId,
@@ -72,7 +72,7 @@ const ContractEditPage = () => {
       });
       navigate(ROUTE_URL.CONTRACT_DETAIL.replace(":id", id));
     } catch (err) {
-      setError(getErrorMessage(err, "Cannot update contract"));
+      notify(getErrorMessage(err, "Cannot update contract"), "error");
     } finally {
       setLoading(false);
     }
@@ -93,7 +93,6 @@ const ContractEditPage = () => {
       </FormSectionCard>
       <FormSectionCard title="Điều Khoản Thanh Toán">
         <CustomTextField title="Payment Terms" value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} />
-        {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
         <div className="mt-4 flex gap-3">
           <CustomButton label={loading ? "Đang lưu..." : "Lưu Thay Đổi"} onClick={handleSave} disabled={loading} />
           <CustomButton label="Quay Lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CONTRACT_LIST)} />

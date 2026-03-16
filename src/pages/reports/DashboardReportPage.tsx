@@ -5,13 +5,14 @@ import StatsGrid from "../../components/dashboard/StatsGrid";
 import PageHeader from "../../components/layout/PageHeader";
 import { reportService } from "../../services/report/report.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const DashboardReportPage = () => {
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalContracts, setTotalContracts] = useState(0);
   const [totalOrders, setTotalOrders] = useState(0);
   const [totalDebt, setTotalDebt] = useState(0);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
@@ -22,7 +23,7 @@ const DashboardReportPage = () => {
         setTotalOrders(dashboard.summary.totalOrders ?? 0);
         setTotalDebt(dashboard.summary.totalDebt ?? 0);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load dashboard report"));
+        notify(getErrorMessage(err, "Cannot load dashboard report"), "error");
       }
     };
 
@@ -42,7 +43,6 @@ const DashboardReportPage = () => {
   return (
     <div className="space-y-4">
       <PageHeader title="Dashboard Report" />
-      {error ? <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-500">{error}</p> : null}
       <StatsGrid items={stats} />
       <BaseCard>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

@@ -6,6 +6,7 @@ import CustomSelect from "../../components/customSelect/CustomSelect";
 import CustomTextField from "../../components/customTextField/CustomTextField";
 import PageHeader from "../../components/layout/PageHeader";
 import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
 import type {
   QuotationFormInitProduct,
   QuotationFormInitProject,
@@ -36,7 +37,7 @@ const QuotationCreatePage = () => {
   const [quotationItems, setQuotationItems] = useState<QuotationItemForm[]>([]);
   const [previewTotal, setPreviewTotal] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const loadInit = async () => {
@@ -101,15 +102,13 @@ const QuotationCreatePage = () => {
     const quantity = Math.max(1, Math.floor(parseInputNumber(draftQuantity, 1)));
 
     if (!productId) {
-      setError("Please select a product.");
+      notify("Please select a product.", "error");
       return;
     }
 
     const fallbackPrice = Number(productsById.get(productId)?.referenceUnitPrice ?? 0);
     const unitPriceInput = parseInputNumber(draftUnitPrice, fallbackPrice);
     const unitPrice = Math.max(0, unitPriceInput);
-
-    setError("");
     setQuotationItems((previous) => {
       const existingIndex = previous.findIndex((item) => item.productId === productId);
       if (existingIndex === -1) {
@@ -160,12 +159,11 @@ const QuotationCreatePage = () => {
   const handlePreview = async () => {
     try {
       if (quotationItems.length === 0) {
-        setError("Please add at least one item.");
+        notify("Please add at least one item.", "error");
         return;
       }
 
       setLoading(true);
-      setError("");
       const preview = await quotationService.preview({
         projectId: selectedProjectId[0] || undefined,
         deliveryRequirements: deliveryRequirement || undefined,
@@ -175,7 +173,7 @@ const QuotationCreatePage = () => {
       });
       setPreviewTotal(preview.summary.totalAmount);
     } catch (err) {
-      setError(getErrorMessage(err, "Cannot preview quotation"));
+      notify(getErrorMessage(err, "Cannot preview quotation"), "error");
     } finally {
       setLoading(false);
     }
@@ -184,12 +182,11 @@ const QuotationCreatePage = () => {
   const handleSubmit = async () => {
     try {
       if (quotationItems.length === 0) {
-        setError("Please add at least one item.");
+        notify("Please add at least one item.", "error");
         return;
       }
 
       setLoading(true);
-      setError("");
       const created = await quotationService.create({
         projectId: selectedProjectId[0] || undefined,
         deliveryRequirements: deliveryRequirement || undefined,
@@ -199,7 +196,7 @@ const QuotationCreatePage = () => {
       });
       navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", created.id));
     } catch (err) {
-      setError(getErrorMessage(err, "Cannot submit quotation"));
+      notify(getErrorMessage(err, "Cannot submit quotation"), "error");
     } finally {
       setLoading(false);
     }
@@ -208,12 +205,11 @@ const QuotationCreatePage = () => {
   const handleSaveDraft = async () => {
     try {
       if (quotationItems.length === 0) {
-        setError("Please add at least one item.");
+        notify("Please add at least one item.", "error");
         return;
       }
 
       setLoading(true);
-      setError("");
       const draft = await quotationService.saveDraft({
         projectId: selectedProjectId[0] || undefined,
         deliveryRequirements: deliveryRequirement || undefined,
@@ -223,7 +219,7 @@ const QuotationCreatePage = () => {
       });
       navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", draft.id));
     } catch (err) {
-      setError(getErrorMessage(err, "Cannot save draft"));
+      notify(getErrorMessage(err, "Cannot save draft"), "error");
     } finally {
       setLoading(false);
     }
@@ -346,7 +342,6 @@ const QuotationCreatePage = () => {
           />
           <CustomTextField title="Note" type="textarea" value={note} onChange={(event) => setNote(event.target.value)} />
           {previewTotal !== null ? <p className="text-sm text-blue-700">Preview total: {toCurrency(previewTotal)}</p> : null}
-          {error ? <p className="text-sm text-red-500">{error}</p> : null}
           <div className="flex flex-wrap items-center gap-3">
             <CustomButton label={loading ? "Previewing..." : "Preview"} onClick={handlePreview} disabled={loading || quotationItems.length === 0} />
             <CustomButton label={loading ? "Saving..." : "Save Draft"} onClick={handleSaveDraft} disabled={loading || quotationItems.length === 0} />

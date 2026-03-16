@@ -13,20 +13,20 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import { getErrorMessage } from "../shared/page.utils";
 import { getDefaultRouteByRole } from "../../const/authz.const";
 import { persistAuthSession } from "../../utils/authSession";
+import { useNotify } from "../../context/notifyContext";
 
 const LoginPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const { notify } = useNotify();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      setError("");
       const response = await authService.login({ email, password });
       persistAuthSession(response.accessToken, response.user.role);
       dispatch(
@@ -35,9 +35,10 @@ const LoginPage = () => {
           user: response.user,
         }),
       );
+      notify("Dang nhap thanh cong", "success");
       navigate(getDefaultRouteByRole(response.user.role));
     } catch (err) {
-      setError(getErrorMessage(err, "Login failed"));
+      notify(getErrorMessage(err, "Login failed"), "error");
     } finally {
       setLoading(false);
     }
@@ -45,27 +46,26 @@ const LoginPage = () => {
 
   return (
     <AuthPageShell>
-      <AuthCard title="Đăng Nhập" subtitle="Chào mừng bạn quay lại! Đăng nhập để tiếp tục." footer={<AuthFooter />}>
+      <AuthCard title="Dang Nhap" subtitle="Chao mung ban quay lai. Dang nhap de tiep tuc." footer={<AuthFooter />}>
         <div className="space-y-4">
           <CustomTextField title="Email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" />
           <CustomTextField
-            title="Mật Khẩu"
+            title="Mat Khau"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             type="password"
-            placeholder="Nhập mật khẩu"
+            placeholder="Nhap mat khau"
           />
-          {error ? <p className="text-sm text-red-500">{error}</p> : null}
-          <CustomButton label={loading ? "Đang xử lý..." : "Đăng Nhập"} className="w-full" onClick={handleSubmit} disabled={loading} />
+          <CustomButton label={loading ? "Dang xu ly..." : "Dang Nhap"} className="w-full" onClick={handleSubmit} disabled={loading} />
           <div className="text-center text-sm text-slate-600">
             <Link to={ROUTE_URL.FORGOT_PASSWORD} className="text-blue-600 hover:underline">
-              Quên mật khẩu?
+              Quen mat khau?
             </Link>
           </div>
           <div className="text-center text-sm text-slate-600">
-            Chưa có tài khoản?{" "}
+            Chua co tai khoan?{" "}
             <Link to={ROUTE_URL.REGISTER} className="text-blue-600 hover:underline">
-              Đăng ký
+              Dang ky
             </Link>
           </div>
         </div>

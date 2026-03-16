@@ -7,12 +7,13 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import type { CustomerModel } from "../../models/customer/customer.model";
 import { customerService } from "../../services/customer/customer.service";
 import { getErrorMessage } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const CustomerDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [customer, setCustomer] = useState<CustomerModel | null>(null);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
@@ -24,7 +25,7 @@ const CustomerDetailPage = () => {
         const detail = await customerService.getDetail(id);
         setCustomer(detail);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load customer detail"));
+        notify(getErrorMessage(err, "Cannot load customer detail"), "error");
       }
     };
 
@@ -43,7 +44,6 @@ const CustomerDetailPage = () => {
         }
       />
       <BaseCard>
-        {error ? <p className="text-sm text-red-500">{error}</p> : null}
         {customer ? (
           <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
             <p><span className="font-semibold">ID:</span> {customer.id}</p>

@@ -10,6 +10,7 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import type { CustomerModel } from "../../models/customer/customer.model";
 import { customerService } from "../../services/customer/customer.service";
 import { getErrorMessage } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const PAGE_SIZE = 8;
 
@@ -20,17 +21,16 @@ const CustomerListPage = () => {
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
-        setError("");
         const result = await customerService.getList({ keyword, status: status[0] as "ACTIVE" | "INACTIVE" | undefined });
         setAllItems(result);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load customers"));
+        notify(getErrorMessage(err, "Cannot load customers"), "error");
       } finally {
         setLoading(false);
       }
@@ -79,7 +79,6 @@ const CustomerListPage = () => {
           ]}
         />
         {loading ? <p className="mb-3 text-sm text-slate-500">Loading customers...</p> : null}
-        {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
         <DataTable
           columns={columns}
           data={pagedItems}

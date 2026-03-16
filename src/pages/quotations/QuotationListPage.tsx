@@ -10,6 +10,7 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import type { QuotationModel } from "../../models/quotation/quotation.model";
 import { quotationService } from "../../services/quotation/quotation.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const PAGE_SIZE = 8;
 
@@ -20,14 +21,13 @@ const QuotationListPage = () => {
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState<string[]>([]);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
-        setError("");
         const response = await quotationService.getCustomerList({
           page,
           pageSize: PAGE_SIZE,
@@ -49,7 +49,7 @@ const QuotationListPage = () => {
         );
         setTotal(response.pagination.totalItems);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load quotations"));
+        notify(getErrorMessage(err, "Cannot load quotations"), "error");
       } finally {
         setLoading(false);
       }
@@ -110,7 +110,6 @@ const QuotationListPage = () => {
           ]}
         />
         {loading ? <p className="mb-3 text-sm text-slate-500">Loading quotations...</p> : null}
-        {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
         <DataTable
           columns={columns}
           data={items}

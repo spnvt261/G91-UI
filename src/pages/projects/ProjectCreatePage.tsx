@@ -7,6 +7,7 @@ import PageHeader from "../../components/layout/PageHeader";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { projectService } from "../../services/project/project.service";
 import { getErrorMessage } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const ProjectCreatePage = () => {
   const navigate = useNavigate();
@@ -17,12 +18,11 @@ const ProjectCreatePage = () => {
   const [status, setStatus] = useState("NEW");
   const [progress, setProgress] = useState("0");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   const handleCreate = async () => {
     try {
       setLoading(true);
-      setError("");
       const created = await projectService.create({
         code,
         name,
@@ -33,7 +33,7 @@ const ProjectCreatePage = () => {
       });
       navigate(ROUTE_URL.PROJECT_DETAIL.replace(":id", created.id));
     } catch (err) {
-      setError(getErrorMessage(err, "Cannot create project"));
+      notify(getErrorMessage(err, "Cannot create project"), "error");
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,6 @@ const ProjectCreatePage = () => {
           <CustomTextField title="Trạng Thái" value={status} onChange={(event) => setStatus(event.target.value)} />
           <CustomTextField title="Tiến Độ" type="number" value={progress} onChange={(event) => setProgress(event.target.value)} />
         </div>
-        {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
         <div className="mt-4 flex gap-3">
           <CustomButton label={loading ? "Đang tạo..." : "Lưu Dự Án"} onClick={handleCreate} disabled={loading} />
           <CustomButton label="Quay Lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)} />

@@ -10,6 +10,7 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import type { ContractModel } from "../../models/contract/contract.model";
 import { contractService } from "../../services/contract/contract.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const PAGE_SIZE = 8;
 
@@ -20,17 +21,16 @@ const ContractListPage = () => {
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
-        setError("");
         const result = await contractService.getList({ keyword, status: status[0] as ContractModel["status"] | undefined });
         setAllItems(result);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load contracts"));
+        notify(getErrorMessage(err, "Cannot load contracts"), "error");
       } finally {
         setLoading(false);
       }
@@ -84,7 +84,6 @@ const ContractListPage = () => {
           ]}
         />
         {loading ? <p className="mb-3 text-sm text-slate-500">Loading contracts...</p> : null}
-        {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
         <DataTable
           columns={columns}
           data={pagedItems}

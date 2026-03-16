@@ -10,6 +10,7 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import type { DebtModel, InvoiceModel } from "../../models/payment/payment.model";
 import { paymentService } from "../../services/payment/payment.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const PAGE_SIZE = 8;
 
@@ -21,13 +22,12 @@ const PaymentListPage = () => {
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
-        setError("");
         const [invoices, debts] = await Promise.all([
           paymentService.getInvoiceList({ keyword, status: status[0] as InvoiceModel["status"] | undefined }),
           paymentService.getDebtStatus({ keyword }),
@@ -35,7 +35,7 @@ const PaymentListPage = () => {
         setAllInvoices(invoices);
         setDebtItems(debts);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load payments"));
+        notify(getErrorMessage(err, "Cannot load payments"), "error");
       } finally {
         setLoading(false);
       }
@@ -86,7 +86,6 @@ const PaymentListPage = () => {
           ]}
         />
         {loading ? <p className="mb-3 text-sm text-slate-500">Loading invoices...</p> : null}
-        {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
         <DataTable
           columns={columns}
           data={pagedItems}

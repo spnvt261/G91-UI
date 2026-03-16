@@ -10,6 +10,7 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import type { ProjectModel } from "../../models/project/project.model";
 import { projectService } from "../../services/project/project.service";
 import { getErrorMessage } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const PAGE_SIZE = 8;
 
@@ -20,17 +21,16 @@ const ProjectListPage = () => {
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
-        setError("");
         const result = await projectService.getList({ keyword, status: status[0] as ProjectModel["status"] | undefined });
         setAllItems(result);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load projects"));
+        notify(getErrorMessage(err, "Cannot load projects"), "error");
       } finally {
         setLoading(false);
       }
@@ -82,7 +82,6 @@ const ProjectListPage = () => {
           ]}
         />
         {loading ? <p className="mb-3 text-sm text-slate-500">Loading projects...</p> : null}
-        {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
         <DataTable
           columns={columns}
           data={pagedItems}

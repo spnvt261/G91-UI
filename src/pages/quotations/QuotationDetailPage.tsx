@@ -8,6 +8,7 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import type { QuotationHistoryResponseData, QuotationItemModel, QuotationModel } from "../../models/quotation/quotation.model";
 import { quotationService } from "../../services/quotation/quotation.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
+import { useNotify } from "../../context/notifyContext";
 
 const QuotationDetailPage = () => {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ const QuotationDetailPage = () => {
   const [history, setHistory] = useState<QuotationHistoryResponseData["events"]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const { notify } = useNotify();
 
   const loadData = async (quotationId: string) => {
     const [detail, historyResponse] = await Promise.all([
@@ -36,10 +37,9 @@ const QuotationDetailPage = () => {
 
       try {
         setLoading(true);
-        setError("");
         await loadData(id);
       } catch (err) {
-        setError(getErrorMessage(err, "Cannot load quotation detail"));
+        notify(getErrorMessage(err, "Cannot load quotation detail"), "error");
       } finally {
         setLoading(false);
       }
@@ -55,11 +55,10 @@ const QuotationDetailPage = () => {
 
     try {
       setSubmitting(true);
-      setError("");
       await quotationService.submit(id);
       await loadData(id);
     } catch (err) {
-      setError(getErrorMessage(err, "Cannot submit draft quotation"));
+      notify(getErrorMessage(err, "Cannot submit draft quotation"), "error");
     } finally {
       setSubmitting(false);
     }
@@ -102,7 +101,6 @@ const QuotationDetailPage = () => {
       />
       <BaseCard>
         {loading ? <p className="mb-3 text-sm text-slate-500">Loading quotation...</p> : null}
-        {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
         {quotation ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
