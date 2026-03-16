@@ -77,6 +77,7 @@ const toCreateRequest = (request: Omit<ContractModel, "id">): ContractCreateRequ
 
 const toUpdateRequest = (request: Omit<ContractModel, "id">): ContractUpdateRequest => ({
   ...toCreateRequest(request),
+  quotationId: request.quotationId,
   changeReason: "Updated from UI",
 });
 

@@ -68,10 +68,16 @@ const ContractEditPage = () => {
       return;
     }
 
+    const normalizedQuotationId = quotationId.trim();
+    if (!normalizedQuotationId) {
+      notify("Quotation ID is required.", "error");
+      return;
+    }
+
     try {
       setLoading(true);
       const payload: ContractUpdateRequest = {
-        quotationId: quotationId || undefined,
+        quotationId: normalizedQuotationId,
         customerId,
         paymentTerms: paymentTerms.trim(),
         deliveryAddress: deliveryAddress.trim(),
