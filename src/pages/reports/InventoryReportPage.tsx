@@ -1,11 +1,14 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import BaseCard from "../../components/cards/BaseCard";
-import PageHeader from "../../components/layout/PageHeader";
+import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable from "../../components/table/DataTable";
 import TableFilterBar from "../../components/table/TableFilterBar";
+import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
 import { reportService } from "../../services/report/report.service";
 import { getErrorMessage } from "../shared/page.utils";
-import { useNotify } from "../../context/notifyContext";
 
 const InventoryReportPage = () => {
   const [items, setItems] = useState<{
@@ -29,28 +32,45 @@ const InventoryReportPage = () => {
     };
 
     void load();
-  }, []);
+  }, [notify]);
 
   const filtered = items.filter(
     (item) => item.productCode.toLowerCase().includes(keyword.toLowerCase()) || item.productName.toLowerCase().includes(keyword.toLowerCase()),
   );
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="Inventory Report" />
-      <BaseCard>
-        <TableFilterBar searchValue={keyword} onSearchChange={setKeyword} />
-        <DataTable
-          columns={[
-            { key: "productCode", header: "Mã SP" },
-            { key: "productName", header: "Tên Sản Phẩm" },
-            { key: "availableQty", header: "Tốn Khả Dùng" },
-            { key: "reservedQty", header: "Dã Giữu Cho" },
-          ]}
-          data={filtered}
+    <NoResizeScreenTemplate
+      bodyClassName="px-0 pb-0 pt-4"
+      header={
+        <ListScreenHeaderTemplate
+          title="Inventory Report"
+          className="rounded-none border-x-0 border-t-0 bg-gray-100"
+          breadcrumb={
+            <CustomBreadcrumb
+              breadcrumbs={[
+                { label: "Trang chủ" },
+                { label: "Báo cáo", url: ROUTE_URL.REPORT_DASHBOARD },
+                { label: "Tồn kho" },
+              ]}
+            />
+          }
         />
-      </BaseCard>
-    </div>
+      }
+      body={
+        <BaseCard>
+          <TableFilterBar searchValue={keyword} onSearchChange={setKeyword} />
+          <DataTable
+            columns={[
+              { key: "productCode", header: "Mã SP" },
+              { key: "productName", header: "Tên sản phẩm" },
+              { key: "availableQty", header: "Tồn khả dụng" },
+              { key: "reservedQty", header: "Đã giữ cho" },
+            ]}
+            data={filtered}
+          />
+        </BaseCard>
+      }
+    />
   );
 };
 

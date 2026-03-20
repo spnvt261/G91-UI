@@ -1,9 +1,11 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FormSectionCard from "../../components/forms/FormSectionCard";
 import CustomButton from "../../components/customButton/CustomButton";
 import CustomTextField from "../../components/customTextField/CustomTextField";
-import PageHeader from "../../components/layout/PageHeader";
+import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
+import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import { customerService } from "../../services/customer/customer.service";
@@ -48,27 +50,44 @@ const CustomerCreatePage = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="Tao Khach Hang" />
-      <FormSectionCard title="Thong Tin Khach Hang">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <CustomTextField title="Company Name" value={companyName} onChange={(event) => setCompanyName(event.target.value)} />
-          <CustomTextField title="Contact Person" value={contactPerson} onChange={(event) => setContactPerson(event.target.value)} />
-          <CustomTextField title="Customer Type" value={customerType} onChange={(event) => setCustomerType(event.target.value)} />
-          <CustomTextField title="Email" value={email} onChange={(event) => setEmail(event.target.value)} />
-          <CustomTextField title="Phone" value={phone} onChange={(event) => setPhone(event.target.value)} />
-          <CustomTextField title="Credit Limit" type="number" value={creditLimit} onChange={(event) => setCreditLimit(event.target.value)} />
-          <CustomTextField title="Status" value={status} onChange={(event) => setStatus(event.target.value)} disabled={isAccountant} />
-        </div>
-        <div className="mt-4">
-          <CustomTextField title="Address" value={address} onChange={(event) => setAddress(event.target.value)} />
-        </div>
-        <div className="mt-4 flex gap-3">
-          <CustomButton label={loading ? "Dang tao..." : "Luu Khach Hang"} onClick={handleCreate} disabled={loading} />
-          <CustomButton label="Quay Lai" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)} />
-        </div>
-      </FormSectionCard>
-    </div>
+    <NoResizeScreenTemplate
+      bodyClassName="px-0 pb-0 pt-4"
+      header={
+        <ListScreenHeaderTemplate
+          title="Tạo khách hàng"
+          className="rounded-none border-x-0 border-t-0 bg-gray-100"
+          breadcrumb={
+            <CustomBreadcrumb
+              breadcrumbs={[
+                { label: "Trang chủ" },
+                { label: "Khách hàng", url: ROUTE_URL.CUSTOMER_LIST },
+                { label: "Tạo mới" },
+              ]}
+            />
+          }
+        />
+      }
+      body={
+        <FormSectionCard title="Thông tin khách hàng">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <CustomTextField title="Company Name" value={companyName} onChange={(event) => setCompanyName(event.target.value)} />
+            <CustomTextField title="Contact Person" value={contactPerson} onChange={(event) => setContactPerson(event.target.value)} />
+            <CustomTextField title="Customer Type" value={customerType} onChange={(event) => setCustomerType(event.target.value)} />
+            <CustomTextField title="Email" value={email} onChange={(event) => setEmail(event.target.value)} />
+            <CustomTextField title="Phone" value={phone} onChange={(event) => setPhone(event.target.value)} />
+            <CustomTextField title="Credit Limit" type="number" value={creditLimit} onChange={(event) => setCreditLimit(event.target.value)} />
+            <CustomTextField title="Status" value={status} onChange={(event) => setStatus(event.target.value)} disabled={isAccountant} />
+          </div>
+          <div className="mt-4">
+            <CustomTextField title="Address" value={address} onChange={(event) => setAddress(event.target.value)} />
+          </div>
+          <div className="mt-4 flex gap-3">
+            <CustomButton label={loading ? "Đang tạo..." : "Lưu khách hàng"} onClick={handleCreate} disabled={loading} />
+            <CustomButton label="Quay lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)} />
+          </div>
+        </FormSectionCard>
+      }
+    />
   );
 };
 

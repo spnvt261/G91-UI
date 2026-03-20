@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import BaseCard from "../../components/cards/BaseCard";
 import CustomButton from "../../components/customButton/CustomButton";
-import PageHeader from "../../components/layout/PageHeader";
+import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
+import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
 import type { ContractTrackEvent } from "../../models/contract/contract.model";
 import { contractService } from "../../services/contract/contract.service";
 import { getErrorMessage } from "../shared/page.utils";
-import { useNotify } from "../../context/notifyContext";
 
 const ContractTrackingPage = () => {
   const navigate = useNavigate();
@@ -36,28 +38,49 @@ const ContractTrackingPage = () => {
     };
 
     void load();
-  }, [id]);
+  }, [id, notify]);
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title="Theo Dõi Hợp Đồng"
-        rightActions={<CustomButton label="Quay Lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CONTRACT_LIST)} />}
-      />
-      <BaseCard>
-        {loading ? <p className="mb-3 text-sm text-slate-500">Loading tracking timeline...</p> : null}
-        {currentStatus ? <p className="mb-4 font-semibold text-blue-900">Current status: {currentStatus}</p> : null}
-        <ol className="space-y-3">
-          {timeline.map((event, index) => (
-            <li key={`${event.status}-${event.at}-${index}`} className="rounded-lg border border-slate-200 bg-white p-3">
-              <p className="font-semibold text-slate-800">{event.status}</p>
-              <p className="text-sm text-slate-500">{event.at}</p>
-              {event.note ? <p className="mt-1 text-sm text-slate-600">{event.note}</p> : null}
-            </li>
-          ))}
-        </ol>
-      </BaseCard>
-    </div>
+    <NoResizeScreenTemplate
+      bodyClassName="px-0 pb-0 pt-4"
+      header={
+        <ListScreenHeaderTemplate
+          title="Theo dõi hợp đồng"
+          className="rounded-none border-x-0 border-t-0 bg-gray-100"
+          actions={
+            <CustomButton
+              label="Quay lại"
+              className="bg-slate-200 text-slate-700 hover:bg-slate-300"
+              onClick={() => navigate(ROUTE_URL.CONTRACT_LIST)}
+            />
+          }
+          breadcrumb={
+            <CustomBreadcrumb
+              breadcrumbs={[
+                { label: "Trang chủ" },
+                { label: "Hợp đồng", url: ROUTE_URL.CONTRACT_LIST },
+                { label: "Theo dõi" },
+              ]}
+            />
+          }
+        />
+      }
+      body={
+        <BaseCard>
+          {loading ? <p className="mb-3 text-sm text-slate-500">Đang tải tiến trình hợp đồng...</p> : null}
+          {currentStatus ? <p className="mb-4 font-semibold text-blue-900">Trạng thái hiện tại: {currentStatus}</p> : null}
+          <ol className="space-y-3">
+            {timeline.map((event, index) => (
+              <li key={`${event.status}-${event.at}-${index}`} className="rounded-lg border border-slate-200 bg-white p-3">
+                <p className="font-semibold text-slate-800">{event.status}</p>
+                <p className="text-sm text-slate-500">{event.at}</p>
+                {event.note ? <p className="mt-1 text-sm text-slate-600">{event.note}</p> : null}
+              </li>
+            ))}
+          </ol>
+        </BaseCard>
+      }
+    />
   );
 };
 

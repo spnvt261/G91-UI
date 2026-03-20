@@ -1,16 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BaseCard from "../../components/cards/BaseCard";
 import CustomButton from "../../components/customButton/CustomButton";
-import PageHeader from "../../components/layout/PageHeader";
+import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
 import Pagination from "../../components/table/Pagination";
 import TableFilterBar from "../../components/table/TableFilterBar";
+import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
 import type { CustomerModel } from "../../models/customer/customer.model";
 import { customerService } from "../../services/customer/customer.service";
 import { getErrorMessage } from "../shared/page.utils";
-import { useNotify } from "../../context/notifyContext";
 
 const PAGE_SIZE = 8;
 
@@ -37,58 +39,72 @@ const CustomerListPage = () => {
     };
 
     void load();
-  }, [keyword, status]);
+  }, [keyword, notify, status]);
 
   const pagedItems = useMemo(() => allItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [allItems, page]);
 
   const columns = useMemo<DataTableColumn<CustomerModel>[]>(
     () => [
       { key: "id", header: "ID", className: "font-semibold text-blue-900" },
-      { key: "fullName", header: "Tên Khách Hàng" },
+      { key: "fullName", header: "Tên khách hàng" },
       { key: "email", header: "Email" },
-      { key: "phone", header: "Số Điện Thoại" },
-      { key: "status", header: "Trạng Thái" },
+      { key: "phone", header: "Số điện thoại" },
+      { key: "status", header: "Trạng thái" },
     ],
     [],
   );
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="Quản Lý Khách Hàng" rightActions={<CustomButton label="Tạo Khách Hàng" onClick={() => navigate(ROUTE_URL.CUSTOMER_CREATE)} />} />
-      <BaseCard>
-        <TableFilterBar
-          searchValue={keyword}
-          onSearchChange={(value) => {
-            setKeyword(value);
-            setPage(1);
-          }}
-          filters={[
-            {
-              key: "status",
-              placeholder: "Trạng Thái",
-              options: [
-                { label: "Active", value: "ACTIVE" },
-                { label: "Inactive", value: "INACTIVE" },
-              ],
-              value: status,
-              onChange: (values) => {
-                setStatus(values);
-                setPage(1);
+    <NoResizeScreenTemplate
+      bodyClassName="px-0 pb-0 pt-4"
+      header={
+        <ListScreenHeaderTemplate
+          title="Quản lý khách hàng"
+          className="rounded-none border-x-0 border-t-0 bg-gray-100"
+          actions={<CustomButton label="Tạo khách hàng" onClick={() => navigate(ROUTE_URL.CUSTOMER_CREATE)} />}
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Khách hàng" }]} />}
+        />
+      }
+      body={
+        <BaseCard>
+          <TableFilterBar
+            searchValue={keyword}
+            onSearchChange={(value) => {
+              setKeyword(value);
+              setPage(1);
+            }}
+            filters={[
+              {
+                key: "status",
+                placeholder: "Trạng thái",
+                options: [
+                  { label: "Active", value: "ACTIVE" },
+                  { label: "Inactive", value: "INACTIVE" },
+                ],
+                value: status,
+                onChange: (values) => {
+                  setStatus(values);
+                  setPage(1);
+                },
               },
-            },
-          ]}
-        />
-        {loading ? <p className="mb-3 text-sm text-slate-500">Loading customers...</p> : null}
-        <DataTable
-          columns={columns}
-          data={pagedItems}
-          actions={(row) => (
-            <CustomButton label="Xem" className="px-2 py-1 text-sm" onClick={() => navigate(ROUTE_URL.CUSTOMER_DETAIL.replace(":id", row.id))} />
-          )}
-        />
-        <Pagination page={page} pageSize={PAGE_SIZE} total={allItems.length} onChange={setPage} />
-      </BaseCard>
-    </div>
+            ]}
+          />
+          {loading ? <p className="mb-3 text-sm text-slate-500">Đang tải danh sách khách hàng...</p> : null}
+          <DataTable
+            columns={columns}
+            data={pagedItems}
+            actions={(row) => (
+              <CustomButton
+                label="Xem"
+                className="px-2 py-1 text-sm"
+                onClick={() => navigate(ROUTE_URL.CUSTOMER_DETAIL.replace(":id", row.id))}
+              />
+            )}
+          />
+          <Pagination page={page} pageSize={PAGE_SIZE} total={allItems.length} onChange={setPage} />
+        </BaseCard>
+      }
+    />
   );
 };
 

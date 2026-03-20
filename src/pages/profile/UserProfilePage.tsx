@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import PageHeader from "../../components/layout/PageHeader";
-import { authService } from "../../services/auth/auth.service";
-import type { UserProfileModel } from "../../models/auth/auth.model";
-import { getErrorMessage } from "../shared/page.utils";
+import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
+import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { useNotify } from "../../context/notifyContext";
+import type { UserProfileModel } from "../../models/auth/auth.model";
+import { authService } from "../../services/auth/auth.service";
 import type { AppDispatch } from "../../store";
 import { setUser } from "../../store/authSlice";
+import { getErrorMessage } from "../shared/page.utils";
 
 const UserProfilePage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -32,40 +34,50 @@ const UserProfilePage = () => {
   }, [dispatch, notify]);
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="My Profile" />
+    <NoResizeScreenTemplate
+      bodyClassName="px-0 pb-0 pt-4"
+      header={
+        <ListScreenHeaderTemplate
+          title="My Profile"
+          className="rounded-none border-x-0 border-t-0 bg-gray-100"
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Hồ sơ cá nhân" }]} />}
+        />
+      }
+      body={
+        <div className="space-y-6">
+          {loading ? <p className="text-sm text-slate-500">Loading profile...</p> : null}
 
-      {loading ? <p className="text-sm text-slate-500">Loading profile...</p> : null}
-
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Full Name</p>
-            <p className="mt-1 text-base font-medium text-slate-900">{profile?.fullName || "-"}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Email</p>
-            <p className="mt-1 text-base font-medium text-slate-900">{profile?.email || "-"}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Role</p>
-            <p className="mt-1 text-base font-medium text-slate-900">{profile?.role || "-"}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Status</p>
-            <p className="mt-1 text-base font-medium text-slate-900">{profile?.status || "-"}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Phone</p>
-            <p className="mt-1 text-base font-medium text-slate-900">{profile?.phone || "-"}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Address</p>
-            <p className="mt-1 text-base font-medium text-slate-900">{profile?.address || "-"}</p>
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">Full Name</p>
+                <p className="mt-1 text-base font-medium text-slate-900">{profile?.fullName || "-"}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">Email</p>
+                <p className="mt-1 text-base font-medium text-slate-900">{profile?.email || "-"}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">Role</p>
+                <p className="mt-1 text-base font-medium text-slate-900">{profile?.role || "-"}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">Status</p>
+                <p className="mt-1 text-base font-medium text-slate-900">{profile?.status || "-"}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">Phone</p>
+                <p className="mt-1 text-base font-medium text-slate-900">{profile?.phone || "-"}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">Address</p>
+                <p className="mt-1 text-base font-medium text-slate-900">{profile?.address || "-"}</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      }
+    />
   );
 };
 

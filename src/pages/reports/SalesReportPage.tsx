@@ -1,11 +1,14 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import BaseCard from "../../components/cards/BaseCard";
-import PageHeader from "../../components/layout/PageHeader";
+import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable from "../../components/table/DataTable";
 import TableFilterBar from "../../components/table/TableFilterBar";
+import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
 import { reportService } from "../../services/report/report.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
-import { useNotify } from "../../context/notifyContext";
 
 const SalesReportPage = () => {
   const [items, setItems] = useState<{ period: string; revenue: number }[]>([]);
@@ -23,24 +26,41 @@ const SalesReportPage = () => {
     };
 
     void load();
-  }, []);
+  }, [notify]);
 
   const filtered = items.filter((item) => item.period.toLowerCase().includes(keyword.toLowerCase()));
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="Sales Report" />
-      <BaseCard>
-        <TableFilterBar searchValue={keyword} onSearchChange={setKeyword} />
-        <DataTable
-          columns={[
-            { key: "period", header: "Ky Bao Cao" },
-            { key: "revenue", header: "Doanh Thu", render: (row) => toCurrency((row as { revenue: number }).revenue) },
-          ]}
-          data={filtered}
+    <NoResizeScreenTemplate
+      bodyClassName="px-0 pb-0 pt-4"
+      header={
+        <ListScreenHeaderTemplate
+          title="Sales Report"
+          className="rounded-none border-x-0 border-t-0 bg-gray-100"
+          breadcrumb={
+            <CustomBreadcrumb
+              breadcrumbs={[
+                { label: "Trang chủ" },
+                { label: "Báo cáo", url: ROUTE_URL.REPORT_DASHBOARD },
+                { label: "Doanh số" },
+              ]}
+            />
+          }
         />
-      </BaseCard>
-    </div>
+      }
+      body={
+        <BaseCard>
+          <TableFilterBar searchValue={keyword} onSearchChange={setKeyword} />
+          <DataTable
+            columns={[
+              { key: "period", header: "Kỳ báo cáo" },
+              { key: "revenue", header: "Doanh thu", render: (row) => toCurrency((row as { revenue: number }).revenue) },
+            ]}
+            data={filtered}
+          />
+        </BaseCard>
+      }
+    />
   );
 };
 

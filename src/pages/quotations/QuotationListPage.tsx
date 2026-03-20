@@ -1,16 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BaseCard from "../../components/cards/BaseCard";
 import CustomButton from "../../components/customButton/CustomButton";
-import PageHeader from "../../components/layout/PageHeader";
+import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
 import Pagination from "../../components/table/Pagination";
 import TableFilterBar from "../../components/table/TableFilterBar";
+import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
 import type { QuotationModel } from "../../models/quotation/quotation.model";
 import { quotationService } from "../../services/quotation/quotation.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
-import { useNotify } from "../../context/notifyContext";
 
 const PAGE_SIZE = 8;
 
@@ -56,7 +58,7 @@ const QuotationListPage = () => {
     };
 
     void load();
-  }, [keyword, page, status]);
+  }, [keyword, notify, page, status]);
 
   const columns = useMemo<DataTableColumn<QuotationModel>[]>(
     () => [
@@ -79,51 +81,58 @@ const QuotationListPage = () => {
   );
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title="Quotation Management"
-        rightActions={<CustomButton label="Create Quotation" onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)} />}
-      />
-      <BaseCard>
-        <TableFilterBar
-          searchValue={keyword}
-          onSearchChange={(value) => {
-            setKeyword(value);
-            setPage(1);
-          }}
-          filters={[
-            {
-              key: "status",
-              placeholder: "Status",
-              options: [
-                { label: "Draft", value: "DRAFT" },
-                { label: "Pending", value: "PENDING" },
-                { label: "Converted", value: "CONVERTED" },
-                { label: "Rejected", value: "REJECTED" },
-              ],
-              value: status,
-              onChange: (values) => {
-                setStatus(values);
-                setPage(1);
+    <NoResizeScreenTemplate
+      bodyClassName="px-0 pb-0 pt-4"
+      header={
+        <ListScreenHeaderTemplate
+          title="Quotation Management"
+          className="rounded-none border-x-0 border-t-0 bg-gray-100"
+          actions={<CustomButton label="Create Quotation" onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)} />}
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Báo giá" }]} />}
+        />
+      }
+      body={
+        <BaseCard>
+          <TableFilterBar
+            searchValue={keyword}
+            onSearchChange={(value) => {
+              setKeyword(value);
+              setPage(1);
+            }}
+            filters={[
+              {
+                key: "status",
+                placeholder: "Status",
+                options: [
+                  { label: "Draft", value: "DRAFT" },
+                  { label: "Pending", value: "PENDING" },
+                  { label: "Converted", value: "CONVERTED" },
+                  { label: "Rejected", value: "REJECTED" },
+                ],
+                value: status,
+                onChange: (values) => {
+                  setStatus(values);
+                  setPage(1);
+                },
               },
-            },
-          ]}
-        />
-        {loading ? <p className="mb-3 text-sm text-slate-500">Loading quotations...</p> : null}
-        <DataTable
-          columns={columns}
-          data={items}
-          actions={(row) => (
-            <CustomButton
-              label="View"
-              className="px-2 py-1 text-sm"
-              onClick={() => navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", row.id))}
-            />
-          )}
-        />
-        <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={setPage} />
-      </BaseCard>
-    </div>
+            ]}
+          />
+          {loading ? <p className="mb-3 text-sm text-slate-500">Đang tải danh sách báo giá...</p> : null}
+          <DataTable
+            columns={columns}
+            data={items}
+            actions={(row) => (
+              <CustomButton
+                label="View"
+                className="px-2 py-1 text-sm"
+                onClick={() => navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", row.id))}
+              />
+            )}
+          />
+          <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={setPage} />
+        </BaseCard>
+      }
+    />
   );
 };
 

@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import FormSectionCard from "../../components/forms/FormSectionCard";
 import CustomButton from "../../components/customButton/CustomButton";
 import CustomTextField from "../../components/customTextField/CustomTextField";
-import PageHeader from "../../components/layout/PageHeader";
+import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
+import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import type { ContractUpdateRequest } from "../../models/contract/contract.model";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
@@ -105,37 +107,56 @@ const ContractEditPage = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="Chinh Sua Hop Dong" />
-      <FormSectionCard title="Thong Tin Hop Dong">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <CustomTextField title="Quotation ID" value={quotationId} onChange={(event) => setQuotationId(event.target.value)} />
-          <CustomTextField title="Customer ID" value={customerId} onChange={(event) => setCustomerId(event.target.value)} />
-          <CustomTextField title="Product ID" value={productId} onChange={(event) => setProductId(event.target.value)} />
-          <CustomTextField title="Quantity" type="number" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
-          <CustomTextField title="Unit Price" type="number" value={unitPrice} onChange={(event) => setUnitPrice(event.target.value)} />
-          <CustomTextField title="Status" value={status} onChange={(event) => setStatus(event.target.value)} disabled={isAccountant} />
-          <CustomTextField title="Expected Delivery Date" value={expectedDeliveryDate} onChange={(event) => setExpectedDeliveryDate(event.target.value)} />
-          <CustomTextField title="Confidential (true/false)" value={confidential} onChange={(event) => setConfidential(event.target.value)} />
-        </div>
-      </FormSectionCard>
+    <NoResizeScreenTemplate
+      bodyClassName="px-0 pb-0 pt-4"
+      header={
+        <ListScreenHeaderTemplate
+          title="Chỉnh sửa hợp đồng"
+          className="rounded-none border-x-0 border-t-0 bg-gray-100"
+          breadcrumb={
+            <CustomBreadcrumb
+              breadcrumbs={[
+                { label: "Trang chủ" },
+                { label: "Hợp đồng", url: ROUTE_URL.CONTRACT_LIST },
+                { label: "Chỉnh sửa" },
+              ]}
+            />
+          }
+        />
+      }
+      body={
+        <div className="space-y-4">
+          <FormSectionCard title="Thông tin hợp đồng">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <CustomTextField title="Quotation ID" value={quotationId} onChange={(event) => setQuotationId(event.target.value)} />
+              <CustomTextField title="Customer ID" value={customerId} onChange={(event) => setCustomerId(event.target.value)} />
+              <CustomTextField title="Product ID" value={productId} onChange={(event) => setProductId(event.target.value)} />
+              <CustomTextField title="Quantity" type="number" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
+              <CustomTextField title="Unit Price" type="number" value={unitPrice} onChange={(event) => setUnitPrice(event.target.value)} />
+              <CustomTextField title="Status" value={status} onChange={(event) => setStatus(event.target.value)} disabled={isAccountant} />
+              <CustomTextField title="Expected Delivery Date" value={expectedDeliveryDate} onChange={(event) => setExpectedDeliveryDate(event.target.value)} />
+              <CustomTextField title="Confidential (true/false)" value={confidential} onChange={(event) => setConfidential(event.target.value)} />
+            </div>
+          </FormSectionCard>
 
-      <FormSectionCard title="Dieu Khoan">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <CustomTextField title="Payment Terms" value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} />
-          <CustomTextField title="Delivery Address" value={deliveryAddress} onChange={(event) => setDeliveryAddress(event.target.value)} />
-          <CustomTextField title="Delivery Terms" value={deliveryTerms} onChange={(event) => setDeliveryTerms(event.target.value)} />
-          <CustomTextField title="Change Reason" value={changeReason} onChange={(event) => setChangeReason(event.target.value)} />
+          <FormSectionCard title="Điều khoản">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <CustomTextField title="Payment Terms" value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} />
+              <CustomTextField title="Delivery Address" value={deliveryAddress} onChange={(event) => setDeliveryAddress(event.target.value)} />
+              <CustomTextField title="Delivery Terms" value={deliveryTerms} onChange={(event) => setDeliveryTerms(event.target.value)} />
+              <CustomTextField title="Change Reason" value={changeReason} onChange={(event) => setChangeReason(event.target.value)} />
+            </div>
+            <div className="mt-4">
+              <CustomTextField title="Note" value={note} onChange={(event) => setNote(event.target.value)} />
+            </div>
+            <div className="mt-4 flex gap-3">
+              <CustomButton label={loading ? "Đang lưu..." : "Lưu thay đổi"} onClick={handleSave} disabled={loading} />
+              <CustomButton label="Quay lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CONTRACT_LIST)} />
+            </div>
+          </FormSectionCard>
         </div>
-        <div className="mt-4">
-          <CustomTextField title="Note" value={note} onChange={(event) => setNote(event.target.value)} />
-        </div>
-        <div className="mt-4 flex gap-3">
-          <CustomButton label={loading ? "Dang luu..." : "Luu Thay Doi"} onClick={handleSave} disabled={loading} />
-          <CustomButton label="Quay Lai" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CONTRACT_LIST)} />
-        </div>
-      </FormSectionCard>
-    </div>
+      }
+    />
   );
 };
 

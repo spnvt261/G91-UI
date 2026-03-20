@@ -4,7 +4,9 @@ import FormSectionCard from "../../components/forms/FormSectionCard";
 import CustomButton from "../../components/customButton/CustomButton";
 import CustomSelect from "../../components/customSelect/CustomSelect";
 import CustomTextField from "../../components/customTextField/CustomTextField";
-import PageHeader from "../../components/layout/PageHeader";
+import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
+import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type {
@@ -292,10 +294,26 @@ const QuotationCreatePage = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="Create Quotation" />
-
-      <FormSectionCard title="Customer Context">
+    <NoResizeScreenTemplate
+      bodyClassName="px-0 pb-0 pt-4"
+      header={
+        <ListScreenHeaderTemplate
+          title="Create Quotation"
+          className="rounded-none border-x-0 border-t-0 bg-gray-100"
+          breadcrumb={
+            <CustomBreadcrumb
+              breadcrumbs={[
+                { label: "Trang chủ" },
+                { label: "Báo giá", url: ROUTE_URL.QUOTATION_LIST },
+                { label: "Tạo mới" },
+              ]}
+            />
+          }
+        />
+      }
+      body={
+        <div className="space-y-4">
+          <FormSectionCard title="Customer Context">
         <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
           <p>
             <span className="font-semibold">Company:</span> {customerInfo?.companyName || "-"}
@@ -460,8 +478,10 @@ const QuotationCreatePage = () => {
             />
           </div>
         </div>
-      </FormSectionCard>
-    </div>
+          </FormSectionCard>
+        </div>
+      }
+    />
   );
 };
 

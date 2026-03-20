@@ -59,8 +59,8 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             }
           }}
         />
-        <div className={useScreenTemplateHeader ? "flex-1 pb-6" : "flex-1 p-6"}>
-          {!useScreenTemplateHeader ? <AppBreadcrumb /> : null}
+        <div className={true ? "flex-1 pb-6" : "flex-1 p-6"}>
+          {/* {!useScreenTemplateHeader ? <AppBreadcrumb /> : null} */}
           {children}
         </div>
         <AppFooter />

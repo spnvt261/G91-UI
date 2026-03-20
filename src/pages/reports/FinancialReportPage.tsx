@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import BaseCard from "../../components/cards/BaseCard";
-import PageHeader from "../../components/layout/PageHeader";
+import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable from "../../components/table/DataTable";
 import TableFilterBar from "../../components/table/TableFilterBar";
+import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
 import { reportService } from "../../services/report/report.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
-import { useNotify } from "../../context/notifyContext";
 
 const FinancialReportPage = () => {
   const [projectRows, setProjectRows] = useState<{ projectId: string; projectName: string; progress: number; status: string }[]>([]);
@@ -27,40 +30,59 @@ const FinancialReportPage = () => {
     };
 
     void load();
-  }, []);
+  }, [notify]);
 
   const filteredRows = useMemo(() => {
     return projectRows.filter((item) => item.projectName.toLowerCase().includes(keyword.toLowerCase()) || item.projectId.toLowerCase().includes(keyword.toLowerCase()));
   }, [keyword, projectRows]);
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="Financial Report" />
-      <BaseCard title="Tổng Quán Tài Chínác">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="rounded-lg bg-slate-50 p-4">
-            <p className="text-sm text-slate-500">Tổng doanh thu</p>
-            <p className="text-2xl font-semibold text-blue-900">{toCurrency(summaryRevenue)}</p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-4">
-            <p className="text-sm text-slate-500">Tổng còng nợ</p>
-            <p className="text-2xl font-semibold text-red-500">{toCurrency(summaryDebt)}</p>
-          </div>
-        </div>
-      </BaseCard>
-      <BaseCard title="Project Financial Status">
-        <TableFilterBar searchValue={keyword} onSearchChange={setKeyword} />
-        <DataTable
-          columns={[
-            { key: "projectId", header: "Project ID" },
-            { key: "projectName", header: "Project Name" },
-            { key: "progress", header: "Progress" },
-            { key: "status", header: "Status" },
-          ]}
-          data={filteredRows}
+    <NoResizeScreenTemplate
+      bodyClassName="px-0 pb-0 pt-4"
+      header={
+        <ListScreenHeaderTemplate
+          title="Financial Report"
+          className="rounded-none border-x-0 border-t-0 bg-gray-100"
+          breadcrumb={
+            <CustomBreadcrumb
+              breadcrumbs={[
+                { label: "Trang chủ" },
+                { label: "Báo cáo", url: ROUTE_URL.REPORT_DASHBOARD },
+                { label: "Tài chính" },
+              ]}
+            />
+          }
         />
-      </BaseCard>
-    </div>
+      }
+      body={
+        <div className="space-y-4">
+          <BaseCard title="Tổng quan tài chính">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="rounded-lg bg-slate-50 p-4">
+                <p className="text-sm text-slate-500">Tổng doanh thu</p>
+                <p className="text-2xl font-semibold text-blue-900">{toCurrency(summaryRevenue)}</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-4">
+                <p className="text-sm text-slate-500">Tổng công nợ</p>
+                <p className="text-2xl font-semibold text-red-500">{toCurrency(summaryDebt)}</p>
+              </div>
+            </div>
+          </BaseCard>
+          <BaseCard title="Project Financial Status">
+            <TableFilterBar searchValue={keyword} onSearchChange={setKeyword} />
+            <DataTable
+              columns={[
+                { key: "projectId", header: "Project ID" },
+                { key: "projectName", header: "Project Name" },
+                { key: "progress", header: "Progress" },
+                { key: "status", header: "Status" },
+              ]}
+              data={filteredRows}
+            />
+          </BaseCard>
+        </div>
+      }
+    />
   );
 };
 

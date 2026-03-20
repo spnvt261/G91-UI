@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import BaseCard from "../../components/cards/BaseCard";
 import ChartCard from "../../components/dashboard/ChartCard";
 import StatsGrid from "../../components/dashboard/StatsGrid";
-import PageHeader from "../../components/layout/PageHeader";
+import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
+import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
 import { reportService } from "../../services/report/report.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
-import { useNotify } from "../../context/notifyContext";
 
 const DashboardReportPage = () => {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -28,7 +31,7 @@ const DashboardReportPage = () => {
     };
 
     void load();
-  }, []);
+  }, [notify]);
 
   const stats = useMemo(
     () => [
@@ -41,16 +44,35 @@ const DashboardReportPage = () => {
   );
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="Dashboard Report" />
-      <StatsGrid items={stats} />
-      <BaseCard>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <ChartCard title="Revenue Trend" subtitle="Sales performance by period" />
-          <ChartCard title="Risk Monitoring" subtitle="Debt and inventory alert tracking" />
+    <NoResizeScreenTemplate
+      bodyClassName="px-0 pb-0 pt-4"
+      header={
+        <ListScreenHeaderTemplate
+          title="Dashboard Report"
+          className="rounded-none border-x-0 border-t-0 bg-gray-100"
+          breadcrumb={
+            <CustomBreadcrumb
+              breadcrumbs={[
+                { label: "Trang chủ" },
+                { label: "Báo cáo", url: ROUTE_URL.REPORT_DASHBOARD },
+                { label: "Dashboard" },
+              ]}
+            />
+          }
+        />
+      }
+      body={
+        <div className="space-y-4">
+          <StatsGrid items={stats} />
+          <BaseCard>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <ChartCard title="Revenue Trend" subtitle="Sales performance by period" />
+              <ChartCard title="Risk Monitoring" subtitle="Debt and inventory alert tracking" />
+            </div>
+          </BaseCard>
         </div>
-      </BaseCard>
-    </div>
+      }
+    />
   );
 };
 

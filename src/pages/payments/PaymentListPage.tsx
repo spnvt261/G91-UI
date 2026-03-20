@@ -1,16 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BaseCard from "../../components/cards/BaseCard";
 import CustomButton from "../../components/customButton/CustomButton";
-import PageHeader from "../../components/layout/PageHeader";
+import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
 import Pagination from "../../components/table/Pagination";
 import TableFilterBar from "../../components/table/TableFilterBar";
+import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
 import type { DebtModel, InvoiceModel } from "../../models/payment/payment.model";
 import { paymentService } from "../../services/payment/payment.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
-import { useNotify } from "../../context/notifyContext";
 
 const PAGE_SIZE = 8;
 
@@ -42,75 +44,94 @@ const PaymentListPage = () => {
     };
 
     void load();
-  }, [keyword, status]);
+  }, [keyword, notify, status]);
 
   const pagedItems = useMemo(() => allInvoices.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [allInvoices, page]);
 
   const columns = useMemo<DataTableColumn<InvoiceModel>[]>(
     () => [
-      { key: "id", header: "Số Hóa Đơn", className: "font-semibold text-blue-900" },
-      { key: "contractId", header: "Hợp Đồng" },
-      { key: "customerId", header: "Khách Hàng" },
-      { key: "totalAmount", header: "Tổng Tiền", render: (row) => toCurrency(row.totalAmount) },
-      { key: "dueAmount", header: "Còn Nợ", render: (row) => toCurrency(row.dueAmount) },
-      { key: "status", header: "Trạng Thái" },
+      { key: "id", header: "Số hóa đơn", className: "font-semibold text-blue-900" },
+      { key: "contractId", header: "Hợp đồng" },
+      { key: "customerId", header: "Khách hàng" },
+      { key: "totalAmount", header: "Tổng tiền", render: (row) => toCurrency(row.totalAmount) },
+      { key: "dueAmount", header: "Còn nợ", render: (row) => toCurrency(row.dueAmount) },
+      { key: "status", header: "Trạng thái" },
     ],
     [],
   );
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="Quản Lý Thanh Toán" />
-      <BaseCard>
-        <TableFilterBar
-          searchValue={keyword}
-          onSearchChange={(value) => {
-            setKeyword(value);
-            setPage(1);
-          }}
-          filters={[
-            {
-              key: "status",
-              placeholder: "Trạng Thái",
-              options: [
-                { label: "UNPAID", value: "UNPAID" },
-                { label: "PARTIAL", value: "PARTIAL" },
-                { label: "PAID", value: "PAID" },
-              ],
-              value: status,
-              onChange: (values) => {
-                setStatus(values);
+    <NoResizeScreenTemplate
+      bodyClassName="px-0 pb-0 pt-4"
+      header={
+        <ListScreenHeaderTemplate
+          title="Quản lý thanh toán"
+          className="rounded-none border-x-0 border-t-0 bg-gray-100"
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Thanh toán" }]} />}
+        />
+      }
+      body={
+        <div className="space-y-4">
+          <BaseCard>
+            <TableFilterBar
+              searchValue={keyword}
+              onSearchChange={(value) => {
+                setKeyword(value);
                 setPage(1);
-              },
-            },
-          ]}
-        />
-        {loading ? <p className="mb-3 text-sm text-slate-500">Loading invoices...</p> : null}
-        <DataTable
-          columns={columns}
-          data={pagedItems}
-          actions={(row) => (
-            <div className="flex gap-2">
-              <CustomButton label="Chi Tiết" className="px-2 py-1 text-sm" onClick={() => navigate(ROUTE_URL.PAYMENT_DETAIL.replace(":id", row.id))} />
-              <CustomButton label="Ghi Nhận" className="px-2 py-1 text-sm" onClick={() => navigate(ROUTE_URL.PAYMENT_RECORD.replace(":id", row.id))} />
-            </div>
-          )}
-        />
-        <Pagination page={page} pageSize={PAGE_SIZE} total={allInvoices.length} onChange={setPage} />
-      </BaseCard>
+              }}
+              filters={[
+                {
+                  key: "status",
+                  placeholder: "Trạng thái",
+                  options: [
+                    { label: "UNPAID", value: "UNPAID" },
+                    { label: "PARTIAL", value: "PARTIAL" },
+                    { label: "PAID", value: "PAID" },
+                  ],
+                  value: status,
+                  onChange: (values) => {
+                    setStatus(values);
+                    setPage(1);
+                  },
+                },
+              ]}
+            />
+            {loading ? <p className="mb-3 text-sm text-slate-500">Đang tải danh sách hóa đơn...</p> : null}
+            <DataTable
+              columns={columns}
+              data={pagedItems}
+              actions={(row) => (
+                <div className="flex gap-2">
+                  <CustomButton
+                    label="Chi tiết"
+                    className="px-2 py-1 text-sm"
+                    onClick={() => navigate(ROUTE_URL.PAYMENT_DETAIL.replace(":id", row.id))}
+                  />
+                  <CustomButton
+                    label="Ghi nhận"
+                    className="px-2 py-1 text-sm"
+                    onClick={() => navigate(ROUTE_URL.PAYMENT_RECORD.replace(":id", row.id))}
+                  />
+                </div>
+              )}
+            />
+            <Pagination page={page} pageSize={PAGE_SIZE} total={allInvoices.length} onChange={setPage} />
+          </BaseCard>
 
-      <BaseCard title="Debt Status">
-        <DataTable
-          columns={[
-            { key: "customerId", header: "Customer ID" },
-            { key: "customerName", header: "Customer" },
-            { key: "totalDebt", header: "Total Debt", render: (row: DebtModel) => toCurrency(row.totalDebt) },
-            { key: "overdueDebt", header: "Overdue", render: (row: DebtModel) => toCurrency(row.overdueDebt) },
-          ]}
-          data={debtItems}
-        />
-      </BaseCard>
-    </div>
+          <BaseCard title="Debt Status">
+            <DataTable
+              columns={[
+                { key: "customerId", header: "Customer ID" },
+                { key: "customerName", header: "Customer" },
+                { key: "totalDebt", header: "Total Debt", render: (row: DebtModel) => toCurrency(row.totalDebt) },
+                { key: "overdueDebt", header: "Overdue", render: (row: DebtModel) => toCurrency(row.overdueDebt) },
+              ]}
+              data={debtItems}
+            />
+          </BaseCard>
+        </div>
+      }
+    />
   );
 };
 

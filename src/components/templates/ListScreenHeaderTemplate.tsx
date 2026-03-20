@@ -29,7 +29,7 @@ const ListScreenHeaderTemplate = ({
       </div>
 
       {/* {subTitle ? (
-        <div className="">
+        <div className="mt-1">
           <Typography.Text className="text-sm text-slate-500">{subTitle}</Typography.Text>
         </div>
       ) : null} */}

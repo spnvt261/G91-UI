@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
-import PageHeader from "../../components/layout/PageHeader";
-import StatsGrid from "../../components/dashboard/StatsGrid";
+﻿import { useEffect, useMemo, useState } from "react";
 import ChartCard from "../../components/dashboard/ChartCard";
+import StatsGrid from "../../components/dashboard/StatsGrid";
+import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
+import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { useNotify } from "../../context/notifyContext";
 import { reportService } from "../../services/report/report.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
-import { useNotify } from "../../context/notifyContext";
 
 const DashboardPage = () => {
   const [loading, setLoading] = useState(false);
@@ -31,7 +33,7 @@ const DashboardPage = () => {
     };
 
     void load();
-  }, []);
+  }, [notify]);
 
   const stats = useMemo(
     () => [
@@ -44,15 +46,26 @@ const DashboardPage = () => {
   );
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Dashboard" />
-      {loading ? <p className="text-sm text-slate-500">Loading dashboard...</p> : null}
-      <StatsGrid items={stats} />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <ChartCard title="Sales Trend" subtitle="Monthly sales overview" />
-        <ChartCard title="Contract Pipeline" subtitle="Pending and approved contracts" />
-      </div>
-    </div>
+    <NoResizeScreenTemplate
+      bodyClassName="px-0 pb-0 pt-4"
+      header={
+        <ListScreenHeaderTemplate
+          title="Dashboard"
+          className="rounded-none border-x-0 border-t-0 bg-gray-100"
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Dashboard" }]} />}
+        />
+      }
+      body={
+        <div className="space-y-6">
+          {loading ? <p className="text-sm text-slate-500">Loading dashboard...</p> : null}
+          <StatsGrid items={stats} />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <ChartCard title="Sales Trend" subtitle="Monthly sales overview" />
+            <ChartCard title="Contract Pipeline" subtitle="Pending and approved contracts" />
+          </div>
+        </div>
+      }
+    />
   );
 };
 

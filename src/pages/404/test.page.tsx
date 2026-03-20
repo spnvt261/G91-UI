@@ -1,21 +1,21 @@
-import { useMemo, useState } from "react";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomTextField from "../../components/customTextField/CustomTextField";
-import AppLayout from "../../components/layout/AppLayout";
-import ContentWrapper from "../../components/layout/ContentWrapper";
-import PageHeader from "../../components/layout/PageHeader";
+﻿import { useMemo, useState } from "react";
 import AuthCard from "../../components/auth/AuthCard";
 import AuthFooter from "../../components/auth/AuthFooter";
 import BaseCard from "../../components/cards/BaseCard";
-import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
-import TableFilterBar from "../../components/table/TableFilterBar";
-import Pagination from "../../components/table/Pagination";
+import ChartCard from "../../components/dashboard/ChartCard";
+import StatsGrid from "../../components/dashboard/StatsGrid";
+import CustomButton from "../../components/customButton/CustomButton";
+import CustomTextField from "../../components/customTextField/CustomTextField";
 import FormSectionCard from "../../components/forms/FormSectionCard";
 import ImageUploadCard from "../../components/forms/ImageUploadCard";
 import StockConfigTable from "../../components/forms/StockConfigTable";
-import StatsGrid from "../../components/dashboard/StatsGrid";
-import ChartCard from "../../components/dashboard/ChartCard";
 import DeleteConfirmModal from "../../components/modals/DeleteConfirmModal";
+import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
+import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
+import Pagination from "../../components/table/Pagination";
+import TableFilterBar from "../../components/table/TableFilterBar";
+import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 
 interface ProductRow {
   sku: string;
@@ -27,20 +27,20 @@ interface ProductRow {
 }
 
 const productData: ProductRow[] = [
-  { sku: "SP000523", name: "Ton Ma Kem G90 1.5mm", category: "Ton", thickness: "1.5 mm", size: "200 mm", inventory: "1,000" },
-  { sku: "SP000524", name: "Ton Ma Kem G90 1.3mm", category: "Ton", thickness: "1.3 mm", size: "500 mm", inventory: "2,300" },
-  { sku: "SP000525", name: "Ton Ma Kem G90 1.3mm", category: "Ton", thickness: "1.3 mm", size: "206 mm", inventory: "1,000" },
-  { sku: "SP000526", name: "Ton Ma Kem G90 1.5mm", category: "Ton", thickness: "1.5 mm", size: "300 mm", inventory: "1,100" },
-  { sku: "SP000527", name: "Ton Ma Kem G90 1.3mm", category: "Ton", thickness: "1.3 mm", size: "200 mm", inventory: "1,600" },
+  { sku: "SP000523", name: "Tôn mạ kẽm G90 1.5mm", category: "Ton", thickness: "1.5 mm", size: "200 mm", inventory: "1,000" },
+  { sku: "SP000524", name: "Tôn mạ kẽm G90 1.3mm", category: "Ton", thickness: "1.3 mm", size: "500 mm", inventory: "2,300" },
+  { sku: "SP000525", name: "Tôn mạ kẽm G90 1.3mm", category: "Ton", thickness: "1.3 mm", size: "206 mm", inventory: "1,000" },
+  { sku: "SP000526", name: "Tôn mạ kẽm G90 1.5mm", category: "Ton", thickness: "1.5 mm", size: "300 mm", inventory: "1,100" },
+  { sku: "SP000527", name: "Tôn mạ kẽm G90 1.3mm", category: "Ton", thickness: "1.3 mm", size: "200 mm", inventory: "1,600" },
 ];
 
 const tableColumns: DataTableColumn<ProductRow>[] = [
   { key: "sku", header: "Mã SP" },
-  { key: "name", header: "Tên Sản Phẩm" },
+  { key: "name", header: "Tên sản phẩm" },
   { key: "category", header: "Loại" },
-  { key: "thickness", header: "Bề Dày" },
-  { key: "size", header: "Kích Thưức" },
-  { key: "inventory", header: "Tốn Kho", className: "font-semibold text-blue-700" },
+  { key: "thickness", header: "Bề dày" },
+  { key: "size", header: "Kích thước" },
+  { key: "inventory", header: "Tồn kho", className: "font-semibold text-blue-700" },
 ];
 
 const TestPage = () => {
@@ -66,51 +66,62 @@ const TestPage = () => {
   const pagedData = filteredData.slice((page - 1) * pageSize, page * pageSize);
 
   return (
-    <ContentWrapper>
-      <div className="space-y-8">
-        <section>
-          <h2 className="mb-4 text-2xl font-bold text-slate-800">Auth Components Showcase</h2>
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-4">
-            <AuthCard title="Tạo Tài Khoản Khách Hàng" subtitle="Đăng ký tài khoản để quản lý báo giá, đơn hàng và theo dõi nó." footer={<AuthFooter />}>
-              <div className="space-y-3">
-                <CustomTextField title="Tên Công Ty" placeholder="Tên Công Ty" />
-                <CustomTextField title="Mã Số Thuế" placeholder="Mã Số Thuế" />
-                <CustomTextField title="Số Điện Thoại" placeholder="0900 000 000" />
-                <CustomTextField title="Mật Khẩu" placeholder="Ít nhất 6 ký tự" type="password" />
-                <CustomTextField title="Xác Nhận Mật Khẩu" placeholder="Ít nhất 6 ký tự" type="password" />
-                <CustomButton label="Đăng Ký" className="w-full" />
-              </div>
-            </AuthCard>
+    <NoResizeScreenTemplate
+      bodyClassName="px-0 pb-0 pt-4"
+      header={
+        <ListScreenHeaderTemplate
+          title="Component Showcase"
+          className="rounded-none border-x-0 border-t-0 bg-gray-100"
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Showcase" }]} />}
+        />
+      }
+      body={
+        <>
+          <div className="space-y-8">
+            <section>
+              <h2 className="mb-4 text-2xl font-bold text-slate-800">Auth Components Showcase</h2>
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-4">
+                <AuthCard title="Tạo tài khoản khách hàng" subtitle="Đăng ký tài khoản để quản lý báo giá, đơn hàng và theo dõi." footer={<AuthFooter />}>
+                  <div className="space-y-3">
+                    <CustomTextField title="Tên công ty" placeholder="Tên công ty" />
+                    <CustomTextField title="Mã số thuế" placeholder="Mã số thuế" />
+                    <CustomTextField title="Số điện thoại" placeholder="0900 000 000" />
+                    <CustomTextField title="Mật khẩu" placeholder="Ít nhất 6 ký tự" type="password" />
+                    <CustomTextField title="Xác nhận mật khẩu" placeholder="Ít nhất 6 ký tự" type="password" />
+                    <CustomButton label="Đăng ký" className="w-full" />
+                  </div>
+                </AuthCard>
 
-            <AuthCard title="Đăng Nhập" subtitle="Chào mừng bạn quay lại! Đăng nhập để tiếp tục." footer={<AuthFooter />}>
-              <div className="space-y-3">
-                <CustomTextField title="Email" placeholder="Email" />
-                <CustomTextField title="Mật Khẩu" placeholder="Nhập mật khẩu" type="password" />
-                <CustomButton label="Đăng Nhập" className="w-full" />
-              </div>
-            </AuthCard>
+                <AuthCard title="Đăng nhập" subtitle="Chào mừng bạn quay lại! Đăng nhập để tiếp tục." footer={<AuthFooter />}>
+                  <div className="space-y-3">
+                    <CustomTextField title="Email" placeholder="Email" />
+                    <CustomTextField title="Mật khẩu" placeholder="Nhập mật khẩu" type="password" />
+                    <CustomButton label="Đăng nhập" className="w-full" />
+                  </div>
+                </AuthCard>
 
-            <AuthCard title="Quên Mật Khẩu" subtitle="Nhập email đăng ký của bạn để lạy lại mật khẩu." footer={<AuthFooter />}>
-              <div className="space-y-3">
-                <CustomTextField title="Email" placeholder="Email" />
-                <CustomButton label="Gửi Yêu Cầu" className="w-full" />
-              </div>
-            </AuthCard>
+                <AuthCard title="Quên mật khẩu" subtitle="Nhập email đăng ký để lấy lại mật khẩu." footer={<AuthFooter />}>
+                  <div className="space-y-3">
+                    <CustomTextField title="Email" placeholder="Email" />
+                    <CustomButton label="Gửi yêu cầu" className="w-full" />
+                  </div>
+                </AuthCard>
 
-            <AuthCard title="Đặt Mật Khẩu Mới" subtitle="Tạo mật khẩu mới cho tài khoản của bạn" footer={<AuthFooter />}>
-              <div className="space-y-3">
-                <CustomTextField title="Mật Khẩu Mới" placeholder="Ít nhất 6 ký tự" type="password" />
-                <CustomTextField title="Xác Nhận Mật Khẩu" placeholder="Ít nhất 6 ký tự" type="password" />
-                <CustomButton label="Đặt Mật Khẩu" className="w-full" />
+                <AuthCard title="Đặt mật khẩu mới" subtitle="Tạo mật khẩu mới cho tài khoản của bạn." footer={<AuthFooter />}>
+                  <div className="space-y-3">
+                    <CustomTextField title="Mật khẩu mới" placeholder="Ít nhất 6 ký tự" type="password" />
+                    <CustomTextField title="Xác nhận mật khẩu" placeholder="Ít nhất 6 ký tự" type="password" />
+                    <CustomButton label="Đặt mật khẩu" className="w-full" />
+                  </div>
+                </AuthCard>
               </div>
-            </AuthCard>
-          </div>
-        </section>
+            </section>
 
-        <section className="overflow-hidden rounded-2xl border border-blue-100 shadow-xl">
-          <AppLayout>
-            <div className="space-y-6">
-              <PageHeader title="Quản Lý Sản Phẩm" rightActions={<CustomButton label="Thêm Sản Phẩm" />} />
+            <section className="space-y-6 overflow-hidden rounded-2xl border border-blue-100 bg-white p-6 shadow-xl">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-xl font-semibold text-slate-800">Quản lý sản phẩm</h3>
+                <CustomButton label="Thêm sản phẩm" />
+              </div>
 
               <StatsGrid
                 items={[
@@ -120,7 +131,7 @@ const TestPage = () => {
                 ]}
               />
 
-              <BaseCard title="Danh Sách Sản Phẩm">
+              <BaseCard title="Danh sách sản phẩm">
                 <TableFilterBar
                   searchValue={searchValue}
                   onSearchChange={(value) => {
@@ -182,10 +193,10 @@ const TestPage = () => {
                 <div className="space-y-6 xl:col-span-2">
                   <FormSectionCard title="Product Information">
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <CustomTextField title="Tên Sản Phẩm" placeholder="Thếp Mã Kem G90 1.5mm" />
-                      <CustomTextField title="Ma SP" placeholder="SP000523" />
-                      <CustomTextField title="Be Day" placeholder="1.5 mm" />
-                      <CustomTextField title="Kich Thuoc" placeholder="200 mm" />
+                      <CustomTextField title="Tên sản phẩm" placeholder="Thép mạ kẽm G90 1.5mm" />
+                      <CustomTextField title="Mã SP" placeholder="SP000523" />
+                      <CustomTextField title="Bề dày" placeholder="1.5 mm" />
+                      <CustomTextField title="Kích thước" placeholder="200 mm" />
                     </div>
                   </FormSectionCard>
                   <StockConfigTable />
@@ -196,18 +207,18 @@ const TestPage = () => {
                   <ChartCard title="Product Trend" subtitle="Weekly import/export overview" />
                 </div>
               </div>
-            </div>
-          </AppLayout>
-        </section>
-      </div>
+            </section>
+          </div>
 
-      <DeleteConfirmModal
-        open={openDeleteModal}
-        itemName="Ton Ma Kem G90 1.5mm"
-        onCancel={() => setOpenDeleteModal(false)}
-        onConfirm={() => setOpenDeleteModal(false)}
-      />
-    </ContentWrapper>
+          <DeleteConfirmModal
+            open={openDeleteModal}
+            itemName="Tôn mạ kẽm G90 1.5mm"
+            onCancel={() => setOpenDeleteModal(false)}
+            onConfirm={() => setOpenDeleteModal(false)}
+          />
+        </>
+      }
+    />
   );
 };
 
