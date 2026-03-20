@@ -4,8 +4,8 @@ import BaseCard from "../../components/cards/BaseCard";
 import CustomButton from "../../components/customButton/CustomButton";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
+import FilterSearchModalBar, { type FilterModalGroup } from "../../components/table/FilterSearchModalBar";
 import Pagination from "../../components/table/Pagination";
-import TableFilterBar from "../../components/table/TableFilterBar";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
@@ -22,6 +22,8 @@ const ContractListPage = () => {
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState<string[]>([]);
+  const [createdRange, setCreatedRange] = useState<{ from?: string; to?: string }>({});
+  const [totalRange, setTotalRange] = useState<{ min?: string; max?: string }>({});
   const [loading, setLoading] = useState(false);
   const { notify } = useNotify();
 
@@ -41,7 +43,58 @@ const ContractListPage = () => {
     void load();
   }, [keyword, notify, status]);
 
-  const pagedItems = useMemo(() => allItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [allItems, page]);
+  const filteredItems = useMemo(() => {
+    const fromTime = createdRange.from ? new Date(createdRange.from).getTime() : undefined;
+    const toTime = createdRange.to ? new Date(createdRange.to).getTime() + 24 * 60 * 60 * 1000 - 1 : undefined;
+    const minTotal = totalRange.min ? Number(totalRange.min) : undefined;
+    const maxTotal = totalRange.max ? Number(totalRange.max) : undefined;
+
+    return allItems.filter((item) => {
+      const createdTime = item.createdAt ? new Date(item.createdAt).getTime() : undefined;
+      const validCreatedDate =
+        (fromTime == null || (createdTime != null && createdTime >= fromTime)) &&
+        (toTime == null || (createdTime != null && createdTime <= toTime));
+
+      const validTotal =
+        (minTotal == null || item.totalAmount >= minTotal) &&
+        (maxTotal == null || item.totalAmount <= maxTotal);
+
+      return validCreatedDate && validTotal;
+    });
+  }, [allItems, createdRange.from, createdRange.to, totalRange.max, totalRange.min]);
+
+  const pagedItems = useMemo(() => filteredItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [filteredItems, page]);
+  const filters: FilterModalGroup[] = [
+    {
+      key: "status",
+      label: "Trạng thái",
+      options: [
+        { label: "Draft", value: "DRAFT" },
+        { label: "Pending", value: "PENDING" },
+        { label: "Approved", value: "APPROVED" },
+        { label: "Rejected", value: "REJECTED" },
+        { label: "In Progress", value: "IN_PROGRESS" },
+        { label: "Completed", value: "COMPLETED" },
+      ],
+      value: status,
+    },
+    {
+      kind: "dateRange",
+      key: "createdRange",
+      label: "Ngày tạo",
+      value: createdRange,
+      fromPlaceholder: "Từ ngày tạo",
+      toPlaceholder: "Đến ngày tạo",
+    },
+    {
+      kind: "numberRange",
+      key: "totalRange",
+      label: "Tổng tiền",
+      value: totalRange,
+      minPlaceholder: "Tổng tiền tối thiểu",
+      maxPlaceholder: "Tổng tiền tối đa",
+    },
+  ];
 
   const columns = useMemo<DataTableColumn<ContractModel>[]>(
     () => [
@@ -67,31 +120,34 @@ const ContractListPage = () => {
       }
       body={
         <BaseCard>
-          <TableFilterBar
+          <FilterSearchModalBar
             searchValue={keyword}
             onSearchChange={(value) => {
               setKeyword(value);
               setPage(1);
             }}
-            filters={[
-              {
-                key: "status",
-                placeholder: "Trạng thái",
-                options: [
-                  { label: "Draft", value: "DRAFT" },
-                  { label: "Pending", value: "PENDING" },
-                  { label: "Approved", value: "APPROVED" },
-                  { label: "Rejected", value: "REJECTED" },
-                  { label: "In Progress", value: "IN_PROGRESS" },
-                  { label: "Completed", value: "COMPLETED" },
-                ],
-                value: status,
-                onChange: (values) => {
-                  setStatus(values);
-                  setPage(1);
-                },
-              },
-            ]}
+            onSearchReset={() => {
+              setKeyword("");
+              setPage(1);
+            }}
+            searchPlaceholder="Tìm hợp đồng"
+            filters={filters}
+            onApplyFilters={(values) => {
+              setStatus(Array.isArray(values.status) ? (values.status as ContractModel["status"][]) : []);
+              const createdValue = values.createdRange;
+              setCreatedRange(
+                createdValue && !Array.isArray(createdValue) && ("from" in createdValue || "to" in createdValue)
+                  ? { from: createdValue.from, to: createdValue.to }
+                  : {},
+              );
+              const totalValue = values.totalRange;
+              setTotalRange(
+                totalValue && !Array.isArray(totalValue) && ("min" in totalValue || "max" in totalValue)
+                  ? { min: totalValue.min, max: totalValue.max }
+                  : {},
+              );
+              setPage(1);
+            }}
           />
           {loading ? <p className="mb-3 text-sm text-slate-500">Đang tải danh sách hợp đồng...</p> : null}
           <DataTable
@@ -112,7 +168,7 @@ const ContractListPage = () => {
               </div>
             )}
           />
-          <Pagination page={page} pageSize={PAGE_SIZE} total={allItems.length} onChange={setPage} />
+          <Pagination page={page} pageSize={PAGE_SIZE} total={filteredItems.length} onChange={setPage} />
         </BaseCard>
       }
     />

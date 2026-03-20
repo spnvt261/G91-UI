@@ -116,8 +116,8 @@ const ProductListPage = () => {
             modalTitle="Bộ lọc sản phẩm"
             filters={filters}
             onApplyFilters={(values) => {
-              setTypeFilter(values.type ?? []);
-              setStatusFilter((values.status ?? []) as ProductModel["status"][]);
+              setTypeFilter(Array.isArray(values.type) ? values.type : []);
+              setStatusFilter(Array.isArray(values.status) ? (values.status as ProductModel["status"][]) : []);
               setPage(1);
             }}
           />

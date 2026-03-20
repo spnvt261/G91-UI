@@ -4,8 +4,8 @@ import BaseCard from "../../components/cards/BaseCard";
 import CustomButton from "../../components/customButton/CustomButton";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
+import FilterSearchModalBar from "../../components/table/FilterSearchModalBar";
 import Pagination from "../../components/table/Pagination";
-import TableFilterBar from "../../components/table/TableFilterBar";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
@@ -65,12 +65,19 @@ const ContractApprovalListPage = () => {
       }
       body={
         <BaseCard>
-          <TableFilterBar
+          <FilterSearchModalBar
             searchValue={keyword}
             onSearchChange={(value) => {
               setKeyword(value);
               setPage(1);
             }}
+            onSearchReset={() => {
+              setKeyword("");
+              setPage(1);
+            }}
+            searchPlaceholder="Tìm hợp đồng chờ duyệt"
+            filters={[]}
+            onApplyFilters={() => undefined}
           />
           {loading ? <p className="mb-3 text-sm text-slate-500">Đang tải danh sách phê duyệt...</p> : null}
           <DataTable

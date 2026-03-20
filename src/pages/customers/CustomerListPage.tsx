@@ -4,8 +4,8 @@ import BaseCard from "../../components/cards/BaseCard";
 import CustomButton from "../../components/customButton/CustomButton";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
+import FilterSearchModalBar, { type FilterModalGroup } from "../../components/table/FilterSearchModalBar";
 import Pagination from "../../components/table/Pagination";
-import TableFilterBar from "../../components/table/TableFilterBar";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
@@ -42,6 +42,17 @@ const CustomerListPage = () => {
   }, [keyword, notify, status]);
 
   const pagedItems = useMemo(() => allItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [allItems, page]);
+  const filters: FilterModalGroup[] = [
+    {
+      key: "status",
+      label: "Trạng thái",
+      options: [
+        { label: "Active", value: "ACTIVE" },
+        { label: "Inactive", value: "INACTIVE" },
+      ],
+      value: status,
+    },
+  ];
 
   const columns = useMemo<DataTableColumn<CustomerModel>[]>(
     () => [
@@ -67,27 +78,22 @@ const CustomerListPage = () => {
       }
       body={
         <BaseCard>
-          <TableFilterBar
+          <FilterSearchModalBar
             searchValue={keyword}
             onSearchChange={(value) => {
               setKeyword(value);
               setPage(1);
             }}
-            filters={[
-              {
-                key: "status",
-                placeholder: "Trạng thái",
-                options: [
-                  { label: "Active", value: "ACTIVE" },
-                  { label: "Inactive", value: "INACTIVE" },
-                ],
-                value: status,
-                onChange: (values) => {
-                  setStatus(values);
-                  setPage(1);
-                },
-              },
-            ]}
+            onSearchReset={() => {
+              setKeyword("");
+              setPage(1);
+            }}
+            searchPlaceholder="Tìm khách hàng"
+            filters={filters}
+            onApplyFilters={(values) => {
+              setStatus(Array.isArray(values.status) ? (values.status as Array<NonNullable<CustomerModel["status"]>>) : []);
+              setPage(1);
+            }}
           />
           {loading ? <p className="mb-3 text-sm text-slate-500">Đang tải danh sách khách hàng...</p> : null}
           <DataTable

@@ -4,8 +4,8 @@ import BaseCard from "../../components/cards/BaseCard";
 import CustomButton from "../../components/customButton/CustomButton";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
+import FilterSearchModalBar, { type FilterModalGroup } from "../../components/table/FilterSearchModalBar";
 import Pagination from "../../components/table/Pagination";
-import TableFilterBar from "../../components/table/TableFilterBar";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
@@ -23,8 +23,40 @@ const QuotationListPage = () => {
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState<string[]>([]);
+  const [createdRange, setCreatedRange] = useState<{ from?: string; to?: string }>({});
+  const [totalRange, setTotalRange] = useState<{ min?: string; max?: string }>({});
   const { notify } = useNotify();
   const [loading, setLoading] = useState(false);
+
+  const filters: FilterModalGroup[] = [
+    {
+      key: "status",
+      label: "Status",
+      options: [
+        { label: "Draft", value: "DRAFT" },
+        { label: "Pending", value: "PENDING" },
+        { label: "Converted", value: "CONVERTED" },
+        { label: "Rejected", value: "REJECTED" },
+      ],
+      value: status,
+    },
+    {
+      kind: "dateRange",
+      key: "createdRange",
+      label: "Ngày tạo",
+      value: createdRange,
+      fromPlaceholder: "Từ ngày tạo",
+      toPlaceholder: "Đến ngày tạo",
+    },
+    {
+      kind: "numberRange",
+      key: "totalRange",
+      label: "Tổng tiền",
+      value: totalRange,
+      minPlaceholder: "Tổng tiền tối thiểu",
+      maxPlaceholder: "Tổng tiền tối đa",
+    },
+  ];
 
   useEffect(() => {
     const load = async () => {
@@ -35,21 +67,29 @@ const QuotationListPage = () => {
           pageSize: PAGE_SIZE,
           keyword: keyword || undefined,
           status: status[0] as QuotationModel["status"] | undefined,
+          fromDate: createdRange.from || undefined,
+          toDate: createdRange.to || undefined,
         });
 
-        setItems(
-          response.items.map((item) => ({
-            id: item.id,
-            quotationNumber: item.quotationNumber,
-            customerId: "",
-            items: [],
-            totalAmount: item.totalAmount,
-            status: item.status,
-            validUntil: item.validUntil,
-            createdAt: item.createdAt,
-          })),
-        );
-        setTotal(response.pagination.totalItems);
+        const mappedItems: QuotationModel[] = response.items.map((item) => ({
+          id: item.id,
+          quotationNumber: item.quotationNumber,
+          customerId: "",
+          items: [],
+          totalAmount: item.totalAmount,
+          status: item.status,
+          validUntil: item.validUntil,
+          createdAt: item.createdAt,
+        }));
+
+        const minTotal = totalRange.min ? Number(totalRange.min) : undefined;
+        const maxTotal = totalRange.max ? Number(totalRange.max) : undefined;
+        const filteredItems = mappedItems.filter((item) => {
+          return (minTotal == null || item.totalAmount >= minTotal) && (maxTotal == null || item.totalAmount <= maxTotal);
+        });
+
+        setItems(filteredItems);
+        setTotal(minTotal != null || maxTotal != null ? filteredItems.length : response.pagination.totalItems);
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load quotations"), "error");
       } finally {
@@ -58,7 +98,7 @@ const QuotationListPage = () => {
     };
 
     void load();
-  }, [keyword, notify, page, status]);
+  }, [createdRange.from, createdRange.to, keyword, notify, page, status, totalRange.max, totalRange.min]);
 
   const columns = useMemo<DataTableColumn<QuotationModel>[]>(
     () => [
@@ -93,29 +133,37 @@ const QuotationListPage = () => {
       }
       body={
         <BaseCard>
-          <TableFilterBar
+          <FilterSearchModalBar
             searchValue={keyword}
             onSearchChange={(value) => {
               setKeyword(value);
               setPage(1);
             }}
-            filters={[
-              {
-                key: "status",
-                placeholder: "Status",
-                options: [
-                  { label: "Draft", value: "DRAFT" },
-                  { label: "Pending", value: "PENDING" },
-                  { label: "Converted", value: "CONVERTED" },
-                  { label: "Rejected", value: "REJECTED" },
-                ],
-                value: status,
-                onChange: (values) => {
-                  setStatus(values);
-                  setPage(1);
-                },
-              },
-            ]}
+            onSearchReset={() => {
+              setKeyword("");
+              setPage(1);
+            }}
+            searchPlaceholder="Search quotation"
+            filters={filters}
+            onApplyFilters={(values) => {
+              setStatus(Array.isArray(values.status) ? (values.status as QuotationModel["status"][]) : []);
+
+              const createdValue = values.createdRange;
+              setCreatedRange(
+                createdValue && !Array.isArray(createdValue) && ("from" in createdValue || "to" in createdValue)
+                  ? { from: createdValue.from, to: createdValue.to }
+                  : {},
+              );
+
+              const totalValue = values.totalRange;
+              setTotalRange(
+                totalValue && !Array.isArray(totalValue) && ("min" in totalValue || "max" in totalValue)
+                  ? { min: totalValue.min, max: totalValue.max }
+                  : {},
+              );
+
+              setPage(1);
+            }}
           />
           {loading ? <p className="mb-3 text-sm text-slate-500">Đang tải danh sách báo giá...</p> : null}
           <DataTable

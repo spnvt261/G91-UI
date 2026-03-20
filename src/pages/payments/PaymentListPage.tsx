@@ -4,8 +4,8 @@ import BaseCard from "../../components/cards/BaseCard";
 import CustomButton from "../../components/customButton/CustomButton";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
+import FilterSearchModalBar, { type FilterModalGroup } from "../../components/table/FilterSearchModalBar";
 import Pagination from "../../components/table/Pagination";
-import TableFilterBar from "../../components/table/TableFilterBar";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
@@ -23,6 +23,8 @@ const PaymentListPage = () => {
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState<string[]>([]);
+  const [dueDateRange, setDueDateRange] = useState<{ from?: string; to?: string }>({});
+  const [totalRange, setTotalRange] = useState<{ min?: string; max?: string }>({});
   const [loading, setLoading] = useState(false);
   const { notify } = useNotify();
 
@@ -46,7 +48,52 @@ const PaymentListPage = () => {
     void load();
   }, [keyword, notify, status]);
 
-  const pagedItems = useMemo(() => allInvoices.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [allInvoices, page]);
+  const filteredInvoices = useMemo(() => {
+    const fromTime = dueDateRange.from ? new Date(dueDateRange.from).getTime() : undefined;
+    const toTime = dueDateRange.to ? new Date(dueDateRange.to).getTime() + 24 * 60 * 60 * 1000 - 1 : undefined;
+    const minTotal = totalRange.min ? Number(totalRange.min) : undefined;
+    const maxTotal = totalRange.max ? Number(totalRange.max) : undefined;
+
+    return allInvoices.filter((item) => {
+      const dueTime = item.dueDate ? new Date(item.dueDate).getTime() : undefined;
+      const validDueDate = (fromTime == null || (dueTime != null && dueTime >= fromTime)) && (toTime == null || (dueTime != null && dueTime <= toTime));
+      const validTotal =
+        (minTotal == null || item.totalAmount >= minTotal) &&
+        (maxTotal == null || item.totalAmount <= maxTotal);
+
+      return validDueDate && validTotal;
+    });
+  }, [allInvoices, dueDateRange.from, dueDateRange.to, totalRange.max, totalRange.min]);
+
+  const pagedItems = useMemo(() => filteredInvoices.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [filteredInvoices, page]);
+  const filters: FilterModalGroup[] = [
+    {
+      key: "status",
+      label: "Trạng thái",
+      options: [
+        { label: "UNPAID", value: "UNPAID" },
+        { label: "PARTIAL", value: "PARTIAL" },
+        { label: "PAID", value: "PAID" },
+      ],
+      value: status,
+    },
+    {
+      kind: "dateRange",
+      key: "dueDateRange",
+      label: "Hạn thanh toán",
+      value: dueDateRange,
+      fromPlaceholder: "Từ ngày",
+      toPlaceholder: "Đến ngày",
+    },
+    {
+      kind: "numberRange",
+      key: "totalRange",
+      label: "Tổng tiền hóa đơn",
+      value: totalRange,
+      minPlaceholder: "Tổng tiền tối thiểu",
+      maxPlaceholder: "Tổng tiền tối đa",
+    },
+  ];
 
   const columns = useMemo<DataTableColumn<InvoiceModel>[]>(
     () => [
@@ -73,28 +120,34 @@ const PaymentListPage = () => {
       body={
         <div className="space-y-4">
           <BaseCard>
-            <TableFilterBar
+            <FilterSearchModalBar
               searchValue={keyword}
               onSearchChange={(value) => {
                 setKeyword(value);
                 setPage(1);
               }}
-              filters={[
-                {
-                  key: "status",
-                  placeholder: "Trạng thái",
-                  options: [
-                    { label: "UNPAID", value: "UNPAID" },
-                    { label: "PARTIAL", value: "PARTIAL" },
-                    { label: "PAID", value: "PAID" },
-                  ],
-                  value: status,
-                  onChange: (values) => {
-                    setStatus(values);
-                    setPage(1);
-                  },
-                },
-              ]}
+              onSearchReset={() => {
+                setKeyword("");
+                setPage(1);
+              }}
+              searchPlaceholder="Tìm hóa đơn"
+              filters={filters}
+              onApplyFilters={(values) => {
+                setStatus(Array.isArray(values.status) ? (values.status as InvoiceModel["status"][]) : []);
+                const dueDateValue = values.dueDateRange;
+                setDueDateRange(
+                  dueDateValue && !Array.isArray(dueDateValue) && ("from" in dueDateValue || "to" in dueDateValue)
+                    ? { from: dueDateValue.from, to: dueDateValue.to }
+                    : {},
+                );
+                const totalValue = values.totalRange;
+                setTotalRange(
+                  totalValue && !Array.isArray(totalValue) && ("min" in totalValue || "max" in totalValue)
+                    ? { min: totalValue.min, max: totalValue.max }
+                    : {},
+                );
+                setPage(1);
+              }}
             />
             {loading ? <p className="mb-3 text-sm text-slate-500">Đang tải danh sách hóa đơn...</p> : null}
             <DataTable
@@ -115,7 +168,7 @@ const PaymentListPage = () => {
                 </div>
               )}
             />
-            <Pagination page={page} pageSize={PAGE_SIZE} total={allInvoices.length} onChange={setPage} />
+            <Pagination page={page} pageSize={PAGE_SIZE} total={filteredInvoices.length} onChange={setPage} />
           </BaseCard>
 
           <BaseCard title="Debt Status">
