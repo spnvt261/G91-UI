@@ -1,19 +1,29 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BaseCard from "../../components/cards/BaseCard";
 import CustomButton from "../../components/customButton/CustomButton";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
+import FilterSearchModalBar, { type FilterModalGroup } from "../../components/table/FilterSearchModalBar";
 import Pagination from "../../components/table/Pagination";
-import TableFilterBar from "../../components/table/TableFilterBar";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
-import { useNotify } from "../../context/notifyContext";
 import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
 import type { ProductModel } from "../../models/product/product.model";
 import { productService } from "../../services/product/product.service";
 import { getErrorMessage } from "../shared/page.utils";
 
 const PAGE_SIZE = 8;
+
+const TYPE_OPTIONS = [
+  { label: "Tôn", value: "Ton" },
+  { label: "Thép tấm", value: "Thep Tam" },
+];
+
+const STATUS_OPTIONS: Array<{ label: string; value: ProductModel["status"] }> = [
+  { label: "Đang kinh doanh", value: "ACTIVE" },
+  { label: "Ngừng kinh doanh", value: "INACTIVE" },
+];
 
 const ProductListPage = () => {
   const navigate = useNavigate();
@@ -22,6 +32,7 @@ const ProductListPage = () => {
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
   const [typeFilter, setTypeFilter] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<ProductModel["status"][]>([]);
   const [loading, setLoading] = useState(false);
   const { notify } = useNotify();
 
@@ -34,6 +45,7 @@ const ProductListPage = () => {
           pageSize: PAGE_SIZE,
           keyword,
           type: typeFilter[0],
+          status: statusFilter[0],
         });
         setItems(response.items);
         setTotal(response.pagination.totalItems);
@@ -45,36 +57,44 @@ const ProductListPage = () => {
     };
 
     void load();
-  }, [keyword, notify, page, typeFilter]);
+  }, [keyword, notify, page, statusFilter, typeFilter]);
 
-  const typeOptions = useMemo(
-    () => [
-      { label: "Ton", value: "Ton" },
-      { label: "Thep Tam", value: "Thep Tam" },
-    ],
-    [],
-  );
+  const filters: FilterModalGroup[] = [
+    {
+      key: "type",
+      label: "Loại sản phẩm",
+      tagLabel: "Loại",
+      options: TYPE_OPTIONS,
+      value: typeFilter,
+    },
+    {
+      key: "status",
+      label: "Trạng thái",
+      options: STATUS_OPTIONS,
+      value: statusFilter,
+    },
+  ];
 
   const statusClassName = (status: ProductModel["status"]) =>
     status === "ACTIVE"
       ? "border-emerald-100 bg-emerald-50 text-emerald-700"
       : "border-slate-200 bg-slate-100 text-slate-600";
 
-  const statusLabel = (status: ProductModel["status"]) => (status === "ACTIVE" ? "Dang kinh doanh" : "Ngung kinh doanh");
+  const statusLabel = (status: ProductModel["status"]) => (status === "ACTIVE" ? "Đang kinh doanh" : "Ngừng kinh doanh");
 
   return (
     <NoResizeScreenTemplate
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Danh sach san pham"
+          title="Danh sách sản phẩm"
           className="rounded-none border-x-0 border-t-0 bg-gray-100"
-          actions={<CustomButton label="Tao bao gia" onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)} />}
+          actions={<CustomButton label="Tạo báo giá" onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)} />}
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chu" },
-                { label: "San pham" },
+                { label: "Trang chủ" },
+                { label: "Sản phẩm" },
               ]}
             />
           }
@@ -82,29 +102,30 @@ const ProductListPage = () => {
       }
       body={
         <BaseCard>
-          <TableFilterBar
+          <FilterSearchModalBar
             searchValue={keyword}
             onSearchChange={(value) => {
               setKeyword(value);
               setPage(1);
             }}
-            filters={[
-              {
-                key: "type",
-                placeholder: "Loai",
-                options: typeOptions,
-                value: typeFilter,
-                onChange: (values) => {
-                  setTypeFilter(values);
-                  setPage(1);
-                },
-              },
-            ]}
+            onSearchReset={() => {
+              setKeyword("");
+              setPage(1);
+            }}
+            searchPlaceholder="Tìm sản phẩm"
+            modalTitle="Bộ lọc sản phẩm"
+            filters={filters}
+            onApplyFilters={(values) => {
+              setTypeFilter(values.type ?? []);
+              setStatusFilter((values.status ?? []) as ProductModel["status"][]);
+              setPage(1);
+            }}
           />
-          {loading ? <p className="mb-3 text-sm text-slate-500">Loading products...</p> : null}
+
+          {loading ? <p className="mb-3 text-sm text-slate-500">Đang tải danh sách sản phẩm...</p> : null}
           {!loading && items.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
-              Khong tim thay san pham phu hop.
+              Không tìm thấy sản phẩm phù hợp.
             </div>
           ) : null}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -127,21 +148,21 @@ const ProductListPage = () => {
 
                   <dl className="space-y-1 text-sm text-slate-600">
                     <div className="flex items-center justify-between gap-2">
-                      <dt>Loai</dt>
+                      <dt>Loại</dt>
                       <dd className="font-semibold text-slate-700">{item.type || "-"}</dd>
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                      <dt>Kich thuoc</dt>
+                      <dt>Kích thước</dt>
                       <dd className="font-semibold text-slate-700">{item.size || "-"}</dd>
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                      <dt>Be day</dt>
+                      <dt>Bề dày</dt>
                       <dd className="font-semibold text-slate-700">{item.thickness || "-"}</dd>
                     </div>
                   </dl>
 
                   <CustomButton
-                    label="Xem chi tiet"
+                    label="Xem chi tiết"
                     className="w-full"
                     onClick={() => navigate(ROUTE_URL.PRODUCT_DETAIL.replace(":id", item.id))}
                   />
