@@ -1,6 +1,17 @@
 import axios, { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from "axios";
 import type { ApiResponse, ApiValidationErrorItem } from "../models/common/api.model";
 
+const MIN_REQUEST_DURATION_MS = 1000;
+
+type PendingRequestListener = (count: number) => void;
+
+type RequestMetaConfig = InternalAxiosRequestConfig & {
+  metadata?: {
+    requestStartedAt: number;
+    tracked: boolean;
+  };
+};
+
 export class ApiClientError extends Error {
   code?: string;
   errors?: ApiValidationErrorItem[];
@@ -20,7 +31,57 @@ const api = axios.create({
   timeout: 10000,
 });
 
+let pendingRequestCount = 0;
+const pendingRequestListeners = new Set<PendingRequestListener>();
+
 const getToken = () => localStorage.getItem("access_token");
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const emitPendingRequestCount = () => {
+  pendingRequestListeners.forEach((listener) => listener(pendingRequestCount));
+};
+
+const increasePendingRequestCount = () => {
+  pendingRequestCount += 1;
+  emitPendingRequestCount();
+};
+
+const decreasePendingRequestCount = () => {
+  pendingRequestCount = Math.max(0, pendingRequestCount - 1);
+  emitPendingRequestCount();
+};
+
+const completeTrackedRequest = (config?: RequestMetaConfig) => {
+  if (!config?.metadata?.tracked) {
+    return;
+  }
+
+  config.metadata.tracked = false;
+  decreasePendingRequestCount();
+};
+
+export const subscribePendingApiRequests = (listener: PendingRequestListener) => {
+  pendingRequestListeners.add(listener);
+  listener(pendingRequestCount);
+
+  return () => {
+    pendingRequestListeners.delete(listener);
+  };
+};
+
+const ensureMinimumRequestDuration = async (config?: RequestMetaConfig) => {
+  const startedAt = config?.metadata?.requestStartedAt;
+  if (!startedAt) {
+    return;
+  }
+
+  const elapsed = Date.now() - startedAt;
+  const remaining = MIN_REQUEST_DURATION_MS - elapsed;
+
+  if (remaining > 0) {
+    await wait(remaining);
+  }
+};
 
 const extractValidationMessage = (errors?: ApiValidationErrorItem[]) => {
   if (!errors?.length) {
@@ -39,6 +100,13 @@ const extractValidationMessage = (errors?: ApiValidationErrorItem[]) => {
 
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    const requestConfig = config as RequestMetaConfig;
+    requestConfig.metadata = {
+      requestStartedAt: Date.now(),
+      tracked: true,
+    };
+    increasePendingRequestCount();
+
     if (!config.headers) {
       config.headers = new AxiosHeaders();
     }
@@ -60,7 +128,10 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => {
+  async (response) => {
+    await ensureMinimumRequestDuration(response.config as RequestMetaConfig);
+    completeTrackedRequest(response.config as RequestMetaConfig);
+
     const payload = response.data as ApiResponse<unknown> | unknown;
 
     if (!payload || typeof payload !== "object" || !("code" in payload)) {
@@ -79,7 +150,10 @@ api.interceptors.response.use(
       errors: apiResponse.errors,
     });
   },
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
+    await ensureMinimumRequestDuration(error.config as RequestMetaConfig | undefined);
+    completeTrackedRequest(error.config as RequestMetaConfig | undefined);
+
     const payload = error.response?.data as ApiResponse<unknown> | undefined;
     if (payload?.code) {
       const validationMessage = extractValidationMessage(payload.errors);

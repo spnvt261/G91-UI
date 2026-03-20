@@ -1,7 +1,8 @@
 import "./App.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
+import Loading from "./components/loading/Loading";
 import { ROUTE_URL } from "./const/route_url.const";
 import NotFoundPage from "./pages/404/NotFound.Page";
 import TestPage from "./pages/404/test.page";
@@ -43,6 +44,7 @@ import { authService } from "./services/auth/auth.service";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "./store";
 import { loginSuccess, logout as logoutAction } from "./store/authSlice";
+import { subscribePendingApiRequests } from "./apiConfig/axiosConfig";
 
 const AppAuthenticatedLayout = () => {
   const location = useLocation();
@@ -111,6 +113,15 @@ const AppAuthenticatedLayout = () => {
 function App() {
   const token = getStoredAccessToken();
   const userRole = getStoredUserRole();
+  const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = subscribePendingApiRequests((count) => {
+      setIsGlobalLoading(count > 0);
+    });
+
+    return unsubscribe;
+  }, []);
 
   return (
     <div className="min-h-screen w-full">
@@ -165,6 +176,7 @@ function App() {
         <Route path="/test" element={<TestPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      {isGlobalLoading ? <Loading fullScreen text="Loading data..." /> : null}
     </div>
   );
 }
