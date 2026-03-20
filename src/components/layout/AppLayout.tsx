@@ -3,7 +3,8 @@ import AppFooter from "./AppFooter";
 import Sidebar from "../navigation/Sidebar";
 import TopNavbar from "../navigation/TopNavbar";
 import AppBreadcrumb from "../navigation/AppBreadcrumb";
-import { useLocation, useNavigate } from "react-router-dom";
+import { matchPath, useLocation, useNavigate } from "react-router-dom";
+import { ROUTE_URL } from "../../const/route_url.const";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -14,6 +15,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const useScreenTemplateHeader =
+    Boolean(matchPath({ path: ROUTE_URL.PRODUCT_LIST, end: true }, location.pathname)) ||
+    Boolean(matchPath({ path: ROUTE_URL.PRODUCT_DETAIL, end: true }, location.pathname));
 
   return (
     <div className="relative flex min-h-screen bg-gray-100">
@@ -55,8 +59,8 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             }
           }}
         />
-        <div className="flex-1 p-6">
-          <AppBreadcrumb />
+        <div className={useScreenTemplateHeader ? "flex-1 pb-6" : "flex-1 p-6"}>
+          {!useScreenTemplateHeader ? <AppBreadcrumb /> : null}
           {children}
         </div>
         <AppFooter />

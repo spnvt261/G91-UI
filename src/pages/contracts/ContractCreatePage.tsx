@@ -3,8 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import FormSectionCard from "../../components/forms/FormSectionCard";
 import CustomButton from "../../components/customButton/CustomButton";
 import CustomTextField from "../../components/customTextField/CustomTextField";
-import PageHeader from "../../components/layout/PageHeader";
+import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
+import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { contractService } from "../../services/contract/contract.service";
 import { quotationService } from "../../services/quotation/quotation.service";
@@ -28,6 +30,9 @@ const ContractCreatePage = () => {
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const { notify } = useNotify();
+  const quotationDetailPath = quotationId
+    ? ROUTE_URL.QUOTATION_DETAIL.replace(":id", quotationId)
+    : ROUTE_URL.QUOTATION_LIST;
 
   useEffect(() => {
     const loadQuotation = async () => {
@@ -150,47 +155,69 @@ const ContractCreatePage = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="Create Contract From Quotation" />
+    <NoResizeScreenTemplate
+      header={
+        <ListScreenHeaderTemplate
+          title="Create Contract From Quotation"
+          subTitle="Create a contract from approved quotation data and define contract terms."
+          actions={
+            <div className="flex flex-wrap gap-2">
+              <CustomButton
+                label="Back To Quotation"
+                className="bg-slate-200 text-slate-700 hover:bg-slate-300"
+                onClick={() => navigate(quotationDetailPath)}
+              />
+              <CustomButton
+                label={loading ? "Creating..." : "Create Contract"}
+                onClick={handleCreate}
+                disabled={loading || !canCreate}
+              />
+            </div>
+          }
+          breadcrumb={
+            <CustomBreadcrumb
+              breadcrumbs={[
+                { label: "Trang chủ" },
+                { label: "Hợp đồng", url: ROUTE_URL.CONTRACT_LIST },
+                { label: "Tạo hợp đồng" },
+              ]}
+            />
+          }
+        />
+      }
+      body={
+        <div className="space-y-4">
+          <FormSectionCard title="Quotation Info">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <CustomTextField title="Quotation ID" value={quotationId ?? ""} disabled />
+              <CustomTextField title="Quotation Number" value={quotationNumber} disabled />
+              <CustomTextField title="Customer" value={customerLabel} disabled />
+              <CustomTextField title="Total Amount" value={toCurrency(totalAmount)} disabled />
+              <CustomTextField title="Quotation Status" value={quotation?.status ?? ""} disabled />
+              <CustomTextField title="Valid Until" value={quotation?.validUntil ?? ""} disabled />
+            </div>
+          </FormSectionCard>
 
-      <FormSectionCard title="Quotation Info">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <CustomTextField title="Quotation ID" value={quotationId ?? ""} disabled />
-          <CustomTextField title="Quotation Number" value={quotationNumber} disabled />
-          <CustomTextField title="Customer" value={customerLabel} disabled />
-          <CustomTextField title="Total Amount" value={toCurrency(totalAmount)} disabled />
-          <CustomTextField title="Quotation Status" value={quotation?.status ?? ""} disabled />
-          <CustomTextField title="Valid Until" value={quotation?.validUntil ?? ""} disabled />
+          <FormSectionCard title="Quotation Items">
+            <DataTable columns={itemColumns} data={quotation?.items ?? []} />
+          </FormSectionCard>
+
+          <FormSectionCard title="Contract Terms">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <CustomTextField title="Payment Terms" value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} />
+              <CustomTextField title="Delivery Address" value={deliveryAddress} onChange={(event) => setDeliveryAddress(event.target.value)} />
+            </div>
+            <p className="mt-2 text-xs text-slate-500">
+              Payment terms max {PAYMENT_TERMS_MAX_LENGTH} chars. Delivery address max {DELIVERY_ADDRESS_MAX_LENGTH} chars.
+            </p>
+
+            {!canCreateFromQuotation ? (
+              <p className="mt-3 text-sm text-amber-600">This quotation does not meet backend policy for contract conversion.</p>
+            ) : null}
+          </FormSectionCard>
         </div>
-      </FormSectionCard>
-
-      <FormSectionCard title="Quotation Items">
-        <DataTable columns={itemColumns} data={quotation?.items ?? []} />
-      </FormSectionCard>
-
-      <FormSectionCard title="Contract Terms">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <CustomTextField title="Payment Terms" value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} />
-          <CustomTextField title="Delivery Address" value={deliveryAddress} onChange={(event) => setDeliveryAddress(event.target.value)} />
-        </div>
-        <p className="mt-2 text-xs text-slate-500">
-          Payment terms max {PAYMENT_TERMS_MAX_LENGTH} chars. Delivery address max {DELIVERY_ADDRESS_MAX_LENGTH} chars.
-        </p>
-
-        {!canCreateFromQuotation ? (
-          <p className="mt-3 text-sm text-amber-600">This quotation does not meet backend policy for contract conversion.</p>
-        ) : null}
-
-        <div className="mt-4 flex gap-3">
-          <CustomButton label={loading ? "Creating..." : "Create Contract"} onClick={handleCreate} disabled={loading || !canCreate} />
-          <CustomButton
-            label="Back"
-            className="bg-slate-200 text-slate-700 hover:bg-slate-300"
-            onClick={() => navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", quotationId ?? ""))}
-          />
-        </div>
-      </FormSectionCard>
-    </div>
+      }
+    />
   );
 };
 
