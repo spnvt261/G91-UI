@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import AppFooter from "./AppFooter";
 import Sidebar from "../navigation/Sidebar";
 import TopNavbar from "../navigation/TopNavbar";
+import AppBreadcrumb from "../navigation/AppBreadcrumb";
 import { useLocation, useNavigate } from "react-router-dom";
 
 interface AppLayoutProps {
@@ -54,7 +55,10 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             }
           }}
         />
-        <div className="flex-1 p-6">{children}</div>
+        <div className="flex-1 p-6">
+          <AppBreadcrumb />
+          {children}
+        </div>
         <AppFooter />
       </main>
     </div>
