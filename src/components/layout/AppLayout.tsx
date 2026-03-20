@@ -2,9 +2,7 @@ import { useState, type ReactNode } from "react";
 import AppFooter from "./AppFooter";
 import Sidebar from "../navigation/Sidebar";
 import TopNavbar from "../navigation/TopNavbar";
-import AppBreadcrumb from "../navigation/AppBreadcrumb";
-import { matchPath, useLocation, useNavigate } from "react-router-dom";
-import { ROUTE_URL } from "../../const/route_url.const";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -15,14 +13,13 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const useScreenTemplateHeader =
-    Boolean(matchPath({ path: ROUTE_URL.PRODUCT_LIST, end: true }, location.pathname)) ||
-    Boolean(matchPath({ path: ROUTE_URL.PRODUCT_DETAIL, end: true }, location.pathname));
+  const desktopSidebarPaddingClass = sidebarCollapsed ? "lg:pl-20" : "lg:pl-72";
 
   return (
-    <div className="relative flex min-h-screen bg-gray-100">
-      <div className="hidden lg:block">
+    <div className="relative h-screen overflow-hidden bg-gray-100">
+      <div className="fixed inset-y-0 left-0 z-30 hidden lg:block">
         <Sidebar
+          className="h-full"
           collapsed={sidebarCollapsed}
           activePath={location.pathname}
           onNavigate={(path) => navigate(path)}
@@ -49,7 +46,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         </>
       ) : null}
 
-      <main className="flex min-h-screen flex-1 flex-col">
+      <main className={`flex h-full min-h-0 flex-1 flex-col transition-[padding-left] duration-200 ${desktopSidebarPaddingClass}`}>
         <TopNavbar
           onToggleSidebar={() => {
             if (window.innerWidth < 1024) {
@@ -59,11 +56,12 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             }
           }}
         />
-        <div className={true ? "flex-1 pb-6" : "flex-1 p-6"}>
-          {/* {!useScreenTemplateHeader ? <AppBreadcrumb /> : null} */}
-          {children}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="flex min-h-full flex-col">
+            <div className="min-h-0 flex-1 mb-4">{children}</div>
+            <AppFooter />
+          </div>
         </div>
-        <AppFooter />
       </main>
     </div>
   );

@@ -5,7 +5,6 @@ import AppBreadcrumb from "../navigation/AppBreadcrumb";
 interface ListScreenHeaderTemplateProps {
   title: ReactNode;
   breadcrumb?: ReactNode;
-  subTitle?: ReactNode;
   actions?: ReactNode;
   className?: string;
 }
@@ -13,7 +12,6 @@ interface ListScreenHeaderTemplateProps {
 const ListScreenHeaderTemplate = ({
   title,
   breadcrumb,
-  subTitle,
   actions,
   className,
 }: ListScreenHeaderTemplateProps) => {
@@ -27,12 +25,6 @@ const ListScreenHeaderTemplate = ({
         </Typography.Title>
         <div className="flex flex-wrap justify-end gap-2">{actions}</div>
       </div>
-
-      {/* {subTitle ? (
-        <div className="mt-1">
-          <Typography.Text className="text-sm text-slate-500">{subTitle}</Typography.Text>
-        </div>
-      ) : null} */}
     </div>
   );
 };

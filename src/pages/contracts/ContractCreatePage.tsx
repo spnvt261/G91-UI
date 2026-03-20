@@ -159,7 +159,6 @@ const ContractCreatePage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Create Contract From Quotation"
-          subTitle="Create a contract from approved quotation data and define contract terms."
           actions={
             <div className="flex flex-wrap gap-2">
               <CustomButton

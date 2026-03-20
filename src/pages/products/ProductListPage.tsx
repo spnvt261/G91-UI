@@ -68,7 +68,6 @@ const ProductListPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Danh sach san pham"
-          subTitle="Quan ly danh muc san pham va xem nhanh thong tin san pham."
           className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={<CustomButton label="Tao bao gia" onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)} />}
           breadcrumb={
