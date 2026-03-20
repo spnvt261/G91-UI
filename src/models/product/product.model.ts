@@ -13,6 +13,8 @@ export interface ProductModel {
   weightConversion?: number | null;
   referenceWeight?: number | null;
   status: ProductStatus;
+  mainImage?: string;
+  images?: string[];
   createdAt?: string;
 }
 
