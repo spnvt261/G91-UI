@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Loading from "../loading/Loading";
+import AppFooter from "../layout/AppFooter";
 
 interface NoResizeScreenTemplateProps {
   header: ReactNode;
@@ -19,9 +20,17 @@ const NoResizeScreenTemplate = ({
   loadingText,
 }: NoResizeScreenTemplateProps) => {
   return (
-    <div className={`relative flex h-full flex-1 min-w-0 flex-col ${className ?? ""}`.trim()}>
+    <div
+      className={`relative flex h-full flex-1 min-w-0 flex-col ${className ?? ""}`.trim()}
+    >
       {header}
-      <div className={`flex-1 overflow-auto px-8 pb-6 pt-6 ${bodyClassName ?? ""}`.trim()}>{body}</div>
+      <div
+        className={`flex-1 flex flex-col overflow-auto pb-6 pt-6 ${bodyClassName ?? ""}`.trim()}
+      >
+        <div className="px-8 pb-4">{body}</div>
+        <AppFooter />
+      </div>
+
       {loading ? <Loading text={loadingText} /> : null}
     </div>
   );
