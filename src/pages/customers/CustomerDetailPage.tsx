@@ -15,6 +15,7 @@ const CustomerDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [customer, setCustomer] = useState<CustomerModel | null>(null);
+  const [loading, setLoading] = useState(false);
   const { notify } = useNotify();
 
   useEffect(() => {
@@ -24,10 +25,13 @@ const CustomerDetailPage = () => {
       }
 
       try {
+        setLoading(true);
         const detail = await customerService.getDetail(id);
         setCustomer(detail);
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load customer detail"), "error");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -36,6 +40,8 @@ const CustomerDetailPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Đang tải thông tin khách hàng..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -94,7 +100,7 @@ const CustomerDetailPage = () => {
               </p>
             </div>
           ) : (
-            <p className="text-sm text-slate-500">Đang tải thông tin khách hàng...</p>
+            <p className="text-sm text-slate-500">Không có dữ liệu khách hàng.</p>
           )}
         </BaseCard>
       }

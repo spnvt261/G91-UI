@@ -55,6 +55,8 @@ const ContractApprovalListPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Đang tải danh sách phê duyệt..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -79,7 +81,6 @@ const ContractApprovalListPage = () => {
             filters={[]}
             onApplyFilters={() => undefined}
           />
-          {loading ? <p className="mb-3 text-sm text-slate-500">Đang tải danh sách phê duyệt...</p> : null}
           <DataTable
             columns={columns}
             data={pagedItems}

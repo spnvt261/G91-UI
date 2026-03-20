@@ -58,7 +58,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         />
         <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="flex h-full min-h-full flex-col">
-            <div className="flex flex-col min-h-0 flex-1 mb-4">{children}</div>
+            <div className="flex flex-col min-h-0 flex-1">{children}</div>
             <AppFooter />
           </div>
         </div>

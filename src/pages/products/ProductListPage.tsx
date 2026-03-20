@@ -84,6 +84,8 @@ const ProductListPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Đang tải danh sách sản phẩm..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate

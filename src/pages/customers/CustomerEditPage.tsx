@@ -23,7 +23,8 @@ const CustomerEditPage = () => {
   const [address, setAddress] = useState("");
   const [creditLimit, setCreditLimit] = useState("");
   const [status, setStatus] = useState("ACTIVE");
-  const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const { notify } = useNotify();
   const isAccountant = getStoredUserRole() === "ACCOUNTANT";
 
@@ -34,7 +35,7 @@ const CustomerEditPage = () => {
       }
 
       try {
-        setLoading(true);
+        setPageLoading(true);
         const detail = await customerService.getDetail(id);
         setCompanyName(detail.companyName ?? detail.fullName ?? "");
         setContactPerson(detail.contactPerson ?? detail.fullName ?? "");
@@ -47,7 +48,7 @@ const CustomerEditPage = () => {
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load customer for editing"), "error");
       } finally {
-        setLoading(false);
+        setPageLoading(false);
       }
     };
 
@@ -60,7 +61,7 @@ const CustomerEditPage = () => {
     }
 
     try {
-      setLoading(true);
+      setSaving(true);
       const parsedCreditLimit = Number(creditLimit);
       await customerService.update(id, {
         fullName: contactPerson.trim() || companyName.trim(),
@@ -77,12 +78,14 @@ const CustomerEditPage = () => {
     } catch (err) {
       notify(getErrorMessage(err, "Cannot update customer"), "error");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
   return (
     <NoResizeScreenTemplate
+      loading={pageLoading}
+      loadingText="Đang tải thông tin khách hàng..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -114,7 +117,7 @@ const CustomerEditPage = () => {
             <CustomTextField title="Address" value={address} onChange={(event) => setAddress(event.target.value)} />
           </div>
           <div className="mt-4 flex gap-3">
-            <CustomButton label={loading ? "Đang lưu..." : "Lưu thay đổi"} onClick={handleUpdate} disabled={loading} />
+            <CustomButton label={saving ? "Đang lưu..." : "Lưu thay đổi"} onClick={handleUpdate} disabled={saving} />
             <CustomButton label="Quay lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)} />
           </div>
         </FormSectionCard>

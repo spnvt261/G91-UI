@@ -16,6 +16,7 @@ const ContractApprovalDetailPage = () => {
   const { id } = useParams();
 
   const [contract, setContract] = useState<ContractModel | null>(null);
+  const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const { notify } = useNotify();
 
@@ -26,10 +27,13 @@ const ContractApprovalDetailPage = () => {
       }
 
       try {
+        setLoading(true);
         const detail = await contractService.getDetail(id);
         setContract(detail);
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load contract approval detail"), "error");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -62,6 +66,8 @@ const ContractApprovalDetailPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Đang tải hợp đồng..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -111,7 +117,7 @@ const ContractApprovalDetailPage = () => {
               </div>
             </div>
           ) : (
-            <p className="text-sm text-slate-500">Đang tải hợp đồng...</p>
+            <p className="text-sm text-slate-500">Không có dữ liệu hợp đồng.</p>
           )}
         </BaseCard>
       }

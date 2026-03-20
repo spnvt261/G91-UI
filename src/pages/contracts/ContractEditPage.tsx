@@ -31,7 +31,8 @@ const ContractEditPage = () => {
   const [confidential, setConfidential] = useState("false");
   const [status, setStatus] = useState("DRAFT");
   const [changeReason, setChangeReason] = useState("Updated from UI");
-  const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const isAccountant = getStoredUserRole() === "ACCOUNTANT";
 
   useEffect(() => {
@@ -41,7 +42,7 @@ const ContractEditPage = () => {
       }
 
       try {
-        setLoading(true);
+        setPageLoading(true);
         const detail = await contractService.getDetail(id);
         setQuotationId(detail.quotationId);
         setCustomerId(detail.customerId);
@@ -58,7 +59,7 @@ const ContractEditPage = () => {
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load contract for editing"), "error");
       } finally {
-        setLoading(false);
+        setPageLoading(false);
       }
     };
 
@@ -77,7 +78,7 @@ const ContractEditPage = () => {
     }
 
     try {
-      setLoading(true);
+      setSaving(true);
       const payload: ContractUpdateRequest = {
         quotationId: normalizedQuotationId,
         customerId,
@@ -102,12 +103,14 @@ const ContractEditPage = () => {
     } catch (err) {
       notify(getErrorMessage(err, "Cannot update contract"), "error");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
   return (
     <NoResizeScreenTemplate
+      loading={pageLoading}
+      loadingText="Đang tải thông tin hợp đồng..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -150,7 +153,7 @@ const ContractEditPage = () => {
               <CustomTextField title="Note" value={note} onChange={(event) => setNote(event.target.value)} />
             </div>
             <div className="mt-4 flex gap-3">
-              <CustomButton label={loading ? "Đang lưu..." : "Lưu thay đổi"} onClick={handleSave} disabled={loading} />
+              <CustomButton label={saving ? "Đang lưu..." : "Lưu thay đổi"} onClick={handleSave} disabled={saving} />
               <CustomButton label="Quay lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CONTRACT_LIST)} />
             </div>
           </FormSectionCard>

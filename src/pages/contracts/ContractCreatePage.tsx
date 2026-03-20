@@ -28,6 +28,7 @@ const ContractCreatePage = () => {
   const [canCreateFromQuotation, setCanCreateFromQuotation] = useState(false);
   const [paymentTerms, setPaymentTerms] = useState("70% on delivery, 30% within 30 days");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [pageLoading, setPageLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const { notify } = useNotify();
   const quotationDetailPath = quotationId
@@ -41,6 +42,7 @@ const ContractCreatePage = () => {
       }
 
       try {
+        setPageLoading(true);
         const detail = await quotationService.getDetail(quotationId);
         setQuotation(detail);
         setQuotationNumber(detail.quotationNumber || detail.id);
@@ -49,6 +51,8 @@ const ContractCreatePage = () => {
         setCanCreateFromQuotation(Boolean(detail.actions?.accountantCanCreateContract));
       } catch {
         setQuotation(null);
+      } finally {
+        setPageLoading(false);
       }
     };
 
@@ -156,6 +160,8 @@ const ContractCreatePage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={pageLoading}
+      loadingText="Loading quotation detail..."
       header={
         <ListScreenHeaderTemplate
           title="Create Contract From Quotation"

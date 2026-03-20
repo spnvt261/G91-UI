@@ -50,12 +50,14 @@ const QuotationCreatePage = () => {
   const [quotationItems, setQuotationItems] = useState<QuotationItemForm[]>([]);
   const [previewResult, setPreviewResult] = useState<QuotationPreviewResponseData | null>(null);
   const [isPreviewStale, setIsPreviewStale] = useState(true);
+  const [pageLoading, setPageLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const { notify } = useNotify();
 
   useEffect(() => {
     const loadInit = async () => {
       try {
+        setPageLoading(true);
         const response = await quotationService.getFormInit({ page: 1, pageSize: 100 });
         setCustomerInfo(response.customer ?? null);
         setProducts(response.products ?? []);
@@ -85,6 +87,8 @@ const QuotationCreatePage = () => {
         setProductOptions([]);
         setProjectOptions([]);
         setPromotionOptions([]);
+      } finally {
+        setPageLoading(false);
       }
     };
 
@@ -295,6 +299,8 @@ const QuotationCreatePage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={pageLoading}
+      loadingText="Loading quotation form..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate

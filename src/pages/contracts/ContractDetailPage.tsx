@@ -114,6 +114,8 @@ const ContractDetailPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Đang tải hợp đồng..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -168,7 +170,6 @@ const ContractDetailPage = () => {
       }
       body={
         <BaseCard>
-          {loading ? <p className="mb-3 text-sm text-slate-500">Đang tải hợp đồng...</p> : null}
           {contract ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">

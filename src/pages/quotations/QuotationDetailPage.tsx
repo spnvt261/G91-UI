@@ -83,6 +83,8 @@ const QuotationDetailPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Đang tải báo giá..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -124,7 +126,6 @@ const QuotationDetailPage = () => {
       }
       body={
         <BaseCard>
-          {loading ? <p className="mb-3 text-sm text-slate-500">Đang tải báo giá...</p> : null}
           {quotation ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">

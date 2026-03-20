@@ -35,6 +35,8 @@ const UserProfilePage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Loading profile..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -45,8 +47,6 @@ const UserProfilePage = () => {
       }
       body={
         <div className="space-y-6">
-          {loading ? <p className="text-sm text-slate-500">Loading profile...</p> : null}
-
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>

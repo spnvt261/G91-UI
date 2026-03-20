@@ -13,15 +13,19 @@ import { getErrorMessage, toCurrency } from "../shared/page.utils";
 const SalesReportPage = () => {
   const [items, setItems] = useState<{ period: string; revenue: number }[]>([]);
   const [keyword, setKeyword] = useState("");
+  const [loading, setLoading] = useState(false);
   const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
       try {
+        setLoading(true);
         const report = await reportService.getSalesReport();
         setItems(report);
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load sales report"), "error");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -32,6 +36,8 @@ const SalesReportPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Loading sales report..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate

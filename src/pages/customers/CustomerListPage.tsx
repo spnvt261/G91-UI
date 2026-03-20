@@ -67,6 +67,8 @@ const CustomerListPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Đang tải danh sách khách hàng..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -95,7 +97,6 @@ const CustomerListPage = () => {
               setPage(1);
             }}
           />
-          {loading ? <p className="mb-3 text-sm text-slate-500">Đang tải danh sách khách hàng...</p> : null}
           <DataTable
             columns={columns}
             data={pagedItems}

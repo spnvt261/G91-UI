@@ -122,6 +122,8 @@ const QuotationListPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Đang tải danh sách báo giá..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -165,7 +167,6 @@ const QuotationListPage = () => {
               setPage(1);
             }}
           />
-          {loading ? <p className="mb-3 text-sm text-slate-500">Đang tải danh sách báo giá...</p> : null}
           <DataTable
             columns={columns}
             data={items}

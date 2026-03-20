@@ -42,6 +42,8 @@ const ContractTrackingPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Đang tải tiến trình hợp đồng..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -67,7 +69,6 @@ const ContractTrackingPage = () => {
       }
       body={
         <BaseCard>
-          {loading ? <p className="mb-3 text-sm text-slate-500">Đang tải tiến trình hợp đồng...</p> : null}
           {currentStatus ? <p className="mb-4 font-semibold text-blue-900">Trạng thái hiện tại: {currentStatus}</p> : null}
           <ol className="space-y-3">
             {timeline.map((event, index) => (

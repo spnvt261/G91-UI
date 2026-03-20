@@ -109,6 +109,8 @@ const PaymentListPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Đang tải danh sách hóa đơn..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -120,7 +122,7 @@ const PaymentListPage = () => {
       body={
         <div className="space-y-4">
           <BaseCard>
-            <FilterSearchModalBar
+          <FilterSearchModalBar
               searchValue={keyword}
               onSearchChange={(value) => {
                 setKeyword(value);
@@ -147,10 +149,9 @@ const PaymentListPage = () => {
                     : {},
                 );
                 setPage(1);
-              }}
-            />
-            {loading ? <p className="mb-3 text-sm text-slate-500">Đang tải danh sách hóa đơn...</p> : null}
-            <DataTable
+            }}
+          />
+          <DataTable
               columns={columns}
               data={pagedItems}
               actions={(row) => (

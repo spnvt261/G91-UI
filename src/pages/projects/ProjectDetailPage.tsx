@@ -15,6 +15,7 @@ const ProjectDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [project, setProject] = useState<ProjectModel | null>(null);
+  const [loading, setLoading] = useState(false);
   const { notify } = useNotify();
 
   useEffect(() => {
@@ -24,10 +25,13 @@ const ProjectDetailPage = () => {
       }
 
       try {
+        setLoading(true);
         const detail = await projectService.getDetail(id);
         setProject(detail);
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load project detail"), "error");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -36,6 +40,8 @@ const ProjectDetailPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Đang tải thông tin dự án..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -85,7 +91,7 @@ const ProjectDetailPage = () => {
               </p>
             </div>
           ) : (
-            <p className="text-sm text-slate-500">Đang tải thông tin dự án...</p>
+            <p className="text-sm text-slate-500">Không có dữ liệu dự án.</p>
           )}
         </BaseCard>
       }

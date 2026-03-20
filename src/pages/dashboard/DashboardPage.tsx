@@ -47,6 +47,8 @@ const DashboardPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Loading dashboard..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -57,7 +59,6 @@ const DashboardPage = () => {
       }
       body={
         <div className="space-y-6">
-          {loading ? <p className="text-sm text-slate-500">Loading dashboard...</p> : null}
           <StatsGrid items={stats} />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <ChartCard title="Sales Trend" subtitle="Monthly sales overview" />

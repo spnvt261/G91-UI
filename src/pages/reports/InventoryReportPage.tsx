@@ -19,15 +19,19 @@ const InventoryReportPage = () => {
     reservedQty?: number;
   }[]>([]);
   const [keyword, setKeyword] = useState("");
+  const [loading, setLoading] = useState(false);
   const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
       try {
+        setLoading(true);
         const report = await reportService.getInventoryReport();
         setItems(report);
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load inventory report"), "error");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -40,6 +44,8 @@ const InventoryReportPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Loading inventory report..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate

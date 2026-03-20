@@ -20,7 +20,8 @@ const ProjectEditPage = () => {
   const [warehouseId, setWarehouseId] = useState("");
   const [status, setStatus] = useState("NEW");
   const [progress, setProgress] = useState("0");
-  const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const { notify } = useNotify();
 
   useEffect(() => {
@@ -30,7 +31,7 @@ const ProjectEditPage = () => {
       }
 
       try {
-        setLoading(true);
+        setPageLoading(true);
         const detail = await projectService.getDetail(id);
         setCode(detail.code ?? "");
         setName(detail.name);
@@ -41,7 +42,7 @@ const ProjectEditPage = () => {
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load project for update"), "error");
       } finally {
-        setLoading(false);
+        setPageLoading(false);
       }
     };
 
@@ -54,7 +55,7 @@ const ProjectEditPage = () => {
     }
 
     try {
-      setLoading(true);
+      setSaving(true);
       await projectService.update(id, {
         code,
         name,
@@ -71,12 +72,14 @@ const ProjectEditPage = () => {
     } catch (err) {
       notify(getErrorMessage(err, "Cannot update project"), "error");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
   return (
     <NoResizeScreenTemplate
+      loading={pageLoading}
+      loadingText="Đang tải thông tin dự án..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -104,7 +107,7 @@ const ProjectEditPage = () => {
             <CustomTextField title="Tiến độ" type="number" value={progress} onChange={(event) => setProgress(event.target.value)} />
           </div>
           <div className="mt-4 flex gap-3">
-            <CustomButton label={loading ? "Đang lưu..." : "Lưu cập nhật"} onClick={handleUpdate} disabled={loading} />
+            <CustomButton label={saving ? "Đang lưu..." : "Lưu cập nhật"} onClick={handleUpdate} disabled={saving} />
             <CustomButton label="Quay lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)} />
           </div>
         </FormSectionCard>

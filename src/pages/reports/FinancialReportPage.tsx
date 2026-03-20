@@ -15,17 +15,21 @@ const FinancialReportPage = () => {
   const [summaryRevenue, setSummaryRevenue] = useState(0);
   const [summaryDebt, setSummaryDebt] = useState(0);
   const [keyword, setKeyword] = useState("");
+  const [loading, setLoading] = useState(false);
   const { notify } = useNotify();
 
   useEffect(() => {
     const load = async () => {
       try {
+        setLoading(true);
         const [projects, dashboard] = await Promise.all([reportService.getProjectReport(), reportService.getDashboard()]);
         setProjectRows(projects);
         setSummaryRevenue(dashboard.summary.totalRevenue ?? 0);
         setSummaryDebt(dashboard.summary.totalDebt ?? 0);
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load financial report"), "error");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -38,6 +42,8 @@ const FinancialReportPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Loading financial report..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate

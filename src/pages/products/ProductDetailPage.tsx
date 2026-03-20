@@ -53,6 +53,8 @@ const ProductDetailPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Dang tai chi tiet san pham..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -85,7 +87,6 @@ const ProductDetailPage = () => {
       }
       body={
         <BaseCard className="border border-slate-200">
-          {loading ? <p className="text-sm text-slate-500">Dang tai chi tiet...</p> : null}
           {product ? (
             <div className="space-y-5">
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

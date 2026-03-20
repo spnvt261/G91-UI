@@ -11,6 +11,7 @@ import { reportService } from "../../services/report/report.service";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
 
 const DashboardReportPage = () => {
+  const [loading, setLoading] = useState(false);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalContracts, setTotalContracts] = useState(0);
   const [totalOrders, setTotalOrders] = useState(0);
@@ -20,6 +21,7 @@ const DashboardReportPage = () => {
   useEffect(() => {
     const load = async () => {
       try {
+        setLoading(true);
         const dashboard = await reportService.getDashboard();
         setTotalRevenue(dashboard.summary.totalRevenue ?? 0);
         setTotalContracts(dashboard.summary.totalContracts ?? 0);
@@ -27,6 +29,8 @@ const DashboardReportPage = () => {
         setTotalDebt(dashboard.summary.totalDebt ?? 0);
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load dashboard report"), "error");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -45,6 +49,8 @@ const DashboardReportPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loading}
+      loadingText="Loading dashboard report..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
