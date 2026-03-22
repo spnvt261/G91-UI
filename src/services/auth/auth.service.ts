@@ -7,9 +7,13 @@ import type {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
+  ResendVerificationCodeRequest,
+  ResendVerificationCodeResponse,
   ResetPasswordRequest,
   UpdateProfileRequest,
   UserProfileModel,
+  VerifyRegistrationRequest,
+  VerifyRegistrationResponse,
 } from "../../models/auth/auth.model";
 
 export const authService = {
@@ -20,6 +24,16 @@ export const authService = {
 
   async register(request: RegisterRequest): Promise<RegisterResponse> {
     const response = await api.post<RegisterResponse>(API.AUTH.REGISTER, request);
+    return response.data;
+  },
+
+  async verifyRegistration(request: VerifyRegistrationRequest): Promise<VerifyRegistrationResponse> {
+    const response = await api.post<VerifyRegistrationResponse>(API.AUTH.VERIFY_REGISTRATION, request);
+    return response.data;
+  },
+
+  async resendVerificationCode(request: ResendVerificationCodeRequest): Promise<ResendVerificationCodeResponse> {
+    const response = await api.post<ResendVerificationCodeResponse>(API.AUTH.RESEND_VERIFICATION_CODE, request);
     return response.data;
   },
 

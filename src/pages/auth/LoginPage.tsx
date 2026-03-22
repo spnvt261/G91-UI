@@ -14,6 +14,7 @@ import { getErrorMessage } from "../shared/page.utils";
 import { getDefaultRouteByRole } from "../../const/authz.const";
 import { persistAuthSession } from "../../utils/authSession";
 import { useNotify } from "../../context/notifyContext";
+import { ApiClientError } from "../../apiConfig/axiosConfig";
 
 const LoginPage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -35,9 +36,17 @@ const LoginPage = () => {
           user: response.user,
         }),
       );
-      notify("Dang nhap thanh cong", "success");
+      notify("Login successfully", "success");
       navigate(getDefaultRouteByRole(response.user.role));
     } catch (err) {
+      if (err instanceof ApiClientError && err.code === "EMAIL_VERIFICATION_REQUIRED") {
+        const normalizedEmail = email.trim();
+        const query = normalizedEmail ? `?email=${encodeURIComponent(normalizedEmail)}` : "";
+        notify("Please verify your email before login", "warning");
+        navigate(`${ROUTE_URL.VERIFY_REGISTRATION}${query}`, { state: { email: normalizedEmail } });
+        return;
+      }
+
       notify(getErrorMessage(err, "Login failed"), "error");
     } finally {
       setLoading(false);
@@ -46,26 +55,26 @@ const LoginPage = () => {
 
   return (
     <AuthPageShell>
-      <AuthCard title="Dang Nhap" subtitle="Chao mung ban quay lai. Dang nhap de tiep tuc." footer={<AuthFooter />}>
+      <AuthCard title="Login" subtitle="Welcome back. Login to continue." footer={<AuthFooter />}>
         <div className="space-y-4">
           <CustomTextField title="Email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" />
           <CustomTextField
-            title="Mat Khau"
+            title="Password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             type="password"
-            placeholder="Nhap mat khau"
+            placeholder="Enter password"
           />
-          <CustomButton label={loading ? "Dang xu ly..." : "Dang Nhap"} className="w-full" onClick={handleSubmit} disabled={loading} />
+          <CustomButton label={loading ? "Processing..." : "Login"} className="w-full" onClick={handleSubmit} disabled={loading} />
           <div className="text-center text-sm text-slate-600">
             <Link to={ROUTE_URL.FORGOT_PASSWORD} className="text-blue-600 hover:underline">
-              Quen mat khau?
+              Forgot password?
             </Link>
           </div>
           <div className="text-center text-sm text-slate-600">
-            Chua co tai khoan?{" "}
+            No account yet?{" "}
             <Link to={ROUTE_URL.REGISTER} className="text-blue-600 hover:underline">
-              Dang ky
+              Register
             </Link>
           </div>
         </div>

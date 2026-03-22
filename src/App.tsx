@@ -9,6 +9,7 @@ import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+import VerifyRegistrationPage from "./pages/auth/VerifyRegistrationPage";
 import ContractCreatePage from "./pages/contracts/ContractCreatePage";
 import ContractDetailPage from "./pages/contracts/ContractDetailPage";
 import ContractEditPage from "./pages/contracts/ContractEditPage";
@@ -119,6 +120,10 @@ function App() {
 
         <Route path={ROUTE_URL.LOGIN} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <LoginPage />} />
         <Route path={ROUTE_URL.REGISTER} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <RegisterPage />} />
+        <Route
+          path={ROUTE_URL.VERIFY_REGISTRATION}
+          element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <VerifyRegistrationPage />}
+        />
         <Route path={ROUTE_URL.FORGOT_PASSWORD} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <ForgotPasswordPage />} />
         <Route path={ROUTE_URL.RESET_PASSWORD} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <ResetPasswordPage />} />
 

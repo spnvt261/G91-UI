@@ -1,5 +1,5 @@
 ﻿export type UserRole = "GUEST" | "CUSTOMER" | "ACCOUNTANT" | "WAREHOUSE" | "OWNER";
-export type UserStatus = "ACTIVE" | "INACTIVE" | "LOCKED";
+export type UserStatus = "ACTIVE" | "INACTIVE" | "LOCKED" | "PENDING_VERIFICATION";
 
 export interface UserModel {
   id: string;
@@ -36,7 +36,33 @@ export interface RegisterRequest {
 
 export interface RegisterResponse {
   userId: string;
+  email: string;
+  verificationRequired: boolean;
+  expireMinutes: number;
   redirectTo: string;
+}
+
+export interface VerifyRegistrationRequest {
+  email: string;
+  verificationCode: string;
+}
+
+export interface VerifyRegistrationResponse {
+  userId: string;
+  email: string;
+  status: UserStatus;
+  verified: boolean;
+  redirectTo: string;
+}
+
+export interface ResendVerificationCodeRequest {
+  email: string;
+}
+
+export interface ResendVerificationCodeResponse {
+  userId: string;
+  email: string;
+  expireMinutes: number;
 }
 
 export interface ChangePasswordRequest {

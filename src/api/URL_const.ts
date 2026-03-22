@@ -1,6 +1,8 @@
 export const API = {
   AUTH: {
     REGISTER: "/api/auth/register",
+    VERIFY_REGISTRATION: "/api/auth/verify-registration",
+    RESEND_VERIFICATION_CODE: "/api/auth/resend-verification-code",
     LOGIN: "/api/auth/login",
     LOGOUT: "/api/auth/logout",
     CHANGE_PASSWORD: "/api/auth/change-password",

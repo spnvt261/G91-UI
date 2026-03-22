@@ -1,6 +1,7 @@
 export const ROUTE_URL = {
   LOGIN: "/login",
   REGISTER: "/register",
+  VERIFY_REGISTRATION: "/verify-registration",
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password",
 

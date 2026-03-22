@@ -21,20 +21,27 @@ const RegisterPage = () => {
 
   const handleRegister = async () => {
     if (password !== confirmPassword) {
-      notify("Xac nhan mat khau khong khop", "error");
+      notify("Password confirmation does not match", "error");
       return;
     }
 
     try {
       setLoading(true);
-      await authService.register({
+      const response = await authService.register({
         fullName,
         email,
         password,
         confirmPassword,
       });
-      notify("Dang ky thanh cong", "success");
-      navigate(ROUTE_URL.LOGIN);
+
+      const nextRoute = response.redirectTo || ROUTE_URL.VERIFY_REGISTRATION;
+      notify("Registration created. Please verify your account.", "success");
+      navigate(nextRoute, {
+        state: {
+          email: response.email || email.trim(),
+          expireMinutes: response.expireMinutes,
+        },
+      });
     } catch (err) {
       notify(getErrorMessage(err, "Register failed"), "error");
     } finally {
@@ -44,29 +51,29 @@ const RegisterPage = () => {
 
   return (
     <AuthPageShell>
-      <AuthCard title="Tao Tai Khoan" subtitle="Dang ky tai khoan de quan ly bao gia va don hang" footer={<AuthFooter />}>
+      <AuthCard title="Create Account" subtitle="Register to manage quotations and orders" footer={<AuthFooter />}>
         <div className="space-y-4">
-          <CustomTextField title="Ho va Ten" value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="Cong ty An Phat" />
+          <CustomTextField title="Full Name" value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="Your full name" />
           <CustomTextField title="Email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="email@company.com" />
           <CustomTextField
-            title="Mat Khau"
+            title="Password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             type="password"
-            placeholder="It nhat 6 ky tu"
+            placeholder="At least 6 characters"
           />
           <CustomTextField
-            title="Xac Nhan Mat Khau"
+            title="Confirm Password"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
             type="password"
-            placeholder="Nhap lai mat khau"
+            placeholder="Re-enter password"
           />
-          <CustomButton label={loading ? "Dang xu ly..." : "Dang Ky"} className="w-full" onClick={handleRegister} disabled={loading} />
+          <CustomButton label={loading ? "Processing..." : "Register"} className="w-full" onClick={handleRegister} disabled={loading} />
           <div className="text-center text-sm text-slate-600">
-            Da co tai khoan?{" "}
+            Already have an account?{" "}
             <Link to={ROUTE_URL.LOGIN} className="text-blue-600 hover:underline">
-              Dang nhap
+              Login
             </Link>
           </div>
         </div>

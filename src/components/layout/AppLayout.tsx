@@ -1,5 +1,4 @@
 import { useState, type ReactNode } from "react";
-import AppFooter from "./AppFooter";
 import Sidebar from "../navigation/Sidebar";
 import TopNavbar from "../navigation/TopNavbar";
 import { useLocation, useNavigate } from "react-router-dom";
