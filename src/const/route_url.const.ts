@@ -7,9 +7,19 @@ export const ROUTE_URL = {
 
   DASHBOARD: "/dashboard",
   PROFILE: "/profile",
+  ACCOUNT_LIST: "/accounts",
+  ACCOUNT_CREATE: "/accounts/create",
+  ACCOUNT_DETAIL: "/accounts/:id",
+  ACCOUNT_EDIT: "/accounts/:id/edit",
 
   PRODUCT_LIST: "/products",
   PRODUCT_DETAIL: "/products/:id",
+  PRODUCT_CREATE: "/products/create",
+  PRODUCT_EDIT: "/products/:id/edit",
+
+  PRICE_LIST_LIST: "/price-lists",
+  PRICE_LIST_CREATE: "/price-lists/create",
+  PRICE_LIST_DETAIL: "/price-lists/:id",
 
   QUOTATION_LIST: "/quotations",
   QUOTATION_CREATE: "/quotations/create",
@@ -43,8 +53,16 @@ export const ROUTE_URL = {
   PAYMENT_DETAIL: "/payments/:id",
   PAYMENT_RECORD: "/payments/:id/record",
 
+  INVENTORY_STATUS: "/inventory",
+  INVENTORY_RECEIPT_CREATE: "/inventory/receipts/create",
+  INVENTORY_ISSUE_CREATE: "/inventory/issues/create",
+  INVENTORY_ADJUSTMENT_CREATE: "/inventory/adjustments/create",
+  INVENTORY_HISTORY: "/inventory/history",
+
   REPORT_DASHBOARD: "/reports/dashboard",
   REPORT_SALES: "/reports/sales",
   REPORT_INVENTORY: "/reports/inventory",
+  REPORT_PROJECT: "/reports/project",
   REPORT_FINANCIAL: "/reports/financial",
+  REPORT_EXPORT: "/reports/export",
 } as const;

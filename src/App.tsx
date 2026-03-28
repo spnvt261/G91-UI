@@ -2,9 +2,13 @@ import "./App.css";
 import { useEffect } from "react";
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
+import { canAccessPathByRole, getDefaultRouteByRole } from "./const/authz.const";
 import { ROUTE_URL } from "./const/route_url.const";
 import NotFoundPage from "./pages/404/NotFound.Page";
 import TestPage from "./pages/404/test.page";
+import AccountListPage from "./pages/accounts/AccountListPage";
+import ContractApprovalDetailPage from "./pages/approvals/ContractApprovalDetailPage";
+import ContractApprovalListPage from "./pages/approvals/ContractApprovalListPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
@@ -20,14 +24,25 @@ import CustomerDetailPage from "./pages/customers/CustomerDetailPage";
 import CustomerEditPage from "./pages/customers/CustomerEditPage";
 import CustomerListPage from "./pages/customers/CustomerListPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
+import InventoryAdjustmentCreatePage from "./pages/inventory/InventoryAdjustmentCreatePage";
+import InventoryHistoryPage from "./pages/inventory/InventoryHistoryPage";
+import InventoryIssueCreatePage from "./pages/inventory/InventoryIssueCreatePage";
+import InventoryReceiptCreatePage from "./pages/inventory/InventoryReceiptCreatePage";
+import InventoryStatusPage from "./pages/inventory/InventoryStatusPage";
 import PaymentDetailPage from "./pages/payments/PaymentDetailPage";
 import PaymentListPage from "./pages/payments/PaymentListPage";
 import RecordPaymentPage from "./pages/payments/RecordPaymentPage";
+import PriceListCreatePage from "./pages/pricing/PriceListCreatePage";
+import PriceListDetailPage from "./pages/pricing/PriceListDetailPage";
+import PriceListListPage from "./pages/pricing/PriceListListPage";
 import PromotionCreatePage from "./pages/promotions/PromotionCreatePage";
 import PromotionDetailPage from "./pages/promotions/PromotionDetailPage";
 import PromotionListPage from "./pages/promotions/PromotionListPage";
+import ProductCreatePage from "./pages/products/ProductCreatePage";
 import ProductDetailPage from "./pages/products/ProductDetailPage";
+import ProductEditPage from "./pages/products/ProductEditPage";
 import ProductListPage from "./pages/products/ProductListPage";
+import UserProfilePage from "./pages/profile/UserProfilePage";
 import ProjectAssignWarehousePage from "./pages/projects/ProjectAssignWarehousePage";
 import ProjectCreatePage from "./pages/projects/ProjectCreatePage";
 import ProjectDetailPage from "./pages/projects/ProjectDetailPage";
@@ -36,17 +51,15 @@ import ProjectListPage from "./pages/projects/ProjectListPage";
 import QuotationCreatePage from "./pages/quotations/QuotationCreatePage";
 import QuotationDetailPage from "./pages/quotations/QuotationDetailPage";
 import QuotationListPage from "./pages/quotations/QuotationListPage";
-import DashboardReportPage from "./pages/reports/DashboardReportPage";
+import ExportReportPage from "./pages/reports/ExportReportPage";
 import FinancialReportPage from "./pages/reports/FinancialReportPage";
 import InventoryReportPage from "./pages/reports/InventoryReportPage";
 import SalesReportPage from "./pages/reports/SalesReportPage";
-import UserProfilePage from "./pages/profile/UserProfilePage";
-import { canAccessPathByRole, getDefaultRouteByRole } from "./const/authz.const";
-import { clearAuthSession, getStoredAccessToken, getStoredUserRole, persistAuthSession } from "./utils/authSession";
 import { authService } from "./services/auth/auth.service";
-import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "./store";
 import { loginSuccess, logout as logoutAction } from "./store/authSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { clearAuthSession, getStoredAccessToken, getStoredUserRole, persistAuthSession } from "./utils/authSession";
 
 const AppAuthenticatedLayout = () => {
   const location = useLocation();
@@ -94,7 +107,10 @@ const AppAuthenticatedLayout = () => {
   }, [currentUser, dispatch, role, token]);
 
   if (!token || !role) {
-    return <Navigate to="/" replace />;
+    if (canAccessPathByRole("GUEST", location.pathname)) {
+      return <Outlet />;
+    }
+    return <Navigate to={ROUTE_URL.LOGIN} replace />;
   }
 
   if (!currentUser) {
@@ -119,7 +135,7 @@ function App() {
   return (
     <div className="min-h-screen w-full">
       <Routes>
-        <Route path="/" element={<Navigate to={token && userRole ? getDefaultRouteByRole(userRole) : ROUTE_URL.LOGIN} replace />} />
+        <Route path="/" element={<Navigate to={token && userRole ? getDefaultRouteByRole(userRole) : ROUTE_URL.PRODUCT_LIST} replace />} />
 
         <Route path={ROUTE_URL.LOGIN} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <LoginPage />} />
         <Route path={ROUTE_URL.REGISTER} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <RegisterPage />} />
@@ -133,9 +149,16 @@ function App() {
         <Route element={<AppAuthenticatedLayout />}>
           <Route path={ROUTE_URL.DASHBOARD} element={<DashboardPage />} />
           <Route path={ROUTE_URL.PROFILE} element={<UserProfilePage />} />
+          <Route path={ROUTE_URL.ACCOUNT_LIST} element={<AccountListPage />} />
 
           <Route path={ROUTE_URL.PRODUCT_LIST} element={<ProductListPage />} />
           <Route path={ROUTE_URL.PRODUCT_DETAIL} element={<ProductDetailPage />} />
+          <Route path={ROUTE_URL.PRODUCT_CREATE} element={<ProductCreatePage />} />
+          <Route path={ROUTE_URL.PRODUCT_EDIT} element={<ProductEditPage />} />
+
+          <Route path={ROUTE_URL.PRICE_LIST_LIST} element={<PriceListListPage />} />
+          <Route path={ROUTE_URL.PRICE_LIST_CREATE} element={<PriceListCreatePage />} />
+          <Route path={ROUTE_URL.PRICE_LIST_DETAIL} element={<PriceListDetailPage />} />
 
           <Route path={ROUTE_URL.QUOTATION_LIST} element={<QuotationListPage />} />
           <Route path={ROUTE_URL.QUOTATION_CREATE} element={<QuotationCreatePage />} />
@@ -150,8 +173,8 @@ function App() {
           <Route path={ROUTE_URL.CONTRACT_DETAIL} element={<ContractDetailPage />} />
           <Route path={ROUTE_URL.CONTRACT_EDIT} element={<ContractEditPage />} />
           <Route path={ROUTE_URL.CONTRACT_TRACKING} element={<ContractTrackingPage />} />
-          <Route path={ROUTE_URL.CONTRACT_APPROVAL_LIST} element={<Navigate to={ROUTE_URL.QUOTATION_LIST} replace />} />
-          <Route path={ROUTE_URL.CONTRACT_APPROVAL_DETAIL} element={<Navigate to={ROUTE_URL.QUOTATION_LIST} replace />} />
+          <Route path={ROUTE_URL.CONTRACT_APPROVAL_LIST} element={<ContractApprovalListPage />} />
+          <Route path={ROUTE_URL.CONTRACT_APPROVAL_DETAIL} element={<ContractApprovalDetailPage />} />
 
           <Route path={ROUTE_URL.CUSTOMER_LIST} element={<CustomerListPage />} />
           <Route path={ROUTE_URL.CUSTOMER_DETAIL} element={<CustomerDetailPage />} />
@@ -168,10 +191,17 @@ function App() {
           <Route path={ROUTE_URL.PAYMENT_DETAIL} element={<PaymentDetailPage />} />
           <Route path={ROUTE_URL.PAYMENT_RECORD} element={<RecordPaymentPage />} />
 
-          <Route path={ROUTE_URL.REPORT_DASHBOARD} element={<DashboardReportPage />} />
+          <Route path={ROUTE_URL.INVENTORY_STATUS} element={<InventoryStatusPage />} />
+          <Route path={ROUTE_URL.INVENTORY_RECEIPT_CREATE} element={<InventoryReceiptCreatePage />} />
+          <Route path={ROUTE_URL.INVENTORY_ISSUE_CREATE} element={<InventoryIssueCreatePage />} />
+          <Route path={ROUTE_URL.INVENTORY_ADJUSTMENT_CREATE} element={<InventoryAdjustmentCreatePage />} />
+          <Route path={ROUTE_URL.INVENTORY_HISTORY} element={<InventoryHistoryPage />} />
+
           <Route path={ROUTE_URL.REPORT_SALES} element={<SalesReportPage />} />
           <Route path={ROUTE_URL.REPORT_INVENTORY} element={<InventoryReportPage />} />
+          <Route path={ROUTE_URL.REPORT_PROJECT} element={<FinancialReportPage />} />
           <Route path={ROUTE_URL.REPORT_FINANCIAL} element={<FinancialReportPage />} />
+          <Route path={ROUTE_URL.REPORT_EXPORT} element={<ExportReportPage />} />
         </Route>
 
         <Route path="/test" element={<TestPage />} />

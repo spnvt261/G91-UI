@@ -1,7 +1,7 @@
 import type { UserRole } from "../models/auth/auth.model";
 
 export const PROMOTION_READ_ROLES: UserRole[] = ["OWNER", "ACCOUNTANT", "CUSTOMER"];
-export const PROMOTION_WRITE_ROLES: UserRole[] = ["OWNER", "ACCOUNTANT"];
+export const PROMOTION_WRITE_ROLES: UserRole[] = ["OWNER"];
 
 export const canReadPromotionByRole = (role: UserRole | null | undefined): boolean => {
   if (!role) {

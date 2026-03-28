@@ -8,16 +8,20 @@ import FilterSearchModalBar, { type FilterModalGroup } from "../../components/ta
 import Pagination from "../../components/table/Pagination";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { canPerformAction } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type { DebtModel, InvoiceModel } from "../../models/payment/payment.model";
 import { paymentService } from "../../services/payment/payment.service";
+import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
 
 const PAGE_SIZE = 8;
 
 const PaymentListPage = () => {
   const navigate = useNavigate();
+  const role = getStoredUserRole();
+  const canRecordPayment = canPerformAction(role, "payment.record");
   const [allInvoices, setAllInvoices] = useState<InvoiceModel[]>([]);
   const [debtItems, setDebtItems] = useState<DebtModel[]>([]);
   const [page, setPage] = useState(1);
@@ -161,11 +165,13 @@ const PaymentListPage = () => {
                     className="px-2 py-1 text-sm"
                     onClick={() => navigate(ROUTE_URL.PAYMENT_DETAIL.replace(":id", row.id))}
                   />
-                  <CustomButton
-                    label="Ghi nhận"
-                    className="px-2 py-1 text-sm"
-                    onClick={() => navigate(ROUTE_URL.PAYMENT_RECORD.replace(":id", row.id))}
-                  />
+                  {canRecordPayment ? (
+                    <CustomButton
+                      label="Ghi nhận"
+                      className="px-2 py-1 text-sm"
+                      onClick={() => navigate(ROUTE_URL.PAYMENT_RECORD.replace(":id", row.id))}
+                    />
+                  ) : null}
                 </div>
               )}
             />

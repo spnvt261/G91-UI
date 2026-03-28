@@ -6,6 +6,7 @@ import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { canPerformAction } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type { ContractItemModel, ContractModel } from "../../models/contract/contract.model";
@@ -22,9 +23,9 @@ const ContractDetailPage = () => {
   const { notify } = useNotify();
 
   const role = getStoredUserRole();
-  const rawRole = localStorage.getItem("user_role")?.trim().toUpperCase();
-  const isAccountant = role === "ACCOUNTANT";
-  const isAdmin = rawRole === "ADMIN" || role === "OWNER";
+  const canSubmit = canPerformAction(role, "contract.submit");
+  const canApprove = canPerformAction(role, "contract.approve");
+  const canEdit = canPerformAction(role, "contract.update");
 
   const loadContractDetail = async (contractId: string) => {
     const detail = await contractService.getDetail(contractId);
@@ -123,21 +124,21 @@ const ContractDetailPage = () => {
           className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={
             <div className="flex flex-wrap gap-2">
-              {isAccountant ? (
+              {canSubmit ? (
                 <CustomButton
                   label={actionLoading ? "Submitting..." : "Submit hợp đồng"}
                   onClick={handleSubmitContract}
                   disabled={!contract || actionLoading}
                 />
               ) : null}
-              {isAdmin ? (
+              {canApprove ? (
                 <CustomButton
                   label={actionLoading ? "Approving..." : "Chấp nhận hợp đồng"}
                   onClick={handleApproveContract}
                   disabled={!contract || actionLoading}
                 />
               ) : null}
-              {isAdmin ? (
+              {canApprove ? (
                 <CustomButton
                   label={actionLoading ? "Rejecting..." : "Từ chối hợp đồng"}
                   className="bg-red-500 hover:bg-red-600"
@@ -150,11 +151,13 @@ const ContractDetailPage = () => {
                 onClick={() => navigate(ROUTE_URL.CONTRACT_TRACKING.replace(":id", contract?.id ?? ""))}
                 disabled={!contract || actionLoading}
               />
-              <CustomButton
-                label="Chỉnh sửa"
-                onClick={() => navigate(ROUTE_URL.CONTRACT_EDIT.replace(":id", contract?.id ?? ""))}
-                disabled={!contract || actionLoading}
-              />
+              {canEdit ? (
+                <CustomButton
+                  label="Chỉnh sửa"
+                  onClick={() => navigate(ROUTE_URL.CONTRACT_EDIT.replace(":id", contract?.id ?? ""))}
+                  disabled={!contract || actionLoading}
+                />
+              ) : null}
             </div>
           }
           breadcrumb={

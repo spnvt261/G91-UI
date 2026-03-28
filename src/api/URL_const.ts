@@ -28,6 +28,7 @@ export const API = {
     DETAIL: "/api/products/{id}",
     UPDATE: "/api/products/{id}",
     STATUS: "/api/products/{id}/status",
+    DELETE: "/api/products/{id}",
   },
 
   PRICE_LISTS: {
@@ -125,6 +126,14 @@ export const API = {
     DASHBOARD: "/api/reports/dashboard",
   },
 
+  INVENTORY: {
+    RECEIPTS_CREATE: "/api/inventory/receipts",
+    ISSUES_CREATE: "/api/inventory/issues",
+    ADJUSTMENTS_CREATE: "/api/inventory/adjustments",
+    STATUS: "/api/inventory/status",
+    HISTORY: "/api/inventory/history",
+  },
+
   // Backward-compatible aliases.
   ACCOUNT: {
     CREATE: "/api/accounts",
@@ -140,6 +149,7 @@ export const API = {
     DETAIL: "/api/products/{id}",
     UPDATE: "/api/products/{id}",
     STATUS: "/api/products/{id}/status",
+    DELETE: "/api/products/{id}",
   },
 
   PRICING: {

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import BaseCard from "../../components/cards/BaseCard";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable from "../../components/table/DataTable";
@@ -46,9 +46,9 @@ const SalesReportPage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chủ" },
-                { label: "Báo cáo", url: ROUTE_URL.REPORT_DASHBOARD },
-                { label: "Doanh số" },
+                { label: "Trang ch?" },
+                { label: "B�o c�o", url: ROUTE_URL.REPORT_SALES },
+                { label: "Doanh s?" },
               ]}
             />
           }
@@ -59,7 +59,7 @@ const SalesReportPage = () => {
           <TableFilterBar searchValue={keyword} onSearchChange={setKeyword} />
           <DataTable
             columns={[
-              { key: "period", header: "Kỳ báo cáo" },
+              { key: "period", header: "K? b�o c�o" },
               { key: "revenue", header: "Doanh thu", render: (row) => toCurrency((row as { revenue: number }).revenue) },
             ]}
             data={filtered}
@@ -71,3 +71,4 @@ const SalesReportPage = () => {
 };
 
 export default SalesReportPage;
+

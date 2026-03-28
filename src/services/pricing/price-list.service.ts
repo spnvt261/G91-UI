@@ -1,51 +1,118 @@
 import api from "../../apiConfig/axiosConfig";
 import { API, withId } from "../../api/URL_const";
 import type {
-  PriceListCreateDataResponse,
-  PriceListCreateRequest,
-  PriceListDetailResponse,
-  PriceListItemCreateDataResponse,
-  PriceListItemCreateRequest,
-  PriceListItemUpdateRequest,
+  PriceListItemModel,
   PriceListListQuery,
   PriceListListResponseData,
-  PriceListUpdateRequest,
+  PriceListModel,
+  PriceListStatus,
+  PriceListWriteRequest,
 } from "../../models/pricing/price-list.model";
+import { extractList } from "../service.utils";
+
+interface PriceListApiItem {
+  id?: string;
+  productId?: string;
+  productCode?: string;
+  productName?: string;
+  unitPrice?: number;
+}
+
+interface PriceListApiModel {
+  id: string;
+  name: string;
+  customerGroup?: string;
+  validFrom?: string;
+  validTo?: string;
+  startDate?: string;
+  endDate?: string;
+  status?: string;
+  itemCount?: number;
+  items?: PriceListApiItem[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface PriceListApiPagedResponse {
+  content?: PriceListApiModel[];
+  page?: number;
+  size?: number;
+  totalElements?: number;
+}
+
+const toPriceListStatus = (value: string | undefined): PriceListStatus => {
+  return value === "INACTIVE" ? "INACTIVE" : "ACTIVE";
+};
+
+const toItemModel = (item: PriceListApiItem): PriceListItemModel => ({
+  id: item.id,
+  productId: item.productId ?? "",
+  productCode: item.productCode,
+  productName: item.productName,
+  unitPrice: Number(item.unitPrice ?? 0),
+});
+
+const toModel = (item: PriceListApiModel): PriceListModel => {
+  const items = (item.items ?? []).map(toItemModel).filter((row) => Boolean(row.productId));
+
+  return {
+    id: item.id,
+    name: item.name,
+    customerGroup: item.customerGroup,
+    validFrom: item.validFrom ?? item.startDate ?? "",
+    validTo: item.validTo ?? item.endDate ?? "",
+    status: toPriceListStatus(item.status),
+    itemCount: Number(item.itemCount ?? items.length),
+    items,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+  };
+};
+
+const toWritePayload = (payload: PriceListWriteRequest) => ({
+  name: payload.name.trim(),
+  customerGroup: payload.customerGroup?.trim() || undefined,
+  validFrom: payload.validFrom,
+  validTo: payload.validTo,
+  status: payload.status,
+  items: payload.items.map((item) => ({
+    productId: item.productId,
+    unitPrice: item.unitPrice,
+  })),
+});
 
 export const priceListService = {
-  async create(requestBody: PriceListCreateRequest): Promise<PriceListCreateDataResponse> {
-    const response = await api.post<PriceListCreateDataResponse>(API.PRICE_LISTS.CREATE, requestBody);
+  async create(payload: PriceListWriteRequest): Promise<{ id: string }> {
+    const response = await api.post<{ id: string }>(API.PRICE_LISTS.CREATE, toWritePayload(payload));
     return response.data;
   },
 
-  async getList(params?: PriceListListQuery): Promise<PriceListListResponseData> {
-    const response = await api.get<PriceListListResponseData>(API.PRICE_LISTS.LIST, { params });
-    return response.data;
+  async getList(query?: PriceListListQuery): Promise<PriceListListResponseData> {
+    const response = await api.get<unknown>(API.PRICE_LISTS.LIST, { params: query });
+    const payload = response.data as PriceListApiPagedResponse | PriceListApiModel[] | undefined;
+    const items = extractList<PriceListApiModel>(payload).map(toModel);
+
+    return {
+      items,
+      page: payload && typeof payload === "object" && "page" in payload ? Number(payload.page ?? query?.page ?? 1) : Number(query?.page ?? 1),
+      size: payload && typeof payload === "object" && "size" in payload ? Number(payload.size ?? query?.size ?? 10) : Number(query?.size ?? 10),
+      totalElements:
+        payload && typeof payload === "object" && "totalElements" in payload
+          ? Number(payload.totalElements ?? items.length)
+          : items.length,
+    };
   },
 
-  async getDetail(id: string): Promise<PriceListDetailResponse> {
-    const response = await api.get<PriceListDetailResponse>(withId(API.PRICE_LISTS.DETAIL, id));
-    return response.data;
+  async getDetail(id: string): Promise<PriceListModel> {
+    const response = await api.get<PriceListApiModel>(withId(API.PRICE_LISTS.DETAIL, id));
+    return toModel(response.data);
   },
 
-  async update(id: string, requestBody: PriceListUpdateRequest): Promise<void> {
-    await api.put<void>(withId(API.PRICE_LISTS.UPDATE, id), requestBody);
+  async update(id: string, payload: PriceListWriteRequest): Promise<void> {
+    await api.put<void>(withId(API.PRICE_LISTS.UPDATE, id), toWritePayload(payload));
   },
 
   async remove(id: string): Promise<void> {
     await api.delete<void>(withId(API.PRICE_LISTS.DELETE, id));
-  },
-
-  async addItem(id: string, requestBody: PriceListItemCreateRequest): Promise<PriceListItemCreateDataResponse> {
-    const response = await api.post<PriceListItemCreateDataResponse>(withId(API.PRICE_LISTS.ADD_ITEM, id), requestBody);
-    return response.data;
-  },
-
-  async updateItem(id: string, requestBody: PriceListItemUpdateRequest): Promise<void> {
-    await api.put<void>(withId(API.PRICE_LIST_ITEMS.UPDATE, id), requestBody);
-  },
-
-  async deleteItem(id: string): Promise<void> {
-    await api.delete<void>(withId(API.PRICE_LIST_ITEMS.DELETE, id));
   },
 };

@@ -1,4 +1,4 @@
-﻿import type { PaginationMeta } from "../common/api.model";
+import type { PaginationMeta } from "../common/api.model";
 
 export type ProductStatus = "ACTIVE" | "INACTIVE";
 
@@ -13,6 +13,7 @@ export interface ProductModel {
   weightConversion?: number | null;
   referenceWeight?: number | null;
   status: ProductStatus;
+  imageUrls?: string[];
   mainImage?: string;
   images?: string[];
   createdAt?: string;
@@ -20,10 +21,11 @@ export interface ProductModel {
 
 export interface ProductListQuery {
   page?: number;
+  size?: number;
   pageSize?: number;
   keyword?: string;
+  search?: string;
   type?: string;
-  size?: string;
   thickness?: string;
   unit?: string;
   status?: ProductStatus;
@@ -34,11 +36,34 @@ export interface ProductListQuery {
 export interface ProductListResponse {
   items: ProductModel[];
   pagination: PaginationMeta;
-  filters: Omit<ProductListQuery, "page" | "pageSize" | "sortBy" | "sortDir">;
+  filters: Omit<ProductListQuery, "page" | "pageSize" | "size" | "sortBy" | "sortDir">;
 }
 
-export type ProductCreateRequest = Omit<ProductModel, "id" | "createdAt">;
-export type ProductUpdateRequest = Omit<ProductModel, "id" | "createdAt">;
+export interface ProductCreateRequest {
+  productCode: string;
+  productName: string;
+  type: string;
+  size: string;
+  thickness: string;
+  unit: string;
+  weightConversion?: number | null;
+  referenceWeight?: number | null;
+  status?: ProductStatus;
+  imageUrls?: string[];
+}
+
+export interface ProductUpdateRequest {
+  productCode: string;
+  productName: string;
+  type: string;
+  size: string;
+  thickness: string;
+  unit: string;
+  weightConversion?: number | null;
+  referenceWeight?: number | null;
+  status?: ProductStatus;
+  imageUrls?: string[];
+}
 
 export interface ProductStatusUpdateRequest {
   status: ProductStatus;

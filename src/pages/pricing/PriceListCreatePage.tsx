@@ -1,0 +1,99 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import CustomButton from "../../components/customButton/CustomButton";
+import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
+import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
+import { priceListService } from "../../services/pricing/price-list.service";
+import { getErrorMessage } from "../shared/page.utils";
+import PriceListFormSection from "./PriceListFormSection";
+import {
+  createEmptyPriceListItem,
+  createInitialPriceListFormValues,
+  toPriceListWritePayload,
+  validatePriceListForm,
+  type PriceListFormErrors,
+} from "./priceListForm.utils";
+
+const PriceListCreatePage = () => {
+  const navigate = useNavigate();
+  const { notify } = useNotify();
+  const [values, setValues] = useState(createInitialPriceListFormValues());
+  const [errors, setErrors] = useState<PriceListFormErrors>({});
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    const validationErrors = validatePriceListForm(values);
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length > 0) {
+      const message = validationErrors.name ?? validationErrors.validFrom ?? validationErrors.validTo ?? validationErrors.items;
+      if (message) {
+        notify(message, "error");
+      }
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const created = await priceListService.create(toPriceListWritePayload(values));
+      notify("Price list created successfully.", "success");
+      navigate(ROUTE_URL.PRICE_LIST_DETAIL.replace(":id", created.id));
+    } catch (error) {
+      notify(getErrorMessage(error, "Cannot create price list"), "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <NoResizeScreenTemplate
+      bodyClassName="px-0 pb-0 pt-4"
+      header={
+        <ListScreenHeaderTemplate
+          title="Create Price List"
+          className="rounded-none border-x-0 border-t-0 bg-gray-100"
+          breadcrumb={
+            <CustomBreadcrumb
+              breadcrumbs={[
+                { label: "Trang chủ" },
+                { label: "Price List", url: ROUTE_URL.PRICE_LIST_LIST },
+                { label: "Create" },
+              ]}
+            />
+          }
+        />
+      }
+      body={
+        <div className="space-y-4">
+          <PriceListFormSection
+            values={values}
+            errors={errors}
+            onChange={(updater) => setValues((previous) => updater(previous))}
+            onAddItem={() => setValues((previous) => ({ ...previous, items: [...previous.items, createEmptyPriceListItem()] }))}
+            onRemoveItem={(rowId) =>
+              setValues((previous) => ({
+                ...previous,
+                items: previous.items.filter((item) => item.rowId !== rowId),
+              }))
+            }
+          />
+
+          <div className="flex flex-wrap gap-3">
+            <CustomButton label={saving ? "Saving..." : "Create Price List"} onClick={handleSave} disabled={saving} />
+            <CustomButton
+              label="Back"
+              className="bg-slate-200 text-slate-700 hover:bg-slate-300"
+              onClick={() => navigate(ROUTE_URL.PRICE_LIST_LIST)}
+              disabled={saving}
+            />
+          </div>
+        </div>
+      }
+    />
+  );
+};
+
+export default PriceListCreatePage;

@@ -1,4 +1,4 @@
-ï»¿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import BaseCard from "../../components/cards/BaseCard";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable from "../../components/table/DataTable";
@@ -52,9 +52,9 @@ const FinancialReportPage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chá»§" },
-                { label: "BÃ¡o cÃ¡o", url: ROUTE_URL.REPORT_DASHBOARD },
-                { label: "TÃ i chÃ­nh" },
+                { label: "Trang ch?" },
+                { label: "Báo cáo", url: ROUTE_URL.REPORT_PROJECT },
+                { label: "Tài chính" },
               ]}
             />
           }
@@ -62,14 +62,14 @@ const FinancialReportPage = () => {
       }
       body={
         <div className="space-y-4">
-          <BaseCard title="Tá»•ng quan tÃ i chÃ­nh">
+          <BaseCard title="T?ng quan tài chính">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="rounded-lg bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Tá»•ng doanh thu</p>
+                <p className="text-sm text-slate-500">T?ng doanh thu</p>
                 <p className="text-2xl font-semibold text-blue-900">{toCurrency(summaryRevenue)}</p>
               </div>
               <div className="rounded-lg bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Tá»•ng cÃ´ng ná»£</p>
+                <p className="text-sm text-slate-500">T?ng công n?</p>
                 <p className="text-2xl font-semibold text-red-500">{toCurrency(summaryDebt)}</p>
               </div>
             </div>
@@ -93,3 +93,4 @@ const FinancialReportPage = () => {
 };
 
 export default FinancialReportPage;
+

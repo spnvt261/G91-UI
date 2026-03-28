@@ -8,16 +8,20 @@ import FilterSearchModalBar, { type FilterModalGroup } from "../../components/ta
 import Pagination from "../../components/table/Pagination";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { canPerformAction } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type { ContractModel } from "../../models/contract/contract.model";
 import { contractService } from "../../services/contract/contract.service";
+import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
 
 const PAGE_SIZE = 8;
 
 const ContractListPage = () => {
   const navigate = useNavigate();
+  const role = getStoredUserRole();
+  const canEdit = canPerformAction(role, "contract.update");
   const [allItems, setAllItems] = useState<ContractModel[]>([]);
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
@@ -161,11 +165,13 @@ const ContractListPage = () => {
                   className="px-2 py-1 text-sm"
                   onClick={() => navigate(ROUTE_URL.CONTRACT_DETAIL.replace(":id", row.id))}
                 />
-                <CustomButton
-                  label="Sửa"
-                  className="px-2 py-1 text-sm"
-                  onClick={() => navigate(ROUTE_URL.CONTRACT_EDIT.replace(":id", row.id))}
-                />
+                {canEdit ? (
+                  <CustomButton
+                    label="Sửa"
+                    className="px-2 py-1 text-sm"
+                    onClick={() => navigate(ROUTE_URL.CONTRACT_EDIT.replace(":id", row.id))}
+                  />
+                ) : null}
               </div>
             )}
           />

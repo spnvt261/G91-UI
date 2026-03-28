@@ -23,7 +23,7 @@ const QuotationDetailPage = () => {
   const { notify } = useNotify();
   const role = getStoredUserRole();
   const isCustomerRole = role === "CUSTOMER";
-  const canShowCreateContract = role === "ACCOUNTANT" || role === "OWNER";
+  const canShowCreateContract = role === "ACCOUNTANT";
 
   const loadData = async (quotationId: string) => {
     const [detail, historyResponse] = await Promise.all([

@@ -2,16 +2,21 @@ import { useMemo, useState } from "react";
 import SidebarItem, { type SidebarNode } from "./SidebarItem";
 import { ROUTE_URL } from "../../const/route_url.const";
 import {
-  HomeOutlined,
-  ShoppingOutlined,
-  FileTextOutlined,
-  UserOutlined,
-  ProjectOutlined,
-  DollarOutlined,
   BarChartOutlined,
+  DollarOutlined,
+  FileTextOutlined,
+  HomeOutlined,
+  ProjectOutlined,
+  ShoppingOutlined,
   TagsOutlined,
+  UserOutlined,
+  UsergroupAddOutlined,
+  WalletOutlined,
 } from "@ant-design/icons";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../store";
 import { getStoredUserRole } from "../../utils/authSession";
+import { canPerformAction, canSeeMenu } from "../../const/authz.const";
 import type { UserRole } from "../../models/auth/auth.model";
 
 interface SidebarProps {
@@ -21,152 +26,177 @@ interface SidebarProps {
   className?: string;
 }
 
-const menuItems: SidebarNode[] = [
-  { id: "dashboard", label: "Dashboard", icon: <HomeOutlined />, path: ROUTE_URL.DASHBOARD },
-  {
-    id: "products",
-    label: "Products",
-    icon: <ShoppingOutlined />,
-    children: [
-      { id: "product-list", label: "Product List", path: ROUTE_URL.PRODUCT_LIST },
-    ],
-  },
-  {
-    id: "quotation-contract",
-    label: "Quotation & Contract",
-    icon: <FileTextOutlined />,
-    children: [
-      { id: "create-quotation", label: "Create Quotation", path: ROUTE_URL.QUOTATION_CREATE },
-      { id: "manage-quotations", label: "Manage Quotations", path: ROUTE_URL.QUOTATION_LIST },
-      { id: "manage-contracts", label: "Manage Contracts", path: ROUTE_URL.CONTRACT_LIST },
-    ],
-  },
-  {
-    id: "promotions",
-    label: "Promotions",
-    icon: <TagsOutlined />,
-    children: [
-      { id: "promotion-list", label: "Promotion List", path: ROUTE_URL.PROMOTION_LIST },
-      { id: "promotion-create", label: "Create Promotion", path: ROUTE_URL.PROMOTION_CREATE },
-    ],
-  },
-  {
-    id: "customers",
-    label: "Customers",
-    icon: <UserOutlined />,
-    children: [
-      { id: "customer-list", label: "Customer List", path: ROUTE_URL.CUSTOMER_LIST },
-      { id: "customer-create", label: "Create Customer", path: ROUTE_URL.CUSTOMER_CREATE },
-    ],
-  },
-  {
-    id: "projects",
-    label: "Projects",
-    icon: <ProjectOutlined />,
-    children: [
-      { id: "project-list", label: "Project List", path: ROUTE_URL.PROJECT_LIST },
-      { id: "project-create", label: "Create Project", path: ROUTE_URL.PROJECT_CREATE },
-    ],
-  },
-  {
-    id: "payments",
-    label: "Payments",
-    icon: <DollarOutlined />,
-    children: [
-      { id: "payment-list", label: "Invoices", path: ROUTE_URL.PAYMENT_LIST },
-    ],
-  },
-  {
-    id: "reports",
-    label: "Reports",
-    icon: <BarChartOutlined />,
-    children: [
-      { id: "dashboard-report", label: "Dashboard Report", path: ROUTE_URL.REPORT_DASHBOARD },
-      { id: "sales-report", label: "Sales Report", path: ROUTE_URL.REPORT_SALES },
-      { id: "inventory-report", label: "Inventory Report", path: ROUTE_URL.REPORT_INVENTORY },
-      { id: "financial-report", label: "Financial Report", path: ROUTE_URL.REPORT_FINANCIAL },
-    ],
-  },
-];
+const buildMenuByRole = (role: UserRole): SidebarNode[] => {
+  const nodes: SidebarNode[] = [];
 
-const ROLE_MENU_IDS: Record<UserRole, string[]> = {
-  GUEST: [],
-  CUSTOMER: [
-    "dashboard",
-    "products",
-    "product-list",
-    "promotions",
-    "promotion-list",
-    "quotation-contract",
-    "create-quotation",
-    "manage-quotations",
-    "projects",
-    "project-list",
-    "payments",
-    "payment-list",
-  ],
-  ACCOUNTANT: [
-    "dashboard",
-    "quotation-contract",
-    "manage-quotations",
-    "manage-contracts",
-    "promotions",
-    "promotion-list",
-    "promotion-create",
-    "customers",
-    "customer-list",
-    "customer-create",
-    "projects",
-    "project-list",
-    "project-create",
-    "payments",
-    "payment-list",
-    "reports",
-    "dashboard-report",
-    "sales-report",
-    "financial-report",
-  ],
-  WAREHOUSE: [
-    "dashboard",
-    "products",
-    "product-list",
-    "projects",
-    "project-list",
-    "reports",
-    "inventory-report",
-  ],
-  OWNER: menuItems.flatMap((item) => [item.id, ...(item.children?.map((child) => child.id) ?? [])]),
-};
+  if (canSeeMenu(role, "dashboard")) {
+    nodes.push({ id: "dashboard", label: "Dashboard", icon: <HomeOutlined />, path: ROUTE_URL.DASHBOARD });
+  }
 
-const filterMenuByRole = (items: SidebarNode[], role: UserRole): SidebarNode[] => {
-  const allowedIds = new Set(ROLE_MENU_IDS[role]);
+  if (canSeeMenu(role, "user-management")) {
+    nodes.push({
+      id: "users",
+      label: "User Management",
+      icon: <UsergroupAddOutlined />,
+      children: [{ id: "users-list", label: "User Accounts", path: ROUTE_URL.ACCOUNT_LIST }],
+    });
+  }
 
-  return items
-    .map((item) => {
-      if (!allowedIds.has(item.id)) {
-        return null;
-      }
+  if (canSeeMenu(role, "product-management")) {
+    nodes.push({
+      id: "products",
+      label: "Product Management",
+      icon: <ShoppingOutlined />,
+      children: [
+        { id: "product-list", label: "Product List", path: ROUTE_URL.PRODUCT_LIST },
+        ...(canPerformAction(role, "product.create") ? [{ id: "product-create", label: "Create Product", path: ROUTE_URL.PRODUCT_CREATE }] : []),
+      ],
+    });
+  }
 
-      if (!item.children?.length) {
-        return item;
-      }
+  if (canSeeMenu(role, "price-list-management")) {
+    nodes.push({
+      id: "price-lists",
+      label: "Price Lists",
+      icon: <WalletOutlined />,
+      children: [
+        { id: "price-list-list", label: "Price List", path: ROUTE_URL.PRICE_LIST_LIST },
+        ...(canPerformAction(role, "price-list.create")
+          ? [{ id: "price-list-create", label: "Create Price List", path: ROUTE_URL.PRICE_LIST_CREATE }]
+          : []),
+      ],
+    });
+  }
 
-      const children = item.children.filter((child) => allowedIds.has(child.id));
-      if (!children.length && !item.path) {
-        return null;
-      }
+  if (canSeeMenu(role, "promotion-management")) {
+    nodes.push({
+      id: "promotions",
+      label: "Promotion Management",
+      icon: <TagsOutlined />,
+      children: [
+        { id: "promotion-list", label: "Promotion List", path: ROUTE_URL.PROMOTION_LIST },
+        ...(canPerformAction(role, "promotion.create")
+          ? [{ id: "promotion-create", label: "Create Promotion", path: ROUTE_URL.PROMOTION_CREATE }]
+          : []),
+      ],
+    });
+  }
 
-      return { ...item, children };
-    })
-    .filter((item): item is SidebarNode => Boolean(item));
+  if (canSeeMenu(role, "inventory-management")) {
+    nodes.push({
+      id: "inventory",
+      label: "Inventory Management",
+      icon: <ProjectOutlined />,
+      children: [
+        { id: "inventory-status", label: "Inventory Status", path: ROUTE_URL.INVENTORY_STATUS },
+        { id: "inventory-receipt", label: "Create Receipt", path: ROUTE_URL.INVENTORY_RECEIPT_CREATE },
+        { id: "inventory-issue", label: "Create Issue", path: ROUTE_URL.INVENTORY_ISSUE_CREATE },
+        { id: "inventory-adjustment", label: "Adjust Inventory", path: ROUTE_URL.INVENTORY_ADJUSTMENT_CREATE },
+        { id: "inventory-history", label: "Inventory History", path: ROUTE_URL.INVENTORY_HISTORY },
+      ],
+    });
+  }
+
+  if (canSeeMenu(role, "quotation-management")) {
+    nodes.push({
+      id: "quotations",
+      label: "Quotation Management",
+      icon: <FileTextOutlined />,
+      children: [
+        { id: "quotation-list", label: "Quotation List", path: ROUTE_URL.QUOTATION_LIST },
+        ...(role === "CUSTOMER" ? [{ id: "quotation-create", label: "Create Quotation", path: ROUTE_URL.QUOTATION_CREATE }] : []),
+      ],
+    });
+  }
+
+  if (canSeeMenu(role, "contract-management")) {
+    nodes.push({
+      id: "contracts",
+      label: "Contract Management",
+      icon: <FileTextOutlined />,
+      children: [{ id: "contract-list", label: "Contract List", path: ROUTE_URL.CONTRACT_LIST }],
+    });
+  }
+
+  if (canSeeMenu(role, "contract-approvals")) {
+    nodes.push({
+      id: "contract-approvals",
+      label: "Contract Approvals",
+      icon: <FileTextOutlined />,
+      children: [{ id: "contract-approvals-list", label: "Pending Contracts", path: ROUTE_URL.CONTRACT_APPROVAL_LIST }],
+    });
+  }
+
+  if (canSeeMenu(role, "customer-management")) {
+    nodes.push({
+      id: "customers",
+      label: "Customer Management",
+      icon: <UserOutlined />,
+      children: [
+        { id: "customer-list", label: "Customer List", path: ROUTE_URL.CUSTOMER_LIST },
+        { id: "customer-create", label: "Create Customer", path: ROUTE_URL.CUSTOMER_CREATE },
+      ],
+    });
+  }
+
+  if (canSeeMenu(role, "project-management")) {
+    nodes.push({
+      id: "projects",
+      label: "Project Management",
+      icon: <ProjectOutlined />,
+      children: [
+        { id: "project-list", label: "Project List", path: ROUTE_URL.PROJECT_LIST },
+        ...(role === "ACCOUNTANT" ? [{ id: "project-create", label: "Create Project", path: ROUTE_URL.PROJECT_CREATE }] : []),
+      ],
+    });
+  }
+
+  if (canSeeMenu(role, "payment-management")) {
+    nodes.push({
+      id: "payments",
+      label: "Invoice & Debt",
+      icon: <DollarOutlined />,
+      children: [{ id: "payment-list", label: "Payments", path: ROUTE_URL.PAYMENT_LIST }],
+    });
+  }
+
+  const reportChildren: SidebarNode[] = [];
+  if (canSeeMenu(role, "reports-sales")) {
+    reportChildren.push({ id: "reports-sales", label: "Sales Report", path: ROUTE_URL.REPORT_SALES });
+  }
+  if (canSeeMenu(role, "reports-project")) {
+    reportChildren.push({ id: "reports-project", label: "Project Report", path: ROUTE_URL.REPORT_PROJECT });
+  }
+  if (canSeeMenu(role, "reports-inventory")) {
+    reportChildren.push({ id: "reports-inventory", label: "Inventory Report", path: ROUTE_URL.REPORT_INVENTORY });
+  }
+  if (canSeeMenu(role, "reports-export")) {
+    reportChildren.push({ id: "reports-export", label: "Export Report", path: ROUTE_URL.REPORT_EXPORT });
+  }
+
+  if (reportChildren.length > 0) {
+    nodes.push({
+      id: "reports",
+      label: "Reports",
+      icon: <BarChartOutlined />,
+      children: reportChildren,
+    });
+  }
+
+  if (canSeeMenu(role, "profile")) {
+    nodes.push({ id: "profile", label: "Profile", icon: <UserOutlined />, path: ROUTE_URL.PROFILE });
+  }
+
+  return nodes;
 };
 
 const Sidebar = ({ collapsed = false, activePath, onNavigate, className = "" }: SidebarProps) => {
-  const [selectedPath, setSelectedPath] = useState(activePath ?? "/products");
-  const role = getStoredUserRole() ?? "CUSTOMER";
+  const [selectedPath, setSelectedPath] = useState(activePath ?? "/");
+  const roleFromState = useSelector((state: RootState) => state.auth.user?.role);
+  const role = roleFromState ?? getStoredUserRole() ?? "CUSTOMER";
 
   const currentPath = useMemo(() => activePath ?? selectedPath, [activePath, selectedPath]);
-  const visibleMenuItems = useMemo(() => filterMenuByRole(menuItems, role), [role]);
+  const visibleMenuItems = useMemo(() => buildMenuByRole(role), [role]);
 
   return (
     <aside
