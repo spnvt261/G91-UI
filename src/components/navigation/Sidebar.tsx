@@ -9,6 +9,7 @@ import {
   ProjectOutlined,
   DollarOutlined,
   BarChartOutlined,
+  TagsOutlined,
 } from "@ant-design/icons";
 import { getStoredUserRole } from "../../utils/authSession";
 import type { UserRole } from "../../models/auth/auth.model";
@@ -38,6 +39,15 @@ const menuItems: SidebarNode[] = [
       { id: "create-quotation", label: "Create Quotation", path: ROUTE_URL.QUOTATION_CREATE },
       { id: "manage-quotations", label: "Manage Quotations", path: ROUTE_URL.QUOTATION_LIST },
       { id: "manage-contracts", label: "Manage Contracts", path: ROUTE_URL.CONTRACT_LIST },
+    ],
+  },
+  {
+    id: "promotions",
+    label: "Promotions",
+    icon: <TagsOutlined />,
+    children: [
+      { id: "promotion-list", label: "Promotion List", path: ROUTE_URL.PROMOTION_LIST },
+      { id: "promotion-create", label: "Create Promotion", path: ROUTE_URL.PROMOTION_CREATE },
     ],
   },
   {
@@ -85,6 +95,8 @@ const ROLE_MENU_IDS: Record<UserRole, string[]> = {
     "dashboard",
     "products",
     "product-list",
+    "promotions",
+    "promotion-list",
     "quotation-contract",
     "create-quotation",
     "manage-quotations",
@@ -98,6 +110,9 @@ const ROLE_MENU_IDS: Record<UserRole, string[]> = {
     "quotation-contract",
     "manage-quotations",
     "manage-contracts",
+    "promotions",
+    "promotion-list",
+    "promotion-create",
     "customers",
     "customer-list",
     "customer-create",

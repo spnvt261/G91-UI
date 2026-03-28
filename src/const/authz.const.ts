@@ -25,6 +25,7 @@ const ROLE_ALLOWED_PATHS: Record<UserRole, string[]> = {
     ROUTE_URL.DASHBOARD,
     ROUTE_URL.PROFILE,
     "/products",
+    ROUTE_URL.PROMOTION_LIST,
     "/quotations",
     "/projects",
     "/payments",
@@ -36,6 +37,7 @@ const ROLE_ALLOWED_PATHS: Record<UserRole, string[]> = {
     "/projects",
     "/contracts",
     "/quotations",
+    ROUTE_URL.PROMOTION_LIST,
     "/payments",
     "/reports/dashboard",
     "/reports/sales",
@@ -43,6 +45,10 @@ const ROLE_ALLOWED_PATHS: Record<UserRole, string[]> = {
   ],
   WAREHOUSE: [ROUTE_URL.DASHBOARD, ROUTE_URL.PROFILE, "/products", "/projects", "/reports/inventory"],
   OWNER: ["/"],
+};
+
+const ROLE_DENIED_PATHS: Partial<Record<UserRole, string[]>> = {
+  CUSTOMER: [ROUTE_URL.PROMOTION_CREATE],
 };
 
 export const getDefaultRouteByRole = (role: UserRole): string => {
@@ -63,6 +69,12 @@ export const getDefaultRouteByRole = (role: UserRole): string => {
 export const canAccessPathByRole = (role: UserRole, pathname: string): boolean => {
   if (role === "OWNER") {
     return true;
+  }
+
+  const deniedPaths = ROLE_DENIED_PATHS[role] ?? [];
+  const isDenied = deniedPaths.some((deniedPath) => startsWithPath(pathname, deniedPath));
+  if (isDenied) {
+    return false;
   }
 
   const allowedPaths = ROLE_ALLOWED_PATHS[role];

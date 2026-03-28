@@ -23,7 +23,7 @@ const QuotationDetailPage = () => {
   const { notify } = useNotify();
   const role = getStoredUserRole();
   const isCustomerRole = role === "CUSTOMER";
-  const canShowCreateContract = role === "ACCOUNTANT";
+  const canShowCreateContract = role === "ACCOUNTANT" || role === "OWNER";
 
   const loadData = async (quotationId: string) => {
     const [detail, historyResponse] = await Promise.all([
@@ -63,6 +63,7 @@ const QuotationDetailPage = () => {
       setSubmitting(true);
       await quotationService.submit(id);
       await loadData(id);
+      notify("Quotation submitted successfully.", "success");
     } catch (err) {
       notify(getErrorMessage(err, "Cannot submit draft quotation"), "error");
     } finally {
@@ -92,11 +93,11 @@ const QuotationDetailPage = () => {
           className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={
             <div className="flex gap-2">
-              {!isCustomerRole ? (
+              {isCustomerRole ? (
                 <CustomButton
                   label={submitting ? "Submitting..." : "Submit Draft"}
                   onClick={handleSubmitDraft}
-                  disabled={!quotation || quotation.status !== "DRAFT" || submitting}
+                  disabled={!quotation || !quotation.actions?.customerCanEdit || quotation.status !== "DRAFT" || submitting}
                 />
               ) : null}
               {canShowCreateContract ? (

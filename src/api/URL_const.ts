@@ -44,6 +44,14 @@ export const API = {
     DELETE: "/api/price-list-items/{id}",
   },
 
+  PROMOTIONS: {
+    CREATE: "/api/promotions",
+    LIST: "/api/promotions",
+    DETAIL: "/api/promotions/{id}",
+    UPDATE: "/api/promotions/{id}",
+    DELETE: "/api/promotions/{id}",
+  },
+
   CUSTOMER: {
     QUOTATION_FORM_INIT: "/api/customer/quotation-form-init",
     QUOTATIONS: "/api/customer/quotations",
@@ -143,6 +151,14 @@ export const API = {
     PRICE_LIST_ADD_ITEM: "/api/price-lists/{id}/items",
     PRICE_LIST_ITEM_UPDATE: "/api/price-list-items/{id}",
     PRICE_LIST_ITEM_DELETE: "/api/price-list-items/{id}",
+  },
+
+  PROMOTION: {
+    CREATE: "/api/promotions",
+    LIST: "/api/promotions",
+    DETAIL: "/api/promotions/{id}",
+    UPDATE: "/api/promotions/{id}",
+    DELETE: "/api/promotions/{id}",
   },
 
   QUOTATION: {

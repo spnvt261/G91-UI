@@ -1,6 +1,7 @@
 import type { PaginationMeta } from "../common/api.model";
 
 export type QuotationStatus = "DRAFT" | "PENDING" | "CONVERTED" | "REJECTED" | "APPROVED";
+export type QuotationDisplayStatus = QuotationStatus | "EXPIRED";
 
 export interface QuotationItemModel {
   productId: string;
@@ -27,7 +28,7 @@ export interface QuotationModel {
   items: QuotationItemModel[];
   quantity?: number;
   totalAmount: number;
-  status: QuotationStatus;
+  status: QuotationDisplayStatus;
   validUntil?: string;
   createdAt?: string;
   deliveryRequirements?: string;
@@ -47,6 +48,19 @@ export interface CustomerQuotationListQuery {
 }
 
 export type QuotationListQuery = CustomerQuotationListQuery;
+
+export interface QuotationManagementListQuery {
+  keyword?: string;
+  quotationNumber?: string;
+  customerId?: string;
+  status?: QuotationStatus;
+  fromDate?: string;
+  toDate?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: "createdAt" | "quotationNumber" | "totalAmount" | "validUntil" | "status";
+  sortDir?: "asc" | "desc";
+}
 
 export interface QuotationRequest {
   customerId?: string;
@@ -130,6 +144,31 @@ export interface CustomerQuotationListResponseData {
   items: CustomerQuotationListItem[];
   pagination: PaginationMeta;
   filters?: {
+    status?: string;
+    fromDate?: string;
+    toDate?: string;
+  };
+}
+
+export interface QuotationManagementListItem {
+  id: string;
+  quotationNumber: string;
+  customerId?: string;
+  customerName?: string;
+  totalAmount: number;
+  status: QuotationDisplayStatus;
+  validUntil?: string;
+  createdAt: string;
+  canEdit: boolean;
+  canCreateContract: boolean;
+}
+
+export interface QuotationManagementListResponseData {
+  items: QuotationManagementListItem[];
+  pagination: PaginationMeta;
+  filters?: {
+    quotationNumber?: string;
+    customerId?: string;
     status?: string;
     fromDate?: string;
     toDate?: string;

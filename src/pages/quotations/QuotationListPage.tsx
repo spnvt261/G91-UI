@@ -10,21 +10,23 @@ import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeade
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
-import type { QuotationModel } from "../../models/quotation/quotation.model";
+import type { QuotationModel, QuotationStatus } from "../../models/quotation/quotation.model";
 import { quotationService } from "../../services/quotation/quotation.service";
+import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
 
 const PAGE_SIZE = 8;
 
 const QuotationListPage = () => {
   const navigate = useNavigate();
+  const role = getStoredUserRole();
+  const isCustomerRole = role === "CUSTOMER";
   const [items, setItems] = useState<QuotationModel[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
-  const [status, setStatus] = useState<string[]>([]);
+  const [status, setStatus] = useState<QuotationStatus[]>([]);
   const [createdRange, setCreatedRange] = useState<{ from?: string; to?: string }>({});
-  const [totalRange, setTotalRange] = useState<{ min?: string; max?: string }>({});
   const { notify } = useNotify();
   const [loading, setLoading] = useState(false);
 
@@ -35,6 +37,7 @@ const QuotationListPage = () => {
       options: [
         { label: "Draft", value: "DRAFT" },
         { label: "Pending", value: "PENDING" },
+        { label: "Approved", value: "APPROVED" },
         { label: "Converted", value: "CONVERTED" },
         { label: "Rejected", value: "REJECTED" },
       ],
@@ -48,48 +51,69 @@ const QuotationListPage = () => {
       fromPlaceholder: "Từ ngày tạo",
       toPlaceholder: "Đến ngày tạo",
     },
-    {
-      kind: "numberRange",
-      key: "totalRange",
-      label: "Tổng tiền",
-      value: totalRange,
-      minPlaceholder: "Tổng tiền tối thiểu",
-      maxPlaceholder: "Tổng tiền tối đa",
-    },
   ];
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
-        const response = await quotationService.getCustomerList({
+
+        if (isCustomerRole) {
+          const response = await quotationService.getCustomerList({
+            page,
+            pageSize: PAGE_SIZE,
+            keyword: keyword || undefined,
+            status: status[0] as QuotationStatus | undefined,
+            fromDate: createdRange.from || undefined,
+            toDate: createdRange.to || undefined,
+          });
+
+          setItems(
+            response.items.map((item) => ({
+              id: item.id,
+              quotationNumber: item.quotationNumber,
+              items: [],
+              totalAmount: item.totalAmount,
+              status: item.status,
+              validUntil: item.validUntil,
+              createdAt: item.createdAt,
+              actions: {
+                customerCanEdit: Boolean(item.actions?.canEdit),
+                accountantCanCreateContract: false,
+              },
+            })),
+          );
+          setTotal(response.pagination.totalItems);
+          return;
+        }
+
+        const response = await quotationService.getManagementList({
           page,
           pageSize: PAGE_SIZE,
           keyword: keyword || undefined,
-          status: status[0] as QuotationModel["status"] | undefined,
+          status: status[0] as QuotationStatus | undefined,
           fromDate: createdRange.from || undefined,
           toDate: createdRange.to || undefined,
         });
 
-        const mappedItems: QuotationModel[] = response.items.map((item) => ({
-          id: item.id,
-          quotationNumber: item.quotationNumber,
-          customerId: "",
-          items: [],
-          totalAmount: item.totalAmount,
-          status: item.status,
-          validUntil: item.validUntil,
-          createdAt: item.createdAt,
-        }));
-
-        const minTotal = totalRange.min ? Number(totalRange.min) : undefined;
-        const maxTotal = totalRange.max ? Number(totalRange.max) : undefined;
-        const filteredItems = mappedItems.filter((item) => {
-          return (minTotal == null || item.totalAmount >= minTotal) && (maxTotal == null || item.totalAmount <= maxTotal);
-        });
-
-        setItems(filteredItems);
-        setTotal(minTotal != null || maxTotal != null ? filteredItems.length : response.pagination.totalItems);
+        setItems(
+          response.items.map((item) => ({
+            id: item.id,
+            quotationNumber: item.quotationNumber,
+            customerId: item.customerId,
+            customerName: item.customerName,
+            items: [],
+            totalAmount: item.totalAmount,
+            status: item.status,
+            validUntil: item.validUntil,
+            createdAt: item.createdAt,
+            actions: {
+              customerCanEdit: item.canEdit,
+              accountantCanCreateContract: item.canCreateContract,
+            },
+          })),
+        );
+        setTotal(response.pagination.totalItems);
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load quotations"), "error");
       } finally {
@@ -98,26 +122,41 @@ const QuotationListPage = () => {
     };
 
     void load();
-  }, [createdRange.from, createdRange.to, keyword, notify, page, status, totalRange.max, totalRange.min]);
+  }, [createdRange.from, createdRange.to, isCustomerRole, keyword, notify, page, status]);
 
   const columns = useMemo<DataTableColumn<QuotationModel>[]>(
-    () => [
-      {
-        key: "quotationNumber",
-        header: "Quotation No",
-        className: "font-semibold text-blue-900",
-        render: (row) => row.quotationNumber || row.id,
-      },
-      { key: "status", header: "Status" },
-      {
-        key: "totalAmount",
-        header: "Total",
-        render: (row) => toCurrency(row.totalAmount),
-      },
-      { key: "validUntil", header: "Valid Until" },
-      { key: "createdAt", header: "Created At" },
-    ],
-    [],
+    () => {
+      const baseColumns: DataTableColumn<QuotationModel>[] = [
+        {
+          key: "quotationNumber",
+          header: "Quotation No",
+          className: "font-semibold text-blue-900",
+          render: (row) => row.quotationNumber || row.id,
+        },
+      ];
+
+      if (!isCustomerRole) {
+        baseColumns.push({
+          key: "customerName",
+          header: "Customer",
+          render: (row) => row.customerName || row.customerId || "-",
+        });
+      }
+
+      baseColumns.push(
+        { key: "status", header: "Status" },
+        {
+          key: "totalAmount",
+          header: "Total",
+          render: (row) => toCurrency(row.totalAmount),
+        },
+        { key: "validUntil", header: "Valid Until" },
+        { key: "createdAt", header: "Created At" },
+      );
+
+      return baseColumns;
+    },
+    [isCustomerRole],
   );
 
   return (
@@ -129,7 +168,7 @@ const QuotationListPage = () => {
         <ListScreenHeaderTemplate
           title="Quotation Management"
           className="rounded-none border-x-0 border-t-0 bg-gray-100"
-          actions={<CustomButton label="Create Quotation" onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)} />}
+          actions={isCustomerRole ? <CustomButton label="Create Quotation" onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)} /> : undefined}
           breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Báo giá" }]} />}
         />
       }
@@ -148,19 +187,12 @@ const QuotationListPage = () => {
             searchPlaceholder="Search quotation"
             filters={filters}
             onApplyFilters={(values) => {
-              setStatus(Array.isArray(values.status) ? (values.status as QuotationModel["status"][]) : []);
+              setStatus(Array.isArray(values.status) ? (values.status as QuotationStatus[]) : []);
 
               const createdValue = values.createdRange;
               setCreatedRange(
                 createdValue && !Array.isArray(createdValue) && ("from" in createdValue || "to" in createdValue)
                   ? { from: createdValue.from, to: createdValue.to }
-                  : {},
-              );
-
-              const totalValue = values.totalRange;
-              setTotalRange(
-                totalValue && !Array.isArray(totalValue) && ("min" in totalValue || "max" in totalValue)
-                  ? { min: totalValue.min, max: totalValue.max }
                   : {},
               );
 
@@ -171,11 +203,20 @@ const QuotationListPage = () => {
             columns={columns}
             data={items}
             actions={(row) => (
-              <CustomButton
-                label="View"
-                className="px-2 py-1 text-sm"
-                onClick={() => navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", row.id))}
-              />
+              <div className="flex flex-wrap gap-2">
+                <CustomButton
+                  label="View"
+                  className="px-2 py-1 text-sm"
+                  onClick={() => navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", row.id))}
+                />
+                {!isCustomerRole && row.actions?.accountantCanCreateContract ? (
+                  <CustomButton
+                    label="Create Contract"
+                    className="px-2 py-1 text-sm"
+                    onClick={() => navigate(ROUTE_URL.CONTRACT_CREATE.replace(":quotationId", row.id))}
+                  />
+                ) : null}
+              </div>
             )}
           />
           <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={setPage} />

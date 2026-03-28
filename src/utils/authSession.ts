@@ -16,6 +16,10 @@ const normalizeUserRole = (role: string | null | undefined): UserRole | null => 
     return "ACCOUNTANT";
   }
 
+  if (upperRole === "ADMIN") {
+    return "OWNER";
+  }
+
   if (upperRole === "GUEST" || upperRole === "CUSTOMER" || upperRole === "ACCOUNTANT" || upperRole === "WAREHOUSE" || upperRole === "OWNER") {
     return upperRole;
   }

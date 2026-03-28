@@ -15,6 +15,10 @@ export const ROUTE_URL = {
   QUOTATION_CREATE: "/quotations/create",
   QUOTATION_DETAIL: "/quotations/:id",
 
+  PROMOTION_LIST: "/promotions",
+  PROMOTION_CREATE: "/promotions/create",
+  PROMOTION_DETAIL: "/promotions/:id",
+
   CONTRACT_LIST: "/contracts",
   CONTRACT_CREATE: "/contracts/create/:quotationId",
   CONTRACT_DETAIL: "/contracts/:id",

@@ -23,6 +23,9 @@ import DashboardPage from "./pages/dashboard/DashboardPage";
 import PaymentDetailPage from "./pages/payments/PaymentDetailPage";
 import PaymentListPage from "./pages/payments/PaymentListPage";
 import RecordPaymentPage from "./pages/payments/RecordPaymentPage";
+import PromotionCreatePage from "./pages/promotions/PromotionCreatePage";
+import PromotionDetailPage from "./pages/promotions/PromotionDetailPage";
+import PromotionListPage from "./pages/promotions/PromotionListPage";
 import ProductDetailPage from "./pages/products/ProductDetailPage";
 import ProductListPage from "./pages/products/ProductListPage";
 import ProjectAssignWarehousePage from "./pages/projects/ProjectAssignWarehousePage";
@@ -137,6 +140,10 @@ function App() {
           <Route path={ROUTE_URL.QUOTATION_LIST} element={<QuotationListPage />} />
           <Route path={ROUTE_URL.QUOTATION_CREATE} element={<QuotationCreatePage />} />
           <Route path={ROUTE_URL.QUOTATION_DETAIL} element={<QuotationDetailPage />} />
+
+          <Route path={ROUTE_URL.PROMOTION_LIST} element={<PromotionListPage />} />
+          <Route path={ROUTE_URL.PROMOTION_CREATE} element={<PromotionCreatePage />} />
+          <Route path={ROUTE_URL.PROMOTION_DETAIL} element={<PromotionDetailPage />} />
 
           <Route path={ROUTE_URL.CONTRACT_CREATE} element={<ContractCreatePage />} />
           <Route path={ROUTE_URL.CONTRACT_LIST} element={<ContractListPage />} />

@@ -4,6 +4,8 @@ import type {
   CustomerQuotationListQuery,
   CustomerQuotationListResponseData,
   CustomerQuotationSummaryResponseData,
+  QuotationManagementListQuery,
+  QuotationManagementListResponseData,
   QuotationDetailResponseData,
   QuotationFormInitQuery,
   QuotationFormInitResponseData,
@@ -32,6 +34,22 @@ const toQuotationModelFromSummary = (item: CustomerQuotationListResponseData["it
   status: item.status,
   validUntil: item.validUntil,
   createdAt: item.createdAt,
+});
+
+const toQuotationModelFromManagement = (item: QuotationManagementListResponseData["items"][number]): QuotationModel => ({
+  id: item.id,
+  quotationNumber: item.quotationNumber,
+  customerId: item.customerId,
+  customerName: item.customerName,
+  items: [],
+  totalAmount: item.totalAmount,
+  status: item.status,
+  validUntil: item.validUntil,
+  createdAt: item.createdAt,
+  actions: {
+    customerCanEdit: item.canEdit,
+    accountantCanCreateContract: item.canCreateContract,
+  },
 });
 
 const toQuotationModelFromDetail = (detail: QuotationDetailResponseData): QuotationModel => ({
@@ -87,7 +105,7 @@ export const quotationService = {
   },
 
   async getCustomerList(params?: CustomerQuotationListQuery): Promise<CustomerQuotationListResponseData> {
-    const response = await api.get<unknown>(API.QUOTATIONS.LIST, { params });
+    const response = await api.get<unknown>(API.CUSTOMER.QUOTATIONS, { params });
     const data = response.data as Partial<CustomerQuotationListResponseData> | undefined;
 
     return {
@@ -102,10 +120,31 @@ export const quotationService = {
     };
   },
 
+  async getManagementList(params?: QuotationManagementListQuery): Promise<QuotationManagementListResponseData> {
+    const response = await api.get<unknown>(API.QUOTATIONS.LIST, { params });
+    const data = response.data as Partial<QuotationManagementListResponseData> | undefined;
+
+    return {
+      items: extractList<QuotationManagementListResponseData["items"][number]>(data),
+      pagination: data?.pagination ?? {
+        page: params?.page ?? 1,
+        pageSize: params?.pageSize ?? 0,
+        totalItems: 0,
+        totalPages: 0,
+      },
+      filters: data?.filters,
+    };
+  },
+
   // Backward-compatible list for existing pages.
   async getList(params?: CustomerQuotationListQuery): Promise<QuotationModel[]> {
     const list = await this.getCustomerList(params);
     return list.items.map(toQuotationModelFromSummary);
+  },
+
+  async getManagementModelList(params?: QuotationManagementListQuery): Promise<QuotationModel[]> {
+    const list = await this.getManagementList(params);
+    return list.items.map(toQuotationModelFromManagement);
   },
 
   async getSummary(): Promise<CustomerQuotationSummaryResponseData> {
