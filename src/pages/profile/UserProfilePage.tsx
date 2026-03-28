@@ -26,6 +26,8 @@ const toFormValues = (profile: UserProfileModel): ProfileFormValues => ({
   address: profile.address ?? "",
 });
 
+const SAMPLE_PROFILE_IMAGE = "/images/sample-profile-avatar.svg";
+
 const UserProfilePage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { notify } = useNotify();
@@ -137,6 +139,15 @@ const UserProfilePage = () => {
       body={
         <div className="space-y-6">
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-6 flex flex-col items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 p-5 md:flex-row">
+              <img src={SAMPLE_PROFILE_IMAGE} alt="Sample profile avatar" className="h-24 w-24 rounded-full border-4 border-white shadow-sm" />
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">Sample Avatar</p>
+                <p className="mt-1 text-base font-medium text-slate-900">{formValues.fullName || "User"}</p>
+                <p className="text-sm text-slate-500">{profile?.email || "-"}</p>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <CustomTextField
                 title="Full Name"
@@ -149,14 +160,6 @@ const UserProfilePage = () => {
               <div>
                 <p className="text-xs uppercase tracking-wide text-slate-500">Email</p>
                 <p className="mt-1 text-base font-medium text-slate-900">{profile?.email || "-"}</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Role</p>
-                <p className="mt-1 text-base font-medium text-slate-900">{profile?.role || "-"}</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Status</p>
-                <p className="mt-1 text-base font-medium text-slate-900">{profile?.status || "-"}</p>
               </div>
               <CustomTextField
                 title="Phone"

@@ -57,19 +57,15 @@ const UserAvatarDropdown = () => {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 rounded-full px-2 py-1 text-white hover:bg-white/10"
+        className="flex items-center gap-1 rounded-full px-1 py-1 text-white hover:bg-white/10 sm:gap-2 sm:px-2"
       >
         <div className="h-8 w-8 rounded-full bg-amber-300 text-center text-sm font-semibold leading-8 text-blue-950">{initials}</div>
-        <span className="max-w-36 truncate text-sm font-medium">{displayName}</span>
+        <span className="max-w-20 truncate text-xs font-medium sm:max-w-36 sm:text-sm">{displayName}</span>
         <DownOutlined style={{ fontSize: "0.75rem" }} />
       </button>
 
       {open ? (
         <ul className="absolute right-0 z-40 mt-2 w-44 overflow-hidden rounded-lg bg-white text-sm text-slate-700 shadow-lg">
-          <li className="flex items-center gap-2 px-3 py-2 text-slate-800">
-            <UserOutlined />
-            <span className="truncate">{displayName}</span>
-          </li>
           <li>
             <button
               type="button"

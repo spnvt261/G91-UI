@@ -15,7 +15,7 @@ import {
 } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../store";
-import { getStoredUserRole } from "../../utils/authSession";
+import { getStoredUserRole, normalizeUserRole } from "../../utils/authSession";
 import { canPerformAction, canSeeMenu } from "../../const/authz.const";
 import type { UserRole } from "../../models/auth/auth.model";
 
@@ -183,16 +183,12 @@ const buildMenuByRole = (role: UserRole): SidebarNode[] => {
     });
   }
 
-  if (canSeeMenu(role, "profile")) {
-    nodes.push({ id: "profile", label: "Profile", icon: <UserOutlined />, path: ROUTE_URL.PROFILE });
-  }
-
   return nodes;
 };
 
 const Sidebar = ({ collapsed = false, activePath, onNavigate, className = "" }: SidebarProps) => {
   const [selectedPath, setSelectedPath] = useState(activePath ?? "/");
-  const roleFromState = useSelector((state: RootState) => state.auth.user?.role);
+  const roleFromState = useSelector((state: RootState) => normalizeUserRole(state.auth.user?.role));
   const role = roleFromState ?? getStoredUserRole() ?? "CUSTOMER";
 
   const currentPath = useMemo(() => activePath ?? selectedPath, [activePath, selectedPath]);

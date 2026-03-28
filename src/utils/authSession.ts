@@ -5,14 +5,22 @@ const USER_ROLE_KEY = "user_role";
 
 export const getStoredAccessToken = (): string | null => localStorage.getItem(ACCESS_TOKEN_KEY);
 
-const normalizeUserRole = (role: string | null | undefined): UserRole | null => {
+export const normalizeUserRole = (role: string | null | undefined): UserRole | null => {
   if (!role) {
     return null;
   }
 
-  const upperRole = role.trim().toUpperCase();
+  let upperRole = role.trim().toUpperCase();
+
+  if (upperRole.startsWith("ROLE_")) {
+    upperRole = upperRole.slice(5);
+  }
 
   if (upperRole === "ACOUNTER") {
+    return "ACCOUNTANT";
+  }
+
+  if (upperRole === "ACCOUNTING") {
     return "ACCOUNTANT";
   }
 
