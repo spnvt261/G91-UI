@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+# Optional AI GENERATE directory
+tests
+test*
+reports
+playwright-report
+AIdocs
+scripts
