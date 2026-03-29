@@ -1,14 +1,19 @@
-﻿import { Alert, Button, Col, Descriptions, Form, Input, Row, Space } from "antd";
+﻿import { Alert, Button, Col, Descriptions, Form, Input, Row, Select, Space } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
 import type { ProjectModel } from "../../models/project/project.model";
 import { projectService } from "../../services/project/project.service";
-import { useNotify } from "../../context/notifyContext";
 import { getErrorMessage } from "../shared/page.utils";
 import ProjectFormLayout from "./components/ProjectFormLayout";
 import { resolveProjectBackTarget } from "./projectNavigation";
 import { displayText } from "./projectPresentation";
+
+type ProjectWarehouseShape = ProjectModel & {
+  primaryWarehouseName?: string;
+  backupWarehouseName?: string;
+};
 
 type AssignWarehouseFormValues = {
   warehouseId?: string;
@@ -23,7 +28,9 @@ const ProjectAssignWarehousePage = () => {
   const [form] = Form.useForm<AssignWarehouseFormValues>();
 
   const [project, setProject] = useState<ProjectModel | null>(null);
+  const [warehouseOptions, setWarehouseOptions] = useState<Array<{ label: string; value: string }>>([]);
   const [pageLoading, setPageLoading] = useState(false);
+  const [warehouseLoading, setWarehouseLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const backTarget = useMemo(() => resolveProjectBackTarget(location, id), [id, location]);
@@ -41,6 +48,51 @@ const ProjectAssignWarehousePage = () => {
         form.setFieldsValue({
           warehouseId: detail.primaryWarehouseId ?? detail.warehouseId ?? "",
         });
+
+        try {
+          setWarehouseLoading(true);
+          const projects = await projectService.getList({ page: 1, pageSize: 200 });
+          const warehouseMap = new Map<string, string>();
+
+          const upsertWarehouse = (warehouseId?: string, warehouseName?: string) => {
+            if (!warehouseId) {
+              return;
+            }
+            const normalizedId = warehouseId.trim();
+            if (!normalizedId) {
+              return;
+            }
+
+            const normalizedName = warehouseName?.trim();
+            const currentName = warehouseMap.get(normalizedId);
+            if (!currentName || currentName === normalizedId) {
+              warehouseMap.set(normalizedId, normalizedName || normalizedId);
+            }
+          };
+
+          projects.forEach((item) => {
+            const projectItem = item as ProjectWarehouseShape;
+            upsertWarehouse(projectItem.primaryWarehouseId ?? projectItem.warehouseId, projectItem.primaryWarehouseName);
+            upsertWarehouse(projectItem.backupWarehouseId, projectItem.backupWarehouseName);
+          });
+
+          const detailWithName = detail as ProjectWarehouseShape;
+          upsertWarehouse(detail.primaryWarehouseId ?? detail.warehouseId, detailWithName.primaryWarehouseName);
+
+          const options = Array.from(warehouseMap.entries())
+            .map(([warehouseId, warehouseName]) => ({
+              value: warehouseId,
+              label: warehouseName === warehouseId ? warehouseId : `${warehouseName} (${warehouseId})`,
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+
+          setWarehouseOptions(options);
+        } catch (warehouseError) {
+          setWarehouseOptions([]);
+          notify(getErrorMessage(warehouseError, "Cannot load warehouse options"), "error");
+        } finally {
+          setWarehouseLoading(false);
+        }
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load project warehouse info"), "error");
       } finally {
@@ -96,11 +148,18 @@ const ProjectAssignWarehousePage = () => {
         <Row gutter={[16, 0]}>
           <Col xs={24} md={12}>
             <Form.Item
-              label="Warehouse ID"
+              label="Warehouse"
               name="warehouseId"
-              rules={[{ required: true, message: "Warehouse ID is required." }, { max: 100, message: "Warehouse ID max length is 100." }]}
+              rules={[{ required: true, message: "Please select warehouse." }, { max: 100, message: "Warehouse ID max length is 100." }]}
+              help={!warehouseLoading && warehouseOptions.length === 0 ? "No warehouse options from API." : undefined}
             >
-              <Input placeholder="WH-001" />
+              <Select
+                showSearch
+                optionFilterProp="label"
+                options={warehouseOptions}
+                loading={warehouseLoading}
+                placeholder={warehouseLoading ? "Loading warehouses..." : "Select warehouse"}
+              />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
@@ -111,7 +170,7 @@ const ProjectAssignWarehousePage = () => {
         </Row>
 
         <Space>
-          <Button type="primary" htmlType="submit" loading={saving}>
+          <Button type="primary" htmlType="submit" loading={saving} disabled={warehouseLoading}>
             Confirm assignment
           </Button>
           <Button onClick={() => navigate(backTarget)} disabled={saving}>

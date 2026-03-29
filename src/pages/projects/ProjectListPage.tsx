@@ -63,13 +63,6 @@ const ProjectListPage = () => {
   const columns = useMemo<ColumnsType<ProjectModel>>(
     () => [
       {
-        title: "ID",
-        dataIndex: "id",
-        key: "id",
-        width: 200,
-        render: (value: string) => <Typography.Text strong>{value}</Typography.Text>,
-      },
-      {
         title: "Project code",
         key: "code",
         render: (_, row) => displayText(row.projectCode ?? row.code),
@@ -187,7 +180,7 @@ const ProjectListPage = () => {
             loading={loading}
             columns={columns}
             dataSource={items}
-            scroll={{ x: 980 }}
+            scroll={{ x: 900 }}
             locale={{ emptyText: "No projects found." }}
             pagination={{
               current: page,

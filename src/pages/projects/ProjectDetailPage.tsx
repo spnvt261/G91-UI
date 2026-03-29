@@ -36,6 +36,13 @@ const ProjectDetailPage = () => {
 
   const isBusy = actionLoading || deleting;
   const progressPercent = resolveProjectProgress(project);
+  const overviewItems = [
+    { key: "projectCode", label: "Project code", value: displayText(project?.projectCode ?? project?.code) },
+    { key: "projectName", label: "Project name", value: displayText(project?.name) },
+    { key: "customer", label: "Customer", value: displayText(project?.customerName ?? project?.customerId) },
+    { key: "manager", label: "Project manager", value: displayText(project?.assignedProjectManager) },
+    { key: "warehouse", label: "Primary warehouse", value: displayText(project?.primaryWarehouseId ?? project?.warehouseId) },
+  ];
 
   const loadProjectDetail = async (projectId: string) => {
     const detail = await projectService.getDetail(projectId);
@@ -181,14 +188,25 @@ const ProjectDetailPage = () => {
             <Row gutter={[16, 16]}>
               <Col xs={24} lg={16}>
                 <Card title="Overview">
-                  <Descriptions column={{ xs: 1, md: 2 }} size="middle">
-                    <Descriptions.Item label="ID">{displayText(project.id)}</Descriptions.Item>
-                    <Descriptions.Item label="Project code">{displayText(project.projectCode ?? project.code)}</Descriptions.Item>
-                    <Descriptions.Item label="Project name">{displayText(project.name)}</Descriptions.Item>
-                    <Descriptions.Item label="Customer">{displayText(project.customerName ?? project.customerId)}</Descriptions.Item>
-                    <Descriptions.Item label="Project manager">{displayText(project.assignedProjectManager)}</Descriptions.Item>
-                    <Descriptions.Item label="Primary warehouse">{displayText(project.primaryWarehouseId ?? project.warehouseId)}</Descriptions.Item>
-                  </Descriptions>
+                  <Row gutter={[12, 12]}>
+                    {overviewItems.map((item) => (
+                      <Col key={item.key} xs={24} md={12}>
+                        <div className="h-full rounded-lg border border-slate-200 px-4 py-3">
+                          <Typography.Text type="secondary">{item.label}</Typography.Text>
+                          <Typography.Paragraph
+                            style={{
+                              marginBottom: 0,
+                              marginTop: 6,
+                              fontWeight: 500,
+                              overflowWrap: "anywhere",
+                            }}
+                          >
+                            {item.value}
+                          </Typography.Paragraph>
+                        </div>
+                      </Col>
+                    ))}
+                  </Row>
                 </Card>
               </Col>
               <Col xs={24} lg={8}>
@@ -252,3 +270,4 @@ const ProjectDetailPage = () => {
 };
 
 export default ProjectDetailPage;
+
