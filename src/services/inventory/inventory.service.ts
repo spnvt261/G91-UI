@@ -17,9 +17,19 @@ import { extractList } from "../service.utils";
 interface PagedApiResponse<T> {
   content?: T[];
   items?: T[];
+  pagination?: {
+    page?: number;
+    size?: number;
+    pageSize?: number;
+    totalItems?: number;
+    totalElements?: number;
+  };
   page?: number;
   size?: number;
+  pageSize?: number;
+  totalItems?: number;
   totalElements?: number;
+  data?: unknown;
 }
 
 interface InventoryStatusApiItem {
@@ -27,6 +37,7 @@ interface InventoryStatusApiItem {
   productCode?: string;
   productName?: string;
   unit?: string;
+  currentQuantity?: number;
   onHandQuantity?: number;
   availableQuantity?: number;
   reservedQuantity?: number;
@@ -59,8 +70,9 @@ const toStatusItem = (row: InventoryStatusApiItem): InventoryStatusItem => ({
   productCode: row.productCode,
   productName: row.productName,
   unit: row.unit,
-  onHandQuantity: Number(row.onHandQuantity ?? 0),
-  availableQuantity: row.availableQuantity == null ? undefined : Number(row.availableQuantity),
+  onHandQuantity: Number(row.onHandQuantity ?? row.currentQuantity ?? 0),
+  availableQuantity:
+    row.availableQuantity == null ? (row.currentQuantity == null ? undefined : Number(row.currentQuantity)) : Number(row.availableQuantity),
   reservedQuantity: row.reservedQuantity == null ? undefined : Number(row.reservedQuantity),
   updatedAt: row.updatedAt,
 });
@@ -86,12 +98,18 @@ const toPagedResult = <TInput, TOutput>(
   const data = payload as PagedApiResponse<TInput> | TInput[] | undefined;
   const items = extractList<TInput>(data).map(mapper);
   const paged = data && typeof data === "object" && !Array.isArray(data) ? data : undefined;
+  const nestedData =
+    paged && typeof paged.data === "object" && paged.data !== null && !Array.isArray(paged.data)
+      ? (paged.data as PagedApiResponse<TInput>)
+      : undefined;
+  const source = nestedData ?? paged;
+  const pagination = source?.pagination;
 
   return {
     items,
-    page: Number(paged?.page ?? query.page ?? 1),
-    size: Number(paged?.size ?? query.size ?? 10),
-    totalElements: Number(paged?.totalElements ?? items.length),
+    page: Number(pagination?.page ?? source?.page ?? query.page ?? 1),
+    size: Number(pagination?.size ?? pagination?.pageSize ?? source?.size ?? source?.pageSize ?? query.size ?? 10),
+    totalElements: Number(pagination?.totalItems ?? pagination?.totalElements ?? source?.totalItems ?? source?.totalElements ?? items.length),
   };
 };
 

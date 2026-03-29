@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FormSectionCard from "../../components/forms/FormSectionCard";
 import CustomButton from "../../components/customButton/CustomButton";
@@ -23,6 +23,19 @@ const InventoryAdjustmentCreatePage = () => {
   const [saving, setSaving] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [productOptions, setProductOptions] = useState<Option[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const clearFieldError = (field: string) => {
+    setErrors((previous) => {
+      if (!previous[field]) {
+        return previous;
+      }
+
+      const next = { ...previous };
+      delete next[field];
+      return next;
+    });
+  };
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -45,7 +58,7 @@ const InventoryAdjustmentCreatePage = () => {
     void loadProducts();
   }, []);
 
-  const errors = useMemo(() => {
+  const validateForm = () => {
     const validationErrors: Record<string, string> = {};
     const parsedQuantity = Number(adjustmentQuantity);
 
@@ -57,11 +70,14 @@ const InventoryAdjustmentCreatePage = () => {
     }
 
     return validationErrors;
-  }, [adjustmentQuantity, productId]);
+  };
 
   const handleSave = async () => {
-    if (Object.keys(errors).length > 0) {
-      notify(Object.values(errors)[0] ?? "Please check input values.", "error");
+    const validationErrors = validateForm();
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length > 0) {
+      notify(Object.values(validationErrors)[0] ?? "Please check input values.", "error");
       return;
     }
 
@@ -84,6 +100,8 @@ const InventoryAdjustmentCreatePage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loadingProducts}
+      loadingText="Đang tải danh sách sản phẩm..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -107,9 +125,13 @@ const InventoryAdjustmentCreatePage = () => {
               title="Product"
               options={productOptions}
               value={productId ? [productId] : []}
-              onChange={(selected) => setProductId(selected[0] ?? "")}
+              onChange={(selected) => {
+                setProductId(selected[0] ?? "");
+                clearFieldError("productId");
+              }}
               classNameSelect="w-full text-left"
               classNameOptions="w-full left-0"
+              placeholder="Select product"
               search
               disable={loadingProducts}
               helperText={errors.productId}
@@ -120,7 +142,10 @@ const InventoryAdjustmentCreatePage = () => {
               value={adjustmentQuantity}
               helperText={errors.adjustmentQuantity}
               error={Boolean(errors.adjustmentQuantity)}
-              onChange={(event) => setAdjustmentQuantity(event.target.value)}
+              onChange={(event) => {
+                setAdjustmentQuantity(event.target.value);
+                clearFieldError("adjustmentQuantity");
+              }}
             />
             <CustomTextField title="Reason" value={reason} onChange={(event) => setReason(event.target.value)} />
             <CustomTextField title="Note" value={note} onChange={(event) => setNote(event.target.value)} />

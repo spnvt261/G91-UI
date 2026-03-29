@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FormSectionCard from "../../components/forms/FormSectionCard";
 import CustomButton from "../../components/customButton/CustomButton";
@@ -25,6 +25,19 @@ const InventoryReceiptCreatePage = () => {
   const [saving, setSaving] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [productOptions, setProductOptions] = useState<Option[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const clearFieldError = (field: string) => {
+    setErrors((previous) => {
+      if (!previous[field]) {
+        return previous;
+      }
+
+      const next = { ...previous };
+      delete next[field];
+      return next;
+    });
+  };
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -47,7 +60,7 @@ const InventoryReceiptCreatePage = () => {
     void loadProducts();
   }, []);
 
-  const errors = useMemo(() => {
+  const validateForm = () => {
     const validationErrors: Record<string, string> = {};
     const parsedQuantity = Number(quantity);
 
@@ -62,11 +75,14 @@ const InventoryReceiptCreatePage = () => {
     }
 
     return validationErrors;
-  }, [productId, quantity, receiptDate]);
+  };
 
   const handleSave = async () => {
-    if (Object.keys(errors).length > 0) {
-      notify(Object.values(errors)[0] ?? "Please check input values.", "error");
+    const validationErrors = validateForm();
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length > 0) {
+      notify(Object.values(validationErrors)[0] ?? "Please check input values.", "error");
       return;
     }
 
@@ -91,6 +107,8 @@ const InventoryReceiptCreatePage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loadingProducts}
+      loadingText="Đang tải danh sách sản phẩm..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -114,9 +132,13 @@ const InventoryReceiptCreatePage = () => {
               title="Product"
               options={productOptions}
               value={productId ? [productId] : []}
-              onChange={(selected) => setProductId(selected[0] ?? "")}
+              onChange={(selected) => {
+                setProductId(selected[0] ?? "");
+                clearFieldError("productId");
+              }}
               classNameSelect="w-full text-left"
               classNameOptions="w-full left-0"
+              placeholder="Select product"
               search
               disable={loadingProducts}
               helperText={errors.productId}
@@ -127,14 +149,20 @@ const InventoryReceiptCreatePage = () => {
               value={quantity}
               helperText={errors.quantity}
               error={Boolean(errors.quantity)}
-              onChange={(event) => setQuantity(event.target.value)}
+              onChange={(event) => {
+                setQuantity(event.target.value);
+                clearFieldError("quantity");
+              }}
             />
             <CustomTextField
               title="Receipt Date (YYYY-MM-DD)"
               value={receiptDate}
               helperText={errors.receiptDate}
               error={Boolean(errors.receiptDate)}
-              onChange={(event) => setReceiptDate(event.target.value)}
+              onChange={(event) => {
+                setReceiptDate(event.target.value);
+                clearFieldError("receiptDate");
+              }}
             />
             <CustomTextField title="Supplier Name" value={supplierName} onChange={(event) => setSupplierName(event.target.value)} />
             <CustomTextField title="Reason" value={reason} onChange={(event) => setReason(event.target.value)} />

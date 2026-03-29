@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FormSectionCard from "../../components/forms/FormSectionCard";
 import CustomButton from "../../components/customButton/CustomButton";
@@ -25,6 +25,19 @@ const InventoryIssueCreatePage = () => {
   const [saving, setSaving] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [productOptions, setProductOptions] = useState<Option[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const clearFieldError = (field: string) => {
+    setErrors((previous) => {
+      if (!previous[field]) {
+        return previous;
+      }
+
+      const next = { ...previous };
+      delete next[field];
+      return next;
+    });
+  };
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -47,7 +60,7 @@ const InventoryIssueCreatePage = () => {
     void loadProducts();
   }, []);
 
-  const errors = useMemo(() => {
+  const validateForm = () => {
     const validationErrors: Record<string, string> = {};
     const parsedQuantity = Number(quantity);
 
@@ -59,11 +72,14 @@ const InventoryIssueCreatePage = () => {
     }
 
     return validationErrors;
-  }, [productId, quantity]);
+  };
 
   const handleSave = async () => {
-    if (Object.keys(errors).length > 0) {
-      notify(Object.values(errors)[0] ?? "Please check input values.", "error");
+    const validationErrors = validateForm();
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length > 0) {
+      notify(Object.values(validationErrors)[0] ?? "Please check input values.", "error");
       return;
     }
 
@@ -88,6 +104,8 @@ const InventoryIssueCreatePage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={loadingProducts}
+      loadingText="Đang tải danh sách sản phẩm..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -111,9 +129,13 @@ const InventoryIssueCreatePage = () => {
               title="Product"
               options={productOptions}
               value={productId ? [productId] : []}
-              onChange={(selected) => setProductId(selected[0] ?? "")}
+              onChange={(selected) => {
+                setProductId(selected[0] ?? "");
+                clearFieldError("productId");
+              }}
               classNameSelect="w-full text-left"
               classNameOptions="w-full left-0"
+              placeholder="Select product"
               search
               disable={loadingProducts}
               helperText={errors.productId}
@@ -124,7 +146,10 @@ const InventoryIssueCreatePage = () => {
               value={quantity}
               helperText={errors.quantity}
               error={Boolean(errors.quantity)}
-              onChange={(event) => setQuantity(event.target.value)}
+              onChange={(event) => {
+                setQuantity(event.target.value);
+                clearFieldError("quantity");
+              }}
             />
             <CustomTextField title="Related Order ID" value={relatedOrderId} onChange={(event) => setRelatedOrderId(event.target.value)} />
             <CustomTextField title="Related Project ID" value={relatedProjectId} onChange={(event) => setRelatedProjectId(event.target.value)} />
