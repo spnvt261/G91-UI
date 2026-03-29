@@ -8,6 +8,7 @@ import FilterSearchModalBar, { type FilterModalGroup } from "../../components/ta
 import Pagination from "../../components/table/Pagination";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { canPerformAction } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type { QuotationModel, QuotationStatus } from "../../models/quotation/quotation.model";
@@ -20,7 +21,9 @@ const PAGE_SIZE = 8;
 const QuotationListPage = () => {
   const navigate = useNavigate();
   const role = getStoredUserRole();
-  const isCustomerRole = role === "CUSTOMER";
+  const canCreateQuotation = canPerformAction(role, "quotation.create");
+  const canCreateContract = canPerformAction(role, "contract.create");
+  const isCustomerRole = canCreateQuotation;
   const [items, setItems] = useState<QuotationModel[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -168,7 +171,7 @@ const QuotationListPage = () => {
         <ListScreenHeaderTemplate
           title="Quotation Management"
           className="rounded-none border-x-0 border-t-0 bg-gray-100"
-          actions={isCustomerRole ? <CustomButton label="Create Quotation" onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)} /> : undefined}
+          actions={canCreateQuotation ? <CustomButton label="Create Quotation" onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)} /> : undefined}
           breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Báo giá" }]} />}
         />
       }
@@ -209,7 +212,7 @@ const QuotationListPage = () => {
                   className="px-2 py-1 text-sm"
                   onClick={() => navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", row.id))}
                 />
-                {!isCustomerRole && row.actions?.accountantCanCreateContract ? (
+                {canCreateContract && row.actions?.accountantCanCreateContract ? (
                   <CustomButton
                     label="Create Contract"
                     className="px-2 py-1 text-sm"

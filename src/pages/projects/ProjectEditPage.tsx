@@ -19,7 +19,6 @@ const ProjectEditPage = () => {
   const [customerId, setCustomerId] = useState("");
   const [warehouseId, setWarehouseId] = useState("");
   const [status, setStatus] = useState("NEW");
-  const [progress, setProgress] = useState("0");
   const [pageLoading, setPageLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const { notify } = useNotify();
@@ -38,7 +37,6 @@ const ProjectEditPage = () => {
         setCustomerId(detail.customerId);
         setWarehouseId(detail.warehouseId ?? "");
         setStatus(detail.status);
-        setProgress(String(detail.progress ?? 0));
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load project for update"), "error");
       } finally {
@@ -61,12 +59,7 @@ const ProjectEditPage = () => {
         name,
         customerId,
         warehouseId,
-        progress: Number(progress),
         status: status as "NEW" | "IN_PROGRESS" | "ON_HOLD" | "DONE",
-      });
-      await projectService.updateProgress(id, {
-        progress: Number(progress),
-        note: "Updated from ProjectEditPage",
       });
       navigate(ROUTE_URL.PROJECT_DETAIL.replace(":id", id));
     } catch (err) {
@@ -104,7 +97,6 @@ const ProjectEditPage = () => {
             <CustomTextField title="Customer ID" value={customerId} onChange={(event) => setCustomerId(event.target.value)} />
             <CustomTextField title="Warehouse ID" value={warehouseId} onChange={(event) => setWarehouseId(event.target.value)} />
             <CustomTextField title="Trạng thái" value={status} onChange={(event) => setStatus(event.target.value)} />
-            <CustomTextField title="Tiến độ" type="number" value={progress} onChange={(event) => setProgress(event.target.value)} />
           </div>
           <div className="mt-4 flex gap-3">
             <CustomButton label={saving ? "Đang lưu..." : "Lưu cập nhật"} onClick={handleUpdate} disabled={saving} />

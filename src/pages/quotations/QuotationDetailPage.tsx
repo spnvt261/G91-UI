@@ -6,6 +6,7 @@ import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { canPerformAction } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type { QuotationHistoryResponseData, QuotationItemModel, QuotationModel } from "../../models/quotation/quotation.model";
@@ -21,16 +22,13 @@ const QuotationDetailPage = () => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { notify } = useNotify();
+
   const role = getStoredUserRole();
-  const isCustomerRole = role === "CUSTOMER";
-  const canShowCreateContract = role === "ACCOUNTANT";
+  const canSubmitDraft = canPerformAction(role, "quotation.create");
+  const canShowCreateContract = canPerformAction(role, "contract.create");
 
   const loadData = async (quotationId: string) => {
-    const [detail, historyResponse] = await Promise.all([
-      quotationService.getDetail(quotationId),
-      quotationService.getHistory(quotationId),
-    ]);
-
+    const [detail, historyResponse] = await Promise.all([quotationService.getDetail(quotationId), quotationService.getHistory(quotationId)]);
     setQuotation(detail);
     setHistory(historyResponse.events ?? []);
   };
@@ -85,7 +83,7 @@ const QuotationDetailPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Đang tải báo giá..."
+      loadingText="Dang tai bao gia..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -93,7 +91,7 @@ const QuotationDetailPage = () => {
           className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={
             <div className="flex gap-2">
-              {isCustomerRole ? (
+              {canSubmitDraft ? (
                 <CustomButton
                   label={submitting ? "Submitting..." : "Submit Draft"}
                   onClick={handleSubmitDraft}
@@ -117,9 +115,9 @@ const QuotationDetailPage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chủ" },
-                { label: "Báo giá", url: ROUTE_URL.QUOTATION_LIST },
-                { label: "Chi tiết" },
+                { label: "Trang chu" },
+                { label: "Bao gia", url: ROUTE_URL.QUOTATION_LIST },
+                { label: "Chi tiet" },
               ]}
             />
           }

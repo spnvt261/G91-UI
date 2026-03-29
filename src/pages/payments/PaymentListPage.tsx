@@ -21,7 +21,14 @@ const PAGE_SIZE = 8;
 const PaymentListPage = () => {
   const navigate = useNavigate();
   const role = getStoredUserRole();
+
   const canRecordPayment = canPerformAction(role, "payment.record");
+  const canCreateInvoice = canPerformAction(role, "invoice.create");
+  const canUpdateInvoice = canPerformAction(role, "invoice.update");
+  const canCancelInvoice = canPerformAction(role, "invoice.cancel");
+  const canSendReminder = canPerformAction(role, "payment.reminder.send");
+  const canConfirmSettlement = canPerformAction(role, "debt.settlement.confirm");
+
   const [allInvoices, setAllInvoices] = useState<InvoiceModel[]>([]);
   const [debtItems, setDebtItems] = useState<DebtModel[]>([]);
   const [page, setPage] = useState(1);
@@ -52,6 +59,28 @@ const PaymentListPage = () => {
     void load();
   }, [keyword, notify, status]);
 
+  const missingBackendActions = useMemo(() => {
+    const pending: string[] = [];
+
+    if (canCreateInvoice) {
+      pending.push("Create Invoice");
+    }
+    if (canUpdateInvoice) {
+      pending.push("Update Invoice");
+    }
+    if (canCancelInvoice) {
+      pending.push("Cancel Invoice");
+    }
+    if (canSendReminder) {
+      pending.push("Send Payment Reminder");
+    }
+    if (canConfirmSettlement) {
+      pending.push("Confirm Debt Settlement");
+    }
+
+    return pending;
+  }, [canCancelInvoice, canConfirmSettlement, canCreateInvoice, canSendReminder, canUpdateInvoice]);
+
   const filteredInvoices = useMemo(() => {
     const fromTime = dueDateRange.from ? new Date(dueDateRange.from).getTime() : undefined;
     const toTime = dueDateRange.to ? new Date(dueDateRange.to).getTime() + 24 * 60 * 60 * 1000 - 1 : undefined;
@@ -61,19 +90,18 @@ const PaymentListPage = () => {
     return allInvoices.filter((item) => {
       const dueTime = item.dueDate ? new Date(item.dueDate).getTime() : undefined;
       const validDueDate = (fromTime == null || (dueTime != null && dueTime >= fromTime)) && (toTime == null || (dueTime != null && dueTime <= toTime));
-      const validTotal =
-        (minTotal == null || item.totalAmount >= minTotal) &&
-        (maxTotal == null || item.totalAmount <= maxTotal);
+      const validTotal = (minTotal == null || item.totalAmount >= minTotal) && (maxTotal == null || item.totalAmount <= maxTotal);
 
       return validDueDate && validTotal;
     });
   }, [allInvoices, dueDateRange.from, dueDateRange.to, totalRange.max, totalRange.min]);
 
   const pagedItems = useMemo(() => filteredInvoices.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [filteredInvoices, page]);
+
   const filters: FilterModalGroup[] = [
     {
       key: "status",
-      label: "Trạng thái",
+      label: "Status",
       options: [
         { label: "UNPAID", value: "UNPAID" },
         { label: "PARTIAL", value: "PARTIAL" },
@@ -84,29 +112,29 @@ const PaymentListPage = () => {
     {
       kind: "dateRange",
       key: "dueDateRange",
-      label: "Hạn thanh toán",
+      label: "Due Date",
       value: dueDateRange,
-      fromPlaceholder: "Từ ngày",
-      toPlaceholder: "Đến ngày",
+      fromPlaceholder: "From",
+      toPlaceholder: "To",
     },
     {
       kind: "numberRange",
       key: "totalRange",
-      label: "Tổng tiền hóa đơn",
+      label: "Invoice Total",
       value: totalRange,
-      minPlaceholder: "Tổng tiền tối thiểu",
-      maxPlaceholder: "Tổng tiền tối đa",
+      minPlaceholder: "Minimum",
+      maxPlaceholder: "Maximum",
     },
   ];
 
   const columns = useMemo<DataTableColumn<InvoiceModel>[]>(
     () => [
-      { key: "id", header: "Số hóa đơn", className: "font-semibold text-blue-900" },
-      { key: "contractId", header: "Hợp đồng" },
-      { key: "customerId", header: "Khách hàng" },
-      { key: "totalAmount", header: "Tổng tiền", render: (row) => toCurrency(row.totalAmount) },
-      { key: "dueAmount", header: "Còn nợ", render: (row) => toCurrency(row.dueAmount) },
-      { key: "status", header: "Trạng thái" },
+      { key: "id", header: "Invoice No", className: "font-semibold text-blue-900" },
+      { key: "contractId", header: "Contract" },
+      { key: "customerId", header: "Customer" },
+      { key: "totalAmount", header: "Total", render: (row) => toCurrency(row.totalAmount) },
+      { key: "dueAmount", header: "Due", render: (row) => toCurrency(row.dueAmount) },
+      { key: "status", header: "Status" },
     ],
     [],
   );
@@ -114,19 +142,28 @@ const PaymentListPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Đang tải danh sách hóa đơn..."
+      loadingText="Loading invoices..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Quản lý thanh toán"
+          title="Payment Management"
           className="rounded-none border-x-0 border-t-0 bg-gray-100"
-          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Thanh toán" }]} />}
+          actions={canCreateInvoice ? <CustomButton label="Create Invoice" disabled /> : undefined}
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Home" }, { label: "Payments" }]} />}
         />
       }
       body={
         <div className="space-y-4">
+          {missingBackendActions.length > 0 ? (
+            <BaseCard>
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                These actions are correctly permission-gated but disabled because backend APIs are not available: {missingBackendActions.join(", ")}.
+              </div>
+            </BaseCard>
+          ) : null}
+
           <BaseCard>
-          <FilterSearchModalBar
+            <FilterSearchModalBar
               searchValue={keyword}
               onSearchChange={(value) => {
                 setKeyword(value);
@@ -136,42 +173,47 @@ const PaymentListPage = () => {
                 setKeyword("");
                 setPage(1);
               }}
-              searchPlaceholder="Tìm hóa đơn"
+              searchPlaceholder="Search invoice"
               filters={filters}
               onApplyFilters={(values) => {
                 setStatus(Array.isArray(values.status) ? (values.status as InvoiceModel["status"][]) : []);
+
                 const dueDateValue = values.dueDateRange;
                 setDueDateRange(
                   dueDateValue && !Array.isArray(dueDateValue) && ("from" in dueDateValue || "to" in dueDateValue)
                     ? { from: dueDateValue.from, to: dueDateValue.to }
                     : {},
                 );
+
                 const totalValue = values.totalRange;
                 setTotalRange(
                   totalValue && !Array.isArray(totalValue) && ("min" in totalValue || "max" in totalValue)
                     ? { min: totalValue.min, max: totalValue.max }
                     : {},
                 );
+
                 setPage(1);
-            }}
-          />
-          <DataTable
+              }}
+            />
+            <DataTable
               columns={columns}
               data={pagedItems}
               actions={(row) => (
                 <div className="flex gap-2">
                   <CustomButton
-                    label="Chi tiết"
+                    label="Detail"
                     className="px-2 py-1 text-sm"
                     onClick={() => navigate(ROUTE_URL.PAYMENT_DETAIL.replace(":id", row.id))}
                   />
                   {canRecordPayment ? (
                     <CustomButton
-                      label="Ghi nhận"
+                      label="Record"
                       className="px-2 py-1 text-sm"
                       onClick={() => navigate(ROUTE_URL.PAYMENT_RECORD.replace(":id", row.id))}
                     />
                   ) : null}
+                  {canUpdateInvoice ? <CustomButton label="Edit" className="px-2 py-1 text-sm" disabled /> : null}
+                  {canCancelInvoice ? <CustomButton label="Cancel" className="bg-red-500 px-2 py-1 text-sm hover:bg-red-600" disabled /> : null}
                 </div>
               )}
             />

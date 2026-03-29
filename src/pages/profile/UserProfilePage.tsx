@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import CustomButton from "../../components/customButton/CustomButton";
 import CustomTextField from "../../components/customTextField/CustomTextField";
@@ -20,11 +20,23 @@ interface ProfileFormValues {
   address: string;
 }
 
+interface ChangePasswordFormValues {
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}
+
 const toFormValues = (profile: UserProfileModel): ProfileFormValues => ({
   fullName: profile.fullName ?? "",
   phone: profile.phone ?? "",
   address: profile.address ?? "",
 });
+
+const EMPTY_CHANGE_PASSWORD_FORM: ChangePasswordFormValues = {
+  currentPassword: "",
+  newPassword: "",
+  confirmNewPassword: "",
+};
 
 const SAMPLE_PROFILE_IMAGE = "/images/sample-profile-avatar.svg";
 
@@ -33,9 +45,11 @@ const UserProfilePage = () => {
   const { notify } = useNotify();
   const role = getStoredUserRole();
   const canEditProfile = canPerformAction(role, "profile.update");
+  const canChangePassword = canPerformAction(role, "profile.change-password");
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [profile, setProfile] = useState<UserProfileModel | null>(null);
   const [formValues, setFormValues] = useState<ProfileFormValues>({
@@ -43,6 +57,7 @@ const UserProfilePage = () => {
     phone: "",
     address: "",
   });
+  const [changePasswordForm, setChangePasswordForm] = useState<ChangePasswordFormValues>(EMPTY_CHANGE_PASSWORD_FORM);
   const [errors, setErrors] = useState<Partial<Record<keyof ProfileFormValues, string>>>({});
 
   useEffect(() => {
@@ -109,6 +124,29 @@ const UserProfilePage = () => {
     setEditMode(false);
   };
 
+  const handleChangePassword = async () => {
+    if (!changePasswordForm.currentPassword || !changePasswordForm.newPassword || !changePasswordForm.confirmNewPassword) {
+      notify("Please fill all password fields.", "error");
+      return;
+    }
+
+    if (changePasswordForm.newPassword !== changePasswordForm.confirmNewPassword) {
+      notify("Confirm password does not match.", "error");
+      return;
+    }
+
+    try {
+      setChangingPassword(true);
+      await authService.changePassword(changePasswordForm);
+      notify("Change password successfully.", "success");
+      setChangePasswordForm(EMPTY_CHANGE_PASSWORD_FORM);
+    } catch (error) {
+      notify(getErrorMessage(error, "Cannot change password"), "error");
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   return (
     <NoResizeScreenTemplate
       loading={loading}
@@ -133,7 +171,7 @@ const UserProfilePage = () => {
               </div>
             ) : undefined
           }
-          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Hồ sơ cá nhân" }]} />}
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang ch?" }, { label: "H? so cá nhân" }]} />}
         />
       }
       body={
@@ -187,6 +225,48 @@ const UserProfilePage = () => {
               </div>
             ) : null}
           </div>
+
+          {canChangePassword ? (
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-900">Change Password</h2>
+              <p className="mt-1 text-sm text-slate-500">Use this form to update your account password.</p>
+
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+                <CustomTextField
+                  title="Current Password"
+                  type="password"
+                  value={changePasswordForm.currentPassword}
+                  onChange={(event) => setChangePasswordForm((previous) => ({ ...previous, currentPassword: event.target.value }))}
+                />
+                <CustomTextField
+                  title="New Password"
+                  type="password"
+                  value={changePasswordForm.newPassword}
+                  onChange={(event) => setChangePasswordForm((previous) => ({ ...previous, newPassword: event.target.value }))}
+                />
+                <CustomTextField
+                  title="Confirm New Password"
+                  type="password"
+                  value={changePasswordForm.confirmNewPassword}
+                  onChange={(event) => setChangePasswordForm((previous) => ({ ...previous, confirmNewPassword: event.target.value }))}
+                />
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-3">
+                <CustomButton
+                  label={changingPassword ? "Changing..." : "Change Password"}
+                  onClick={handleChangePassword}
+                  disabled={changingPassword}
+                />
+                <CustomButton
+                  label="Reset"
+                  className="bg-slate-200 text-slate-700 hover:bg-slate-300"
+                  onClick={() => setChangePasswordForm(EMPTY_CHANGE_PASSWORD_FORM)}
+                  disabled={changingPassword}
+                />
+              </div>
+            </div>
+          ) : null}
         </div>
       }
     />
@@ -194,3 +274,4 @@ const UserProfilePage = () => {
 };
 
 export default UserProfilePage;
+

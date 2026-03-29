@@ -48,6 +48,7 @@ export const ROUTE_URL = {
   PROJECT_CREATE: "/projects/create",
   PROJECT_EDIT: "/projects/:id/edit",
   PROJECT_ASSIGN_WAREHOUSE: "/projects/:id/assign-warehouse",
+  PROJECT_PROGRESS_UPDATE: "/projects/:id/progress",
 
   PAYMENT_LIST: "/payments",
   PAYMENT_DETAIL: "/payments/:id",

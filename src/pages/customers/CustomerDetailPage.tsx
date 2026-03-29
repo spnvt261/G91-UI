@@ -5,18 +5,31 @@ import CustomButton from "../../components/customButton/CustomButton";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { canPerformAction } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type { CustomerModel } from "../../models/customer/customer.model";
 import { customerService } from "../../services/customer/customer.service";
+import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
 
 const CustomerDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const role = getStoredUserRole();
+
+  const canUpdateCustomer = canPerformAction(role, "customer.update");
+  const canDisableCustomer = canPerformAction(role, "customer.delete-disable");
+
   const [customer, setCustomer] = useState<CustomerModel | null>(null);
   const [loading, setLoading] = useState(false);
+  const [disabling, setDisabling] = useState(false);
   const { notify } = useNotify();
+
+  const loadCustomer = async (customerId: string) => {
+    const detail = await customerService.getDetail(customerId);
+    setCustomer(detail);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -26,8 +39,7 @@ const CustomerDetailPage = () => {
 
       try {
         setLoading(true);
-        const detail = await customerService.getDetail(id);
-        setCustomer(detail);
+        await loadCustomer(id);
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load customer detail"), "error");
       } finally {
@@ -38,27 +50,59 @@ const CustomerDetailPage = () => {
     void load();
   }, [id, notify]);
 
+  const handleDisableCustomer = async () => {
+    if (!id || !customer || customer.status === "INACTIVE") {
+      return;
+    }
+
+    try {
+      setDisabling(true);
+      const updated = await customerService.disable(id);
+      setCustomer(updated);
+      notify("Ðã vô hi?u hóa khách hàng.", "success");
+    } catch (err) {
+      notify(getErrorMessage(err, "Cannot disable customer"), "error");
+    } finally {
+      setDisabling(false);
+    }
+  };
+
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Đang tải thông tin khách hàng..."
+      loadingText="Ðang t?i thông tin khách hàng..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Chi tiết khách hàng"
+          title="Chi ti?t khách hàng"
           className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={
             <div className="flex gap-2">
-              <CustomButton label="Chỉnh sửa" onClick={() => navigate(ROUTE_URL.CUSTOMER_EDIT.replace(":id", id ?? ""))} />
-              <CustomButton label="Quay lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)} />
+              {canUpdateCustomer ? (
+                <CustomButton label="Ch?nh s?a" onClick={() => navigate(ROUTE_URL.CUSTOMER_EDIT.replace(":id", id ?? ""))} disabled={disabling} />
+              ) : null}
+              {canDisableCustomer ? (
+                <CustomButton
+                  label={customer?.status === "INACTIVE" ? "Ðã vô hi?u" : disabling ? "Ðang x? lý..." : "Vô hi?u hóa"}
+                  className="bg-red-500 hover:bg-red-600"
+                  onClick={handleDisableCustomer}
+                  disabled={!customer || customer.status === "INACTIVE" || disabling}
+                />
+              ) : null}
+              <CustomButton
+                label="Quay l?i"
+                className="bg-slate-200 text-slate-700 hover:bg-slate-300"
+                onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)}
+                disabled={disabling}
+              />
             </div>
           }
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chủ" },
+                { label: "Trang ch?" },
                 { label: "Khách hàng", url: ROUTE_URL.CUSTOMER_LIST },
-                { label: "Chi tiết" },
+                { label: "Chi ti?t" },
               ]}
             />
           }
@@ -100,7 +144,7 @@ const CustomerDetailPage = () => {
               </p>
             </div>
           ) : (
-            <p className="text-sm text-slate-500">Không có dữ liệu khách hàng.</p>
+            <p className="text-sm text-slate-500">Không có d? li?u khách hàng.</p>
           )}
         </BaseCard>
       }
@@ -109,3 +153,4 @@ const CustomerDetailPage = () => {
 };
 
 export default CustomerDetailPage;
+

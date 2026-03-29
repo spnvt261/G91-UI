@@ -1,4 +1,4 @@
-import { canReadPromotionByRole, canWritePromotionByRole } from "../../const/promotion_policy.const";
+import { canPerformAction, hasPermission } from "../../const/authz.const";
 import type { UserRole } from "../../models/auth/auth.model";
 import type { PromotionListItem, PromotionStatus, PromotionType } from "../../models/promotion/promotion.model";
 import { toCurrency } from "../shared/page.utils";
@@ -75,7 +75,7 @@ export const formatPromotionDiscountValue = (promotion: Pick<PromotionListItem, 
   return toCurrency(promotion.discountValue);
 };
 
-export const canAccessPromotionModule = (role: UserRole | null | undefined): boolean => canReadPromotionByRole(role);
-export const canCreatePromotion = (role: UserRole | null | undefined): boolean => canWritePromotionByRole(role);
-export const canEditPromotion = (role: UserRole | null | undefined): boolean => canWritePromotionByRole(role);
-export const canDeletePromotion = (role: UserRole | null | undefined): boolean => canWritePromotionByRole(role);
+export const canAccessPromotionModule = (role: UserRole | null | undefined): boolean => hasPermission(role, "promotion.view");
+export const canCreatePromotion = (role: UserRole | null | undefined): boolean => canPerformAction(role, "promotion.create");
+export const canEditPromotion = (role: UserRole | null | undefined): boolean => canPerformAction(role, "promotion.update");
+export const canDeletePromotion = (role: UserRole | null | undefined): boolean => canPerformAction(role, "promotion.delete");

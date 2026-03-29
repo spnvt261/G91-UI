@@ -5,7 +5,6 @@ import AppLayout from "./components/layout/AppLayout";
 import { canAccessPathByRole, getDefaultRouteByRole } from "./const/authz.const";
 import { ROUTE_URL } from "./const/route_url.const";
 import NotFoundPage from "./pages/404/NotFound.Page";
-import TestPage from "./pages/404/test.page";
 import AccountListPage from "./pages/accounts/AccountListPage";
 import ContractApprovalDetailPage from "./pages/approvals/ContractApprovalDetailPage";
 import ContractApprovalListPage from "./pages/approvals/ContractApprovalListPage";
@@ -48,12 +47,14 @@ import ProjectCreatePage from "./pages/projects/ProjectCreatePage";
 import ProjectDetailPage from "./pages/projects/ProjectDetailPage";
 import ProjectEditPage from "./pages/projects/ProjectEditPage";
 import ProjectListPage from "./pages/projects/ProjectListPage";
+import ProjectProgressUpdatePage from "./pages/projects/ProjectProgressUpdatePage";
 import QuotationCreatePage from "./pages/quotations/QuotationCreatePage";
 import QuotationDetailPage from "./pages/quotations/QuotationDetailPage";
 import QuotationListPage from "./pages/quotations/QuotationListPage";
 import ExportReportPage from "./pages/reports/ExportReportPage";
 import FinancialReportPage from "./pages/reports/FinancialReportPage";
 import InventoryReportPage from "./pages/reports/InventoryReportPage";
+import ProjectReportPage from "./pages/reports/ProjectReportPage";
 import SalesReportPage from "./pages/reports/SalesReportPage";
 import { authService } from "./services/auth/auth.service";
 import type { AppDispatch, RootState } from "./store";
@@ -186,6 +187,7 @@ function App() {
           <Route path={ROUTE_URL.PROJECT_CREATE} element={<ProjectCreatePage />} />
           <Route path={ROUTE_URL.PROJECT_EDIT} element={<ProjectEditPage />} />
           <Route path={ROUTE_URL.PROJECT_ASSIGN_WAREHOUSE} element={<ProjectAssignWarehousePage />} />
+          <Route path={ROUTE_URL.PROJECT_PROGRESS_UPDATE} element={<ProjectProgressUpdatePage />} />
 
           <Route path={ROUTE_URL.PAYMENT_LIST} element={<PaymentListPage />} />
           <Route path={ROUTE_URL.PAYMENT_DETAIL} element={<PaymentDetailPage />} />
@@ -199,12 +201,11 @@ function App() {
 
           <Route path={ROUTE_URL.REPORT_SALES} element={<SalesReportPage />} />
           <Route path={ROUTE_URL.REPORT_INVENTORY} element={<InventoryReportPage />} />
-          <Route path={ROUTE_URL.REPORT_PROJECT} element={<FinancialReportPage />} />
+          <Route path={ROUTE_URL.REPORT_PROJECT} element={<ProjectReportPage />} />
           <Route path={ROUTE_URL.REPORT_FINANCIAL} element={<FinancialReportPage />} />
           <Route path={ROUTE_URL.REPORT_EXPORT} element={<ExportReportPage />} />
         </Route>
 
-        <Route path="/test" element={<TestPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </div>

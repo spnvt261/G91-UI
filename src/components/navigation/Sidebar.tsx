@@ -104,7 +104,9 @@ const buildMenuByRole = (role: UserRole): SidebarNode[] => {
       icon: <FileTextOutlined />,
       children: [
         { id: "quotation-list", label: "Quotation List", path: ROUTE_URL.QUOTATION_LIST },
-        ...(role === "CUSTOMER" ? [{ id: "quotation-create", label: "Create Quotation", path: ROUTE_URL.QUOTATION_CREATE }] : []),
+        ...(canPerformAction(role, "quotation.create")
+          ? [{ id: "quotation-create", label: "Create Quotation", path: ROUTE_URL.QUOTATION_CREATE }]
+          : []),
       ],
     });
   }
@@ -134,7 +136,9 @@ const buildMenuByRole = (role: UserRole): SidebarNode[] => {
       icon: <UserOutlined />,
       children: [
         { id: "customer-list", label: "Customer List", path: ROUTE_URL.CUSTOMER_LIST },
-        { id: "customer-create", label: "Create Customer", path: ROUTE_URL.CUSTOMER_CREATE },
+        ...(canPerformAction(role, "customer.create")
+          ? [{ id: "customer-create", label: "Create Customer", path: ROUTE_URL.CUSTOMER_CREATE }]
+          : []),
       ],
     });
   }
@@ -146,7 +150,9 @@ const buildMenuByRole = (role: UserRole): SidebarNode[] => {
       icon: <ProjectOutlined />,
       children: [
         { id: "project-list", label: "Project List", path: ROUTE_URL.PROJECT_LIST },
-        ...(role === "ACCOUNTANT" ? [{ id: "project-create", label: "Create Project", path: ROUTE_URL.PROJECT_CREATE }] : []),
+        ...(canPerformAction(role, "project.create")
+          ? [{ id: "project-create", label: "Create Project", path: ROUTE_URL.PROJECT_CREATE }]
+          : []),
       ],
     });
   }

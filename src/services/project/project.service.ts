@@ -138,4 +138,25 @@ export const projectService = {
     const response = await api.post<ProjectProgressResponse>(withId(API.PROJECT.ADD_PROGRESS, id), payload);
     return response.data;
   },
+
+  async close(id: string, note?: string): Promise<ProjectModel> {
+    return projectService.update(id, {
+      status: "DONE",
+      changeReason: note ?? "Project closed from UI",
+    });
+  },
+
+  async confirmMilestone(id: string, note?: string): Promise<ProjectModel> {
+    return projectService.update(id, {
+      customerSignoffCompleted: true,
+      changeReason: note ?? "Milestone confirmed by customer",
+    });
+  },
+
+  async softDelete(id: string, note?: string): Promise<ProjectModel> {
+    return projectService.update(id, {
+      status: "CANCELLED",
+      changeReason: note ?? "Project archived from UI",
+    });
+  },
 };

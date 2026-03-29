@@ -45,7 +45,7 @@ const ProductDetailPage = () => {
 
   const gallery = useMemo(() => (product?.images ?? product?.imageUrls ?? []).filter(Boolean).slice(0, 6), [product]);
   const canUpdate = canPerformAction(role, "product.update");
-  const showRequestQuotation = role === "CUSTOMER";
+  const showRequestQuotation = canPerformAction(role, "quotation.create");
 
   return (
     <NoResizeScreenTemplate

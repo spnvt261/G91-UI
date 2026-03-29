@@ -1,5 +1,5 @@
 import api from "../../apiConfig/axiosConfig";
-import { API, withId } from "../../api/URL_const";
+import { API, withId, withPathParams } from "../../api/URL_const";
 import type {
   ContractApprovalResponseData,
   ContractApprovalRequest,
@@ -16,6 +16,13 @@ import type {
   CreateContractFromQuotationRequest,
 } from "../../models/contract/contract.model";
 import { extractList } from "../service.utils";
+
+export interface ContractDocumentModel {
+  id: string;
+  name: string;
+  status?: string;
+  generatedAt?: string;
+}
 
 const toContractModelFromListItem = (item: ContractListResponseData["items"][number]): ContractModel => ({
   id: item.id,
@@ -135,6 +142,33 @@ export const contractService = {
 
   async cancel(id: string, request: ContractCancelRequest): Promise<ContractApprovalResponseData> {
     const response = await api.post<ContractApprovalResponseData>(withId(API.CONTRACTS.CANCEL, id), request);
+    return response.data;
+  },
+
+  async getDocuments(id: string): Promise<ContractDocumentModel[]> {
+    const response = await api.get<unknown>(withId(API.CONTRACTS.DOCUMENTS, id));
+    return extractList<Record<string, unknown>>(response.data).map((item) => ({
+      id: String(item.id ?? item.documentId ?? ""),
+      name: String(item.name ?? item.fileName ?? item.documentName ?? item.id ?? item.documentId ?? "Contract document"),
+      status: typeof item.status === "string" ? item.status : undefined,
+      generatedAt: typeof item.generatedAt === "string" ? item.generatedAt : undefined,
+    }));
+  },
+
+  async generateDocuments(id: string): Promise<ContractDocumentModel[]> {
+    const response = await api.post<unknown>(withId(API.CONTRACTS.DOCUMENTS_GENERATE, id), {});
+    return extractList<Record<string, unknown>>(response.data).map((item) => ({
+      id: String(item.id ?? item.documentId ?? ""),
+      name: String(item.name ?? item.fileName ?? item.documentName ?? item.id ?? item.documentId ?? "Contract document"),
+      status: typeof item.status === "string" ? item.status : undefined,
+      generatedAt: typeof item.generatedAt === "string" ? item.generatedAt : undefined,
+    }));
+  },
+
+  async exportDocument(id: string, documentId: string): Promise<Blob> {
+    const response = await api.get<Blob>(withPathParams(API.CONTRACTS.DOCUMENT_EXPORT, { id, documentId }), {
+      responseType: "blob",
+    });
     return response.data;
   },
 

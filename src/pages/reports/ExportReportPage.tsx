@@ -1,4 +1,5 @@
-import BaseCard from "../../components/cards/BaseCard";
+﻿import BaseCard from "../../components/cards/BaseCard";
+import CustomButton from "../../components/customButton/CustomButton";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
@@ -15,7 +16,7 @@ const ExportReportPage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chủ" },
+                { label: "Trang ch?" },
                 { label: "Reports", url: ROUTE_URL.REPORT_SALES },
                 { label: "Export" },
               ]}
@@ -25,9 +26,16 @@ const ExportReportPage = () => {
       }
       body={
         <BaseCard>
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            Export report backend endpoint is not available in the current codebase. This screen is reserved for owner/accountant once the backend export
-            contract is provided.
+          <div className="space-y-4">
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+              Backend export API chua kh? d?ng trong codebase hi?n t?i. Các l?a ch?n export dang ? tr?ng thái ki?m soát (disabled), không dánh PASS gi?.
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <CustomButton label="Export Sales (CSV)" disabled />
+              <CustomButton label="Export Inventory (CSV)" disabled />
+              <CustomButton label="Export Project (PDF)" disabled />
+            </div>
           </div>
         </BaseCard>
       }
@@ -36,3 +44,4 @@ const ExportReportPage = () => {
 };
 
 export default ExportReportPage;
+

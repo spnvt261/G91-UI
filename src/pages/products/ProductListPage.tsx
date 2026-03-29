@@ -24,7 +24,7 @@ const ProductListPage = () => {
   const allowCreate = canPerformAction(role, "product.create");
   const allowUpdate = canPerformAction(role, "product.update");
   const allowDelete = canPerformAction(role, "product.delete");
-  const showCreateQuotation = role === "CUSTOMER";
+  const showCreateQuotation = canPerformAction(role, "quotation.create");
   const { notify } = useNotify();
 
   const [items, setItems] = useState<ProductModel[]>([]);

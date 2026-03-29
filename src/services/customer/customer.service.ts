@@ -39,6 +39,19 @@ const unwrapCustomerPayload = (payload: unknown): unknown => {
   return data.customer ?? data;
 };
 
+const toUpdatePayload = (customer: CustomerModel, status: "ACTIVE" | "INACTIVE"): CustomerUpdateRequest => ({
+  fullName: customer.fullName,
+  companyName: customer.companyName,
+  customerType: customer.customerType,
+  contactPerson: customer.contactPerson,
+  email: customer.email,
+  phone: customer.phone,
+  address: customer.address,
+  creditLimit: customer.creditLimit,
+  currentDebt: customer.currentDebt,
+  status,
+});
+
 export const customerService = {
   async create(request: CustomerCreateRequest): Promise<CustomerModel> {
     const response = await api.post<unknown>(API.CUSTOMER.CREATE, request);
@@ -57,6 +70,12 @@ export const customerService = {
 
   async update(id: string, request: CustomerUpdateRequest): Promise<CustomerModel> {
     const response = await api.put<unknown>(withId(API.CUSTOMER.UPDATE, id), request);
+    return normalizeCustomer(unwrapCustomerPayload(response.data));
+  },
+
+  async disable(id: string): Promise<CustomerModel> {
+    const current = await customerService.getDetail(id);
+    const response = await api.put<unknown>(withId(API.CUSTOMER.UPDATE, id), toUpdatePayload(current, "INACTIVE"));
     return normalizeCustomer(unwrapCustomerPayload(response.data));
   },
 };
