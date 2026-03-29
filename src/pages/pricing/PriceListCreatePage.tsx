@@ -12,7 +12,6 @@ import { priceListService } from "../../services/pricing/price-list.service";
 import { getErrorMessage } from "../shared/page.utils";
 import PriceListFormSection from "./PriceListFormSection";
 import {
-  createEmptyPriceListItem,
   createInitialPriceListFormValues,
   toPriceListWritePayload,
   validatePriceListForm,
@@ -42,6 +41,7 @@ const PriceListCreatePage = () => {
         response.items.map((item) => ({
           label: `${item.productCode} - ${item.productName}`,
           value: item.id,
+          searchText: item.productName ?? "",
         })),
       );
     } catch (error) {
@@ -108,7 +108,6 @@ const PriceListCreatePage = () => {
             productLoadError={productLoadError}
             onRetryLoadProducts={() => void loadProducts()}
             onChange={(updater) => setValues((previous) => updater(previous))}
-            onAddItem={() => setValues((previous) => ({ ...previous, items: [...previous.items, createEmptyPriceListItem()] }))}
             onRemoveItem={(rowId) =>
               setValues((previous) => ({
                 ...previous,

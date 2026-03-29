@@ -15,7 +15,6 @@ import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
 import PriceListFormSection from "./PriceListFormSection";
 import {
-  createEmptyPriceListItem,
   createInitialPriceListFormValues,
   toPriceListWritePayload,
   validatePriceListForm,
@@ -201,7 +200,6 @@ const PriceListDetailPage = () => {
                 values={values}
                 errors={errors}
                 onChange={(updater) => setValues((previous) => updater(previous))}
-                onAddItem={() => setValues((previous) => ({ ...previous, items: [...previous.items, createEmptyPriceListItem()] }))}
                 onRemoveItem={(rowId) =>
                   setValues((previous) => ({
                     ...previous,

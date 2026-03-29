@@ -45,7 +45,7 @@ export const createInitialPriceListFormValues = (model?: PriceListModel): PriceL
           productId: item.productId,
           unitPrice: String(item.unitPriceVnd ?? ""),
         }))
-      : [createEmptyPriceListItem()],
+      : [],
 });
 
 const toNumber = (value: string): number | undefined => {
