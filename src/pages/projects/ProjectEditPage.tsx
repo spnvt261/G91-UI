@@ -1,27 +1,32 @@
-﻿import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import FormSectionCard from "../../components/forms/FormSectionCard";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomTextField from "../../components/customTextField/CustomTextField";
-import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
-import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
-import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+﻿import { Button, Col, Form, Input, Row, Select, Space } from "antd";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import { projectService } from "../../services/project/project.service";
 import { getErrorMessage } from "../shared/page.utils";
+import ProjectFormLayout from "./components/ProjectFormLayout";
+import { PROJECT_STATUS_OPTIONS } from "./projectForm.constants";
+import { resolveProjectBackTarget } from "./projectNavigation";
+
+type ProjectEditFormValues = {
+  code?: string;
+  name?: string;
+  customerId?: string;
+  warehouseId?: string;
+  status?: string;
+};
 
 const ProjectEditPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
-  const [code, setCode] = useState("");
-  const [name, setName] = useState("");
-  const [customerId, setCustomerId] = useState("");
-  const [warehouseId, setWarehouseId] = useState("");
-  const [status, setStatus] = useState("NEW");
+  const [form] = Form.useForm<ProjectEditFormValues>();
   const [pageLoading, setPageLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const { notify } = useNotify();
+
+  const backTarget = useMemo(() => resolveProjectBackTarget(location, id), [id, location]);
 
   useEffect(() => {
     const load = async () => {
@@ -32,11 +37,13 @@ const ProjectEditPage = () => {
       try {
         setPageLoading(true);
         const detail = await projectService.getDetail(id);
-        setCode(detail.code ?? "");
-        setName(detail.name);
-        setCustomerId(detail.customerId);
-        setWarehouseId(detail.warehouseId ?? "");
-        setStatus(detail.status);
+        form.setFieldsValue({
+          code: detail.code ?? detail.projectCode ?? "",
+          name: detail.name ?? "",
+          customerId: detail.customerId ?? "",
+          warehouseId: detail.warehouseId ?? detail.primaryWarehouseId ?? "",
+          status: detail.status ?? "NEW",
+        });
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load project for update"), "error");
       } finally {
@@ -45,9 +52,9 @@ const ProjectEditPage = () => {
     };
 
     void load();
-  }, [id, notify]);
+  }, [form, id, notify]);
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (values: ProjectEditFormValues) => {
     if (!id) {
       return;
     }
@@ -55,13 +62,13 @@ const ProjectEditPage = () => {
     try {
       setSaving(true);
       await projectService.update(id, {
-        code,
-        name,
-        customerId,
-        warehouseId,
-        status: status as "NEW" | "IN_PROGRESS" | "ON_HOLD" | "DONE",
+        code: values.code,
+        name: values.name,
+        customerId: values.customerId,
+        warehouseId: values.warehouseId,
+        status: values.status,
       });
-      navigate(ROUTE_URL.PROJECT_DETAIL.replace(":id", id));
+      navigate(backTarget);
     } catch (err) {
       notify(getErrorMessage(err, "Cannot update project"), "error");
     } finally {
@@ -70,41 +77,59 @@ const ProjectEditPage = () => {
   };
 
   return (
-    <NoResizeScreenTemplate
+    <ProjectFormLayout
+      title="Update Project"
+      subtitle="Edit project core fields while keeping the current business flow unchanged."
+      breadcrumbItems={[
+        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Home</span> },
+        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)}>Projects</span> },
+        { title: "Update" },
+      ]}
       loading={pageLoading}
-      loadingText="Đang tải thông tin dự án..."
-      bodyClassName="px-0 pb-0 pt-4"
-      header={
-        <ListScreenHeaderTemplate
-          title="Cập nhật dự án"
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
-          breadcrumb={
-            <CustomBreadcrumb
-              breadcrumbs={[
-                { label: "Trang chủ" },
-                { label: "Dự án", url: ROUTE_URL.PROJECT_LIST },
-                { label: "Cập nhật" },
-              ]}
-            />
-          }
-        />
-      }
-      body={
-        <FormSectionCard title="Thông tin dự án">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <CustomTextField title="Mã dự án" value={code} onChange={(event) => setCode(event.target.value)} />
-            <CustomTextField title="Tên dự án" value={name} onChange={(event) => setName(event.target.value)} />
-            <CustomTextField title="Customer ID" value={customerId} onChange={(event) => setCustomerId(event.target.value)} />
-            <CustomTextField title="Warehouse ID" value={warehouseId} onChange={(event) => setWarehouseId(event.target.value)} />
-            <CustomTextField title="Trạng thái" value={status} onChange={(event) => setStatus(event.target.value)} />
-          </div>
-          <div className="mt-4 flex gap-3">
-            <CustomButton label={saving ? "Đang lưu..." : "Lưu cập nhật"} onClick={handleUpdate} disabled={saving} />
-            <CustomButton label="Quay lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)} />
-          </div>
-        </FormSectionCard>
-      }
-    />
+    >
+      <Form<ProjectEditFormValues> form={form} layout="vertical" onFinish={handleUpdate}>
+        <Row gutter={[16, 0]}>
+          <Col xs={24} md={12}>
+            <Form.Item label="Project code" name="code">
+              <Input placeholder="Enter project code" />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={12}>
+            <Form.Item
+              label="Project name"
+              name="name"
+              rules={[{ required: true, message: "Project name is required." }, { max: 255, message: "Project name max length is 255." }]}
+            >
+              <Input placeholder="Enter project name" />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={12}>
+            <Form.Item label="Customer ID" name="customerId" rules={[{ required: true, message: "Customer ID is required." }]}>
+              <Input placeholder="Enter customer id" />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={12}>
+            <Form.Item label="Warehouse ID" name="warehouseId">
+              <Input placeholder="Enter warehouse id" />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={12}>
+            <Form.Item label="Status" name="status">
+              <Select options={PROJECT_STATUS_OPTIONS.map((item) => ({ ...item }))} />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Space>
+          <Button type="primary" htmlType="submit" loading={saving}>
+            Save changes
+          </Button>
+          <Button onClick={() => navigate(backTarget)} disabled={saving}>
+            Back
+          </Button>
+        </Space>
+      </Form>
+    </ProjectFormLayout>
   );
 };
 

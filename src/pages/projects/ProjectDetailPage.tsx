@@ -1,6 +1,6 @@
-﻿import { Breadcrumb, Button, Card, Descriptions, Empty, Modal, Space, Spin, Tag, Typography } from "antd";
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+﻿import { Alert, Button, Card, Col, Descriptions, Empty, Modal, Row, Space, Spin, Statistic, Typography } from "antd";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { canPerformAction } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
@@ -8,26 +8,15 @@ import type { ProjectModel } from "../../models/project/project.model";
 import { projectService } from "../../services/project/project.service";
 import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage } from "../shared/page.utils";
-
-const getStatusColor = (status?: string) => {
-  const normalized = (status ?? "").toUpperCase();
-  if (["ACTIVE", "IN_PROGRESS"].includes(normalized)) {
-    return "processing";
-  }
-  if (["COMPLETED", "DONE", "CLOSED"].includes(normalized)) {
-    return "success";
-  }
-  if (["ON_HOLD"].includes(normalized)) {
-    return "warning";
-  }
-  if (["CANCELLED", "ARCHIVED"].includes(normalized)) {
-    return "default";
-  }
-  return "blue";
-};
+import ProjectPageLayout from "./components/ProjectPageLayout";
+import ProjectProgressBar from "./components/ProjectProgressBar";
+import ProjectStatusTag from "./components/ProjectStatusTag";
+import { buildProjectActionNavigation } from "./projectNavigation";
+import { displayText, formatProjectDate, resolveProjectProgress } from "./projectPresentation";
 
 const ProjectDetailPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
   const role = getStoredUserRole();
 
@@ -46,14 +35,7 @@ const ProjectDetailPage = () => {
   const { notify } = useNotify();
 
   const isBusy = actionLoading || deleting;
-
-  const progressDisplay = useMemo(() => {
-    const rawValue = Number(project?.progress ?? project?.progressPercent ?? 0);
-    if (Number.isNaN(rawValue)) {
-      return "0%";
-    }
-    return `${Math.max(0, Math.min(100, rawValue))}%`;
-  }, [project]);
+  const progressPercent = resolveProjectProgress(project);
 
   const loadProjectDetail = async (projectId: string) => {
     const detail = await projectService.getDetail(projectId);
@@ -70,7 +52,7 @@ const ProjectDetailPage = () => {
         setLoading(true);
         await loadProjectDetail(id);
       } catch (error) {
-        notify(getErrorMessage(error, "Không thể tải chi tiết dự án"), "error");
+        notify(getErrorMessage(error, "Cannot load project detail"), "error");
       } finally {
         setLoading(false);
       }
@@ -86,11 +68,11 @@ const ProjectDetailPage = () => {
 
     try {
       setActionLoading(true);
-      await projectService.close(id, "Đóng từ màn hình chi tiết dự án");
+      await projectService.close(id, "Closed from project detail screen");
       await loadProjectDetail(id);
-      notify("Đóng dự án thành công.", "success");
+      notify("Project closed successfully.", "success");
     } catch (error) {
-      notify(getErrorMessage(error, "Không thể đóng dự án"), "error");
+      notify(getErrorMessage(error, "Cannot close project"), "error");
     } finally {
       setActionLoading(false);
     }
@@ -103,11 +85,11 @@ const ProjectDetailPage = () => {
 
     try {
       setActionLoading(true);
-      await projectService.confirmMilestone(id, "Xác nhận mốc từ màn hình chi tiết dự án");
+      await projectService.confirmMilestone(id, "Milestone confirmed from project detail screen");
       await loadProjectDetail(id);
-      notify("Xác nhận mốc dự án thành công.", "success");
+      notify("Milestone confirmed successfully.", "success");
     } catch (error) {
-      notify(getErrorMessage(error, "Không thể xác nhận mốc dự án"), "error");
+      notify(getErrorMessage(error, "Cannot confirm project milestone"), "error");
     } finally {
       setActionLoading(false);
     }
@@ -120,126 +102,152 @@ const ProjectDetailPage = () => {
 
     try {
       setDeleting(true);
-      await projectService.softDelete(id, "Lưu trữ từ màn hình chi tiết dự án");
-      notify("Dự án đã được lưu trữ (soft delete).", "success");
+      await projectService.softDelete(id, "Archived from project detail screen");
+      notify("Project archived (soft delete).", "success");
       setShowDeleteModal(false);
       navigate(ROUTE_URL.PROJECT_LIST);
     } catch (error) {
-      notify(getErrorMessage(error, "Không thể lưu trữ dự án"), "error");
+      notify(getErrorMessage(error, "Cannot archive project"), "error");
     } finally {
       setDeleting(false);
     }
   };
 
+  const navigateToActionPage = (targetPath: string) => {
+    if (!id) {
+      return;
+    }
+
+    const navigation = buildProjectActionNavigation(targetPath.replace(":id", id), location);
+    navigate(navigation.to, { state: navigation.state });
+  };
+
   return (
-    <div className="p-4">
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
-        <Breadcrumb
-          items={[
-            { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Trang chủ</span> },
-            { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)}>Dự án</span> },
-            { title: "Chi tiết" },
-          ]}
-        />
-
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Typography.Title level={4} style={{ margin: 0 }}>
-            Chi tiết dự án
-          </Typography.Title>
-
+    <>
+      <ProjectPageLayout
+        title={
+          <Space size={8} wrap>
+            <span>{displayText(project?.name ?? "Project detail")}</span>
+            {project ? <ProjectStatusTag status={project.status} /> : null}
+          </Space>
+        }
+        subtitle={`Project code: ${displayText(project?.projectCode ?? project?.code)}`}
+        breadcrumbItems={[
+          { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Home</span> },
+          { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)}>Projects</span> },
+          { title: "Detail" },
+        ]}
+        actions={
           <Space wrap>
             {canUpdateProject ? (
-              <Button
-                type="primary"
-                onClick={() => navigate(ROUTE_URL.PROJECT_EDIT.replace(":id", id ?? ""))}
-                disabled={!project || isBusy}
-              >
-                Cập nhật
+              <Button type="primary" onClick={() => navigateToActionPage(ROUTE_URL.PROJECT_EDIT)} disabled={!project || isBusy}>
+                Update
               </Button>
             ) : null}
-
             {canAssignWarehouse ? (
-              <Button onClick={() => navigate(ROUTE_URL.PROJECT_ASSIGN_WAREHOUSE.replace(":id", id ?? ""))} disabled={!project || isBusy}>
-                Gán kho
+              <Button onClick={() => navigateToActionPage(ROUTE_URL.PROJECT_ASSIGN_WAREHOUSE)} disabled={!project || isBusy}>
+                Assign warehouse
               </Button>
             ) : null}
-
             {canUpdateProgress ? (
-              <Button onClick={() => navigate(ROUTE_URL.PROJECT_PROGRESS_UPDATE.replace(":id", id ?? ""))} disabled={!project || isBusy}>
-                Cập nhật tiến độ
+              <Button onClick={() => navigateToActionPage(ROUTE_URL.PROJECT_PROGRESS_UPDATE)} disabled={!project || isBusy}>
+                Update progress
               </Button>
             ) : null}
-
             {canCloseProject ? (
               <Button onClick={handleCloseProject} loading={actionLoading} disabled={!project || isBusy}>
-                Đóng dự án
+                Close project
               </Button>
             ) : null}
-
             {canConfirmMilestone ? (
               <Button onClick={handleConfirmMilestone} loading={actionLoading} disabled={!project || isBusy}>
-                Xác nhận mốc
+                Confirm milestone
               </Button>
             ) : null}
-
             {canDeleteProject ? (
               <Button danger onClick={() => setShowDeleteModal(true)} disabled={!project || isBusy}>
-                Xóa mềm
+                Soft delete
               </Button>
             ) : null}
-
             <Button onClick={() => navigate(ROUTE_URL.PROJECT_LIST)} disabled={isBusy}>
-              Quay lại
+              Back to list
             </Button>
           </Space>
-        </div>
-
-        <Card>
-          <Spin spinning={loading} tip="Đang tải thông tin dự án...">
-            {project ? (
-              <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} size="middle">
-                <Descriptions.Item label="ID">{project.id}</Descriptions.Item>
-                <Descriptions.Item label="Mã dự án">{project.code ?? "-"}</Descriptions.Item>
-                <Descriptions.Item label="Tên dự án">{project.name}</Descriptions.Item>
-                <Descriptions.Item label="Khách hàng">{project.customerName ?? project.customerId}</Descriptions.Item>
-                <Descriptions.Item label="Kho chính">{project.warehouseId ?? project.primaryWarehouseId ?? "-"}</Descriptions.Item>
-                <Descriptions.Item label="Trạng thái">
-                  <Tag color={getStatusColor(project.status)}>{project.status ?? "-"}</Tag>
-                </Descriptions.Item>
-                <Descriptions.Item label="Tiến độ">{progressDisplay}</Descriptions.Item>
-                <Descriptions.Item label="Người quản lý">{project.assignedProjectManager ?? "-"}</Descriptions.Item>
-                <Descriptions.Item label="Ngày bắt đầu">{project.startDate ?? project.startedAt ?? "-"}</Descriptions.Item>
-                <Descriptions.Item label="Ngày kết thúc">{project.endDate ?? project.endedAt ?? "-"}</Descriptions.Item>
-                <Descriptions.Item label="Địa điểm">{project.location ?? "-"}</Descriptions.Item>
-                <Descriptions.Item label="Phạm vi">{project.scope ?? "-"}</Descriptions.Item>
-              </Descriptions>
-            ) : (
-              <Empty description="Không có dữ liệu dự án." />
-            )}
-          </Spin>
-        </Card>
-      </Space>
+        }
+      >
+        {!id ? <Alert type="warning" showIcon message="Project id is missing from URL." /> : null}
+        <Spin spinning={loading} tip="Loading project detail...">
+          {project ? (
+            <Row gutter={[16, 16]}>
+              <Col xs={24} lg={16}>
+                <Card title="Overview">
+                  <Descriptions column={{ xs: 1, md: 2 }} size="middle">
+                    <Descriptions.Item label="ID">{displayText(project.id)}</Descriptions.Item>
+                    <Descriptions.Item label="Project code">{displayText(project.projectCode ?? project.code)}</Descriptions.Item>
+                    <Descriptions.Item label="Project name">{displayText(project.name)}</Descriptions.Item>
+                    <Descriptions.Item label="Customer">{displayText(project.customerName ?? project.customerId)}</Descriptions.Item>
+                    <Descriptions.Item label="Project manager">{displayText(project.assignedProjectManager)}</Descriptions.Item>
+                    <Descriptions.Item label="Primary warehouse">{displayText(project.primaryWarehouseId ?? project.warehouseId)}</Descriptions.Item>
+                  </Descriptions>
+                </Card>
+              </Col>
+              <Col xs={24} lg={8}>
+                <Card title="Progress">
+                  <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                    <ProjectProgressBar value={progressPercent} showMeta />
+                    <Row gutter={12}>
+                      <Col span={12}>
+                        <Statistic title="Completed" value={progressPercent} suffix="%" />
+                      </Col>
+                      <Col span={12}>
+                        <Statistic title="Progress status" value={displayText(project.progressStatus ?? project.status)} />
+                      </Col>
+                    </Row>
+                  </Space>
+                </Card>
+              </Col>
+              <Col xs={24}>
+                <Card title="Execution info">
+                  <Descriptions column={{ xs: 1, md: 2, xl: 3 }} size="middle">
+                    <Descriptions.Item label="Start date">{formatProjectDate(project.startDate ?? project.startedAt)}</Descriptions.Item>
+                    <Descriptions.Item label="End date">{formatProjectDate(project.endDate ?? project.endedAt)}</Descriptions.Item>
+                    <Descriptions.Item label="Location">{displayText(project.location)}</Descriptions.Item>
+                    <Descriptions.Item label="Scope">{displayText(project.scope)}</Descriptions.Item>
+                    <Descriptions.Item label="Budget">{displayText(project.budget)}</Descriptions.Item>
+                    <Descriptions.Item label="Linked order">{displayText(project.linkedOrderReference)}</Descriptions.Item>
+                  </Descriptions>
+                </Card>
+              </Col>
+            </Row>
+          ) : (
+            <Card>
+              <Empty description="No project data found." />
+            </Card>
+          )}
+        </Spin>
+      </ProjectPageLayout>
 
       <Modal
-        title="Xóa mềm dự án"
+        title="Soft delete project"
         open={showDeleteModal}
         onCancel={() => (deleting ? undefined : setShowDeleteModal(false))}
         closable={!deleting}
         maskClosable={!deleting}
         footer={[
           <Button key="cancel" onClick={() => setShowDeleteModal(false)} disabled={deleting}>
-            Hủy
+            Cancel
           </Button>,
           <Button key="confirm" type="primary" danger loading={deleting} onClick={handleDeleteProject}>
-            Xác nhận xóa mềm
+            Confirm soft delete
           </Button>,
         ]}
       >
-        <Typography.Paragraph style={{ marginBottom: 0 }}>
-          Dự án sẽ được chuyển sang trạng thái lưu trữ. Hệ thống hiện chưa có endpoint xóa vật lý dự án.
+        <Typography.Paragraph style={{ marginBottom: 8 }}>
+          This action moves the project into archived status. Physical delete endpoint is not available yet.
         </Typography.Paragraph>
+        <Typography.Text type="secondary">{displayText(project?.name)}</Typography.Text>
       </Modal>
-    </div>
+    </>
   );
 };
 

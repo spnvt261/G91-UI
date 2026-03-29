@@ -1,14 +1,7 @@
-﻿import { Modal } from "antd";
+﻿import { Button, Card, Col, Input, Modal, Row, Select, Space, Table, Typography } from "antd";
+import type { ColumnsType } from "antd/es/table";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import BaseCard from "../../components/cards/BaseCard";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
-import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
-import FilterSearchModalBar, { type FilterModalGroup } from "../../components/table/FilterSearchModalBar";
-import Pagination from "../../components/table/Pagination";
-import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
-import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { canPerformAction } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
@@ -16,8 +9,22 @@ import type { ProjectModel } from "../../models/project/project.model";
 import { projectService } from "../../services/project/project.service";
 import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage } from "../shared/page.utils";
+import ProjectPageLayout from "./components/ProjectPageLayout";
+import ProjectProgressBar from "./components/ProjectProgressBar";
+import ProjectStatusTag from "./components/ProjectStatusTag";
+import { displayText } from "./projectPresentation";
 
 const PAGE_SIZE = 8;
+
+const STATUS_OPTIONS = [
+  { label: "NEW", value: "NEW" },
+  { label: "IN_PROGRESS", value: "IN_PROGRESS" },
+  { label: "ON_HOLD", value: "ON_HOLD" },
+  { label: "DONE", value: "DONE" },
+  { label: "ACTIVE", value: "ACTIVE" },
+  { label: "COMPLETED", value: "COMPLETED" },
+  { label: "CANCELLED", value: "CANCELLED" },
+];
 
 const ProjectListPage = () => {
   const navigate = useNavigate();
@@ -25,10 +32,10 @@ const ProjectListPage = () => {
   const canCreateProject = canPerformAction(role, "project.create");
   const canDeleteProject = canPerformAction(role, "project.delete");
 
-  const [allItems, setAllItems] = useState<ProjectModel[]>([]);
+  const [items, setItems] = useState<ProjectModel[]>([]);
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
-  const [status, setStatus] = useState<string[]>([]);
+  const [status, setStatus] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deletingItem, setDeletingItem] = useState<ProjectModel | null>(null);
@@ -38,8 +45,11 @@ const ProjectListPage = () => {
     const load = async () => {
       try {
         setLoading(true);
-        const result = await projectService.getList({ keyword, status: status[0] as ProjectModel["status"] | undefined });
-        setAllItems(result);
+        const result = await projectService.getList({
+          keyword: keyword.trim() || undefined,
+          status: status as ProjectModel["status"] | undefined,
+        });
+        setItems(result);
       } catch (err) {
         notify(getErrorMessage(err, "Cannot load projects"), "error");
       } finally {
@@ -50,32 +60,63 @@ const ProjectListPage = () => {
     void load();
   }, [keyword, notify, status]);
 
-  const pagedItems = useMemo(() => allItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [allItems, page]);
-
-  const filters: FilterModalGroup[] = [
-    {
-      key: "status",
-      label: "Status",
-      options: [
-        { label: "NEW", value: "NEW" },
-        { label: "IN_PROGRESS", value: "IN_PROGRESS" },
-        { label: "ON_HOLD", value: "ON_HOLD" },
-        { label: "DONE", value: "DONE" },
-      ],
-      value: status,
-    },
-  ];
-
-  const columns = useMemo<DataTableColumn<ProjectModel>[]>(
+  const columns = useMemo<ColumnsType<ProjectModel>>(
     () => [
-      { key: "id", header: "ID", className: "font-semibold text-blue-900" },
-      { key: "code", header: "Project Code" },
-      { key: "name", header: "Project Name" },
-      { key: "customerId", header: "Customer" },
-      { key: "status", header: "Status" },
-      { key: "progress", header: "Progress" },
+      {
+        title: "ID",
+        dataIndex: "id",
+        key: "id",
+        width: 200,
+        render: (value: string) => <Typography.Text strong>{value}</Typography.Text>,
+      },
+      {
+        title: "Project code",
+        key: "code",
+        render: (_, row) => displayText(row.projectCode ?? row.code),
+      },
+      {
+        title: "Project name",
+        dataIndex: "name",
+        key: "name",
+        render: (value: string) => displayText(value),
+      },
+      {
+        title: "Customer",
+        key: "customer",
+        render: (_, row) => displayText(row.customerName ?? row.customerId),
+      },
+      {
+        title: "Status",
+        dataIndex: "status",
+        key: "status",
+        width: 140,
+        render: (value: string | undefined) => <ProjectStatusTag status={value} />,
+      },
+      {
+        title: "Progress",
+        key: "progress",
+        width: 220,
+        render: (_, row) => <ProjectProgressBar value={row.progressPercent ?? row.progress} size="small" />,
+      },
+      {
+        title: "Actions",
+        key: "actions",
+        width: 210,
+        render: (_, row) => (
+          <Space>
+            <Button size="small" onClick={() => navigate(ROUTE_URL.PROJECT_DETAIL.replace(":id", row.id))}>
+              View
+            </Button>
+            {canDeleteProject ? (
+              <Button size="small" danger onClick={() => setDeletingItem(row)}>
+                Soft delete
+              </Button>
+            ) : null}
+          </Space>
+        ),
+      },
     ],
-    [],
+    [canDeleteProject, navigate],
   );
 
   const handleDeleteProject = async () => {
@@ -86,7 +127,7 @@ const ProjectListPage = () => {
     try {
       setDeleting(true);
       await projectService.softDelete(deletingItem.id, "Archived from project list");
-      setAllItems((previous) => previous.filter((item) => item.id !== deletingItem.id));
+      setItems((previous) => previous.filter((item) => item.id !== deletingItem.id));
       notify("Project archived (soft delete).", "success");
       setDeletingItem(null);
     } catch (err) {
@@ -97,90 +138,90 @@ const ProjectListPage = () => {
   };
 
   return (
-    <NoResizeScreenTemplate
-      loading={loading}
-      loadingText="Loading projects..."
-      bodyClassName="px-0 pb-0 pt-4"
-      header={
-        <ListScreenHeaderTemplate
-          title="Project Management"
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
-          actions={canCreateProject ? <CustomButton label="Create Project" onClick={() => navigate(ROUTE_URL.PROJECT_CREATE)} /> : undefined}
-          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Home" }, { label: "Projects" }]} />}
-        />
-      }
-      body={
-        <BaseCard>
-          <FilterSearchModalBar
-            searchValue={keyword}
-            onSearchChange={(value) => {
-              setKeyword(value);
-              setPage(1);
-            }}
-            onSearchReset={() => {
-              setKeyword("");
-              setPage(1);
-            }}
-            searchPlaceholder="Search projects"
-            filters={filters}
-            onApplyFilters={(values) => {
-              setStatus(Array.isArray(values.status) ? (values.status as ProjectModel["status"][]) : []);
-              setPage(1);
-            }}
-          />
-          <DataTable
-            columns={columns}
-            data={pagedItems}
-            actions={(row) => (
-              <div className="flex gap-2">
-                <CustomButton
-                  label="View"
-                  className="px-2 py-1 text-sm"
-                  onClick={() => navigate(ROUTE_URL.PROJECT_DETAIL.replace(":id", row.id))}
-                />
-                {canDeleteProject ? (
-                  <CustomButton
-                    label="Soft Delete"
-                    className="bg-red-500 px-2 py-1 text-sm hover:bg-red-600"
-                    onClick={() => setDeletingItem(row)}
-                  />
-                ) : null}
-              </div>
-            )}
-          />
-          <Pagination page={page} pageSize={PAGE_SIZE} total={allItems.length} onChange={setPage} />
+    <>
+      <ProjectPageLayout
+        title="Project Management"
+        subtitle="Track project lifecycle and execute project actions from one workspace."
+        breadcrumbItems={[
+          { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Home</span> },
+          { title: "Projects" },
+        ]}
+        actions={
+          canCreateProject ? (
+            <Button type="primary" onClick={() => navigate(ROUTE_URL.PROJECT_CREATE)}>
+              Create project
+            </Button>
+          ) : undefined
+        }
+      >
+        <Card>
+          <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+            <Col xs={24} md={16}>
+              <Input.Search
+                allowClear
+                placeholder="Search by project name, code, customer..."
+                value={keyword}
+                onChange={(event) => {
+                  setKeyword(event.target.value);
+                  setPage(1);
+                }}
+              />
+            </Col>
+            <Col xs={24} md={8}>
+              <Select
+                className="w-full"
+                allowClear
+                placeholder="Filter by status"
+                value={status}
+                options={STATUS_OPTIONS}
+                onChange={(value: string | undefined) => {
+                  setStatus(value);
+                  setPage(1);
+                }}
+              />
+            </Col>
+          </Row>
 
-          <Modal
-            title="Soft delete project"
-            open={Boolean(deletingItem)}
-            onCancel={() => (deleting ? undefined : setDeletingItem(null))}
-            closable={!deleting}
-            maskClosable={!deleting}
-            footer={
-              <div className="flex justify-end gap-2">
-                <CustomButton
-                  label="Cancel"
-                  className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                  onClick={() => setDeletingItem(null)}
-                  disabled={deleting}
-                />
-                <CustomButton
-                  label={deleting ? "Processing..." : "Confirm"}
-                  className="bg-red-500 hover:bg-red-600"
-                  onClick={handleDeleteProject}
-                  disabled={deleting}
-                />
-              </div>
-            }
-          >
-            <p className="text-sm text-slate-600">
-              This action archives the project using update status because backend hard-delete API is not available.
-            </p>
-            {deletingItem ? <p className="mt-2 text-sm font-semibold text-slate-800">{deletingItem.name}</p> : null}
-          </Modal>
-        </BaseCard>
-      }
-    />
+          <Table<ProjectModel>
+            rowKey="id"
+            loading={loading}
+            columns={columns}
+            dataSource={items}
+            scroll={{ x: 980 }}
+            locale={{ emptyText: "No projects found." }}
+            pagination={{
+              current: page,
+              pageSize: PAGE_SIZE,
+              total: items.length,
+              showSizeChanger: false,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} projects`,
+              onChange: (nextPage) => setPage(nextPage),
+            }}
+          />
+        </Card>
+      </ProjectPageLayout>
+
+      <Modal
+        title="Soft delete project"
+        open={Boolean(deletingItem)}
+        onCancel={() => (deleting ? undefined : setDeletingItem(null))}
+        closable={!deleting}
+        maskClosable={!deleting}
+        footer={[
+          <Button key="cancel" onClick={() => setDeletingItem(null)} disabled={deleting}>
+            Cancel
+          </Button>,
+          <Button key="confirm" type="primary" danger loading={deleting} onClick={handleDeleteProject}>
+            Confirm
+          </Button>,
+        ]}
+      >
+        <Typography.Paragraph style={{ marginBottom: 0 }}>
+          This action archives the project because backend hard-delete API is not available.
+        </Typography.Paragraph>
+        {deletingItem ? <Typography.Text strong>{deletingItem.name}</Typography.Text> : null}
+      </Modal>
+    </>
   );
 };
 
