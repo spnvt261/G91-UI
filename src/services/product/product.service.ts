@@ -36,10 +36,12 @@ interface ProductApiListResponse {
   pagination?: {
     page?: number;
     pageSize?: number;
+    size?: number;
     totalItems?: number;
     totalPages?: number;
   };
   page?: number;
+  pageSize?: number;
   size?: number;
   totalElements?: number;
   filters?: Record<string, string | undefined>;
@@ -90,10 +92,17 @@ const toWritePayload = (payload: ProductCreateRequest | ProductUpdateRequest) =>
 export const productService = {
   async getList(query?: ProductListQuery): Promise<ProductListResponse> {
     const params = {
-      ...query,
       page: query?.page,
-      size: query?.size ?? query?.pageSize,
-      search: query?.search ?? query?.keyword,
+      pageSize: query?.pageSize,
+      keyword: query?.keyword ?? query?.search,
+      search: query?.search,
+      type: query?.type,
+      size: query?.size ?? query?.sizeValue,
+      thickness: query?.thickness,
+      unit: query?.unit,
+      status: query?.status,
+      sortBy: query?.sortBy,
+      sortDir: query?.sortDir,
     };
 
     const response = await api.get<unknown>(API.PRODUCTS.LIST, { params });
@@ -106,7 +115,11 @@ export const productService = {
       pagination: {
         page: Number(pagination?.page ?? (payload && typeof payload === "object" && "page" in payload ? payload.page : query?.page) ?? 1),
         pageSize: Number(
-          pagination?.pageSize ?? (payload && typeof payload === "object" && "size" in payload ? payload.size : query?.size ?? query?.pageSize) ?? 10,
+          pagination?.pageSize ??
+            pagination?.size ??
+            (payload && typeof payload === "object" && "pageSize" in payload ? payload.pageSize : undefined) ??
+            (payload && typeof payload === "object" && "size" in payload ? payload.size : query?.pageSize) ??
+            10,
         ),
         totalItems: Number(
           pagination?.totalItems ?? (payload && typeof payload === "object" && "totalElements" in payload ? payload.totalElements : items.length) ?? items.length,
@@ -116,6 +129,7 @@ export const productService = {
       filters: {
         keyword: query?.keyword ?? query?.search,
         type: query?.type,
+        size: query?.size ?? query?.sizeValue,
         thickness: query?.thickness,
         unit: query?.unit,
         status: query?.status,

@@ -1,4 +1,7 @@
-import type { UserRole, UserStatus } from "../auth/auth.model";
+import type { UserStatus } from "../auth/auth.model";
+
+export type InternalAccountRoleId = "ACCOUNTANT" | "WAREHOUSE";
+export type AccountRoleId = InternalAccountRoleId | "OWNER";
 
 export interface AccountCreateRequest {
   fullName: string;
@@ -6,7 +9,7 @@ export interface AccountCreateRequest {
   password: string;
   phone?: string;
   address?: string;
-  roleId: string;
+  roleId: InternalAccountRoleId;
 }
 
 export interface AccountCreateDataResponse {
@@ -16,7 +19,7 @@ export interface AccountCreateDataResponse {
 export interface AccountListQuery {
   page?: number;
   size?: number;
-  role?: UserRole;
+  role?: AccountRoleId;
   status?: UserStatus;
 }
 
@@ -24,7 +27,7 @@ export interface AccountListItem {
   id: string;
   fullName: string;
   email: string;
-  role: UserRole;
+  role: AccountRoleId;
   status: UserStatus;
   createdAt: string;
 }
@@ -42,7 +45,7 @@ export interface AccountDetailResponse {
   email: string;
   phone?: string;
   address?: string;
-  role: UserRole;
+  role: AccountRoleId;
   status: UserStatus;
   createdAt: string;
 }
@@ -51,7 +54,7 @@ export interface AccountUpdateRequest {
   fullName: string;
   phone?: string;
   address?: string;
-  roleId: string;
+  roleId: AccountRoleId;
   status: UserStatus;
 }
 

@@ -43,7 +43,7 @@ export const createInitialPriceListFormValues = (model?: PriceListModel): PriceL
       ? model.items.map((item) => ({
           rowId: createRowId(),
           productId: item.productId,
-          unitPrice: String(item.unitPrice ?? ""),
+          unitPrice: String(item.unitPriceVnd ?? ""),
         }))
       : [createEmptyPriceListItem()],
 });
@@ -123,7 +123,7 @@ export const toPriceListWritePayload = (values: PriceListFormValues): PriceListW
   items: values.items
     .map((item) => ({
       productId: item.productId.trim(),
-      unitPrice: Number(item.unitPrice),
+      unitPriceVnd: Number(item.unitPrice),
     }))
-    .filter((item) => item.productId && Number.isFinite(item.unitPrice) && item.unitPrice > 0),
+    .filter((item) => item.productId && Number.isFinite(item.unitPriceVnd) && item.unitPriceVnd > 0),
 });

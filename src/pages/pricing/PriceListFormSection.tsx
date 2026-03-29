@@ -1,6 +1,6 @@
 import FormSectionCard from "../../components/forms/FormSectionCard";
 import CustomButton from "../../components/customButton/CustomButton";
-import CustomSelect from "../../components/customSelect/CustomSelect";
+import CustomSelect, { type Option } from "../../components/customSelect/CustomSelect";
 import CustomTextField from "../../components/customTextField/CustomTextField";
 import type { PriceListStatus } from "../../models/pricing/price-list.model";
 import type { PriceListFormErrors, PriceListFormItemValues, PriceListFormValues } from "./priceListForm.utils";
@@ -10,6 +10,10 @@ interface PriceListFormSectionProps {
   values: PriceListFormValues;
   errors: PriceListFormErrors;
   readOnly?: boolean;
+  productOptions?: Option[];
+  loadingProducts?: boolean;
+  productLoadError?: string | null;
+  onRetryLoadProducts?: () => void;
   onChange: (updater: (previous: PriceListFormValues) => PriceListFormValues) => void;
   onAddItem: () => void;
   onRemoveItem: (rowId: string) => void;
@@ -34,10 +38,17 @@ const PriceListFormSection = ({
   values,
   errors,
   readOnly = false,
+  productOptions,
+  loadingProducts = false,
+  productLoadError,
+  onRetryLoadProducts,
   onChange,
   onAddItem,
   onRemoveItem,
 }: PriceListFormSectionProps) => {
+  const hasProductSelector = Array.isArray(productOptions);
+  const noAvailableProducts = hasProductSelector && !loadingProducts && !productLoadError && (productOptions?.length ?? 0) === 0;
+
   return (
     <FormSectionCard title={title}>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -91,22 +102,58 @@ const PriceListFormSection = ({
           <h4 className="text-sm font-semibold text-slate-800">Items</h4>
           {!readOnly ? <CustomButton label="Add Item" className="px-2 py-1 text-sm" onClick={onAddItem} /> : null}
         </div>
+        {productLoadError ? (
+          <div className="mb-3 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <p>{productLoadError}</p>
+            {onRetryLoadProducts ? (
+              <div className="mt-2">
+                <CustomButton
+                  label={loadingProducts ? "Retrying..." : "Retry"}
+                  className="bg-red-500 px-2 py-1 text-sm hover:bg-red-600"
+                  onClick={onRetryLoadProducts}
+                  disabled={loadingProducts}
+                />
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+        {noAvailableProducts ? <p className="mb-3 text-sm text-slate-500">No active products available.</p> : null}
         <div className="space-y-3">
           {values.items.map((item) => (
             <div key={item.rowId} className="grid grid-cols-1 gap-3 rounded border border-slate-200 p-3 md:grid-cols-[1fr_200px_auto]">
-              <CustomTextField
-                title="Product ID"
-                value={item.productId}
-                helperText={errors.itemProductMap?.[item.rowId]}
-                error={Boolean(errors.itemProductMap?.[item.rowId])}
-                disabled={readOnly}
-                onChange={(event) =>
-                  onChange((previous) => ({
-                    ...previous,
-                    items: updateItem(previous.items, item.rowId, "productId", event.target.value),
-                  }))
-                }
-              />
+              {hasProductSelector ? (
+                <CustomSelect
+                  title="Product"
+                  options={productOptions ?? []}
+                  value={item.productId ? [item.productId] : []}
+                  helperText={errors.itemProductMap?.[item.rowId]}
+                  placeholder={loadingProducts ? "Loading products..." : "Select product"}
+                  disable={readOnly || loadingProducts || noAvailableProducts}
+                  search
+                  onChange={(selected) =>
+                    onChange((previous) => ({
+                      ...previous,
+                      items: updateItem(previous.items, item.rowId, "productId", selected[0] ?? ""),
+                    }))
+                  }
+                  classNameSelect="w-full text-left"
+                  classNameOptions="w-full left-0"
+                />
+              ) : (
+                <CustomTextField
+                  title="Product ID"
+                  value={item.productId}
+                  helperText={errors.itemProductMap?.[item.rowId]}
+                  error={Boolean(errors.itemProductMap?.[item.rowId])}
+                  disabled={readOnly}
+                  onChange={(event) =>
+                    onChange((previous) => ({
+                      ...previous,
+                      items: updateItem(previous.items, item.rowId, "productId", event.target.value),
+                    }))
+                  }
+                />
+              )}
               <CustomTextField
                 title="Unit Price"
                 value={item.unitPrice}

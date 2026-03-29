@@ -1,5 +1,5 @@
 import { Modal } from "antd";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import BaseCard from "../../components/cards/BaseCard";
 import CustomButton from "../../components/customButton/CustomButton";
 import CustomSelect from "../../components/customSelect/CustomSelect";
@@ -11,12 +11,18 @@ import Pagination from "../../components/table/Pagination";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { useNotify } from "../../context/notifyContext";
-import type { UserRole, UserStatus } from "../../models/auth/auth.model";
-import type { AccountListItem } from "../../models/account/account.model";
+import type { UserStatus } from "../../models/auth/auth.model";
+import type { AccountListItem, AccountRoleId, InternalAccountRoleId } from "../../models/account/account.model";
 import { accountService } from "../../services/account/account.service";
 import { getErrorMessage } from "../shared/page.utils";
 
 const PAGE_SIZE = 8;
+
+interface RoleOption {
+  label: string;
+  roleId: AccountRoleId;
+  roleName?: AccountRoleId;
+}
 
 interface AccountFormValues {
   fullName: string;
@@ -24,26 +30,42 @@ interface AccountFormValues {
   password: string;
   phone: string;
   address: string;
-  roleId: UserRole;
+  roleOption: RoleOption | null;
   status: UserStatus;
 }
 
-const EMPTY_FORM: AccountFormValues = {
-  fullName: "",
-  email: "",
-  password: "",
-  phone: "",
-  address: "",
-  roleId: "CUSTOMER",
-  status: "ACTIVE",
+const ACCOUNTANT_ROLE_OPTION: RoleOption = {
+  label: "ACCOUNTANT",
+  roleId: "ACCOUNTANT",
+  roleName: "ACCOUNTANT",
 };
 
-const ROLE_OPTIONS: Array<{ label: string; value: UserRole }> = [
-  { label: "CUSTOMER", value: "CUSTOMER" },
-  { label: "WAREHOUSE", value: "WAREHOUSE" },
-  { label: "ACCOUNTANT", value: "ACCOUNTANT" },
-  { label: "OWNER", value: "OWNER" },
-];
+const WAREHOUSE_ROLE_OPTION: RoleOption = {
+  label: "WAREHOUSE",
+  roleId: "WAREHOUSE",
+  roleName: "WAREHOUSE",
+};
+
+const OWNER_ROLE_OPTION: RoleOption = {
+  label: "OWNER",
+  roleId: "OWNER",
+  roleName: "OWNER",
+};
+
+const ROLE_OPTION_BY_ID: Record<AccountRoleId, RoleOption> = {
+  ACCOUNTANT: ACCOUNTANT_ROLE_OPTION,
+  WAREHOUSE: WAREHOUSE_ROLE_OPTION,
+  OWNER: OWNER_ROLE_OPTION,
+};
+
+const INTERNAL_ROLE_OPTIONS: RoleOption[] = [ACCOUNTANT_ROLE_OPTION, WAREHOUSE_ROLE_OPTION];
+const FILTER_ROLE_OPTIONS: RoleOption[] = [OWNER_ROLE_OPTION, ...INTERNAL_ROLE_OPTIONS];
+
+const toSelectOptions = (options: RoleOption[]) =>
+  options.map((option) => ({
+    label: option.label,
+    value: option.roleId,
+  }));
 
 const STATUS_OPTIONS: Array<{ label: string; value: UserStatus }> = [
   { label: "ACTIVE", value: "ACTIVE" },
@@ -52,6 +74,25 @@ const STATUS_OPTIONS: Array<{ label: string; value: UserStatus }> = [
   { label: "PENDING_VERIFICATION", value: "PENDING_VERIFICATION" },
 ];
 
+const toRoleOption = (role?: AccountRoleId): RoleOption | null => {
+  if (!role) {
+    return null;
+  }
+  return ROLE_OPTION_BY_ID[role] ?? null;
+};
+
+const createEmptyFormValues = (): AccountFormValues => ({
+  fullName: "",
+  email: "",
+  password: "",
+  phone: "",
+  address: "",
+  roleOption: ACCOUNTANT_ROLE_OPTION,
+  status: "ACTIVE",
+});
+
+const isInternalRole = (role: AccountRoleId): role is InternalAccountRoleId => role === "ACCOUNTANT" || role === "WAREHOUSE";
+
 const AccountListPage = () => {
   const { notify } = useNotify();
   const [items, setItems] = useState<AccountListItem[]>([]);
@@ -59,7 +100,7 @@ const AccountListPage = () => {
   const [query, setQuery] = useState({
     page: 1,
     size: PAGE_SIZE,
-    role: undefined as UserRole | undefined,
+    role: undefined as AccountRoleId | undefined,
     status: undefined as UserStatus | undefined,
     keyword: "",
   });
@@ -68,50 +109,64 @@ const AccountListPage = () => {
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState(false);
   const [deactivating, setDeactivating] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<AccountListItem | null>(null);
+  const [activatingId, setActivatingId] = useState<string | null>(null);
+  const [detailItem, setDetailItem] = useState<AccountListItem | null>(null);
+  const [editTarget, setEditTarget] = useState<AccountListItem | null>(null);
+  const [actionTarget, setActionTarget] = useState<AccountListItem | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit" | null>(null);
-  const [formValues, setFormValues] = useState<AccountFormValues>(EMPTY_FORM);
+  const [formValues, setFormValues] = useState<AccountFormValues>(createEmptyFormValues);
+
+  const loadAccounts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await accountService.getList({
+        page: query.page,
+        size: query.size,
+        role: query.role,
+        status: query.status,
+      });
+
+      const keywordLower = query.keyword.trim().toLowerCase();
+      const allItems = response.content ?? [];
+      const filtered = keywordLower
+        ? allItems.filter(
+            (item) =>
+              item.fullName.toLowerCase().includes(keywordLower) ||
+              item.email.toLowerCase().includes(keywordLower) ||
+              item.id.toLowerCase().includes(keywordLower),
+          )
+        : allItems;
+      const hasKeyword = keywordLower.length > 0;
+
+      setItems(filtered);
+      setTotal(hasKeyword ? filtered.length : Number(response.totalElements ?? filtered.length));
+      setDetailItem((previous) => (previous ? allItems.find((item) => item.id === previous.id) ?? previous : previous));
+      setEditTarget((previous) => (previous ? allItems.find((item) => item.id === previous.id) ?? previous : previous));
+      setActionTarget((previous) => (previous ? allItems.find((item) => item.id === previous.id) ?? previous : previous));
+    } catch (error) {
+      notify(getErrorMessage(error, "Cannot load accounts"), "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [notify, query.keyword, query.page, query.role, query.size, query.status]);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const response = await accountService.getList({
-          page: query.page,
-          size: query.size,
-          role: query.role,
-          status: query.status,
-        });
+    void loadAccounts();
+  }, [loadAccounts]);
 
-        const keywordLower = query.keyword.trim().toLowerCase();
-        const allItems = response.content ?? [];
-        const filtered = keywordLower
-          ? allItems.filter(
-              (item) =>
-                item.fullName.toLowerCase().includes(keywordLower) ||
-                item.email.toLowerCase().includes(keywordLower) ||
-                item.id.toLowerCase().includes(keywordLower),
-            )
-          : allItems;
-
-        setItems(filtered);
-        setTotal(filtered.length || response.totalElements || 0);
-      } catch (error) {
-        notify(getErrorMessage(error, "Cannot load accounts"), "error");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void load();
-  }, [notify, query.keyword, query.page, query.role, query.size, query.status]);
+  const formRoleOptions = useMemo(() => {
+    if (formMode === "edit" && formValues.roleOption?.roleId === "OWNER") {
+      return [OWNER_ROLE_OPTION, ...INTERNAL_ROLE_OPTIONS];
+    }
+    return INTERNAL_ROLE_OPTIONS;
+  }, [formMode, formValues.roleOption?.roleId]);
 
   const filters: FilterModalGroup[] = [
     {
       key: "role",
       label: "Role",
-      options: ROLE_OPTIONS,
+      options: toSelectOptions(FILTER_ROLE_OPTIONS),
       value: query.role ? [query.role] : [],
     },
     {
@@ -134,21 +189,22 @@ const AccountListPage = () => {
   );
 
   const openCreateModal = () => {
-    setFormValues(EMPTY_FORM);
+    setFormValues(createEmptyFormValues());
+    setEditTarget(null);
     setFormMode("create");
   };
 
   const openEditModal = async (item: AccountListItem) => {
     try {
       const detail = await accountService.getDetail(item.id);
-      setSelectedItem(item);
+      setEditTarget(item);
       setFormValues({
         fullName: detail.fullName,
         email: detail.email,
         password: "",
         phone: detail.phone ?? "",
         address: detail.address ?? "",
-        roleId: detail.role,
+        roleOption: toRoleOption(detail.role),
         status: detail.status,
       });
       setFormMode("edit");
@@ -160,7 +216,7 @@ const AccountListPage = () => {
   const openDetailModal = async (item: AccountListItem) => {
     try {
       const detail = await accountService.getDetail(item.id);
-      setSelectedItem({
+      setDetailItem({
         ...item,
         fullName: detail.fullName,
         email: detail.email,
@@ -171,6 +227,29 @@ const AccountListPage = () => {
     } catch (error) {
       notify(getErrorMessage(error, "Cannot load account detail"), "error");
     }
+  };
+
+  const closeFormModal = () => {
+    if (creating || editing) {
+      return;
+    }
+
+    setFormMode(null);
+    setEditTarget(null);
+  };
+
+  const closeDetailModal = () => {
+    setDetailOpen(false);
+    setDetailItem(null);
+  };
+
+  const deactivateFromDetail = () => {
+    if (!detailItem) {
+      return;
+    }
+
+    setDetailOpen(false);
+    setActionTarget(detailItem);
   };
 
   const handleSubmitForm = async () => {
@@ -189,8 +268,19 @@ const AccountListPage = () => {
       return;
     }
 
+    const roleId = formValues.roleOption?.roleId;
+    if (!roleId) {
+      notify("Role is required.", "error");
+      return;
+    }
+
     try {
       if (formMode === "create") {
+        if (!isInternalRole(roleId)) {
+          notify("Role must be ACCOUNTANT or WAREHOUSE.", "error");
+          return;
+        }
+
         setCreating(true);
         await accountService.create({
           fullName: formValues.fullName.trim(),
@@ -198,24 +288,24 @@ const AccountListPage = () => {
           password: formValues.password,
           phone: formValues.phone.trim() || undefined,
           address: formValues.address.trim() || undefined,
-          roleId: formValues.roleId,
+          roleId,
         });
         notify("Account created successfully.", "success");
-      } else if (formMode === "edit" && selectedItem) {
+      } else if (formMode === "edit" && editTarget) {
         setEditing(true);
-        await accountService.update(selectedItem.id, {
+        await accountService.update(editTarget.id, {
           fullName: formValues.fullName.trim(),
           phone: formValues.phone.trim() || undefined,
           address: formValues.address.trim() || undefined,
-          roleId: formValues.roleId,
+          roleId,
           status: formValues.status,
         });
         notify("Account updated successfully.", "success");
       }
 
       setFormMode(null);
-      setSelectedItem(null);
-      setQuery((previous) => ({ ...previous }));
+      setEditTarget(null);
+      await loadAccounts();
     } catch (error) {
       notify(getErrorMessage(error, "Cannot save account"), "error");
     } finally {
@@ -225,20 +315,65 @@ const AccountListPage = () => {
   };
 
   const handleDeactivate = async () => {
-    if (!selectedItem) {
+    if (!actionTarget) {
+      return;
+    }
+
+    if (actionTarget.role === "OWNER") {
+      notify("Cannot deactivate OWNER account.", "error");
       return;
     }
 
     try {
       setDeactivating(true);
-      await accountService.deactivate(selectedItem.id, { reason: "Deactivated by owner" });
+      await accountService.deactivate(actionTarget.id, { reason: "Deactivated by owner" });
       notify("Account deactivated successfully.", "success");
-      setSelectedItem(null);
-      setQuery((previous) => ({ ...previous }));
+      setActionTarget(null);
+      setDetailItem((previous) => (previous && previous.id === actionTarget.id ? { ...previous, status: "INACTIVE" } : previous));
+      setFormValues((previous) =>
+        formMode === "edit" && editTarget?.id === actionTarget.id ? { ...previous, status: "INACTIVE" } : previous,
+      );
+      await loadAccounts();
     } catch (error) {
       notify(getErrorMessage(error, "Cannot deactivate account"), "error");
     } finally {
       setDeactivating(false);
+    }
+  };
+
+  const handleActivate = async (item: AccountListItem) => {
+    if (item.role === "OWNER") {
+      notify("Cannot activate OWNER account from this screen.", "error");
+      return;
+    }
+
+    try {
+      setActivatingId(item.id);
+      const detail = await accountService.getDetail(item.id);
+      await accountService.update(item.id, {
+        fullName: detail.fullName.trim(),
+        phone: detail.phone ?? undefined,
+        address: detail.address ?? undefined,
+        roleId: detail.role,
+        status: "ACTIVE",
+      });
+      notify("Account activated successfully.", "success");
+      setActionTarget((previous) => (previous?.id === item.id ? null : previous));
+      setDetailItem((previous) => (previous && previous.id === item.id ? { ...previous, status: "ACTIVE" } : previous));
+      setFormValues((previous) =>
+        formMode === "edit" && editTarget?.id === item.id
+          ? {
+              ...previous,
+              status: "ACTIVE",
+              roleOption: toRoleOption(detail.role),
+            }
+          : previous,
+      );
+      await loadAccounts();
+    } catch (error) {
+      notify(getErrorMessage(error, "Cannot activate account"), "error");
+    } finally {
+      setActivatingId(null);
     }
   };
 
@@ -278,7 +413,7 @@ const AccountListPage = () => {
             onApplyFilters={(values) => {
               setQuery((previous) => ({
                 ...previous,
-                role: Array.isArray(values.role) ? (values.role[0] as UserRole | undefined) : undefined,
+                role: Array.isArray(values.role) ? (values.role[0] as AccountRoleId | undefined) : undefined,
                 status: Array.isArray(values.status) ? (values.status[0] as UserStatus | undefined) : undefined,
                 page: 1,
               }));
@@ -289,17 +424,32 @@ const AccountListPage = () => {
             columns={columns}
             data={items}
             emptyText="No accounts found."
-            actions={(row) => (
-              <div className="flex flex-wrap gap-2">
-                <CustomButton label="View" className="px-2 py-1 text-sm" onClick={() => void openDetailModal(row)} />
-                <CustomButton label="Edit" className="px-2 py-1 text-sm" onClick={() => void openEditModal(row)} />
-                <CustomButton
-                  label="Deactivate"
-                  className="bg-red-500 px-2 py-1 text-sm hover:bg-red-600"
-                  onClick={() => setSelectedItem(row)}
-                />
-              </div>
-            )}
+            actions={(row) => {
+              const canDeactivate = row.status === "ACTIVE" && row.role !== "OWNER";
+              const canActivate = row.status === "INACTIVE" && isInternalRole(row.role);
+
+              return (
+                <div className="flex flex-wrap gap-2">
+                  <CustomButton label="View" className="px-2 py-1 text-sm" onClick={() => void openDetailModal(row)} />
+                  <CustomButton label="Edit" className="px-2 py-1 text-sm" onClick={() => void openEditModal(row)} />
+                  {canDeactivate ? (
+                    <CustomButton
+                      label="Deactivate"
+                      className="bg-red-500 px-2 py-1 text-sm hover:bg-red-600"
+                      onClick={() => setActionTarget(row)}
+                    />
+                  ) : null}
+                  {canActivate ? (
+                    <CustomButton
+                      label={activatingId === row.id ? "Activating..." : "Activate"}
+                      className="bg-emerald-600 px-2 py-1 text-sm hover:bg-emerald-700"
+                      onClick={() => void handleActivate(row)}
+                      disabled={Boolean(activatingId)}
+                    />
+                  ) : null}
+                </div>
+              );
+            }}
           />
 
           <Pagination
@@ -312,13 +462,7 @@ const AccountListPage = () => {
           <Modal
             title={formMode === "create" ? "Create User Account" : "Update User Account"}
             open={Boolean(formMode)}
-            onCancel={() => {
-              if (creating || editing) {
-                return;
-              }
-              setFormMode(null);
-              setSelectedItem(null);
-            }}
+            onCancel={closeFormModal}
             closable={!creating && !editing}
             maskClosable={!creating && !editing}
             footer={
@@ -326,17 +470,10 @@ const AccountListPage = () => {
                 <CustomButton
                   label="Cancel"
                   className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                  onClick={() => {
-                    setFormMode(null);
-                    setSelectedItem(null);
-                  }}
+                  onClick={closeFormModal}
                   disabled={creating || editing}
                 />
-                <CustomButton
-                  label={creating || editing ? "Saving..." : "Save"}
-                  onClick={handleSubmitForm}
-                  disabled={creating || editing}
-                />
+                <CustomButton label={creating || editing ? "Saving..." : "Save"} onClick={handleSubmitForm} disabled={creating || editing} />
               </div>
             }
           >
@@ -364,9 +501,13 @@ const AccountListPage = () => {
               />
               <CustomSelect
                 title="Role"
-                options={ROLE_OPTIONS}
-                value={formValues.roleId ? [formValues.roleId] : []}
-                onChange={(selected) => setFormValues((previous) => ({ ...previous, roleId: (selected[0] as UserRole) ?? "CUSTOMER" }))}
+                options={toSelectOptions(formRoleOptions)}
+                value={formValues.roleOption?.roleId ? [formValues.roleOption.roleId] : []}
+                onChange={(selected) => {
+                  const selectedRoleId = selected[0] as AccountRoleId | undefined;
+                  const selectedRole = formRoleOptions.find((option) => option.roleId === selectedRoleId) ?? (selectedRoleId ? toRoleOption(selectedRoleId) : null);
+                  setFormValues((previous) => ({ ...previous, roleOption: selectedRole }));
+                }}
                 classNameSelect="w-full text-left"
                 classNameOptions="w-full left-0"
               />
@@ -386,39 +527,44 @@ const AccountListPage = () => {
           <Modal
             title="User Account Detail"
             open={detailOpen}
-            onCancel={() => {
-              setDetailOpen(false);
-              setSelectedItem(null);
-            }}
+            onCancel={closeDetailModal}
             footer={
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-2">
+                {detailItem?.status === "ACTIVE" && detailItem.role !== "OWNER" ? (
+                  <CustomButton label="Deactivate" className="bg-red-500 hover:bg-red-600" onClick={deactivateFromDetail} />
+                ) : null}
+                {detailItem?.status === "INACTIVE" && isInternalRole(detailItem.role) ? (
+                  <CustomButton
+                    label={activatingId === detailItem.id ? "Activating..." : "Activate"}
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                    onClick={() => void handleActivate(detailItem)}
+                    disabled={Boolean(activatingId)}
+                  />
+                ) : null}
                 <CustomButton
                   label="Close"
                   className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                  onClick={() => {
-                    setDetailOpen(false);
-                    setSelectedItem(null);
-                  }}
+                  onClick={closeDetailModal}
                 />
               </div>
             }
           >
-            {selectedItem ? (
+            {detailItem ? (
               <div className="space-y-2 text-sm text-slate-700">
                 <p>
-                  <span className="font-semibold">Full Name:</span> {selectedItem.fullName}
+                  <span className="font-semibold">Full Name:</span> {detailItem.fullName}
                 </p>
                 <p>
-                  <span className="font-semibold">Email:</span> {selectedItem.email}
+                  <span className="font-semibold">Email:</span> {detailItem.email}
                 </p>
                 <p>
-                  <span className="font-semibold">Role:</span> {selectedItem.role}
+                  <span className="font-semibold">Role:</span> {detailItem.role}
                 </p>
                 <p>
-                  <span className="font-semibold">Status:</span> {selectedItem.status}
+                  <span className="font-semibold">Status:</span> {detailItem.status}
                 </p>
                 <p>
-                  <span className="font-semibold">Created At:</span> {selectedItem.createdAt}
+                  <span className="font-semibold">Created At:</span> {detailItem.createdAt}
                 </p>
               </div>
             ) : null}
@@ -426,8 +572,8 @@ const AccountListPage = () => {
 
           <Modal
             title="Deactivate User Account"
-            open={Boolean(selectedItem) && !detailOpen && !formMode}
-            onCancel={() => (deactivating ? undefined : setSelectedItem(null))}
+            open={Boolean(actionTarget)}
+            onCancel={() => (deactivating ? undefined : setActionTarget(null))}
             closable={!deactivating}
             maskClosable={!deactivating}
             footer={
@@ -435,7 +581,7 @@ const AccountListPage = () => {
                 <CustomButton
                   label="Cancel"
                   className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                  onClick={() => setSelectedItem(null)}
+                  onClick={() => setActionTarget(null)}
                   disabled={deactivating}
                 />
                 <CustomButton
@@ -448,7 +594,7 @@ const AccountListPage = () => {
             }
           >
             <p className="text-sm text-slate-600">Are you sure you want to deactivate this user account?</p>
-            {selectedItem ? <p className="mt-2 text-sm font-semibold text-slate-800">{selectedItem.fullName}</p> : null}
+            {actionTarget ? <p className="mt-2 text-sm font-semibold text-slate-800">{actionTarget.fullName}</p> : null}
           </Modal>
         </BaseCard>
       }

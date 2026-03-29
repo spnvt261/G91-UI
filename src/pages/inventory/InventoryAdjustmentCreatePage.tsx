@@ -28,7 +28,7 @@ const InventoryAdjustmentCreatePage = () => {
     const loadProducts = async () => {
       try {
         setLoadingProducts(true);
-        const response = await productService.getList({ page: 1, size: 1000 });
+        const response = await productService.getList({ page: 1, pageSize: 1000 });
         setProductOptions(
           response.items.map((item) => ({
             label: `${item.productCode} - ${item.productName}`,

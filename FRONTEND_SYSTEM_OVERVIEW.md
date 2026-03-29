@@ -9,6 +9,7 @@
 6. [State management và data flow](#6-state-management-và-data-flow)
 7. [Business rules quan trọng toàn hệ thống](#7-business-rules-quan-trọng-toàn-hệ-thống)
 8. [Những điểm chưa xác định chắc chắn từ source code](#8-những-điểm-chưa-xác-định-chắc-chắn-từ-source-code)
+9. [Delta cập nhật 2026-03-29](#9-delta-cập-nhật-2026-03-29)
 
 ---
 
@@ -67,18 +68,27 @@
 |- (authenticated layout)
 |  |- /dashboard
 |  |- /profile
+|  |- /accounts
 |  |- /products
 |  |- /products/:id
+|  |- /products/create
+|  |- /products/:id/edit
+|  |- /price-lists
+|  |- /price-lists/create
+|  |- /price-lists/:id
 |  |- /quotations
 |  |- /quotations/create
 |  |- /quotations/:id
+|  |- /promotions
+|  |- /promotions/create
+|  |- /promotions/:id
 |  |- /contracts
 |  |- /contracts/create/:quotationId
 |  |- /contracts/:id
 |  |- /contracts/:id/edit
 |  |- /contracts/:id/tracking
-|  |- /approvals/contracts (redirect -> /quotations)
-|  |- /approvals/contracts/:id (redirect -> /quotations)
+|  |- /approvals/contracts
+|  |- /approvals/contracts/:id
 |  |- /customers
 |  |- /customers/create
 |  |- /customers/:id
@@ -91,10 +101,16 @@
 |  |- /payments
 |  |- /payments/:id
 |  |- /payments/:id/record
-|  |- /reports/dashboard
+|  |- /inventory
+|  |- /inventory/receipts/create
+|  |- /inventory/issues/create
+|  |- /inventory/adjustments/create
+|  |- /inventory/history
 |  |- /reports/sales
+|  |- /reports/project
 |  |- /reports/inventory
 |  |- /reports/financial
+|  |- /reports/export
 |- /test
 |- * (404)
 ```
@@ -108,24 +124,37 @@
   - `Quotation List` -> `Quotation Detail`.
   - `Quotation Create` -> `Quotation Detail` (save draft hoặc submit create).
   - `Quotation Detail` -> `Contract Create` (khi role/flag cho phép) -> `Contract Detail`.
+- Account module:
+  - `User Accounts` list + modal create/edit/detail/deactivate (single-page management).
+- Pricing module:
+  - `Price List` -> `Create Price List`.
+  - `Price List` -> `Price List Detail` (view/update/delete).
+- Promotion module:
+  - `Promotion List` -> `Promotion Detail`.
+  - `Promotion List` -> `Promotion Create`.
 - Contract module:
   - `Contract List` -> `Contract Detail` -> (`Edit` / `Tracking`).
   - `Contract Detail` có action submit/approve/reject theo role.
+  - `Contract Approvals` route đã active cho OWNER.
 - Customer module:
   - `Customer List` -> `Detail` -> `Edit`.
   - `Customer List` -> `Create` -> `Detail`.
 - Project module:
   - `Project List` -> `Detail` -> (`Edit` / `Assign Warehouse`).
   - `Project List` -> `Create` -> `Detail`.
+- Inventory module:
+  - `Inventory Status` -> (`Create Receipt` / `Create Issue` / `Adjust Inventory`) -> `Inventory History`.
 - Payment module:
   - `Payment List` -> `Payment Detail` -> `Record Payment` -> `Payment Detail`.
   - `Payment List` -> `Record Payment` trực tiếp.
 - Report module:
-  - Truy cập độc lập từng báo cáo dashboard/sales/inventory/financial.
+  - Truy cập độc lập từng báo cáo sales/project/inventory/financial/export.
 
 ---
 
 ## 3. Phân tích từng page
+
+- Lưu ý: mapping quyền truy cập chuẩn theo code hiện tại nằm ở Mục 5.4 (`canAccessPathByRole`); một số ghi chú role ở các page legacy có thể rộng hơn thực tế runtime.
 
 ### 3.1 LoginPage
 - Route: `/login`
@@ -652,10 +681,10 @@
 
 ### 3.18 ContractApprovalListPage
 - Route code-level: `/approvals/contracts`
-- Route thực thi trong App: đang redirect sang `/quotations`.
+- Route thực thi trong App: đã map trực tiếp tới page approvals.
 - Module: `pages/approvals`
 - Mục đích thiết kế: danh sách hợp đồng chờ duyệt (PENDING).
-- Người dùng sử dụng: dự kiến OWNER/ADMIN.
+- Người dùng sử dụng: OWNER (theo authz route hiện tại).
 - UI structure: search + table + pagination.
 - Thành phần chính: `FilterSearchModalBar`, `DataTable`, `Pagination`.
 - Dữ liệu load ban đầu (nếu page được mount):
@@ -666,18 +695,17 @@
 - State chính: `allItems`, `keyword`, `page`, `loading`.
 - Validate: không.
 - Business logic: lọc pending từ API query.
-- Permission/Auth: chưa thấy guard riêng cho approval ngoài route/authz tổng.
+- Permission/Auth: phụ thuộc guard route/authz tổng, không có guard nội bộ riêng trong page.
 - Loading/Error/Empty state: loading overlay + notify.
 - Điều hướng liên quan: `/approvals/contracts/:id`.
-- Ghi chú:
-  - Trong `App.tsx`, route này hiện **không render page thật**, mà redirect về quotation list.
+- Ghi chú: page render bình thường khi role/path hợp lệ.
 
 ### 3.19 ContractApprovalDetailPage
 - Route code-level: `/approvals/contracts/:id`
-- Route thực thi trong App: đang redirect sang `/quotations`.
+- Route thực thi trong App: đã map trực tiếp tới page approvals.
 - Module: `pages/approvals`
 - Mục đích thiết kế: xem chi tiết để approve/reject/request modification.
-- Người dùng sử dụng: dự kiến OWNER/ADMIN.
+- Người dùng sử dụng: OWNER (theo authz route hiện tại).
 - UI structure: summary contract + 3 nút decision.
 - Thành phần chính: `BaseCard`, `CustomButton`.
 - Dữ liệu load ban đầu:
@@ -694,11 +722,10 @@
 - Validate: không có rule status trước khi decision.
 - Business logic:
   - Sau action -> navigate approval list.
-- Permission/Auth: theo thiết kế là admin/owner, nhưng route thật đang redirect.
+- Permission/Auth: theo guard route/authz tổng, không có guard nội bộ riêng trong page.
 - Loading/Error/Empty state: loading overlay, notify lỗi.
 - Điều hướng liên quan: `/approvals/contracts`.
-- Ghi chú:
-  - Hiện chưa truy cập được qua route chính của App.
+- Ghi chú: comment decision trong payload hiện hard-code theo owner flow.
 ### 3.20 CustomerListPage
 - Route: `/customers`
 - Module: `pages/customers`
@@ -841,7 +868,7 @@
 - Route: `/projects/create`
 - Module: `pages/projects`
 - Mục đích: tạo dự án.
-- Người dùng sử dụng: ACCOUNTANT, OWNER (menu create hiển thị cho ACCOUNTANT/OWNER, owner toàn quyền).
+- Người dùng sử dụng: ACCOUNTANT (theo authz route hiện tại).
 - UI structure: form 6 field + lưu/quay lại.
 - Thành phần chính: `FormSectionCard`, `CustomTextField`, `CustomButton`.
 - Dữ liệu load ban đầu: không.
@@ -981,10 +1008,10 @@
 - Ghi chú: `paidAt` đang nhập text/date string, không bắt buộc format cứng ở client.
 
 ### 3.32 DashboardReportPage
-- Route: `/reports/dashboard`
+- Route: chưa được map trong `App.tsx` (source-only page, route dự kiến `/reports/dashboard`).
 - Module: `pages/reports`
 - Mục đích: báo cáo dashboard tài chính/tổng quan.
-- Người dùng sử dụng: ACCOUNTANT, OWNER.
+- Người dùng sử dụng: chưa truy cập được từ route runtime hiện tại.
 - UI structure: stats grid + 2 chart placeholder.
 - Thành phần chính: `StatsGrid`, `ChartCard`, `BaseCard`.
 - Dữ liệu load ban đầu:
@@ -995,7 +1022,7 @@
 - State chính: 4 summary số liệu + `loading`.
 - Validate: không.
 - Business logic: map summary vào KPI card.
-- Permission/Auth: theo guard role path reports.
+- Permission/Auth: chưa đi qua guard route vì chưa được mount vào route tree.
 - Loading/Error/Empty state: loading overlay, notify lỗi.
 - Điều hướng liên quan: nhóm report.
 - Ghi chú: chart chỉ placeholder.
@@ -1024,7 +1051,7 @@
 - Route: `/reports/inventory`
 - Module: `pages/reports`
 - Mục đích: báo cáo tồn kho.
-- Người dùng sử dụng: WAREHOUSE, OWNER.
+- Người dùng sử dụng: WAREHOUSE.
 - UI structure: search bar + table tồn kho.
 - Thành phần chính: `TableFilterBar`, `DataTable`.
 - Dữ liệu load ban đầu:
@@ -1065,7 +1092,24 @@
 - Điều hướng liên quan: báo cáo khác.
 - Ghi chú: chưa có drill-down từ project sang màn hình project detail.
 
-### 3.36 NotFoundPage
+### 3.36 ExportReportPage
+- Route: `/reports/export`
+- Module: `pages/reports`
+- Mục đích: placeholder cho luồng export report.
+- Người dùng sử dụng: ACCOUNTANT, OWNER.
+- UI structure: info card cảnh báo backend export chưa sẵn sàng.
+- Thành phần chính: `ListScreenHeaderTemplate`, `CustomBreadcrumb`, `BaseCard`.
+- Dữ liệu load ban đầu: không gọi API.
+- API sử dụng: chưa có endpoint backend được frontend gọi.
+- State chính: gần như stateless.
+- Validate: không.
+- Business logic: chỉ hiển thị thông điệp chờ contract backend.
+- Permission/Auth: theo guard role reports export.
+- Loading/Error/Empty state: không có loading/empty phức tạp.
+- Điều hướng liên quan: nhóm report.
+- Ghi chú: đây là màn hình reserve cho integration sau.
+
+### 3.37 NotFoundPage
 - Route: `*`
 - Module: `pages/404`
 - Mục đích: xử lý đường dẫn không tồn tại.
@@ -1082,7 +1126,7 @@
 - Điều hướng liên quan: về `/`.
 - Ghi chú: action `Báo lỗi` hiện chưa có xử lý.
 
-### 3.37 TestPage (Showcase)
+### 3.38 TestPage (Showcase)
 - Route: `/test`
 - Module: `pages/404` (file test page nằm trong thư mục 404).
 - Mục đích: showcase component UI, không phải flow nghiệp vụ production.
@@ -1099,13 +1143,57 @@
 - Điều hướng liên quan: không thuộc luồng nghiệp vụ chính.
 - Ghi chú: nên xem như sandbox UI.
 
-### 3.38 Root redirect `/`
+### 3.39 Root redirect `/`
 - Route: `/`
 - Mục đích: điểm vào hệ thống.
 - Business logic:
   - Có token + role hợp lệ -> redirect default theo role.
-  - Không có session -> redirect `/login`.
+  - Không có session -> redirect `/products`.
 - API: không gọi trực tiếp tại route này.
+
+### 3.40 Snapshot các page bổ sung (cập nhật 2026-03-29)
+- `AccountListPage` (`/accounts`):
+  - List/create/update/deactivate account trên cùng page.
+  - API chính: `GET/POST /api/accounts`, `GET/PUT /api/accounts/{id}`, `PATCH /api/accounts/{id}/deactivate`.
+- `ProductCreatePage` (`/products/create`):
+  - Form tạo mới product, submit thành công chuyển sang detail.
+  - API chính: `POST /api/products`.
+- `ProductEditPage` (`/products/:id/edit`):
+  - Load detail trước khi edit, save xong quay về detail.
+  - API chính: `GET /api/products/{id}`, `PUT /api/products/{id}`.
+- `PriceListListPage` (`/price-lists`):
+  - List + filter + pagination + xóa mềm bảng giá.
+  - API chính: `GET /api/price-lists`, `DELETE /api/price-lists/{id}`.
+- `PriceListCreatePage` (`/price-lists/create`):
+  - Tạo bảng giá mới và chuyển sang trang detail.
+  - API chính: `POST /api/price-lists`.
+- `PriceListDetailPage` (`/price-lists/:id`):
+  - Xem/cập nhật thông tin bảng giá.
+  - API chính: `GET /api/price-lists/{id}`, `PUT /api/price-lists/{id}`.
+- `PromotionListPage` (`/promotions`):
+  - List promotion, filter theo status/search, có delete.
+  - API chính: `GET /api/promotions`, `DELETE /api/promotions/{id}`.
+- `PromotionCreatePage` (`/promotions/create`):
+  - Form tạo promotion có load danh sách product để pick scope.
+  - API chính: `GET /api/products`, `POST /api/promotions`.
+- `PromotionDetailPage` (`/promotions/:id`):
+  - Xem/cập nhật promotion, có mode edit từ query.
+  - API chính: `GET /api/promotions/{id}`, `PUT /api/promotions/{id}`, `GET /api/products`.
+- `InventoryStatusPage` (`/inventory`):
+  - Theo dõi trạng thái tồn kho và điều hướng sang các màn tạo phiếu.
+  - API chính: `GET /api/inventory/status`.
+- `InventoryReceiptCreatePage` (`/inventory/receipts/create`):
+  - Tạo phiếu nhập kho.
+  - API chính: `GET /api/products`, `POST /api/inventory/receipts`.
+- `InventoryIssueCreatePage` (`/inventory/issues/create`):
+  - Tạo phiếu xuất kho.
+  - API chính: `GET /api/products`, `POST /api/inventory/issues`.
+- `InventoryAdjustmentCreatePage` (`/inventory/adjustments/create`):
+  - Tạo phiếu điều chỉnh kho.
+  - API chính: `GET /api/products`, `POST /api/inventory/adjustments`.
+- `InventoryHistoryPage` (`/inventory/history`):
+  - Lịch sử giao dịch kho, filter theo loại giao dịch và phân trang server-side.
+  - API chính: `GET /api/inventory/history`.
 
 ---
 ## 4. Component dùng chung quan trọng
@@ -1127,9 +1215,9 @@
   - `collapsed`, `activePath`, `onNavigate`.
 - Hành vi UI:
   - Menu tree có nhóm con.
-  - Filter item theo role (`ROLE_MENU_IDS`).
+  - Filter item theo `MENU_ROLE_MAP` (`canSeeMenu`) và action-level theo `canPerformAction`.
 - Ghi chú nghiệp vụ:
-  - Mapping menu role khác với route authz ở một số điểm (ví dụ approvals không xuất hiện trên sidebar).
+  - Có thể khác route authz ở mức action button, nhưng `Contract Approvals` đã có menu riêng cho OWNER.
 
 ### 4.3 TopNavbar + UserAvatarDropdown + NotificationBell
 - Mục đích: top-level action và session action.
@@ -1226,7 +1314,7 @@
 - Nhóm public (không qua `AppLayout`):
   - `/login`, `/register`, `/verify-registration`, `/forgot-password`, `/reset-password`.
 - Nhóm authenticated (qua `AppLayout` + `Outlet`):
-  - dashboard, profile, products, quotations, contracts, customers, projects, payments, reports.
+  - dashboard, profile, accounts, products, price-lists, quotations, promotions, contracts, approvals, customers, projects, payments, inventory, reports.
 
 ### 5.3 Guard/auth
 - `AppAuthenticatedLayout` kiểm tra:
@@ -1237,23 +1325,29 @@
 - Root `/` tự redirect theo session.
 
 ### 5.4 Permission mapping theo role (canAccessPathByRole)
+- `GUEST`:
+  - `/login`, `/register`, `/verify-registration`, `/forgot-password`, `/reset-password`, `/products`.
 - `CUSTOMER`:
-  - `/dashboard`, `/profile`, `/products`, `/quotations`, `/projects`, `/payments`.
-- `ACCOUNTANT`:
-  - `/dashboard`, `/profile`, `/customers`, `/projects`, `/contracts`, `/quotations`, `/payments`, `/reports/dashboard`, `/reports/sales`, `/reports/financial`.
+  - `/profile`, `/products`, `/quotations`, `/contracts`, `/projects`, `/payments`, `/promotions`.
 - `WAREHOUSE`:
-  - `/dashboard`, `/profile`, `/products`, `/projects`, `/reports/inventory`.
+  - `/profile`, `/products`, `/inventory`, `/reports/inventory`.
+- `ACCOUNTANT`:
+  - `/profile`, `/customers`, `/quotations`, `/contracts`, `/projects`, `/payments`, `/promotions`, `/price-lists`, `/reports/sales`, `/reports/project`, `/reports/financial`, `/reports/export`.
 - `OWNER`:
-  - toàn bộ path.
+  - `/dashboard`, `/profile`, `/accounts`, `/price-lists`, `/promotions`, `/approvals/contracts`, `/reports/sales`, `/reports/project`, `/reports/financial`, `/reports/export`.
+- Lưu ý:
+  - Rule dùng cả allow prefix và deny prefix/pattern regex, nên không phải toàn bộ sub-path của module đều được phép.
 
 ### 5.5 Menu/sidebar mapping
-- Sidebar lọc theo `ROLE_MENU_IDS` riêng.
-- Có thể khác nhẹ với route authz:
-  - Approval pages có source nhưng không xuất hiện menu và route App đang redirect.
+- Sidebar lọc theo `MENU_ROLE_MAP` + `canSeeMenu`.
+- Action-level visibility (nút create/update/delete) dùng `canPerformAction`.
+- `Contract Approvals` hiện có menu riêng cho OWNER.
 
 ### 5.6 Điểm đặc biệt route approvals
-- `ROUTE_URL.CONTRACT_APPROVAL_LIST` và `ROUTE_URL.CONTRACT_APPROVAL_DETAIL` trong `App.tsx` đang map `Navigate -> /quotations`.
-- Nghĩa là 2 page approvals hiện chưa hoạt động trong flow route chính, dù code page vẫn tồn tại.
+- `ROUTE_URL.CONTRACT_APPROVAL_LIST` và `ROUTE_URL.CONTRACT_APPROVAL_DETAIL` đang map trực tiếp tới page approvals (không redirect).
+- Root route `/`:
+  - Nếu có session: redirect theo `getDefaultRouteByRole`.
+  - Nếu chưa login: redirect tới `/products`.
 
 ---
 
@@ -1301,6 +1395,8 @@
   - `productService`: bổ sung `mainImage/images` fallback bằng picsum.
   - `customerService`: unwrap và normalize field.
   - `projectService`: map alias field cũ/mới (`code/projectCode`, `warehouseId/primaryWarehouseId`, `progress/progressPercent`).
+  - `priceListService`: map response `validFrom/validTo` hoặc `startDate/endDate`, và giữ payload write field `unitPrice` (backend hiện hỗ trợ alias cho `unitPriceVnd`).
+  - `accountService`: request/query pagination dùng base-1 đồng bộ với backend (`page` mặc định từ `1`).
   - `quotationService` + `contractService`: map response list/detail/save/submit về model thống nhất frontend.
 - `extractList` hỗ trợ đọc list từ nhiều shape (`items`, `content`, `results`, nested `data`).
 
@@ -1323,9 +1419,17 @@
 1. Auth/role
 - Session frontend phụ thuộc `access_token` + `user_role` trong localStorage.
 - Role string `ACOUNTER` được normalize thành `ACCOUNTANT`.
-- Role quyết định default route sau login.
+- Default route sau login:
+  - CUSTOMER -> `/quotations`
+  - ACCOUNTANT -> `/customers`
+  - WAREHOUSE -> `/inventory`
+  - OWNER -> `/dashboard`
 
-2. Quotation
+2. Account
+- `/accounts` dùng server pagination base-1 (`page` bắt đầu từ `1`).
+- UI đang có filter keyword phía client sau khi nhận `content` từ server.
+
+3. Quotation
 - Một báo giá tối đa 20 item.
 - Mỗi item quantity phải > 0.
 - Submit quotation yêu cầu:
@@ -1335,32 +1439,36 @@
   - tổng tiền >= 10,000,000 VND.
 - Có thể save draft trước khi submit.
 
-3. Contract
+4. Contract
 - Tạo contract từ quotation phụ thuộc cờ backend `actions.accountantCanCreateContract`.
 - Contract detail action theo role:
   - ACCOUNTANT: submit hợp đồng.
   - OWNER/ADMIN raw role: approve hoặc reject.
-- Approval pages có code nhưng route hiện redirect (chưa active luồng chuẩn).
+- Approval pages đã active route trong `App.tsx`.
 
-4. Customer
+5. Pricing
+- Frontend write payload hiện gửi `items[].unitPrice`.
+- Backend đã chấp nhận alias `unitPrice` cho field chuẩn `unitPriceVnd` (compatible từ 2026-03-29), nên chưa bắt buộc đổi payload ngay.
+
+6. Customer
 - Tạo/sửa customer: `fullName` được dựng từ `contactPerson` hoặc `companyName`.
 - Role ACCOUNTANT bị khóa chỉnh status customer trên UI.
 
-5. Project
+7. Project
 - Update project hiện gọi thêm API update progress ngay sau update thông tin dự án.
 - Assign warehouse yêu cầu có warehouseId mới bật nút xác nhận.
 
-6. Payment
+8. Payment
 - Payment list hiển thị đồng thời invoice và debt status.
 - Record payment chỉ check amount không rỗng ở UI, không check amount > 0.
 
-7. UI/UX rule chung
+9. UI/UX rule chung
 - Hầu hết page business dùng template header + breadcrumb + body card.
 - Thao tác lỗi/success thống nhất qua toast notify.
 - Các list page ưu tiên search/filter client + pagination local (trừ vài API có pagination metadata).
 
-8. Các thiếu hụt CRUD hiện tại
-- Nhiều module mới có C-R-U nhưng chưa có D (delete).
+10. Các thiếu hụt CRUD hiện tại
+- Nhiều module vẫn chưa có bulk action/import-export ở mức list management.
 - Không thấy import/export hoặc bulk actions ở các module chính.
 
 ---
@@ -1368,12 +1476,12 @@
 ## 8. Những điểm chưa xác định chắc chắn từ source code
 
 - Chưa xác định chắc chắn từ source code: backend có bắt buộc field nào ở mức validation cuối cùng cho từng API (nhiều form client không validate required rõ ràng).
-- Chưa xác định chắc chắn từ source code: policy phân quyền chuẩn cho approvals vì page approvals tồn tại nhưng route trong `App.tsx` đang redirect.
 - Chưa xác định chắc chắn từ source code: một số role ngoài enum (`ADMIN`) có được backend phát hành chính thức hay chỉ là legacy tạm thời.
 - Chưa xác định chắc chắn từ source code: lý do nghiệp vụ của mapping `inventoryAlertCount * 1,000,000` trong DashboardPage.
 - Chưa xác định chắc chắn từ source code: vì sao một số text tiếng Việt bị lỗi encoding (nguồn file hoặc editor settings).
 - Chưa xác định chắc chắn từ source code: vì sao `CustomTextField` hỗ trợ type `textarea` nhưng render input thường (có thể chủ ý hoặc bug).
 - Chưa xác định chắc chắn từ source code: page `/test` có dùng trong release production hay chỉ phục vụ nội bộ dev.
+- Chưa xác định chắc chắn từ source code: `DashboardReportPage` còn nằm trong source nhưng chưa được map route trong `App.tsx`.
 
 ---
 
@@ -1390,9 +1498,24 @@
 - DashboardPage
 - UserProfilePage
 
+### Accounts
+- AccountListPage
+
 ### Products
 - ProductListPage
 - ProductDetailPage
+- ProductCreatePage
+- ProductEditPage
+
+### Pricing
+- PriceListListPage
+- PriceListCreatePage
+- PriceListDetailPage
+
+### Promotions
+- PromotionListPage
+- PromotionCreatePage
+- PromotionDetailPage
 
 ### Quotations
 - QuotationListPage
@@ -1406,7 +1529,7 @@
 - ContractEditPage
 - ContractTrackingPage
 
-### Approvals (có source nhưng route chính đang redirect)
+### Approvals
 - ContractApprovalListPage
 - ContractApprovalDetailPage
 
@@ -1428,13 +1551,31 @@
 - PaymentDetailPage
 - RecordPaymentPage
 
+### Inventory
+- InventoryStatusPage
+- InventoryReceiptCreatePage
+- InventoryIssueCreatePage
+- InventoryAdjustmentCreatePage
+- InventoryHistoryPage
+
 ### Reports
 - DashboardReportPage
 - SalesReportPage
 - InventoryReportPage
 - FinancialReportPage
+- ExportReportPage
 
 ### Utility
 - NotFoundPage
 - TestPage
 - Root redirect route
+
+---
+
+## 9. Delta cập nhật 2026-03-29
+
+- Đồng bộ route map theo `App.tsx` hiện tại: bổ sung Accounts/Pricing/Promotions/Inventory và route reports mới (`/reports/project`, `/reports/export`).
+- Cập nhật lại permission theo `authz.const.ts`: OWNER không còn là "toàn bộ path", approvals đã active route/menu.
+- Đồng bộ ghi chú API contract với backend assessment ngày 2026-03-29:
+  - `/api/accounts` pagination chuẩn base-1 cho cả request/response.
+  - Pricing item field chuẩn là `unitPriceVnd`, nhưng frontend hiện dùng `unitPrice` vẫn tương thích nhờ backend `@JsonAlias`.

@@ -64,7 +64,7 @@ const PriceListDetailPage = () => {
       { key: "productId", header: "Product ID", className: "font-semibold text-blue-900" },
       { key: "productCode", header: "Code", render: (row) => row.productCode ?? "-" },
       { key: "productName", header: "Name", render: (row) => row.productName ?? "-" },
-      { key: "unitPrice", header: "Unit Price", render: (row) => toCurrency(row.unitPrice) },
+      { key: "unitPriceVnd", header: "Unit Price", render: (row) => toCurrency(row.unitPriceVnd) },
     ],
     [],
   );

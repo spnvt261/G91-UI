@@ -5,7 +5,7 @@ export interface PriceListItemModel {
   productId: string;
   productCode?: string;
   productName?: string;
-  unitPrice: number;
+  unitPriceVnd: number;
 }
 
 export interface PriceListModel {

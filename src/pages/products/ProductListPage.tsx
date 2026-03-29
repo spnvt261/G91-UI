@@ -45,7 +45,7 @@ const ProductListPage = () => {
         setLoading(true);
         const response = await productService.getList({
           page,
-          size: PAGE_SIZE,
+          pageSize: PAGE_SIZE,
           keyword: keyword || undefined,
           type: typeFilter[0],
           status: statusFilter[0],

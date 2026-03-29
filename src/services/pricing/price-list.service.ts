@@ -15,7 +15,10 @@ interface PriceListApiItem {
   productId?: string;
   productCode?: string;
   productName?: string;
+  unitPriceVnd?: number;
   unitPrice?: number;
+  unit_price_vnd?: number;
+  unitPriceVND?: number;
 }
 
 interface PriceListApiModel {
@@ -49,7 +52,7 @@ const toItemModel = (item: PriceListApiItem): PriceListItemModel => ({
   productId: item.productId ?? "",
   productCode: item.productCode,
   productName: item.productName,
-  unitPrice: Number(item.unitPrice ?? 0),
+  unitPriceVnd: Number(item.unitPriceVnd ?? item.unitPrice ?? item.unit_price_vnd ?? item.unitPriceVND ?? 0),
 });
 
 const toModel = (item: PriceListApiModel): PriceListModel => {
@@ -77,7 +80,7 @@ const toWritePayload = (payload: PriceListWriteRequest) => ({
   status: payload.status,
   items: payload.items.map((item) => ({
     productId: item.productId,
-    unitPrice: item.unitPrice,
+    unitPriceVnd: item.unitPriceVnd,
   })),
 });
 

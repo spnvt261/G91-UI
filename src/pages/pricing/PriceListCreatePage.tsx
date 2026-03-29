@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomButton from "../../components/customButton/CustomButton";
+import type { Option } from "../../components/customSelect/CustomSelect";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
+import { productService } from "../../services/product/product.service";
 import { priceListService } from "../../services/pricing/price-list.service";
 import { getErrorMessage } from "../shared/page.utils";
 import PriceListFormSection from "./PriceListFormSection";
@@ -23,6 +25,36 @@ const PriceListCreatePage = () => {
   const [values, setValues] = useState(createInitialPriceListFormValues());
   const [errors, setErrors] = useState<PriceListFormErrors>({});
   const [saving, setSaving] = useState(false);
+  const [productOptions, setProductOptions] = useState<Option[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [productLoadError, setProductLoadError] = useState<string | null>(null);
+
+  const loadProducts = useCallback(async () => {
+    try {
+      setLoadingProducts(true);
+      setProductLoadError(null);
+      const response = await productService.getList({
+        page: 1,
+        pageSize: 1000,
+        status: "ACTIVE",
+      });
+      setProductOptions(
+        response.items.map((item) => ({
+          label: `${item.productCode} - ${item.productName}`,
+          value: item.id,
+        })),
+      );
+    } catch (error) {
+      setProductOptions([]);
+      setProductLoadError(getErrorMessage(error, "Cannot load active products. Please retry."));
+    } finally {
+      setLoadingProducts(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadProducts();
+  }, [loadProducts]);
 
   const handleSave = async () => {
     const validationErrors = validatePriceListForm(values);
@@ -71,6 +103,10 @@ const PriceListCreatePage = () => {
           <PriceListFormSection
             values={values}
             errors={errors}
+            productOptions={productOptions}
+            loadingProducts={loadingProducts}
+            productLoadError={productLoadError}
+            onRetryLoadProducts={() => void loadProducts()}
             onChange={(updater) => setValues((previous) => updater(previous))}
             onAddItem={() => setValues((previous) => ({ ...previous, items: [...previous.items, createEmptyPriceListItem()] }))}
             onRemoveItem={(rowId) =>

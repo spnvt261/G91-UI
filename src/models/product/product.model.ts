@@ -21,11 +21,12 @@ export interface ProductModel {
 
 export interface ProductListQuery {
   page?: number;
-  size?: number;
   pageSize?: number;
   keyword?: string;
   search?: string;
   type?: string;
+  size?: string;
+  sizeValue?: string;
   thickness?: string;
   unit?: string;
   status?: ProductStatus;
@@ -36,7 +37,7 @@ export interface ProductListQuery {
 export interface ProductListResponse {
   items: ProductModel[];
   pagination: PaginationMeta;
-  filters: Omit<ProductListQuery, "page" | "pageSize" | "size" | "sortBy" | "sortDir">;
+  filters: Omit<ProductListQuery, "page" | "pageSize" | "sortBy" | "sortDir">;
 }
 
 export interface ProductCreateRequest {
