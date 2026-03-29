@@ -1,17 +1,17 @@
 export const PROJECT_STATUS_OPTIONS = [
-  { label: "NEW", value: "NEW" },
-  { label: "IN_PROGRESS", value: "IN_PROGRESS" },
-  { label: "ON_HOLD", value: "ON_HOLD" },
-  { label: "DONE", value: "DONE" },
-  { label: "ACTIVE", value: "ACTIVE" },
-  { label: "COMPLETED", value: "COMPLETED" },
-  { label: "CANCELLED", value: "CANCELLED" },
+  { label: "Mới", value: "NEW" },
+  { label: "Đang thực hiện", value: "IN_PROGRESS" },
+  { label: "Tạm dừng", value: "ON_HOLD" },
+  { label: "Hoàn thành", value: "DONE" },
+  { label: "Đang hoạt động", value: "ACTIVE" },
+  { label: "Hoàn thành", value: "COMPLETED" },
+  { label: "Đã hủy", value: "CANCELLED" },
 ] as const;
 
 export const PROGRESS_STATUS_OPTIONS = [
-  { label: "IN_PROGRESS", value: "IN_PROGRESS" },
-  { label: "ON_HOLD", value: "ON_HOLD" },
-  { label: "DONE", value: "DONE" },
+  { label: "Đang thực hiện", value: "IN_PROGRESS" },
+  { label: "Tạm dừng", value: "ON_HOLD" },
+  { label: "Hoàn thành", value: "DONE" },
 ] as const;
 
 export const clampProgress = (value?: number): number => {

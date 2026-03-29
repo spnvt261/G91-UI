@@ -45,7 +45,7 @@ const ProjectEditPage = () => {
           status: detail.status ?? "NEW",
         });
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load project for update"), "error");
+        notify(getErrorMessage(err, "Không thể tải dữ liệu dự án để cập nhật"), "error");
       } finally {
         setPageLoading(false);
       }
@@ -70,7 +70,7 @@ const ProjectEditPage = () => {
       });
       navigate(backTarget);
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot update project"), "error");
+      notify(getErrorMessage(err, "Không thể cập nhật dự án"), "error");
     } finally {
       setSaving(false);
     }
@@ -78,43 +78,43 @@ const ProjectEditPage = () => {
 
   return (
     <ProjectFormLayout
-      title="Update Project"
-      subtitle="Edit project core fields while keeping the current business flow unchanged."
+      title="Cập nhật dự án"
+      subtitle="Chỉnh sửa thông tin chính của dự án và giữ nguyên luồng nghiệp vụ hiện tại."
       breadcrumbItems={[
-        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Home</span> },
-        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)}>Projects</span> },
-        { title: "Update" },
+        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Trang chủ</span> },
+        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)}>Dự án</span> },
+        { title: "Cập nhật" },
       ]}
       loading={pageLoading}
     >
       <Form<ProjectEditFormValues> form={form} layout="vertical" onFinish={handleUpdate}>
         <Row gutter={[16, 0]}>
           <Col xs={24} md={12}>
-            <Form.Item label="Project code" name="code">
-              <Input placeholder="Enter project code" />
+            <Form.Item label="Mã dự án" name="code">
+              <Input placeholder="Nhập mã dự án" />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
             <Form.Item
-              label="Project name"
+              label="Tên dự án"
               name="name"
-              rules={[{ required: true, message: "Project name is required." }, { max: 255, message: "Project name max length is 255." }]}
+              rules={[{ required: true, message: "Vui lòng nhập tên dự án." }, { max: 255, message: "Tên dự án tối đa 255 ký tự." }]}
             >
-              <Input placeholder="Enter project name" />
+              <Input placeholder="Nhập tên dự án" />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item label="Customer ID" name="customerId" rules={[{ required: true, message: "Customer ID is required." }]}>
-              <Input placeholder="Enter customer id" />
+            <Form.Item label="Mã khách hàng" name="customerId" rules={[{ required: true, message: "Vui lòng nhập mã khách hàng." }]}>
+              <Input placeholder="Nhập mã khách hàng" />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item label="Warehouse ID" name="warehouseId">
-              <Input placeholder="Enter warehouse id" />
+            <Form.Item label="Mã kho" name="warehouseId">
+              <Input placeholder="Nhập mã kho" />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item label="Status" name="status">
+            <Form.Item label="Trạng thái" name="status">
               <Select options={PROJECT_STATUS_OPTIONS.map((item) => ({ ...item }))} />
             </Form.Item>
           </Col>
@@ -122,10 +122,10 @@ const ProjectEditPage = () => {
 
         <Space>
           <Button type="primary" htmlType="submit" loading={saving}>
-            Save changes
+            Lưu cập nhật
           </Button>
           <Button onClick={() => navigate(backTarget)} disabled={saving}>
-            Back
+            Quay lại
           </Button>
         </Space>
       </Form>

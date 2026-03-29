@@ -12,6 +12,18 @@ const STATUS_COLOR_MAP: Record<string, string> = {
   ARCHIVED: "default",
 };
 
+const STATUS_LABEL_MAP: Record<string, string> = {
+  NEW: "Mới",
+  IN_PROGRESS: "Đang thực hiện",
+  ON_HOLD: "Tạm dừng",
+  DONE: "Hoàn thành",
+  ACTIVE: "Đang hoạt động",
+  COMPLETED: "Hoàn thành",
+  CLOSED: "Đã đóng",
+  CANCELLED: "Đã hủy",
+  ARCHIVED: "Lưu trữ",
+};
+
 export const getProjectStatusColor = (status?: string): string => {
   const normalized = (status ?? "").trim().toUpperCase();
   return STATUS_COLOR_MAP[normalized] ?? "blue";
@@ -19,15 +31,19 @@ export const getProjectStatusColor = (status?: string): string => {
 
 export const getProjectStatusLabel = (status?: string): string => {
   if (!status) {
-    return "Unknown";
+    return "Không xác định";
   }
-  const normalized = status.trim();
+  const normalized = status.trim().toUpperCase();
   if (!normalized) {
-    return "Unknown";
+    return "Không xác định";
   }
+  if (STATUS_LABEL_MAP[normalized]) {
+    return STATUS_LABEL_MAP[normalized];
+  }
+
   return normalized
     .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .map((part) => part.charAt(0) + part.slice(1).toLowerCase())
     .join(" ");
 };
 

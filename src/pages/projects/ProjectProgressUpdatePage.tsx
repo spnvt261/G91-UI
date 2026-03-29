@@ -45,7 +45,7 @@ const ProjectProgressUpdatePage = () => {
           notes: "",
         });
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load project progress"), "error");
+        notify(getErrorMessage(err, "Không thể tải tiến độ dự án"), "error");
       } finally {
         setPageLoading(false);
       }
@@ -61,7 +61,7 @@ const ProjectProgressUpdatePage = () => {
 
     const normalizedProgress = clampProgress(values.progressPercent);
     if (values.progressPercent == null || normalizedProgress !== values.progressPercent) {
-      notify("Progress must be between 0 and 100.", "error");
+      notify("Tiến độ phải nằm trong khoảng 0 đến 100.", "error");
       return;
     }
 
@@ -72,12 +72,12 @@ const ProjectProgressUpdatePage = () => {
         progressStatus: values.progressStatus?.trim() || undefined,
         phase: values.phase?.trim() || undefined,
         notes: values.notes?.trim() || undefined,
-        changeReason: "Updated from project progress flow",
+        changeReason: "Cập nhật từ màn hình tiến độ dự án",
       });
-      notify("Project progress updated successfully.", "success");
+      notify("Cập nhật tiến độ dự án thành công.", "success");
       navigate(backTarget);
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot update project progress"), "error");
+      notify(getErrorMessage(err, "Không thể cập nhật tiến độ dự án"), "error");
     } finally {
       setSaving(false);
     }
@@ -85,30 +85,30 @@ const ProjectProgressUpdatePage = () => {
 
   return (
     <ProjectFormLayout
-      title="Update Progress"
-      subtitle="Record latest progress and execution notes for this project."
+      title="Cập nhật tiến độ"
+      subtitle="Ghi nhận tiến độ mới nhất và thông tin triển khai cho dự án."
       breadcrumbItems={[
-        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Home</span> },
-        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)}>Projects</span> },
-        { title: "Update progress" },
+        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Trang chủ</span> },
+        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)}>Dự án</span> },
+        { title: "Cập nhật tiến độ" },
       ]}
       loading={pageLoading}
     >
-      {!id ? <Alert type="warning" showIcon message="Project id is missing from URL." /> : null}
+      {!id ? <Alert type="warning" showIcon message="Không tìm thấy mã dự án trên URL." /> : null}
 
       <Form<ProjectProgressFormValues> form={form} layout="vertical" onFinish={handleSubmit}>
         <Row gutter={[16, 0]}>
           <Col xs={24} md={12}>
             <Form.Item
-              label="Progress (%)"
+              label="Tiến độ (%)"
               name="progressPercent"
               rules={[
-                { required: true, message: "Progress is required." },
+                { required: true, message: "Vui lòng nhập tiến độ." },
                 {
                   validator: (_, value) => {
                     const normalized = clampProgress(value);
                     if (value == null || normalized !== value) {
-                      return Promise.reject(new Error("Progress must be between 0 and 100."));
+                      return Promise.reject(new Error("Tiến độ phải nằm trong khoảng 0 đến 100."));
                     }
                     return Promise.resolve();
                   },
@@ -119,23 +119,23 @@ const ProjectProgressUpdatePage = () => {
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item label="Progress status" name="progressStatus">
+            <Form.Item label="Trạng thái tiến độ" name="progressStatus">
               <Select
                 showSearch
                 allowClear
                 options={PROGRESS_STATUS_OPTIONS.map((item) => ({ ...item }))}
-                placeholder="Select progress status"
+                placeholder="Chọn trạng thái tiến độ"
               />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item label="Phase" name="phase" rules={[{ max: 255, message: "Phase max length is 255." }]}>
-              <Input placeholder="Foundation / Structure / Finishing..." />
+            <Form.Item label="Giai đoạn" name="phase" rules={[{ max: 255, message: "Giai đoạn tối đa 255 ký tự." }]}>
+              <Input placeholder="Móng / Kết cấu / Hoàn thiện..." />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item label="Notes" name="notes" rules={[{ max: 1000, message: "Notes max length is 1000." }]}>
-              <Input placeholder="Brief update notes" />
+            <Form.Item label="Ghi chú" name="notes" rules={[{ max: 1000, message: "Ghi chú tối đa 1000 ký tự." }]}>
+              <Input placeholder="Mô tả ngắn cập nhật tiến độ" />
             </Form.Item>
           </Col>
         </Row>
@@ -143,7 +143,7 @@ const ProjectProgressUpdatePage = () => {
         <Form.Item noStyle shouldUpdate>
           {() => (
             <div style={{ marginBottom: 24 }}>
-              <Typography.Text type="secondary">Current progress preview</Typography.Text>
+              <Typography.Text type="secondary">Xem trước tiến độ hiện tại</Typography.Text>
               <div style={{ marginTop: 8 }}>
                 <ProjectProgressBar value={form.getFieldValue("progressPercent")} showMeta />
               </div>
@@ -153,10 +153,10 @@ const ProjectProgressUpdatePage = () => {
 
         <Space>
           <Button type="primary" htmlType="submit" loading={saving}>
-            Save progress
+            Lưu tiến độ
           </Button>
           <Button onClick={() => navigate(backTarget)} disabled={saving}>
-            Back
+            Quay lại
           </Button>
         </Space>
       </Form>

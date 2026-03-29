@@ -89,12 +89,12 @@ const ProjectAssignWarehousePage = () => {
           setWarehouseOptions(options);
         } catch (warehouseError) {
           setWarehouseOptions([]);
-          notify(getErrorMessage(warehouseError, "Cannot load warehouse options"), "error");
+          notify(getErrorMessage(warehouseError, "Không thể tải danh sách kho"), "error");
         } finally {
           setWarehouseLoading(false);
         }
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load project warehouse info"), "error");
+        notify(getErrorMessage(err, "Không thể tải thông tin kho của dự án"), "error");
       } finally {
         setPageLoading(false);
       }
@@ -114,10 +114,10 @@ const ProjectAssignWarehousePage = () => {
         warehouseId: values.warehouseId,
         assignmentReason: values.assignmentReason?.trim() || undefined,
       });
-      notify("Warehouse assigned successfully.", "success");
+      notify("Gán kho thành công.", "success");
       navigate(backTarget);
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot assign warehouse"), "error");
+      notify(getErrorMessage(err, "Không thể gán kho"), "error");
     } finally {
       setSaving(false);
     }
@@ -125,22 +125,22 @@ const ProjectAssignWarehousePage = () => {
 
   return (
     <ProjectFormLayout
-      title="Assign Warehouse"
-      subtitle="Update warehouse assignment for this project."
+      title="Gán kho"
+      subtitle="Cập nhật kho cho dự án hiện tại."
       breadcrumbItems={[
-        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Home</span> },
-        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)}>Projects</span> },
-        { title: "Assign warehouse" },
+        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Trang chủ</span> },
+        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)}>Dự án</span> },
+        { title: "Gán kho" },
       ]}
       loading={pageLoading}
     >
-      {!id ? <Alert type="warning" showIcon message="Project id is missing from URL." /> : null}
+      {!id ? <Alert type="warning" showIcon message="Không tìm thấy mã dự án trên URL." /> : null}
 
       {project ? (
         <Descriptions size="small" column={{ xs: 1, md: 3 }}>
-          <Descriptions.Item label="Project">{displayText(project.name)}</Descriptions.Item>
-          <Descriptions.Item label="Project code">{displayText(project.projectCode ?? project.code)}</Descriptions.Item>
-          <Descriptions.Item label="Current warehouse">{displayText(project.primaryWarehouseId ?? project.warehouseId)}</Descriptions.Item>
+          <Descriptions.Item label="Dự án">{displayText(project.name)}</Descriptions.Item>
+          <Descriptions.Item label="Mã dự án">{displayText(project.projectCode ?? project.code)}</Descriptions.Item>
+          <Descriptions.Item label="Kho hiện tại">{displayText(project.primaryWarehouseId ?? project.warehouseId)}</Descriptions.Item>
         </Descriptions>
       ) : null}
 
@@ -148,33 +148,33 @@ const ProjectAssignWarehousePage = () => {
         <Row gutter={[16, 0]}>
           <Col xs={24} md={12}>
             <Form.Item
-              label="Warehouse"
+              label="Kho"
               name="warehouseId"
-              rules={[{ required: true, message: "Please select warehouse." }, { max: 100, message: "Warehouse ID max length is 100." }]}
-              help={!warehouseLoading && warehouseOptions.length === 0 ? "No warehouse options from API." : undefined}
+              rules={[{ required: true, message: "Vui lòng chọn kho." }, { max: 100, message: "Mã kho tối đa 100 ký tự." }]}
+              help={!warehouseLoading && warehouseOptions.length === 0 ? "Không có dữ liệu kho từ API." : undefined}
             >
               <Select
                 showSearch
                 optionFilterProp="label"
                 options={warehouseOptions}
                 loading={warehouseLoading}
-                placeholder={warehouseLoading ? "Loading warehouses..." : "Select warehouse"}
+                placeholder={warehouseLoading ? "Đang tải danh sách kho..." : "Chọn kho"}
               />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item label="Reason" name="assignmentReason" rules={[{ max: 1000, message: "Reason max length is 1000." }]}>
-              <Input placeholder="Optional reason for assignment" />
+            <Form.Item label="Lý do" name="assignmentReason" rules={[{ max: 1000, message: "Lý do tối đa 1000 ký tự." }]}>
+              <Input placeholder="Lý do gán kho (không bắt buộc)" />
             </Form.Item>
           </Col>
         </Row>
 
         <Space>
           <Button type="primary" htmlType="submit" loading={saving} disabled={warehouseLoading}>
-            Confirm assignment
+            Xác nhận gán kho
           </Button>
           <Button onClick={() => navigate(backTarget)} disabled={saving}>
-            Back
+            Quay lại
           </Button>
         </Space>
       </Form>

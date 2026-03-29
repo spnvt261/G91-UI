@@ -94,7 +94,7 @@ const ProjectCreatePage = () => {
       } catch (error) {
         setCustomerOptions([]);
         setWarehouseOptions([]);
-        notify(getErrorMessage(error, "Cannot load customer and warehouse options"), "error");
+        notify(getErrorMessage(error, "Không thể tải danh sách khách hàng và kho"), "error");
       } finally {
         setLookupLoading(false);
       }
@@ -116,7 +116,7 @@ const ProjectCreatePage = () => {
       });
       navigate(ROUTE_URL.PROJECT_DETAIL.replace(":id", created.id));
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot create project"), "error");
+      notify(getErrorMessage(error, "Không thể tạo dự án"), "error");
     } finally {
       setSaving(false);
     }
@@ -124,12 +124,12 @@ const ProjectCreatePage = () => {
 
   return (
     <ProjectFormLayout
-      title="Create Project"
-      subtitle="Create a new project and configure basic customer and warehouse info."
+      title="Tạo dự án"
+      subtitle="Tạo mới dự án và thiết lập thông tin cơ bản về khách hàng, kho."
       breadcrumbItems={[
-        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Home</span> },
-        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)}>Projects</span> },
-        { title: "Create" },
+        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Trang chủ</span> },
+        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)}>Dự án</span> },
+        { title: "Tạo mới" },
       ]}
     >
       <Form<ProjectCreateFormValues>
@@ -147,65 +147,65 @@ const ProjectCreatePage = () => {
       >
         <Row gutter={[16, 0]}>
           <Col xs={24} md={12}>
-            <Form.Item label="Project code" name="code">
-              <Input placeholder="Enter project code" />
+            <Form.Item label="Mã dự án" name="code">
+              <Input placeholder="Nhập mã dự án" />
             </Form.Item>
           </Col>
 
           <Col xs={24} md={12}>
             <Form.Item
-              label="Project name"
+              label="Tên dự án"
               name="name"
-              rules={[{ required: true, message: "Project name is required." }, { max: 255, message: "Project name max length is 255." }]}
+              rules={[{ required: true, message: "Vui lòng nhập tên dự án." }, { max: 255, message: "Tên dự án tối đa 255 ký tự." }]}
             >
-              <Input placeholder="Enter project name" />
+              <Input placeholder="Nhập tên dự án" />
             </Form.Item>
           </Col>
 
           <Col xs={24} md={12}>
-            <Form.Item label="Customer" name="customerId" rules={[{ required: true, message: "Please select customer." }]}>
+            <Form.Item label="Khách hàng" name="customerId" rules={[{ required: true, message: "Vui lòng chọn khách hàng." }]}>
               <Select
                 showSearch
                 optionFilterProp="label"
                 options={customerOptions}
                 loading={lookupLoading}
-                placeholder={lookupLoading ? "Loading customers..." : "Select customer"}
+                placeholder={lookupLoading ? "Đang tải khách hàng..." : "Chọn khách hàng"}
               />
             </Form.Item>
           </Col>
 
           <Col xs={24} md={12}>
             <Form.Item
-              label="Primary warehouse"
+              label="Kho chính"
               name="warehouseId"
-              help={!lookupLoading && warehouseOptions.length === 0 ? "Warehouse options are not available from current API data." : undefined}
+              help={!lookupLoading && warehouseOptions.length === 0 ? "Không có dữ liệu kho từ API hiện tại." : undefined}
             >
               <Select
                 showSearch
                 optionFilterProp="label"
                 options={warehouseOptions}
                 loading={lookupLoading}
-                placeholder={lookupLoading ? "Loading warehouses..." : "Select warehouse"}
+                placeholder={lookupLoading ? "Đang tải kho..." : "Chọn kho"}
               />
             </Form.Item>
           </Col>
 
           <Col xs={24} md={12}>
-            <Form.Item label="Status" name="status">
+            <Form.Item label="Trạng thái" name="status">
               <Select options={PROJECT_STATUS_OPTIONS.map((item) => ({ ...item }))} />
             </Form.Item>
           </Col>
 
           <Col xs={24} md={12}>
             <Form.Item
-              label="Progress (%)"
+              label="Tiến độ (%)"
               name="progress"
               rules={[
                 {
                   validator: (_, value) => {
                     const normalized = clampProgress(value);
                     if (value == null || normalized !== value) {
-                      return Promise.reject(new Error("Progress must be between 0 and 100."));
+                      return Promise.reject(new Error("Tiến độ phải nằm trong khoảng 0 đến 100."));
                     }
                     return Promise.resolve();
                   },
@@ -220,7 +220,7 @@ const ProjectCreatePage = () => {
         <Form.Item noStyle shouldUpdate>
           {() => (
             <div style={{ marginBottom: 24 }}>
-              <Typography.Text type="secondary">Progress preview</Typography.Text>
+              <Typography.Text type="secondary">Xem trước tiến độ</Typography.Text>
               <div style={{ marginTop: 8 }}>
                 <ProjectProgressBar value={form.getFieldValue("progress")} showMeta />
               </div>
@@ -230,10 +230,10 @@ const ProjectCreatePage = () => {
 
         <Space>
           <Button type="primary" htmlType="submit" loading={saving} disabled={lookupLoading}>
-            Save project
+            Lưu dự án
           </Button>
           <Button onClick={() => navigate(ROUTE_URL.PROJECT_LIST)} disabled={saving}>
-            Back
+            Quay lại
           </Button>
         </Space>
       </Form>

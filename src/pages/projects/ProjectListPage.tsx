@@ -17,13 +17,12 @@ import { displayText } from "./projectPresentation";
 const PAGE_SIZE = 8;
 
 const STATUS_OPTIONS = [
-  { label: "NEW", value: "NEW" },
-  { label: "IN_PROGRESS", value: "IN_PROGRESS" },
-  { label: "ON_HOLD", value: "ON_HOLD" },
-  { label: "DONE", value: "DONE" },
-  { label: "ACTIVE", value: "ACTIVE" },
-  { label: "COMPLETED", value: "COMPLETED" },
-  { label: "CANCELLED", value: "CANCELLED" },
+  { label: "Mới", value: "NEW" },
+  { label: "Đang thực hiện", value: "IN_PROGRESS" },
+  { label: "Tạm dừng", value: "ON_HOLD" },
+  { label: "Hoàn thành", value: "DONE" },
+  { label: "Đang hoạt động", value: "ACTIVE" },
+  { label: "Đã hủy", value: "CANCELLED" },
 ];
 
 const ProjectListPage = () => {
@@ -51,7 +50,7 @@ const ProjectListPage = () => {
         });
         setItems(result);
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load projects"), "error");
+        notify(getErrorMessage(err, "Không thể tải danh sách dự án"), "error");
       } finally {
         setLoading(false);
       }
@@ -63,46 +62,46 @@ const ProjectListPage = () => {
   const columns = useMemo<ColumnsType<ProjectModel>>(
     () => [
       {
-        title: "Project code",
+        title: "Mã dự án",
         key: "code",
         render: (_, row) => displayText(row.projectCode ?? row.code),
       },
       {
-        title: "Project name",
+        title: "Tên dự án",
         dataIndex: "name",
         key: "name",
         render: (value: string) => displayText(value),
       },
       {
-        title: "Customer",
+        title: "Khách hàng",
         key: "customer",
         render: (_, row) => displayText(row.customerName ?? row.customerId),
       },
       {
-        title: "Status",
+        title: "Trạng thái",
         dataIndex: "status",
         key: "status",
-        width: 140,
+        width: 160,
         render: (value: string | undefined) => <ProjectStatusTag status={value} />,
       },
       {
-        title: "Progress",
+        title: "Tiến độ",
         key: "progress",
         width: 220,
         render: (_, row) => <ProjectProgressBar value={row.progressPercent ?? row.progress} size="small" />,
       },
       {
-        title: "Actions",
+        title: "Thao tác",
         key: "actions",
-        width: 210,
+        width: 190,
         render: (_, row) => (
           <Space>
             <Button size="small" onClick={() => navigate(ROUTE_URL.PROJECT_DETAIL.replace(":id", row.id))}>
-              View
+              Xem
             </Button>
             {canDeleteProject ? (
               <Button size="small" danger onClick={() => setDeletingItem(row)}>
-                Soft delete
+                Xóa
               </Button>
             ) : null}
           </Space>
@@ -119,12 +118,12 @@ const ProjectListPage = () => {
 
     try {
       setDeleting(true);
-      await projectService.softDelete(deletingItem.id, "Archived from project list");
+      await projectService.softDelete(deletingItem.id, "Lưu trữ từ danh sách dự án");
       setItems((previous) => previous.filter((item) => item.id !== deletingItem.id));
-      notify("Project archived (soft delete).", "success");
+      notify("Đã xóa dự án thành công.", "success");
       setDeletingItem(null);
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot archive project"), "error");
+      notify(getErrorMessage(err, "Không thể xóa dự án"), "error");
     } finally {
       setDeleting(false);
     }
@@ -133,16 +132,16 @@ const ProjectListPage = () => {
   return (
     <>
       <ProjectPageLayout
-        title="Project Management"
-        subtitle="Track project lifecycle and execute project actions from one workspace."
+        title="Quản lý dự án"
+        subtitle="Theo dõi vòng đời dự án và thao tác nhanh trên cùng một màn hình."
         breadcrumbItems={[
-          { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Home</span> },
-          { title: "Projects" },
+          { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Trang chủ</span> },
+          { title: "Dự án" },
         ]}
         actions={
           canCreateProject ? (
             <Button type="primary" onClick={() => navigate(ROUTE_URL.PROJECT_CREATE)}>
-              Create project
+              Tạo dự án
             </Button>
           ) : undefined
         }
@@ -152,7 +151,7 @@ const ProjectListPage = () => {
             <Col xs={24} md={16}>
               <Input.Search
                 allowClear
-                placeholder="Search by project name, code, customer..."
+                placeholder="Tìm theo tên dự án, mã dự án, khách hàng..."
                 value={keyword}
                 onChange={(event) => {
                   setKeyword(event.target.value);
@@ -164,7 +163,7 @@ const ProjectListPage = () => {
               <Select
                 className="w-full"
                 allowClear
-                placeholder="Filter by status"
+                placeholder="Lọc theo trạng thái"
                 value={status}
                 options={STATUS_OPTIONS}
                 onChange={(value: string | undefined) => {
@@ -181,13 +180,13 @@ const ProjectListPage = () => {
             columns={columns}
             dataSource={items}
             scroll={{ x: 900 }}
-            locale={{ emptyText: "No projects found." }}
+            locale={{ emptyText: "Không có dữ liệu dự án." }}
             pagination={{
               current: page,
               pageSize: PAGE_SIZE,
               total: items.length,
               showSizeChanger: false,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} projects`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} dự án`,
               onChange: (nextPage) => setPage(nextPage),
             }}
           />
@@ -195,22 +194,22 @@ const ProjectListPage = () => {
       </ProjectPageLayout>
 
       <Modal
-        title="Soft delete project"
+        title="Xóa dự án"
         open={Boolean(deletingItem)}
         onCancel={() => (deleting ? undefined : setDeletingItem(null))}
         closable={!deleting}
         maskClosable={!deleting}
         footer={[
           <Button key="cancel" onClick={() => setDeletingItem(null)} disabled={deleting}>
-            Cancel
+            Hủy
           </Button>,
           <Button key="confirm" type="primary" danger loading={deleting} onClick={handleDeleteProject}>
-            Confirm
+            Xác nhận
           </Button>,
         ]}
       >
         <Typography.Paragraph style={{ marginBottom: 0 }}>
-          This action archives the project because backend hard-delete API is not available.
+          Hành động này sẽ chuyển dự án sang trạng thái lưu trữ vì backend chưa hỗ trợ API xóa cứng.
         </Typography.Paragraph>
         {deletingItem ? <Typography.Text strong>{deletingItem.name}</Typography.Text> : null}
       </Modal>
