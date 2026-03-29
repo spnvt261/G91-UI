@@ -1,32 +1,40 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { Button, Card, Col, Form, Input, InputNumber, Row, Space, Typography } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
-import FormSectionCard from "../../components/forms/FormSectionCard";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomTextField from "../../components/customTextField/CustomTextField";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import { customerService } from "../../services/customer/customer.service";
-import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage } from "../shared/page.utils";
+
+interface CustomerEditFormValues {
+  companyName: string;
+  taxCode: string;
+  customerType: string;
+  address?: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  priceGroup?: string;
+  creditLimit?: number | null;
+  paymentTerms?: string;
+  changeReason?: string;
+}
+
+const trimOrUndefined = (value: string | undefined): string | undefined => {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+};
 
 const CustomerEditPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [companyName, setCompanyName] = useState("");
-  const [contactPerson, setContactPerson] = useState("");
-  const [customerType, setCustomerType] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [creditLimit, setCreditLimit] = useState("");
-  const [status, setStatus] = useState("ACTIVE");
+  const [form] = Form.useForm<CustomerEditFormValues>();
   const [pageLoading, setPageLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const { notify } = useNotify();
-  const isAccountant = getStoredUserRole() === "ACCOUNTANT";
 
   useEffect(() => {
     const load = async () => {
@@ -37,46 +45,53 @@ const CustomerEditPage = () => {
       try {
         setPageLoading(true);
         const detail = await customerService.getDetail(id);
-        setCompanyName(detail.companyName ?? detail.fullName ?? "");
-        setContactPerson(detail.contactPerson ?? detail.fullName ?? "");
-        setCustomerType(detail.customerType ?? "");
-        setEmail(detail.email ?? "");
-        setPhone(detail.phone ?? "");
-        setAddress(detail.address ?? "");
-        setCreditLimit(detail.creditLimit != null ? String(detail.creditLimit) : "");
-        setStatus(detail.status ?? "ACTIVE");
+        form.setFieldsValue({
+          companyName: detail.companyName,
+          taxCode: detail.taxCode,
+          customerType: detail.customerType,
+          address: detail.address,
+          contactPerson: detail.contactPerson,
+          phone: detail.phone,
+          email: detail.email,
+          priceGroup: detail.priceGroup,
+          creditLimit: detail.creditLimit,
+          paymentTerms: detail.paymentTerms,
+        });
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load customer for editing"), "error");
+        notify(getErrorMessage(err, "Không thể tải dữ liệu khách hàng để chỉnh sửa"), "error");
       } finally {
         setPageLoading(false);
       }
     };
 
     void load();
-  }, [id, notify]);
+  }, [form, id, notify]);
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (values: CustomerEditFormValues) => {
     if (!id) {
       return;
     }
 
     try {
       setSaving(true);
-      const parsedCreditLimit = Number(creditLimit);
       await customerService.update(id, {
-        fullName: contactPerson.trim() || companyName.trim(),
-        companyName: companyName.trim() || undefined,
-        contactPerson: contactPerson.trim() || undefined,
-        customerType: customerType.trim() || undefined,
-        email: email.trim() || undefined,
-        phone: phone.trim() || undefined,
-        address: address.trim() || undefined,
-        creditLimit: Number.isFinite(parsedCreditLimit) && parsedCreditLimit >= 0 ? parsedCreditLimit : undefined,
-        status: status as "ACTIVE" | "INACTIVE",
+        companyName: values.companyName.trim(),
+        taxCode: values.taxCode.trim(),
+        customerType: values.customerType.trim(),
+        address: trimOrUndefined(values.address),
+        contactPerson: trimOrUndefined(values.contactPerson),
+        phone: trimOrUndefined(values.phone),
+        email: trimOrUndefined(values.email),
+        priceGroup: trimOrUndefined(values.priceGroup),
+        creditLimit: values.creditLimit ?? undefined,
+        paymentTerms: trimOrUndefined(values.paymentTerms),
+        changeReason: trimOrUndefined(values.changeReason),
       });
+
+      notify("Cập nhật khách hàng thành công.", "success");
       navigate(ROUTE_URL.CUSTOMER_DETAIL.replace(":id", id));
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot update customer"), "error");
+      notify(getErrorMessage(err, "Không thể cập nhật khách hàng"), "error");
     } finally {
       setSaving(false);
     }
@@ -103,24 +118,122 @@ const CustomerEditPage = () => {
         />
       }
       body={
-        <FormSectionCard title="Thông tin khách hàng">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <CustomTextField title="Company Name" value={companyName} onChange={(event) => setCompanyName(event.target.value)} />
-            <CustomTextField title="Contact Person" value={contactPerson} onChange={(event) => setContactPerson(event.target.value)} />
-            <CustomTextField title="Customer Type" value={customerType} onChange={(event) => setCustomerType(event.target.value)} />
-            <CustomTextField title="Email" value={email} onChange={(event) => setEmail(event.target.value)} />
-            <CustomTextField title="Phone" value={phone} onChange={(event) => setPhone(event.target.value)} />
-            <CustomTextField title="Credit Limit" type="number" value={creditLimit} onChange={(event) => setCreditLimit(event.target.value)} />
-            <CustomTextField title="Status" value={status} onChange={(event) => setStatus(event.target.value)} disabled={isAccountant} />
-          </div>
-          <div className="mt-4">
-            <CustomTextField title="Address" value={address} onChange={(event) => setAddress(event.target.value)} />
-          </div>
-          <div className="mt-4 flex gap-3">
-            <CustomButton label={saving ? "Đang lưu..." : "Lưu thay đổi"} onClick={handleUpdate} disabled={saving} />
-            <CustomButton label="Quay lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)} />
-          </div>
-        </FormSectionCard>
+        <Card>
+          <Typography.Paragraph className="mb-4 text-slate-600">
+            Trường bắt buộc theo BE: tên công ty, mã số thuế, loại khách hàng.
+          </Typography.Paragraph>
+
+          <Form<CustomerEditFormValues> form={form} layout="vertical" onFinish={(values) => void handleUpdate(values)}>
+            <Row gutter={16}>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="companyName"
+                  label="Tên công ty"
+                  rules={[
+                    { required: true, message: "Vui lòng nhập tên công ty" },
+                    { max: 255, message: "Tên công ty tối đa 255 ký tự" },
+                  ]}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="taxCode"
+                  label="Mã số thuế"
+                  rules={[
+                    { required: true, message: "Vui lòng nhập mã số thuế" },
+                    { pattern: /^\d{10,13}$/, message: "Mã số thuế phải gồm 10-13 chữ số" },
+                  ]}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="customerType"
+                  label="Loại khách hàng"
+                  rules={[
+                    { required: true, message: "Vui lòng nhập loại khách hàng" },
+                    { max: 50, message: "Loại khách hàng tối đa 50 ký tự" },
+                  ]}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item name="contactPerson" label="Người liên hệ" rules={[{ max: 255, message: "Tối đa 255 ký tự" }]}>
+                  <Input />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="phone"
+                  label="Số điện thoại"
+                  rules={[{ pattern: /^[0-9+\-()\s]{8,20}$/, message: "Số điện thoại phải từ 8-20 ký tự hợp lệ" }]}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="email"
+                  label="Email"
+                  rules={[
+                    { type: "email", message: "Email không hợp lệ" },
+                    { max: 255, message: "Email tối đa 255 ký tự" },
+                  ]}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item name="priceGroup" label="Nhóm giá" rules={[{ max: 50, message: "Nhóm giá tối đa 50 ký tự" }]}>
+                  <Input />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item name="creditLimit" label="Hạn mức tín dụng" rules={[{ type: "number", min: 0, message: "Hạn mức phải >= 0" }]}>
+                  <InputNumber className="w-full" min={0} />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24}>
+                <Form.Item name="paymentTerms" label="Điều khoản thanh toán" rules={[{ max: 255, message: "Tối đa 255 ký tự" }]}>
+                  <Input />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24}>
+                <Form.Item name="address" label="Địa chỉ" rules={[{ max: 500, message: "Địa chỉ tối đa 500 ký tự" }]}>
+                  <Input.TextArea rows={3} />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24}>
+                <Form.Item name="changeReason" label="Lý do chỉnh sửa" rules={[{ max: 1000, message: "Tối đa 1000 ký tự" }]}>
+                  <Input.TextArea rows={3} placeholder="Không bắt buộc, nhưng nên điền để thuận tiện audit" />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Space>
+              <Button type="primary" htmlType="submit" loading={saving}>
+                Lưu thay đổi
+              </Button>
+              <Button onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)} disabled={saving}>
+                Quay lại
+              </Button>
+            </Space>
+          </Form>
+        </Card>
       }
     />
   );

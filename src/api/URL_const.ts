@@ -63,6 +63,8 @@ export const API = {
     LIST: "/api/customers",
     DETAIL: "/api/customers/{id}",
     UPDATE: "/api/customers/{id}",
+    DISABLE: "/api/customers/{id}/disable",
+    SUMMARY: "/api/customers/{id}/summary",
   },
 
   QUOTATIONS: {

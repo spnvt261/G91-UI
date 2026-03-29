@@ -1,49 +1,67 @@
-﻿import { useState } from "react";
+import { useState } from "react";
+import { Button, Card, Col, Form, Input, InputNumber, Row, Select, Space, Switch, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
-import FormSectionCard from "../../components/forms/FormSectionCard";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomTextField from "../../components/customTextField/CustomTextField";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import { customerService } from "../../services/customer/customer.service";
-import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage } from "../shared/page.utils";
+
+interface CustomerCreateFormValues {
+  companyName: string;
+  taxCode: string;
+  customerType: string;
+  address?: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  priceGroup?: string;
+  creditLimit?: number | null;
+  paymentTerms?: string;
+  createPortalAccount?: boolean;
+}
+
+const CUSTOMER_TYPE_OPTIONS = [
+  { label: "RETAIL", value: "RETAIL" },
+  { label: "CONTRACTOR", value: "CONTRACTOR" },
+  { label: "DISTRIBUTOR", value: "DISTRIBUTOR" },
+];
+
+const trimOrUndefined = (value: string | undefined): string | undefined => {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+};
 
 const CustomerCreatePage = () => {
   const navigate = useNavigate();
-  const [companyName, setCompanyName] = useState("");
-  const [contactPerson, setContactPerson] = useState("");
-  const [customerType, setCustomerType] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [creditLimit, setCreditLimit] = useState("");
-  const [status, setStatus] = useState("ACTIVE");
+  const [form] = Form.useForm<CustomerCreateFormValues>();
   const [loading, setLoading] = useState(false);
   const { notify } = useNotify();
-  const isAccountant = getStoredUserRole() === "ACCOUNTANT";
+  const createPortalAccount = Form.useWatch("createPortalAccount", form);
 
-  const handleCreate = async () => {
+  const handleCreate = async (values: CustomerCreateFormValues) => {
     try {
       setLoading(true);
-      const parsedCreditLimit = Number(creditLimit);
       const created = await customerService.create({
-        fullName: contactPerson.trim() || companyName.trim(),
-        companyName: companyName.trim() || undefined,
-        contactPerson: contactPerson.trim() || undefined,
-        customerType: customerType.trim() || undefined,
-        email: email.trim() || undefined,
-        phone: phone.trim() || undefined,
-        address: address.trim() || undefined,
-        creditLimit: Number.isFinite(parsedCreditLimit) && parsedCreditLimit >= 0 ? parsedCreditLimit : undefined,
-        status: status as "ACTIVE" | "INACTIVE",
+        companyName: values.companyName.trim(),
+        taxCode: values.taxCode.trim(),
+        customerType: values.customerType.trim(),
+        address: trimOrUndefined(values.address),
+        contactPerson: trimOrUndefined(values.contactPerson),
+        phone: trimOrUndefined(values.phone),
+        email: trimOrUndefined(values.email),
+        priceGroup: trimOrUndefined(values.priceGroup),
+        creditLimit: values.creditLimit ?? undefined,
+        paymentTerms: trimOrUndefined(values.paymentTerms),
+        createPortalAccount: Boolean(values.createPortalAccount),
       });
+
+      notify("Tạo khách hàng thành công.", "success");
       navigate(ROUTE_URL.CUSTOMER_DETAIL.replace(":id", created.id));
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot create customer"), "error");
+      notify(getErrorMessage(err, "Không thể tạo khách hàng"), "error");
     } finally {
       setLoading(false);
     }
@@ -68,24 +86,137 @@ const CustomerCreatePage = () => {
         />
       }
       body={
-        <FormSectionCard title="Thông tin khách hàng">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <CustomTextField title="Company Name" value={companyName} onChange={(event) => setCompanyName(event.target.value)} />
-            <CustomTextField title="Contact Person" value={contactPerson} onChange={(event) => setContactPerson(event.target.value)} />
-            <CustomTextField title="Customer Type" value={customerType} onChange={(event) => setCustomerType(event.target.value)} />
-            <CustomTextField title="Email" value={email} onChange={(event) => setEmail(event.target.value)} />
-            <CustomTextField title="Phone" value={phone} onChange={(event) => setPhone(event.target.value)} />
-            <CustomTextField title="Credit Limit" type="number" value={creditLimit} onChange={(event) => setCreditLimit(event.target.value)} />
-            <CustomTextField title="Status" value={status} onChange={(event) => setStatus(event.target.value)} disabled={isAccountant} />
-          </div>
-          <div className="mt-4">
-            <CustomTextField title="Address" value={address} onChange={(event) => setAddress(event.target.value)} />
-          </div>
-          <div className="mt-4 flex gap-3">
-            <CustomButton label={loading ? "Đang tạo..." : "Lưu khách hàng"} onClick={handleCreate} disabled={loading} />
-            <CustomButton label="Quay lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)} />
-          </div>
-        </FormSectionCard>
+        <Card>
+          <Typography.Paragraph className="mb-4 text-slate-600">
+            Điền đầy đủ thông tin bắt buộc để tránh lỗi validate từ BE.
+          </Typography.Paragraph>
+
+          <Form<CustomerCreateFormValues>
+            form={form}
+            layout="vertical"
+            initialValues={{ createPortalAccount: false }}
+            onFinish={(values) => void handleCreate(values)}
+          >
+            <Row gutter={16}>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="companyName"
+                  label="Tên công ty"
+                  rules={[
+                    { required: true, message: "Vui lòng nhập tên công ty" },
+                    { max: 255, message: "Tên công ty tối đa 255 ký tự" },
+                  ]}
+                >
+                  <Input placeholder="Ví dụ: Công ty TNHH G91" />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="taxCode"
+                  label="Mã số thuế"
+                  rules={[
+                    { required: true, message: "Vui lòng nhập mã số thuế" },
+                    { pattern: /^\d{10,13}$/, message: "Mã số thuế phải gồm 10-13 chữ số" },
+                  ]}
+                >
+                  <Input placeholder="Ví dụ: 0312345678" />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="customerType"
+                  label="Loại khách hàng"
+                  rules={[
+                    { required: true, message: "Vui lòng chọn loại khách hàng" },
+                    { max: 50, message: "Loại khách hàng tối đa 50 ký tự" },
+                  ]}
+                >
+                  <Select options={CUSTOMER_TYPE_OPTIONS} placeholder="Chọn loại khách hàng" />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item name="contactPerson" label="Người liên hệ" rules={[{ max: 255, message: "Tối đa 255 ký tự" }]}>
+                  <Input placeholder="Ví dụ: Nguyễn Văn A" />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="phone"
+                  label="Số điện thoại"
+                  rules={[{ pattern: /^[0-9+\-()\s]{8,20}$/, message: "Số điện thoại phải từ 8-20 ký tự hợp lệ" }]}
+                >
+                  <Input placeholder="Ví dụ: 0901234567" />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="email"
+                  label="Email"
+                  dependencies={["createPortalAccount"]}
+                  rules={[
+                    { type: "email", message: "Email không hợp lệ" },
+                    { max: 255, message: "Email tối đa 255 ký tự" },
+                    () => ({
+                      validator(_, value) {
+                        if (!createPortalAccount || (typeof value === "string" && value.trim())) {
+                          return Promise.resolve();
+                        }
+
+                        return Promise.reject(new Error("Email là bắt buộc khi tạo tài khoản portal"));
+                      },
+                    }),
+                  ]}
+                >
+                  <Input placeholder="contact@g91.com" />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item name="priceGroup" label="Nhóm giá" rules={[{ max: 50, message: "Nhóm giá tối đa 50 ký tự" }]}>
+                  <Input placeholder="Ví dụ: DEFAULT" />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item name="creditLimit" label="Hạn mức tín dụng" rules={[{ type: "number", min: 0, message: "Hạn mức phải >= 0" }]}>
+                  <InputNumber className="w-full" min={0} placeholder="0" />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24}>
+                <Form.Item name="paymentTerms" label="Điều khoản thanh toán" rules={[{ max: 255, message: "Tối đa 255 ký tự" }]}>
+                  <Input placeholder="Ví dụ: Thanh toán trong vòng 30 ngày" />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24}>
+                <Form.Item name="address" label="Địa chỉ" rules={[{ max: 500, message: "Địa chỉ tối đa 500 ký tự" }]}>
+                  <Input.TextArea rows={3} placeholder="Nhập địa chỉ công ty" />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24}>
+                <Form.Item name="createPortalAccount" label="Tạo tài khoản portal cho khách hàng" valuePropName="checked">
+                  <Switch />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Space>
+              <Button type="primary" htmlType="submit" loading={loading}>
+                Lưu khách hàng
+              </Button>
+              <Button onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)} disabled={loading}>
+                Quay lại
+              </Button>
+            </Space>
+          </Form>
+        </Card>
       }
     />
   );
