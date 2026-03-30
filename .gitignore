@@ -28,6 +28,6 @@ dist-ssr
 tests
 test*
 /reports/
-playwright-report
-AIdocs
-scripts
+/playwright-report/
+/AIdocs/
+/scripts/

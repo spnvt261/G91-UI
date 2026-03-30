@@ -13,7 +13,8 @@ interface BreadcrumbConfig {
 
 const BREADCRUMB_CONFIGS: BreadcrumbConfig[] = [
   { path: ROUTE_URL.DASHBOARD, crumbs: [{ label: "Trang chủ" }] },
-  { path: ROUTE_URL.PROFILE, crumbs: [{ label: "Hồ sơ cá nhân" }] },
+  { path: ROUTE_URL.PROFILE, crumbs: [{ label: "Hồ sơ người dùng" }] },
+  { path: ROUTE_URL.CHANGE_PASSWORD, crumbs: [{ label: "Đổi mật khẩu" }] },
 
   { path: ROUTE_URL.PRODUCT_LIST, crumbs: [{ label: "Sản phẩm" }] },
   {

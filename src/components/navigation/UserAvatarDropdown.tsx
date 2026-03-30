@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { DownOutlined, LogoutOutlined, UserOutlined } from "@ant-design/icons";
+import { DownOutlined, KeyOutlined, LogoutOutlined, UserOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import type { RootState, AppDispatch } from "../../store";
@@ -19,7 +19,7 @@ const UserAvatarDropdown = () => {
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const initials = currentUser?.fullName?.trim()?.charAt(0)?.toUpperCase() ?? "U";
-  const displayName = currentUser?.fullName || currentUser?.email || "User";
+  const displayName = currentUser?.fullName || currentUser?.email || "Người dùng";
 
   const handleLogout = async () => {
     if (loggingOut) {
@@ -29,9 +29,9 @@ const UserAvatarDropdown = () => {
     try {
       setLoggingOut(true);
       await authService.logout();
-      notify("Dang xuat thanh cong", "success");
+      notify("Đăng xuất thành công.", "success");
     } catch {
-      notify("Khong the goi API dang xuat, da dang xuat tai client", "warning");
+      notify("Không thể gọi API đăng xuất, đã đăng xuất ở phía trình duyệt.", "warning");
     } finally {
       clearAuthSession();
       dispatch(logoutAction());
@@ -65,7 +65,7 @@ const UserAvatarDropdown = () => {
       </button>
 
       {open ? (
-        <ul className="absolute right-0 z-40 mt-2 w-44 overflow-hidden rounded-lg bg-white text-sm text-slate-700 shadow-lg">
+        <ul className="absolute right-0 z-40 mt-2 w-52 overflow-hidden rounded-lg bg-white text-sm text-slate-700 shadow-lg">
           <li>
             <button
               type="button"
@@ -76,7 +76,20 @@ const UserAvatarDropdown = () => {
               className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-blue-50"
             >
               <UserOutlined />
-              <span>Profile</span>
+              <span>Hồ sơ người dùng</span>
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                navigate(ROUTE_URL.CHANGE_PASSWORD);
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-blue-50"
+            >
+              <KeyOutlined />
+              <span>Đổi mật khẩu</span>
             </button>
           </li>
           <li>
@@ -87,7 +100,7 @@ const UserAvatarDropdown = () => {
               disabled={loggingOut}
             >
               <LogoutOutlined />
-              <span>{loggingOut ? "Logging out..." : "Logout"}</span>
+              <span>{loggingOut ? "Đang đăng xuất..." : "Đăng xuất"}</span>
             </button>
           </li>
         </ul>

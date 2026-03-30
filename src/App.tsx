@@ -41,6 +41,7 @@ import ProductCreatePage from "./pages/products/ProductCreatePage";
 import ProductDetailPage from "./pages/products/ProductDetailPage";
 import ProductEditPage from "./pages/products/ProductEditPage";
 import ProductListPage from "./pages/products/ProductListPage";
+import ChangePasswordPage from "./pages/profile/ChangePasswordPage";
 import UserProfilePage from "./pages/profile/UserProfilePage";
 import ProjectAssignWarehousePage from "./pages/projects/ProjectAssignWarehousePage";
 import ProjectCreatePage from "./pages/projects/ProjectCreatePage";
@@ -150,6 +151,7 @@ function App() {
         <Route element={<AppAuthenticatedLayout />}>
           <Route path={ROUTE_URL.DASHBOARD} element={<DashboardPage />} />
           <Route path={ROUTE_URL.PROFILE} element={<UserProfilePage />} />
+          <Route path={ROUTE_URL.CHANGE_PASSWORD} element={<ChangePasswordPage />} />
           <Route path={ROUTE_URL.ACCOUNT_LIST} element={<AccountListPage />} />
 
           <Route path={ROUTE_URL.PRODUCT_LIST} element={<ProductListPage />} />

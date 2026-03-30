@@ -7,6 +7,7 @@ export const ROUTE_URL = {
 
   DASHBOARD: "/dashboard",
   PROFILE: "/profile",
+  CHANGE_PASSWORD: "/change-password",
   ACCOUNT_LIST: "/accounts",
   ACCOUNT_CREATE: "/accounts/create",
   ACCOUNT_DETAIL: "/accounts/:id",

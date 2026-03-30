@@ -1,18 +1,17 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomTextField from "../../components/customTextField/CustomTextField";
-import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
-import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
-import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { Alert, Avatar, Badge, Breadcrumb, Button, Card, Col, Descriptions, Empty, Form, Input, Row, Skeleton, Space, Statistic, Tag, Typography } from "antd";
+import { CloseOutlined, EditOutlined, ReloadOutlined, SaveOutlined, UserOutlined } from "@ant-design/icons";
 import { canPerformAction } from "../../const/authz.const";
 import { useNotify } from "../../context/notifyContext";
-import type { UpdateProfileRequest, UserProfileModel } from "../../models/auth/auth.model";
+import type { UpdateProfileRequest, UserProfileModel, UserRole, UserStatus } from "../../models/auth/auth.model";
 import { authService } from "../../services/auth/auth.service";
 import type { AppDispatch } from "../../store";
 import { setUser } from "../../store/authSlice";
 import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage } from "../shared/page.utils";
+import AuthInlineStatus, { type AuthInlineStatusValue } from "../../components/auth/AuthInlineStatus";
+import { ApiClientError } from "../../apiConfig/axiosConfig";
 
 interface ProfileFormValues {
   fullName: string;
@@ -20,258 +19,376 @@ interface ProfileFormValues {
   address: string;
 }
 
-interface ChangePasswordFormValues {
-  currentPassword: string;
-  newPassword: string;
-  confirmNewPassword: string;
-}
+const ROLE_LABELS: Record<UserRole, string> = {
+  GUEST: "Khách",
+  CUSTOMER: "Khách hàng",
+  ACCOUNTANT: "Kế toán",
+  WAREHOUSE: "Kho",
+  OWNER: "Chủ hệ thống",
+};
 
-const toFormValues = (profile: UserProfileModel): ProfileFormValues => ({
+const STATUS_META: Record<UserStatus, { label: string; badgeStatus: "success" | "error" | "warning" | "default"; tagColor: string }> = {
+  ACTIVE: { label: "Đang hoạt động", badgeStatus: "success", tagColor: "success" },
+  INACTIVE: { label: "Chưa kích hoạt", badgeStatus: "default", tagColor: "default" },
+  LOCKED: { label: "Bị khóa", badgeStatus: "error", tagColor: "error" },
+  PENDING_VERIFICATION: { label: "Chờ xác thực", badgeStatus: "warning", tagColor: "warning" },
+};
+
+const toProfileFormValues = (profile: UserProfileModel): ProfileFormValues => ({
   fullName: profile.fullName ?? "",
   phone: profile.phone ?? "",
   address: profile.address ?? "",
 });
 
-const EMPTY_CHANGE_PASSWORD_FORM: ChangePasswordFormValues = {
-  currentPassword: "",
-  newPassword: "",
-  confirmNewPassword: "",
+const formatDateTime = (value?: string): string => {
+  if (!value) {
+    return "Chưa cập nhật";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
 };
 
-const SAMPLE_PROFILE_IMAGE = "/images/sample-profile-avatar.svg";
+const getInitials = (fullName?: string): string => {
+  if (!fullName) {
+    return "U";
+  }
+
+  const tokens = fullName
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (tokens.length === 0) {
+    return "U";
+  }
+
+  const first = tokens[0]?.[0] ?? "";
+  const last = tokens[tokens.length - 1]?.[0] ?? "";
+  return `${first}${last}`.toUpperCase();
+};
 
 const UserProfilePage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { notify } = useNotify();
   const role = getStoredUserRole();
   const canEditProfile = canPerformAction(role, "profile.update");
-  const canChangePassword = canPerformAction(role, "profile.change-password");
 
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [changingPassword, setChangingPassword] = useState(false);
+  const [profileForm] = Form.useForm<ProfileFormValues>();
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [savingProfile, setSavingProfile] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [profile, setProfile] = useState<UserProfileModel | null>(null);
-  const [formValues, setFormValues] = useState<ProfileFormValues>({
-    fullName: "",
-    phone: "",
-    address: "",
-  });
-  const [changePasswordForm, setChangePasswordForm] = useState<ChangePasswordFormValues>(EMPTY_CHANGE_PASSWORD_FORM);
-  const [errors, setErrors] = useState<Partial<Record<keyof ProfileFormValues, string>>>({});
+  const [profileStatus, setProfileStatus] = useState<AuthInlineStatusValue | null>(null);
+
+  const loadProfile = useCallback(async () => {
+    try {
+      setLoadingProfile(true);
+      setLoadError(null);
+      const response = await authService.getProfile();
+      setProfile(response);
+      profileForm.setFieldsValue(toProfileFormValues(response));
+      dispatch(setUser(response));
+    } catch (error) {
+      const message = getErrorMessage(error, "Không thể tải hồ sơ người dùng.");
+      setLoadError(message);
+      notify(message, "error");
+    } finally {
+      setLoadingProfile(false);
+    }
+  }, [dispatch, notify, profileForm]);
 
   useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        setLoading(true);
-        const response = await authService.getProfile();
-        setProfile(response);
-        setFormValues(toFormValues(response));
-        dispatch(setUser(response));
-      } catch (error) {
-        notify(getErrorMessage(error, "Cannot load profile"), "error");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     void loadProfile();
-  }, [dispatch, notify]);
+  }, [loadProfile]);
 
-  const validationErrors = useMemo(() => {
-    const nextErrors: Partial<Record<keyof ProfileFormValues, string>> = {};
-
-    if (!formValues.fullName.trim()) {
-      nextErrors.fullName = "Full name is required.";
-    }
-
-    return nextErrors;
-  }, [formValues.fullName]);
-
-  const handleSave = async () => {
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) {
-      notify(Object.values(validationErrors)[0] ?? "Invalid profile data.", "error");
+  const handleStartEdit = () => {
+    if (!profile) {
       return;
     }
 
-    const payload: UpdateProfileRequest = {
-      fullName: formValues.fullName.trim(),
-      phone: formValues.phone.trim() || undefined,
-      address: formValues.address.trim() || undefined,
-    };
-
-    try {
-      setSaving(true);
-      const updatedProfile = await authService.updateProfile(payload);
-      setProfile(updatedProfile);
-      setFormValues(toFormValues(updatedProfile));
-      dispatch(setUser(updatedProfile));
-      notify("Profile updated successfully.", "success");
-      setEditMode(false);
-    } catch (error) {
-      notify(getErrorMessage(error, "Cannot update profile"), "error");
-    } finally {
-      setSaving(false);
-    }
+    profileForm.setFieldsValue(toProfileFormValues(profile));
+    setProfileStatus(null);
+    setEditMode(true);
   };
 
   const handleCancelEdit = () => {
-    setErrors({});
     if (profile) {
-      setFormValues(toFormValues(profile));
+      profileForm.setFieldsValue(toProfileFormValues(profile));
     }
+    setProfileStatus(null);
     setEditMode(false);
   };
 
-  const handleChangePassword = async () => {
-    if (!changePasswordForm.currentPassword || !changePasswordForm.newPassword || !changePasswordForm.confirmNewPassword) {
-      notify("Please fill all password fields.", "error");
-      return;
-    }
-
-    if (changePasswordForm.newPassword !== changePasswordForm.confirmNewPassword) {
-      notify("Confirm password does not match.", "error");
-      return;
-    }
+  const handleSaveProfile = async () => {
+    let values: ProfileFormValues;
 
     try {
-      setChangingPassword(true);
-      await authService.changePassword(changePasswordForm);
-      notify("Change password successfully.", "success");
-      setChangePasswordForm(EMPTY_CHANGE_PASSWORD_FORM);
+      values = await profileForm.validateFields();
+    } catch {
+      return;
+    }
+
+    setProfileStatus(null);
+
+    const payload: UpdateProfileRequest = {
+      fullName: values.fullName.trim(),
+      phone: values.phone.trim() || undefined,
+      address: values.address.trim() || undefined,
+    };
+
+    try {
+      setSavingProfile(true);
+      const updatedProfile = await authService.updateProfile(payload);
+      setProfile(updatedProfile);
+      profileForm.setFieldsValue(toProfileFormValues(updatedProfile));
+      dispatch(setUser(updatedProfile));
+
+      setProfileStatus({
+        type: "success",
+        message: "Cập nhật hồ sơ thành công",
+        description: "Thông tin cá nhân của bạn đã được lưu.",
+      });
+      notify("Cập nhật hồ sơ thành công.", "success");
+      setEditMode(false);
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot change password"), "error");
+      if (error instanceof ApiClientError && error.errors?.length) {
+        profileForm.setFields(
+          error.errors.map((item) => ({
+            name: item.field as keyof ProfileFormValues,
+            errors: [item.message],
+          })),
+        );
+      }
+
+      const message = getErrorMessage(error, "Không thể cập nhật hồ sơ.");
+      setProfileStatus({
+        type: "error",
+        message: "Lưu thay đổi chưa thành công",
+        description: message,
+      });
+      notify(message, "error");
     } finally {
-      setChangingPassword(false);
+      setSavingProfile(false);
     }
   };
 
+  if (loadingProfile) {
+    return (
+      <div className="space-y-5 p-6 md:p-8">
+        <Skeleton.Button active block style={{ height: 36 }} />
+        <Card>
+          <Skeleton active avatar paragraph={{ rows: 4 }} />
+        </Card>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} xl={16}>
+            <Card>
+              <Skeleton active paragraph={{ rows: 6 }} />
+            </Card>
+          </Col>
+          <Col xs={24} xl={8}>
+            <Card>
+              <Skeleton active paragraph={{ rows: 5 }} />
+            </Card>
+          </Col>
+        </Row>
+      </div>
+    );
+  }
+
   return (
-    <NoResizeScreenTemplate
-      loading={loading}
-      loadingText="Loading profile..."
-      bodyClassName="px-0 pb-0 pt-4"
-      header={
-        <ListScreenHeaderTemplate
-          title="My Profile"
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
-          actions={
-            canEditProfile ? (
-              <div className="flex flex-wrap gap-2">
-                {!editMode ? <CustomButton label="Edit Profile" onClick={() => setEditMode(true)} /> : null}
-                {editMode ? (
-                  <CustomButton
-                    label="Cancel"
-                    className="bg-slate-200 text-slate-700 hover:bg-slate-300"
-                    onClick={handleCancelEdit}
-                    disabled={saving}
-                  />
-                ) : null}
-              </div>
-            ) : undefined
+    <div className="space-y-6 p-6 md:p-8">
+      <Breadcrumb items={[{ title: "Trang chủ" }, { title: "Tài khoản" }, { title: "Hồ sơ người dùng" }]} />
+
+      {loadError ? (
+        <Alert
+          showIcon
+          type="error"
+          message="Không thể tải hồ sơ"
+          description={loadError}
+          action={
+            <Button type="default" icon={<ReloadOutlined />} onClick={() => void loadProfile()}>
+              Tải lại
+            </Button>
           }
-          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang ch?" }, { label: "H? so cá nhân" }]} />}
         />
-      }
-      body={
-        <div className="space-y-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="mb-6 flex flex-col items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 p-5 md:flex-row">
-              <img src={SAMPLE_PROFILE_IMAGE} alt="Sample profile avatar" className="h-24 w-24 rounded-full border-4 border-white shadow-sm" />
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Sample Avatar</p>
-                <p className="mt-1 text-base font-medium text-slate-900">{formValues.fullName || "User"}</p>
-                <p className="text-sm text-slate-500">{profile?.email || "-"}</p>
-              </div>
-            </div>
+      ) : null}
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <CustomTextField
-                title="Full Name"
-                value={formValues.fullName}
-                helperText={errors.fullName}
-                error={Boolean(errors.fullName)}
-                disabled={!editMode}
-                onChange={(event) => setFormValues((previous) => ({ ...previous, fullName: event.target.value }))}
-              />
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Email</p>
-                <p className="mt-1 text-base font-medium text-slate-900">{profile?.email || "-"}</p>
-              </div>
-              <CustomTextField
-                title="Phone"
-                value={formValues.phone}
-                disabled={!editMode}
-                onChange={(event) => setFormValues((previous) => ({ ...previous, phone: event.target.value }))}
-              />
-              <CustomTextField
-                title="Address"
-                value={formValues.address}
-                disabled={!editMode}
-                onChange={(event) => setFormValues((previous) => ({ ...previous, address: event.target.value }))}
-              />
-            </div>
+      {!profile ? (
+        <Card>
+          <Empty description="Chưa có dữ liệu hồ sơ." />
+        </Card>
+      ) : (
+        <>
+          <Card bordered={false} className="shadow-sm">
+            <Row gutter={[16, 16]} align="middle" justify="space-between">
+              <Col xs={24} lg={16}>
+                <Space align="start" size={16}>
+                  <Avatar size={80} icon={<UserOutlined />}>
+                    {getInitials(profile.fullName)}
+                  </Avatar>
+                  <Space direction="vertical" size={4}>
+                    <Typography.Title level={3} className="!mb-0">
+                      {profile.fullName || "Chưa cập nhật tên"}
+                    </Typography.Title>
+                    <Typography.Text type="secondary">{profile.email || "Chưa có email"}</Typography.Text>
+                    <Space wrap>
+                      <Tag color="blue">{ROLE_LABELS[profile.role]}</Tag>
+                      <Tag color={STATUS_META[profile.status].tagColor}>{STATUS_META[profile.status].label}</Tag>
+                    </Space>
+                  </Space>
+                </Space>
+              </Col>
 
-            {editMode ? (
-              <div className="mt-4 flex flex-wrap gap-3">
-                <CustomButton label={saving ? "Saving..." : "Save Profile"} onClick={handleSave} disabled={saving} />
-                <CustomButton
-                  label="Cancel"
-                  className="bg-slate-200 text-slate-700 hover:bg-slate-300"
-                  onClick={handleCancelEdit}
-                  disabled={saving}
-                />
-              </div>
-            ) : null}
-          </div>
+              {canEditProfile ? (
+                <Col xs={24} lg={8}>
+                  <Space wrap className="lg:justify-end">
+                    {!editMode ? (
+                      <Button type="primary" icon={<EditOutlined />} onClick={handleStartEdit}>
+                        Chỉnh sửa
+                      </Button>
+                    ) : (
+                      <Button icon={<CloseOutlined />} onClick={handleCancelEdit} disabled={savingProfile}>
+                        Hủy
+                      </Button>
+                    )}
+                  </Space>
+                </Col>
+              ) : null}
+            </Row>
 
-          {canChangePassword ? (
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-slate-900">Change Password</h2>
-              <p className="mt-1 text-sm text-slate-500">Use this form to update your account password.</p>
+            <Row gutter={[16, 16]} className="mt-4">
+              <Col xs={24} sm={8}>
+                <Statistic title="Vai trò" value={ROLE_LABELS[profile.role]} />
+              </Col>
+              <Col xs={24} sm={8}>
+                <Statistic title="Trạng thái" value={STATUS_META[profile.status].label} />
+              </Col>
+              <Col xs={24} sm={8}>
+                <Space direction="vertical" size={2}>
+                  <Typography.Text type="secondary">Cập nhật gần nhất</Typography.Text>
+                  <Typography.Text strong>{formatDateTime(profile.updatedAt)}</Typography.Text>
+                </Space>
+              </Col>
+            </Row>
+          </Card>
 
-              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-                <CustomTextField
-                  title="Current Password"
-                  type="password"
-                  value={changePasswordForm.currentPassword}
-                  onChange={(event) => setChangePasswordForm((previous) => ({ ...previous, currentPassword: event.target.value }))}
-                />
-                <CustomTextField
-                  title="New Password"
-                  type="password"
-                  value={changePasswordForm.newPassword}
-                  onChange={(event) => setChangePasswordForm((previous) => ({ ...previous, newPassword: event.target.value }))}
-                />
-                <CustomTextField
-                  title="Confirm New Password"
-                  type="password"
-                  value={changePasswordForm.confirmNewPassword}
-                  onChange={(event) => setChangePasswordForm((previous) => ({ ...previous, confirmNewPassword: event.target.value }))}
-                />
-              </div>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} xl={16}>
+              <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                {editMode ? (
+                  <Card title="Chỉnh sửa hồ sơ người dùng" bordered={false} className="shadow-sm">
+                    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                      <AuthInlineStatus status={profileStatus} />
 
-              <div className="mt-4 flex flex-wrap gap-3">
-                <CustomButton
-                  label={changingPassword ? "Changing..." : "Change Password"}
-                  onClick={handleChangePassword}
-                  disabled={changingPassword}
-                />
-                <CustomButton
-                  label="Reset"
-                  className="bg-slate-200 text-slate-700 hover:bg-slate-300"
-                  onClick={() => setChangePasswordForm(EMPTY_CHANGE_PASSWORD_FORM)}
-                  disabled={changingPassword}
-                />
-              </div>
-            </div>
-          ) : null}
-        </div>
-      }
-    />
+                      <Form form={profileForm} layout="vertical" requiredMark={false} disabled={savingProfile}>
+                        <Row gutter={[16, 8]}>
+                          <Col xs={24} md={12}>
+                            <Form.Item
+                              label="Họ và tên"
+                              name="fullName"
+                              rules={[
+                                { required: true, message: "Vui lòng nhập họ và tên." },
+                                { min: 2, message: "Họ và tên cần ít nhất 2 ký tự." },
+                              ]}
+                            >
+                              <Input size="large" placeholder="Nhập họ và tên" />
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24} md={12}>
+                            <Form.Item label="Email">
+                              <Input size="large" value={profile.email} disabled />
+                            </Form.Item>
+                          </Col>
+                        </Row>
+
+                        <Row gutter={[16, 8]}>
+                          <Col xs={24} md={12}>
+                            <Form.Item
+                              label="Số điện thoại"
+                              name="phone"
+                              rules={[{ max: 20, message: "Số điện thoại không vượt quá 20 ký tự." }]}
+                            >
+                              <Input size="large" placeholder="Ví dụ: 0901234567" />
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24} md={12}>
+                            <Form.Item
+                              label="Địa chỉ"
+                              name="address"
+                              rules={[{ max: 255, message: "Địa chỉ không vượt quá 255 ký tự." }]}
+                            >
+                              <Input size="large" placeholder="Nhập địa chỉ liên hệ" />
+                            </Form.Item>
+                          </Col>
+                        </Row>
+
+                        <Space>
+                          <Button type="primary" icon={<SaveOutlined />} loading={savingProfile} onClick={() => void handleSaveProfile()}>
+                            Lưu thay đổi
+                          </Button>
+                          <Button onClick={handleCancelEdit} disabled={savingProfile}>
+                            Hủy
+                          </Button>
+                        </Space>
+                      </Form>
+                    </Space>
+                  </Card>
+                ) : (
+                  <>
+                    <Card title="Thông tin cá nhân" bordered={false} className="shadow-sm">
+                      <Descriptions column={1} size="middle" colon={false}>
+                        <Descriptions.Item label="Họ và tên">{profile.fullName || "Chưa cập nhật"}</Descriptions.Item>
+                        <Descriptions.Item label="Email">{profile.email || "Chưa cập nhật"}</Descriptions.Item>
+                      </Descriptions>
+                    </Card>
+
+                    <Card title="Thông tin liên hệ" bordered={false} className="shadow-sm">
+                      <Descriptions column={1} size="middle" colon={false}>
+                        <Descriptions.Item label="Số điện thoại">{profile.phone || "Chưa cập nhật"}</Descriptions.Item>
+                        <Descriptions.Item label="Địa chỉ">{profile.address || "Chưa cập nhật"}</Descriptions.Item>
+                      </Descriptions>
+                    </Card>
+                  </>
+                )}
+              </Space>
+            </Col>
+
+            <Col xs={24} xl={8}>
+              <Card title="Thông tin tài khoản" bordered={false} className="shadow-sm">
+                <Space direction="vertical" size={10} style={{ width: "100%" }}>
+                  <Space>
+                    <Typography.Text type="secondary">Vai trò:</Typography.Text>
+                    <Typography.Text>{ROLE_LABELS[profile.role]}</Typography.Text>
+                  </Space>
+                  <Space>
+                    <Typography.Text type="secondary">Trạng thái:</Typography.Text>
+                    <Badge status={STATUS_META[profile.status].badgeStatus} text={STATUS_META[profile.status].label} />
+                  </Space>
+                  <Space>
+                    <Typography.Text type="secondary">Ngày tạo:</Typography.Text>
+                    <Typography.Text>{formatDateTime(profile.createdAt)}</Typography.Text>
+                  </Space>
+                  <Space>
+                    <Typography.Text type="secondary">Cập nhật cuối:</Typography.Text>
+                    <Typography.Text>{formatDateTime(profile.updatedAt)}</Typography.Text>
+                  </Space>
+                </Space>
+              </Card>
+            </Col>
+          </Row>
+        </>
+      )}
+    </div>
   );
 };
 
 export default UserProfilePage;
-

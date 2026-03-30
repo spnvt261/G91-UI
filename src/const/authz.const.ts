@@ -268,6 +268,7 @@ interface RoutePermissionRule {
 const PROTECTED_ROUTE_RULES: RoutePermissionRule[] = [
   { path: ROUTE_URL.DASHBOARD, permission: "dashboard.view" },
   { path: ROUTE_URL.PROFILE, permission: "profile.manage" },
+  { path: ROUTE_URL.CHANGE_PASSWORD, permission: "profile.manage" },
   { path: ROUTE_URL.ACCOUNT_LIST, permission: "account.view" },
 
   { path: ROUTE_URL.PRODUCT_CREATE, permission: "product.create" },
