@@ -9,6 +9,7 @@ export interface SidebarNode {
   description?: string;
   path?: string;
   badgeText?: string;
+  activeRoutePatterns?: string[];
   children?: SidebarNode[];
 }
 
@@ -22,20 +23,37 @@ const normalizePath = (path: string) => path.replace(/\/+$/, "") || "/";
 
 const nodeKey = (node: SidebarNode) => node.path ?? node.id;
 
-const isPathActive = (currentPath: string, nodePath: string) => {
-  const normalizedCurrent = normalizePath(currentPath);
-  const normalizedNodePath = normalizePath(nodePath);
+const escapeRegex = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-  if (normalizedCurrent === normalizedNodePath) {
-    return true;
+const routeTemplateToRegex = (template: string): RegExp => {
+  const normalizedTemplate = normalizePath(template);
+  if (normalizedTemplate === "/") {
+    return /^\/$/;
   }
 
-  if (normalizedNodePath === "/") {
-    return normalizedCurrent === "/";
-  }
+  const escaped = normalizedTemplate
+    .split("/")
+    .map((segment) => {
+      if (!segment) {
+        return "";
+      }
 
-  return normalizedCurrent.startsWith(`${normalizedNodePath}/`);
+      if (segment.startsWith(":")) {
+        return "[^/]+";
+      }
+
+      return escapeRegex(segment);
+    })
+    .join("/");
+
+  return new RegExp(`^${escaped}(?:/.*)?$`);
 };
+
+const isPathActive = (currentPath: string, routeTemplate: string) =>
+  routeTemplateToRegex(routeTemplate).test(normalizePath(currentPath));
+
+const getNodeActivePatterns = (node: SidebarNode): string[] =>
+  [node.path, ...(node.activeRoutePatterns ?? [])].filter((pattern): pattern is string => Boolean(pattern));
 
 const renderNodeLabel = (node: SidebarNode, collapsed: boolean) => {
   if (collapsed) {
@@ -88,10 +106,14 @@ export const resolveSidebarActiveState = (nodes: SidebarNode[], currentPath?: st
   }> = [];
 
   const visit = (node: SidebarNode, parentKeys: string[]) => {
-    if (node.path && isPathActive(currentPath, node.path)) {
-      const score = normalizePath(node.path).length;
+    getNodeActivePatterns(node).forEach((pattern) => {
+      if (!isPathActive(currentPath, pattern)) {
+        return;
+      }
+
+      const score = normalizePath(pattern).length;
       matches.push({ score, node, parentKeys });
-    }
+    });
 
     if (node.children?.length) {
       const nextParentKeys = [...parentKeys, nodeKey(node)];

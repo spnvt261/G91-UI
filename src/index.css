@@ -35,7 +35,7 @@ body {
 
 .app-shell__sider {
   border-right: 1px solid var(--app-border);
-  background: #fff !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
 }
 
 .app-shell__main {
@@ -101,6 +101,29 @@ body {
   background: linear-gradient(145deg, #0f5ca8, #1d74c9);
 }
 
+.app-sidebar__brand {
+  border-bottom: 1px solid #e6edf5;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(6px);
+}
+
+.app-sidebar__role-tag {
+  cursor: pointer;
+  margin-inline-end: 0;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.app-sidebar__role-tag--collapsed {
+  width: 28px;
+  min-width: 28px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .app-sidebar__menu {
   background: transparent;
 }
@@ -109,21 +132,53 @@ body {
 .app-sidebar__menu .ant-menu-submenu-title {
   margin-inline: 0 !important;
   width: 100% !important;
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  height: 44px;
+  line-height: 44px;
+  margin-block: 3px !important;
+  padding-inline: 12px !important;
+  transition: all 0.22s ease;
+}
+
+.app-sidebar__menu .ant-menu-item:hover,
+.app-sidebar__menu .ant-menu-submenu-title:hover {
+  background: #f1f6ff !important;
 }
 
 .app-sidebar__menu .ant-menu-submenu-title {
-  font-weight: 500;
+  font-weight: 600;
+}
+
+.app-sidebar__menu .ant-menu-sub .ant-menu-item {
+  height: 40px;
+  line-height: 40px;
+  margin-block: 2px !important;
+  padding-inline: 36px 12px !important;
 }
 
 .app-sidebar__menu .ant-menu-item-selected,
 .app-sidebar__menu .ant-menu-submenu-selected > .ant-menu-submenu-title {
-  background: #e8f2ff !important;
-  color: #0f5ca8 !important;
+  background: #e7f1ff !important;
+  color: #0e5aa7 !important;
+}
+
+.app-sidebar__menu .ant-menu-item-selected::after,
+.app-sidebar__menu .ant-menu-submenu-selected > .ant-menu-submenu-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: #0f5ca8;
 }
 
 .app-sidebar__item-label {
   color: #0f172a;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .app-sidebar__item-description {

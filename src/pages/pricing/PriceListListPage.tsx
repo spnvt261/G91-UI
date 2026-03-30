@@ -129,7 +129,7 @@ const PriceListListPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Äang táº£i danh sÃ¡ch báº£ng giÃ¡..."
+      loadingText="Đang tải danh sách bảng giá..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -240,4 +240,5 @@ const PriceListListPage = () => {
 };
 
 export default PriceListListPage;
+
 

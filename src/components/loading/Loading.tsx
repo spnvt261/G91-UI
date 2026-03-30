@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Alert, Button, Card, Result, Skeleton, Space, Spin, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 
@@ -42,11 +42,7 @@ const Loading = ({
           icon={<Spin size="large" />}
           title="Hệ thống đang chuẩn bị dữ liệu"
           subTitle={text}
-          extra={
-            allowGoHome ? (
-              <Button onClick={() => navigate("/")}>Về trang tổng quan</Button>
-            ) : null
-          }
+          extra={allowGoHome ? <Button onClick={() => navigate("/")}>Về trang tổng quan</Button> : null}
         />
       </div>
     );

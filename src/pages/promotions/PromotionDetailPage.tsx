@@ -190,7 +190,7 @@ const PromotionDetailPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Äang táº£i promotion..."
+      loadingText="Đang tải chi tiết khuyến mãi..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -382,5 +382,6 @@ const PromotionDetailPage = () => {
 };
 
 export default PromotionDetailPage;
+
 
 

@@ -1,7 +1,8 @@
-import { Alert, Button, Card, Col, Empty, Progress, Row, Space, Table, Tag, Typography } from "antd";
+﻿import { Alert, Button, Card, Col, Empty, Progress, Row, Space, Table, Tag, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import Loading from "../../components/loading/Loading";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type { ProjectFinancialBreakdownItem, ProjectFinancialSummaryModel, ProjectModel } from "../../models/project/project.model";
@@ -136,9 +137,7 @@ const ProjectFinancialSummaryPage = () => {
       ) : null}
 
       {loading ? (
-        <Card bordered={false} style={{ border: "1px solid #e6edf5" }}>
-          <Typography.Text type="secondary">Đang tải dữ liệu tài chính dự án...</Typography.Text>
-        </Card>
+        <Loading mode="section" text="Đang tải dữ liệu tài chính dự án..." />
       ) : project && summary ? (
         <Space direction="vertical" size={16} style={{ width: "100%" }}>
           <ProjectContextCard project={project} title="Ngữ cảnh dự án" />

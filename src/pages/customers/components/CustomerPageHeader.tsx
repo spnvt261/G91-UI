@@ -10,7 +10,7 @@ interface CustomerPageHeaderProps {
   actions?: ReactNode;
 }
 
-const CustomerPageHeader = ({ title, subtitle, breadcrumbItems, actions }: CustomerPageHeaderProps) => {
+const CustomerPageHeader = ({ title, breadcrumbItems, actions }: CustomerPageHeaderProps) => {
   const breadcrumbNode = <Breadcrumb items={breadcrumbItems} />;
 
   return (
