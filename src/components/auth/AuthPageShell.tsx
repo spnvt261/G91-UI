@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Col, Layout, Row, Space, Typography } from "antd";
+import { Col, Grid, Layout, Row, Space, Typography } from "antd";
 import "./auth-ui.css";
 
 interface AuthPageShellProps {
@@ -8,32 +8,29 @@ interface AuthPageShellProps {
 }
 
 const AuthPageShell = ({ children, sidePanel }: AuthPageShellProps) => {
+  const screens = Grid.useBreakpoint();
   const hasSidePanel = Boolean(sidePanel);
 
   return (
     <Layout className="auth-shell">
       <Layout.Content className="auth-shell__content">
-        <div
-          className={`auth-shell__inner ${
-            hasSidePanel ? "auth-shell__inner--split" : "auth-shell__inner--single"
-          }`}
-        >
-          <Row gutter={[26, 26]} align="middle">
+        <div className={`auth-shell__frame ${hasSidePanel ? "auth-shell__frame--split" : "auth-shell__frame--single"}`}>
+          <Row gutter={[28, 28]} align={screens.lg ? "middle" : "top"} className="auth-shell__row">
             {hasSidePanel ? (
-              <Col xs={24} lg={11}>
+              <Col xs={{ span: 24, order: 2 }} lg={{ span: 10, order: 1 }} className="auth-shell__side-col">
                 {sidePanel}
               </Col>
             ) : null}
-            <Col xs={24} lg={hasSidePanel ? 13 : 24}>
-              <Space direction="vertical" size={14} style={{ width: "100%" }}>
-                <Space direction="vertical" size={0}>
-                  <Typography.Text className="auth-shell__eyebrow">
-                    G91 STEEL
-                  </Typography.Text>
-                  <Typography.Title level={5} className="auth-shell__title">
-                    Nền tảng vận hành thống nhất
+
+            <Col xs={{ span: 24, order: 1 }} lg={{ span: hasSidePanel ? 14 : 24, order: 2 }} className="auth-shell__form-col">
+              <Space direction="vertical" size={16} className="auth-shell__form-stack">
+                <Space direction="vertical" size={2}>
+                  <Typography.Text className="auth-shell__eyebrow">Nền tảng điều hành G91</Typography.Text>
+                  <Typography.Title level={4} className="auth-shell__title">
+                    Truy cập bảo mật, vận hành liền mạch
                   </Typography.Title>
                 </Space>
+
                 {children}
               </Space>
             </Col>

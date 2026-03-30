@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CheckCircleOutlined, FormOutlined, MailOutlined, UserAddOutlined } from "@ant-design/icons";
-import { Alert, Button, Card, Divider, Form, Input, Space, Typography } from "antd";
+import { FormOutlined, LockOutlined, MailOutlined, UserAddOutlined, UserOutlined } from "@ant-design/icons";
+import { Alert, Button, Col, Divider, Form, Input, Row, Space, Typography } from "antd";
 import AuthFormCard from "../../components/auth/AuthFormCard";
+import AuthHeroPanel from "../../components/auth/AuthHeroPanel";
 import AuthInlineStatus, { type AuthInlineStatusValue } from "../../components/auth/AuthInlineStatus";
 import AuthPageShell from "../../components/auth/AuthPageShell";
-import { authService } from "../../services/auth/auth.service";
-import { ROUTE_URL } from "../../const/route_url.const";
-import { getErrorMessage } from "../shared/page.utils";
-import { useNotify } from "../../context/notifyContext";
 import { ApiClientError } from "../../apiConfig/axiosConfig";
+import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
+import { authService } from "../../services/auth/auth.service";
+import { getErrorMessage } from "../shared/page.utils";
 
 interface RegisterFormValues {
   fullName: string;
@@ -69,61 +70,31 @@ const RegisterPage = () => {
   return (
     <AuthPageShell
       sidePanel={
-        <Card bordered={false} className="auth-side-panel">
-          <Space direction="vertical" size={24} style={{ width: "100%" }}>
-            <Space direction="vertical" size={8}>
-              <Typography.Text className="auth-side-panel__subtitle">BẮT ĐẦU SỬ DỤNG</Typography.Text>
-              <Typography.Title level={2} className="!mb-0 !text-white">
-                Tạo tài khoản trong vài bước
-              </Typography.Title>
-              <Typography.Paragraph className="auth-side-panel__subtitle !mb-0">
-                Hoàn tất thông tin đăng ký, sau đó xác thực email để kích hoạt tài khoản và bắt đầu sử dụng hệ thống.
-              </Typography.Paragraph>
-            </Space>
-
-            <Space direction="vertical" size={14}>
-              <Space align="start" size={12}>
-                <FormOutlined style={{ fontSize: 18 }} />
-                <Space direction="vertical" size={0}>
-                  <Typography.Text className="auth-side-panel__item-title">Bước 1: Điền thông tin</Typography.Text>
-                  <Typography.Text className="auth-side-panel__item-description">Nhập đúng họ tên, email và mật khẩu.</Typography.Text>
-                </Space>
-              </Space>
-              <Space align="start" size={12}>
-                <MailOutlined style={{ fontSize: 18 }} />
-                <Space direction="vertical" size={0}>
-                  <Typography.Text className="auth-side-panel__item-title">Bước 2: Xác thực email</Typography.Text>
-                  <Typography.Text className="auth-side-panel__item-description">Hệ thống gửi mã xác thực về email của bạn.</Typography.Text>
-                </Space>
-              </Space>
-              <Space align="start" size={12}>
-                <CheckCircleOutlined style={{ fontSize: 18 }} />
-                <Space direction="vertical" size={0}>
-                  <Typography.Text className="auth-side-panel__item-title">Bước 3: Hoàn tất kích hoạt</Typography.Text>
-                  <Typography.Text className="auth-side-panel__item-description">Đăng nhập và bắt đầu làm việc ngay.</Typography.Text>
-                </Space>
-              </Space>
-            </Space>
-          </Space>
-        </Card>
+        <AuthHeroPanel
+          eyebrow="Bắt đầu trong vài phút"
+          title="Hành trình onboarding rõ ràng và an tâm"
+          description="Bạn chỉ cần hoàn tất thông tin tài khoản, xác thực email và đăng nhập để bắt đầu sử dụng toàn bộ tiện ích của hệ thống G91."
+          steps={[
+            { title: "Điền thông tin", description: "Nhập họ tên, email và mật khẩu mới." },
+            { title: "Xác thực email", description: "Nhập mã xác thực được gửi đến hộp thư." },
+            { title: "Bắt đầu sử dụng", description: "Đăng nhập và truy cập không gian làm việc." },
+          ]}
+          currentStep={0}
+          note="Email xác thực sẽ có thời hạn, bạn có thể gửi lại mã bất kỳ lúc nào."
+        />
       }
     >
       <AuthFormCard
-        title="Tạo tài khoản"
-        description="Thiết lập tài khoản mới để quản lý báo giá, hợp đồng và đơn hàng."
+        eyebrow="Khởi tạo tài khoản mới"
+        title="Đăng ký"
+        description="Tạo tài khoản để quản lý báo giá, hợp đồng, đơn hàng và các nghiệp vụ vận hành trên một nền tảng thống nhất."
         icon={<UserAddOutlined />}
-        extraTop={
-          <Alert
-            showIcon
-            type="info"
-            message="Sau khi đăng ký, bạn cần xác thực email để kích hoạt tài khoản."
-          />
-        }
+        extraTop={<Alert showIcon type="info" message="Sau khi đăng ký, bạn cần xác thực email để kích hoạt tài khoản." />}
         footer={
-          <Typography.Text type="secondary">
+          <Typography.Text className="auth-footer-links__text">
             Đã có tài khoản?{" "}
-            <Link to={ROUTE_URL.LOGIN}>
-              <Typography.Text strong>Quay lại đăng nhập</Typography.Text>
+            <Link to={ROUTE_URL.LOGIN} className="auth-footer-links__primary">
+              Quay lại đăng nhập
             </Link>
           </Typography.Text>
         }
@@ -132,37 +103,40 @@ const RegisterPage = () => {
           <AuthInlineStatus status={status} />
 
           <Form form={form} layout="vertical" onFinish={handleRegister} requiredMark={false} autoComplete="off" disabled={loading}>
-            <Typography.Title level={5} className="!mb-3">
-              Thông tin tài khoản
-            </Typography.Title>
+            <Typography.Text className="auth-form-section-title">Thông tin tài khoản</Typography.Text>
 
-            <Form.Item
-              label="Họ và tên"
-              name="fullName"
-              rules={[
-                { required: true, message: "Vui lòng nhập họ và tên." },
-                { min: 2, message: "Họ và tên cần ít nhất 2 ký tự." },
-              ]}
-            >
-              <Input size="large" placeholder="Ví dụ: Nguyễn Văn A" />
-            </Form.Item>
+            <Row gutter={12}>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  label="Họ và tên"
+                  name="fullName"
+                  rules={[
+                    { required: true, message: "Vui lòng nhập họ và tên." },
+                    { min: 2, message: "Họ và tên cần ít nhất 2 ký tự." },
+                  ]}
+                >
+                  <Input size="large" placeholder="Ví dụ: Nguyễn Văn A" prefix={<UserOutlined />} />
+                </Form.Item>
+              </Col>
 
-            <Form.Item
-              label="Email"
-              name="email"
-              rules={[
-                { required: true, message: "Vui lòng nhập email." },
-                { type: "email", message: "Email không đúng định dạng." },
-              ]}
-            >
-              <Input size="large" placeholder="email@congty.com" />
-            </Form.Item>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  label="Email"
+                  name="email"
+                  rules={[
+                    { required: true, message: "Vui lòng nhập email." },
+                    { type: "email", message: "Email không đúng định dạng." },
+                  ]}
+                >
+                  <Input size="large" placeholder="email@congty.com" prefix={<MailOutlined />} />
+                </Form.Item>
+              </Col>
+            </Row>
 
-            <Divider />
+            <Divider style={{ margin: "8px 0 14px", borderColor: "#e8eef5" }} />
 
-            <Typography.Title level={5} className="!mb-3">
-              Mật khẩu
-            </Typography.Title>
+            <Typography.Text className="auth-form-section-title">Mật khẩu</Typography.Text>
+            <Typography.Text className="auth-form-helper">Mật khẩu nên có chữ hoa, chữ thường, số và ký tự đặc biệt để tăng độ an toàn.</Typography.Text>
 
             <Form.Item
               label="Mật khẩu"
@@ -172,7 +146,7 @@ const RegisterPage = () => {
                 { min: 6, message: "Mật khẩu cần có ít nhất 6 ký tự." },
               ]}
             >
-              <Input.Password size="large" placeholder="Tối thiểu 6 ký tự" />
+              <Input.Password size="large" placeholder="Tối thiểu 6 ký tự" prefix={<LockOutlined />} />
             </Form.Item>
 
             <Form.Item
@@ -191,10 +165,10 @@ const RegisterPage = () => {
                 }),
               ]}
             >
-              <Input.Password size="large" placeholder="Nhập lại mật khẩu" />
+              <Input.Password size="large" placeholder="Nhập lại mật khẩu" prefix={<FormOutlined />} />
             </Form.Item>
 
-            <Button type="primary" size="large" htmlType="submit" loading={loading} block>
+            <Button type="primary" size="large" htmlType="submit" loading={loading} block className="auth-primary-btn">
               Tạo tài khoản
             </Button>
           </Form>

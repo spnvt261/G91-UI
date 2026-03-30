@@ -8,34 +8,39 @@ interface AuthFormCardProps {
   children: ReactNode;
   footer?: ReactNode;
   extraTop?: ReactNode;
+  eyebrow?: string;
 }
 
-const AuthFormCard = ({ title, description, icon, children, footer, extraTop }: AuthFormCardProps) => {
+const AuthFormCard = ({ title, description, icon, children, footer, extraTop, eyebrow }: AuthFormCardProps) => {
   return (
-    <Card bordered={false} className="auth-form-card" styles={{ body: { padding: 24 } }}>
-      <Space direction="vertical" size={20} style={{ width: "100%" }}>
-        <Space align="start" size={14} className="auth-form-card__headline">
-          {icon ? (
-            <Avatar size={48} className="auth-form-card__icon">
-              {icon}
-            </Avatar>
-          ) : null}
-          <Space direction="vertical" size={3}>
-            <Typography.Title level={2} className="auth-form-card__title">
-              {title}
-            </Typography.Title>
-            <Typography.Paragraph type="secondary" className="auth-form-card__description">
-              {description}
-            </Typography.Paragraph>
+    <Card bordered={false} className="auth-form-card">
+      <Space direction="vertical" size={24} style={{ width: "100%" }}>
+        <Space direction="vertical" size={12} style={{ width: "100%" }}>
+          <Space align="start" size={14} className="auth-form-card__headline">
+            {icon ? (
+              <Avatar size={46} className="auth-form-card__icon">
+                {icon}
+              </Avatar>
+            ) : null}
+
+            <Space direction="vertical" size={2}>
+              {eyebrow ? <Typography.Text className="auth-form-card__eyebrow">{eyebrow}</Typography.Text> : null}
+              <Typography.Title level={2} className="auth-form-card__title">
+                {title}
+              </Typography.Title>
+            </Space>
           </Space>
+
+          <Typography.Paragraph className="auth-form-card__description">{description}</Typography.Paragraph>
         </Space>
 
-        {extraTop}
+        {extraTop ? <div className="auth-form-card__extra-top">{extraTop}</div> : null}
+
         <div className="auth-form-card__body">{children}</div>
 
         {footer ? (
           <>
-            <Divider className="!my-0 !border-slate-200" />
+            <Divider className="auth-form-card__divider" />
             <div className="auth-form-card__footer">{footer}</div>
           </>
         ) : null}

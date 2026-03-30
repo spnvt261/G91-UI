@@ -1,20 +1,21 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { CheckCircleOutlined, LoginOutlined, SafetyOutlined } from "@ant-design/icons";
-import { Button, Card, Form, Input, Space, Typography } from "antd";
+import { Link, useNavigate } from "react-router-dom";
+import { CheckCircleOutlined, LockOutlined, LoginOutlined, MailOutlined, SafetyOutlined } from "@ant-design/icons";
+import { Button, Form, Input, Space, Typography } from "antd";
 import AuthFormCard from "../../components/auth/AuthFormCard";
+import AuthHeroPanel from "../../components/auth/AuthHeroPanel";
 import AuthInlineStatus, { type AuthInlineStatusValue } from "../../components/auth/AuthInlineStatus";
 import AuthPageShell from "../../components/auth/AuthPageShell";
+import { ApiClientError } from "../../apiConfig/axiosConfig";
+import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
 import { authService } from "../../services/auth/auth.service";
 import { loginSuccess } from "../../store/authSlice";
 import type { AppDispatch } from "../../store";
-import { ROUTE_URL } from "../../const/route_url.const";
-import { getErrorMessage } from "../shared/page.utils";
-import { getDefaultRouteByRole } from "../../const/authz.const";
 import { persistAuthSession } from "../../utils/authSession";
-import { useNotify } from "../../context/notifyContext";
-import { ApiClientError } from "../../apiConfig/axiosConfig";
+import { getDefaultRouteByRole } from "../../const/authz.const";
+import { getErrorMessage } from "../shared/page.utils";
 
 interface LoginFormValues {
   email: string;
@@ -81,54 +82,43 @@ const LoginPage = () => {
   return (
     <AuthPageShell
       sidePanel={
-        <Card bordered={false} className="auth-side-panel">
-          <Space direction="vertical" size={24} style={{ width: "100%" }}>
-            <Space direction="vertical" size={8}>
-              <Typography.Text className="auth-side-panel__subtitle">NỀN TẢNG ERP G91</Typography.Text>
-              <Typography.Title level={2} className="!mb-0 !text-white">
-                Quản trị tập trung, vận hành an toàn
-              </Typography.Title>
-              <Typography.Paragraph className="auth-side-panel__subtitle !mb-0">
-                Đăng nhập để truy cập dữ liệu nghiệp vụ, theo dõi tiến độ và kiểm soát quy trình theo đúng vai trò của bạn.
-              </Typography.Paragraph>
-            </Space>
-
-            <Space direction="vertical" size={16}>
-              <Space align="start" size={12}>
-                <SafetyOutlined style={{ fontSize: 18 }} />
-                <Space direction="vertical" size={0}>
-                  <Typography.Text className="auth-side-panel__item-title">Bảo mật phiên đăng nhập</Typography.Text>
-                  <Typography.Text className="auth-side-panel__item-description">Tự động kiểm soát truy cập theo quyền tài khoản.</Typography.Text>
-                </Space>
-              </Space>
-              <Space align="start" size={12}>
-                <CheckCircleOutlined style={{ fontSize: 18 }} />
-                <Space direction="vertical" size={0}>
-                  <Typography.Text className="auth-side-panel__item-title">Luồng xử lý rõ ràng</Typography.Text>
-                  <Typography.Text className="auth-side-panel__item-description">Giao diện tối ưu để thao tác nhanh và ít sai sót.</Typography.Text>
-                </Space>
-              </Space>
-            </Space>
-          </Space>
-        </Card>
+        <AuthHeroPanel
+          eyebrow="Không gian làm việc G91"
+          title="Quản lý dữ liệu tập trung, bảo mật theo vai trò"
+          description="Đăng nhập để theo dõi tiến độ, phối hợp phòng ban và kiểm soát toàn bộ quy trình vận hành trong một giao diện thống nhất."
+          highlights={[
+            {
+              icon: <SafetyOutlined />,
+              title: "Bảo mật phiên đăng nhập",
+              description: "Phiên truy cập được kiểm soát tự động theo quyền của từng người dùng.",
+            },
+            {
+              icon: <CheckCircleOutlined />,
+              title: "Luồng thao tác rõ ràng",
+              description: "Form gọn, trạng thái phản hồi rõ, giúp đăng nhập nhanh và ít sai sót.",
+            },
+          ]}
+          note="Mẹo: nếu chưa kích hoạt email, bạn có thể xác thực tài khoản ngay từ trang này."
+        />
       }
     >
       <AuthFormCard
+        eyebrow="Chào mừng bạn quay lại"
         title="Đăng nhập"
-        description="Chào mừng bạn quay lại. Vui lòng nhập thông tin để tiếp tục."
+        description="Nhập email và mật khẩu để truy cập hệ thống điều hành doanh nghiệp G91."
         icon={<LoginOutlined />}
         footer={
-          <Space direction="vertical" size={6} style={{ width: "100%" }}>
-            <Typography.Text type="secondary">
+          <Space direction="vertical" size={8} className="auth-footer-links">
+            <Typography.Text className="auth-footer-links__text">
               Chưa có tài khoản?{" "}
-              <Link to={ROUTE_URL.REGISTER}>
-                <Typography.Text strong>Đăng ký ngay</Typography.Text>
+              <Link to={ROUTE_URL.REGISTER} className="auth-footer-links__primary">
+                Đăng ký ngay
               </Link>
             </Typography.Text>
-            <Typography.Text type="secondary">
+            <Typography.Text className="auth-footer-links__text">
               Chưa xác thực email?{" "}
-              <Link to={ROUTE_URL.VERIFY_REGISTRATION}>
-                <Typography.Text strong>Nhập mã xác thực</Typography.Text>
+              <Link to={ROUTE_URL.VERIFY_REGISTRATION} className="auth-footer-links__secondary">
+                Nhập mã xác thực
               </Link>
             </Typography.Text>
           </Space>
@@ -146,7 +136,7 @@ const LoginPage = () => {
                 { type: "email", message: "Email không đúng định dạng." },
               ]}
             >
-              <Input size="large" placeholder="email@congty.com" />
+              <Input size="large" placeholder="email@congty.com" prefix={<MailOutlined />} />
             </Form.Item>
 
             <Form.Item
@@ -157,16 +147,16 @@ const LoginPage = () => {
                 { min: 3, message: "Mật khẩu cần có ít nhất 3 ký tự." },
               ]}
             >
-              <Input.Password size="large" placeholder="Nhập mật khẩu của bạn" />
+              <Input.Password size="large" placeholder="Nhập mật khẩu của bạn" prefix={<LockOutlined />} />
             </Form.Item>
 
-            <div className="mb-4 text-right">
-              <Link to={ROUTE_URL.FORGOT_PASSWORD}>
-                <Typography.Text>Tôi quên mật khẩu</Typography.Text>
+            <div className="auth-form-link-row">
+              <Link to={ROUTE_URL.FORGOT_PASSWORD} className="auth-form-link">
+                Tôi quên mật khẩu
               </Link>
             </div>
 
-            <Button type="primary" size="large" htmlType="submit" loading={loading} block>
+            <Button type="primary" size="large" htmlType="submit" loading={loading} block className="auth-primary-btn">
               Đăng nhập
             </Button>
           </Form>

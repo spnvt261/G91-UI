@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { LockOutlined, MailOutlined } from "@ant-design/icons";
-import { Button, Form, Input, Result, Space, Typography } from "antd";
+import { CheckCircleOutlined, LockOutlined, MailOutlined, SafetyOutlined } from "@ant-design/icons";
+import { Alert, Button, Form, Input, Result, Space, Typography } from "antd";
 import AuthFormCard from "../../components/auth/AuthFormCard";
+import AuthHeroPanel from "../../components/auth/AuthHeroPanel";
 import AuthInlineStatus, { type AuthInlineStatusValue } from "../../components/auth/AuthInlineStatus";
 import AuthPageShell from "../../components/auth/AuthPageShell";
-import { authService } from "../../services/auth/auth.service";
-import { ROUTE_URL } from "../../const/route_url.const";
-import { getErrorMessage } from "../shared/page.utils";
-import { useNotify } from "../../context/notifyContext";
 import { ApiClientError } from "../../apiConfig/axiosConfig";
+import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
+import { authService } from "../../services/auth/auth.service";
+import { getErrorMessage } from "../shared/page.utils";
 
 interface ForgotPasswordFormValues {
   email: string;
@@ -52,16 +53,38 @@ const ForgotPasswordPage = () => {
   };
 
   return (
-    <AuthPageShell>
+    <AuthPageShell
+      sidePanel={
+        <AuthHeroPanel
+          eyebrow="Khôi phục quyền truy cập"
+          title="Đổi mật khẩu nhanh, không gián đoạn công việc"
+          description="Chỉ cần nhập email đã đăng ký, hệ thống sẽ gửi hướng dẫn đặt lại mật khẩu để bạn truy cập lại tài khoản an toàn."
+          highlights={[
+            {
+              icon: <SafetyOutlined />,
+              title: "Quy trình bảo mật",
+              description: "Liên kết khôi phục chỉ gửi đến email đã đăng ký và có thời hạn sử dụng.",
+            },
+            {
+              icon: <CheckCircleOutlined />,
+              title: "Thao tác rõ ràng",
+              description: "Mỗi bước đều có thông báo trạng thái để bạn dễ theo dõi và xử lý.",
+            },
+          ]}
+        />
+      }
+    >
       <AuthFormCard
+        eyebrow="Hỗ trợ tài khoản"
         title="Quên mật khẩu"
-        description="Nhập email đã đăng ký để nhận hướng dẫn đặt lại mật khẩu."
+        description="Nhập email đã đăng ký để nhận liên kết đặt lại mật khẩu."
         icon={<LockOutlined />}
+        extraTop={<Alert showIcon type="info" message="Nếu email hợp lệ, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu trong vài phút." />}
         footer={
-          <Typography.Text type="secondary">
+          <Typography.Text className="auth-footer-links__text">
             Nhớ lại mật khẩu rồi?{" "}
-            <Link to={ROUTE_URL.LOGIN}>
-              <Typography.Text strong>Quay lại đăng nhập</Typography.Text>
+            <Link to={ROUTE_URL.LOGIN} className="auth-footer-links__primary">
+              Quay lại đăng nhập
             </Link>
           </Typography.Text>
         }
@@ -72,9 +95,11 @@ const ForgotPasswordPage = () => {
             title="Yêu cầu đã được gửi"
             subTitle={`Nếu email ${submittedEmail} tồn tại trong hệ thống, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu.`}
             extra={
-              <Space>
+              <div className="auth-result-actions">
                 <Link to={ROUTE_URL.LOGIN}>
-                  <Button type="primary">Về trang đăng nhập</Button>
+                  <Button type="primary" className="auth-primary-btn">
+                    Về trang đăng nhập
+                  </Button>
                 </Link>
                 <Button
                   onClick={() => {
@@ -84,7 +109,7 @@ const ForgotPasswordPage = () => {
                 >
                   Gửi lại yêu cầu
                 </Button>
-              </Space>
+              </div>
             }
           />
         ) : (
@@ -103,7 +128,7 @@ const ForgotPasswordPage = () => {
                 <Input size="large" prefix={<MailOutlined />} placeholder="email@congty.com" />
               </Form.Item>
 
-              <Button type="primary" htmlType="submit" size="large" loading={loading} block>
+              <Button type="primary" htmlType="submit" size="large" loading={loading} block className="auth-primary-btn">
                 Gửi hướng dẫn đặt lại mật khẩu
               </Button>
             </Form>

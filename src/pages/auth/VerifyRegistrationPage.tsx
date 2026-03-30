@@ -1,15 +1,16 @@
 import { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { MailOutlined, SafetyCertificateOutlined } from "@ant-design/icons";
-import { Alert, Button, Card, Form, Input, Result, Space, Steps, Typography } from "antd";
+import { CheckCircleOutlined, MailOutlined, SafetyCertificateOutlined, SendOutlined } from "@ant-design/icons";
+import { Alert, Button, Form, Input, Result, Space, Typography } from "antd";
 import AuthFormCard from "../../components/auth/AuthFormCard";
+import AuthHeroPanel from "../../components/auth/AuthHeroPanel";
 import AuthInlineStatus, { type AuthInlineStatusValue } from "../../components/auth/AuthInlineStatus";
 import AuthPageShell from "../../components/auth/AuthPageShell";
-import { useNotify } from "../../context/notifyContext";
+import { ApiClientError } from "../../apiConfig/axiosConfig";
 import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
 import { authService } from "../../services/auth/auth.service";
 import { getErrorMessage } from "../shared/page.utils";
-import { ApiClientError } from "../../apiConfig/axiosConfig";
 
 type VerifyRegistrationLocationState = {
   email?: string;
@@ -117,45 +118,39 @@ const VerifyRegistrationPage = () => {
   return (
     <AuthPageShell
       sidePanel={
-        <Card bordered={false} className="auth-side-panel">
-          <Space direction="vertical" size={24} style={{ width: "100%" }}>
-            <Space direction="vertical" size={8}>
-              <Typography.Text className="auth-side-panel__subtitle">KÍCH HOẠT TÀI KHOẢN</Typography.Text>
-              <Typography.Title level={2} className="!mb-0 !text-white">
-                Bước xác minh quan trọng
-              </Typography.Title>
-              <Typography.Paragraph className="auth-side-panel__subtitle !mb-0">
-                Hãy nhập email và mã xác thực để hoàn tất đăng ký. Sau bước này, tài khoản của bạn sẽ sẵn sàng để đăng nhập.
-              </Typography.Paragraph>
-            </Space>
-            <Steps
-              direction="vertical"
-              current={1}
-              items={[
-                { title: "Đăng ký", description: "Tạo tài khoản mới" },
-                { title: "Xác thực email", description: "Nhập mã xác thực đã nhận" },
-                { title: "Hoàn tất", description: "Đăng nhập và sử dụng hệ thống" },
-              ]}
-              style={{ color: "#f8fbff" }}
-            />
-          </Space>
-        </Card>
+        <AuthHeroPanel
+          eyebrow="Xác minh tài khoản"
+          title="Hoàn tất kích hoạt trong một bước ngắn"
+          description="Nhập email và mã xác thực để hoàn thành đăng ký. Sau khi xác minh thành công, bạn có thể đăng nhập và sử dụng hệ thống ngay."
+          steps={[
+            { title: "Đăng ký", description: "Tạo thông tin tài khoản mới." },
+            { title: "Xác thực email", description: "Nhập mã gồm 5 ký tự được gửi qua email." },
+            { title: "Hoàn tất", description: "Đăng nhập và bắt đầu làm việc." },
+          ]}
+          currentStep={1}
+          highlights={[
+            {
+              icon: <CheckCircleOutlined />,
+              title: "Mã xác thực có thời hạn",
+              description: "Bạn có thể gửi lại mã mới nếu chưa nhận được email hoặc mã đã hết hạn.",
+            },
+          ]}
+        />
       }
     >
       <AuthFormCard
+        eyebrow="Bước 2 trong quy trình đăng ký"
         title="Xác thực tài khoản"
-        description="Nhập email và mã xác thực để kích hoạt tài khoản của bạn."
+        description="Điền đúng email đã đăng ký và mã xác thực để kích hoạt tài khoản của bạn."
         icon={<SafetyCertificateOutlined />}
         extraTop={
-          expireMinutes !== null ? (
-            <Alert showIcon type="info" message={`Mã xác thực hiện có hiệu lực trong ${expireMinutes} phút.`} />
-          ) : null
+          expireMinutes !== null ? <Alert showIcon type="info" message={`Mã xác thực hiện có hiệu lực trong ${expireMinutes} phút.`} /> : null
         }
         footer={
-          <Typography.Text type="secondary">
+          <Typography.Text className="auth-footer-links__text">
             Đã xác thực xong?{" "}
-            <Link to={ROUTE_URL.LOGIN}>
-              <Typography.Text strong>Quay lại đăng nhập</Typography.Text>
+            <Link to={ROUTE_URL.LOGIN} className="auth-footer-links__primary">
+              Quay lại đăng nhập
             </Link>
           </Typography.Text>
         }
@@ -164,9 +159,9 @@ const VerifyRegistrationPage = () => {
           <Result
             status="success"
             title="Xác thực thành công"
-            subTitle="Tài khoản của bạn đã được kích hoạt."
+            subTitle="Tài khoản của bạn đã được kích hoạt và sẵn sàng đăng nhập."
             extra={
-              <Button type="primary" onClick={() => navigate(verifiedRoute, { replace: true })}>
+              <Button type="primary" className="auth-primary-btn" onClick={() => navigate(verifiedRoute, { replace: true })}>
                 Đi đến đăng nhập
               </Button>
             }
@@ -204,15 +199,17 @@ const VerifyRegistrationPage = () => {
                   { len: 5, message: "Mã xác thực gồm 5 ký tự." },
                 ]}
               >
-                <Input size="large" placeholder="Ví dụ: ABCDE" />
+                <Input size="large" placeholder="Ví dụ: ABCDE" prefix={<SafetyCertificateOutlined />} maxLength={5} />
               </Form.Item>
 
-              <Space size={12} style={{ width: "100%" }}>
-                <Button type="primary" htmlType="submit" size="large" loading={verifyLoading}>
+              <Typography.Text className="auth-form-helper">Nếu chưa nhận được email, hãy kiểm tra mục thư rác trước khi gửi lại mã.</Typography.Text>
+
+              <Space direction="vertical" size={10} style={{ width: "100%", marginTop: 8 }}>
+                <Button type="primary" htmlType="submit" size="large" loading={verifyLoading} className="auth-primary-btn" block>
                   Xác thực tài khoản
                 </Button>
-                <Button size="large" loading={resendLoading} onClick={handleResendVerificationCode}>
-                  Gửi lại mã
+                <Button size="large" loading={resendLoading} onClick={handleResendVerificationCode} icon={<SendOutlined />} className="auth-secondary-btn" block>
+                  Gửi lại mã xác thực
                 </Button>
               </Space>
             </Form>
