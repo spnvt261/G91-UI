@@ -9,7 +9,7 @@ export interface AccountCreateRequest {
   password: string;
   phone?: string;
   address?: string;
-  roleId: InternalAccountRoleId;
+  roleId: string;
 }
 
 export interface AccountCreateDataResponse {
@@ -54,10 +54,16 @@ export interface AccountUpdateRequest {
   fullName: string;
   phone?: string;
   address?: string;
-  roleId: AccountRoleId;
+  roleId: string;
   status: UserStatus;
 }
 
 export interface AccountDeactivateRequest {
   reason?: string;
+}
+
+export interface AccountRoleResponse {
+  id: string;
+  name: string;
+  description?: string;
 }

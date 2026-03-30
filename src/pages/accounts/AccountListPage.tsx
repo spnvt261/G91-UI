@@ -20,8 +20,7 @@ const PAGE_SIZE = 8;
 
 interface RoleOption {
   label: string;
-  roleId: AccountRoleId;
-  roleName?: AccountRoleId;
+  roleName: AccountRoleId;
 }
 
 interface AccountFormValues {
@@ -36,23 +35,20 @@ interface AccountFormValues {
 
 const ACCOUNTANT_ROLE_OPTION: RoleOption = {
   label: "ACCOUNTANT",
-  roleId: "ACCOUNTANT",
   roleName: "ACCOUNTANT",
 };
 
 const WAREHOUSE_ROLE_OPTION: RoleOption = {
   label: "WAREHOUSE",
-  roleId: "WAREHOUSE",
   roleName: "WAREHOUSE",
 };
 
 const OWNER_ROLE_OPTION: RoleOption = {
   label: "OWNER",
-  roleId: "OWNER",
   roleName: "OWNER",
 };
 
-const ROLE_OPTION_BY_ID: Record<AccountRoleId, RoleOption> = {
+const ROLE_OPTION_BY_NAME: Record<AccountRoleId, RoleOption> = {
   ACCOUNTANT: ACCOUNTANT_ROLE_OPTION,
   WAREHOUSE: WAREHOUSE_ROLE_OPTION,
   OWNER: OWNER_ROLE_OPTION,
@@ -64,7 +60,7 @@ const FILTER_ROLE_OPTIONS: RoleOption[] = [OWNER_ROLE_OPTION, ...INTERNAL_ROLE_O
 const toSelectOptions = (options: RoleOption[]) =>
   options.map((option) => ({
     label: option.label,
-    value: option.roleId,
+    value: option.roleName,
   }));
 
 const STATUS_OPTIONS: Array<{ label: string; value: UserStatus }> = [
@@ -78,7 +74,7 @@ const toRoleOption = (role?: AccountRoleId): RoleOption | null => {
   if (!role) {
     return null;
   }
-  return ROLE_OPTION_BY_ID[role] ?? null;
+  return ROLE_OPTION_BY_NAME[role] ?? null;
 };
 
 const createEmptyFormValues = (): AccountFormValues => ({
@@ -92,6 +88,7 @@ const createEmptyFormValues = (): AccountFormValues => ({
 });
 
 const isInternalRole = (role: AccountRoleId): role is InternalAccountRoleId => role === "ACCOUNTANT" || role === "WAREHOUSE";
+const isAccountRoleId = (role: string): role is AccountRoleId => role === "ACCOUNTANT" || role === "WAREHOUSE" || role === "OWNER";
 
 const AccountListPage = () => {
   const { notify } = useNotify();
@@ -116,6 +113,24 @@ const AccountListPage = () => {
   const [detailOpen, setDetailOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit" | null>(null);
   const [formValues, setFormValues] = useState<AccountFormValues>(createEmptyFormValues);
+  const [roleIdByName, setRoleIdByName] = useState<Partial<Record<AccountRoleId, string>>>({});
+
+  const loadRoles = useCallback(async () => {
+    try {
+      const roleResponses = await accountService.getRoles();
+      const nextRoleIdByName: Partial<Record<AccountRoleId, string>> = {};
+
+      roleResponses.forEach((role) => {
+        if (isAccountRoleId(role.name)) {
+          nextRoleIdByName[role.name] = role.id;
+        }
+      });
+
+      setRoleIdByName(nextRoleIdByName);
+    } catch (error) {
+      notify(getErrorMessage(error, "Cannot load roles"), "error");
+    }
+  }, [notify]);
 
   const loadAccounts = useCallback(async () => {
     try {
@@ -152,15 +167,24 @@ const AccountListPage = () => {
   }, [notify, query.keyword, query.page, query.role, query.size, query.status]);
 
   useEffect(() => {
+    void loadRoles();
+  }, [loadRoles]);
+
+  useEffect(() => {
     void loadAccounts();
   }, [loadAccounts]);
 
+  const resolveRoleId = useCallback(
+    (roleName: AccountRoleId) => roleIdByName[roleName],
+    [roleIdByName],
+  );
+
   const formRoleOptions = useMemo(() => {
-    if (formMode === "edit" && formValues.roleOption?.roleId === "OWNER") {
+    if (formMode === "edit" && formValues.roleOption?.roleName === "OWNER") {
       return [OWNER_ROLE_OPTION, ...INTERNAL_ROLE_OPTIONS];
     }
     return INTERNAL_ROLE_OPTIONS;
-  }, [formMode, formValues.roleOption?.roleId]);
+  }, [formMode, formValues.roleOption?.roleName]);
 
   const filters: FilterModalGroup[] = [
     {
@@ -268,15 +292,21 @@ const AccountListPage = () => {
       return;
     }
 
-    const roleId = formValues.roleOption?.roleId;
-    if (!roleId) {
+    const roleName = formValues.roleOption?.roleName;
+    if (!roleName) {
       notify("Role is required.", "error");
+      return;
+    }
+
+    const roleId = resolveRoleId(roleName);
+    if (!roleId) {
+      notify(`Role ID for ${roleName} is not configured.`, "error");
       return;
     }
 
     try {
       if (formMode === "create") {
-        if (!isInternalRole(roleId)) {
+        if (!isInternalRole(roleName)) {
           notify("Role must be ACCOUNTANT or WAREHOUSE.", "error");
           return;
         }
@@ -350,11 +380,17 @@ const AccountListPage = () => {
     try {
       setActivatingId(item.id);
       const detail = await accountService.getDetail(item.id);
+      const roleId = resolveRoleId(detail.role);
+      if (!roleId) {
+        notify(`Role ID for ${detail.role} is not configured.`, "error");
+        return;
+      }
+
       await accountService.update(item.id, {
         fullName: detail.fullName.trim(),
         phone: detail.phone ?? undefined,
         address: detail.address ?? undefined,
-        roleId: detail.role,
+        roleId,
         status: "ACTIVE",
       });
       notify("Account activated successfully.", "success");
@@ -502,10 +538,12 @@ const AccountListPage = () => {
               <CustomSelect
                 title="Role"
                 options={toSelectOptions(formRoleOptions)}
-                value={formValues.roleOption?.roleId ? [formValues.roleOption.roleId] : []}
+                value={formValues.roleOption?.roleName ? [formValues.roleOption.roleName] : []}
                 onChange={(selected) => {
-                  const selectedRoleId = selected[0] as AccountRoleId | undefined;
-                  const selectedRole = formRoleOptions.find((option) => option.roleId === selectedRoleId) ?? (selectedRoleId ? toRoleOption(selectedRoleId) : null);
+                  const selectedRoleName = selected[0] as AccountRoleId | undefined;
+                  const selectedRole =
+                    formRoleOptions.find((option) => option.roleName === selectedRoleName) ??
+                    (selectedRoleName ? toRoleOption(selectedRoleName) : null);
                   setFormValues((previous) => ({ ...previous, roleOption: selectedRole }));
                 }}
                 classNameSelect="w-full text-left"

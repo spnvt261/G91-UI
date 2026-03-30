@@ -6,6 +6,7 @@ import type {
   AccountDeactivateRequest,
   AccountDetailResponse,
   AccountListQuery,
+  AccountRoleResponse,
   AccountListResponseData,
   AccountUpdateRequest,
 } from "../../models/account/account.model";
@@ -32,5 +33,10 @@ export const accountService = {
 
   async deactivate(id: string, requestBody?: AccountDeactivateRequest): Promise<void> {
     await api.patch<void>(withId(API.ACCOUNTS.DEACTIVATE, id), requestBody);
+  },
+
+  async getRoles(): Promise<AccountRoleResponse[]> {
+    const response = await api.get<AccountRoleResponse[]>(API.ROLES.LIST);
+    return response.data;
   },
 };

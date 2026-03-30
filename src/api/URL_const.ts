@@ -22,6 +22,10 @@ export const API = {
     DEACTIVATE: "/api/accounts/{id}/deactivate",
   },
 
+  ROLES: {
+    LIST: "/api/roles",
+  },
+
   PRODUCTS: {
     LIST: "/api/products",
     CREATE: "/api/products",
