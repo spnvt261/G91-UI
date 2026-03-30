@@ -1,9 +1,29 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { ArrowLeftOutlined, EyeOutlined, PlusOutlined, SaveOutlined, SendOutlined } from "@ant-design/icons";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Col,
+  Descriptions,
+  Divider,
+  Flex,
+  Form,
+  Grid,
+  Input,
+  InputNumber,
+  Layout,
+  Row,
+  Select,
+  Skeleton,
+  Space,
+  Steps,
+  Tag,
+  Typography,
+} from "antd";
+import type { AlertProps } from "antd";
 import { useNavigate } from "react-router-dom";
-import FormSectionCard from "../../components/forms/FormSectionCard";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomSelect from "../../components/customSelect/CustomSelect";
-import CustomTextField from "../../components/customTextField/CustomTextField";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
@@ -16,11 +36,23 @@ import type {
   QuotationPreviewResponseData,
 } from "../../models/quotation/quotation.model";
 import { quotationService } from "../../services/quotation/quotation.service";
-import { getErrorMessage, toCurrency } from "../shared/page.utils";
+import { getErrorMessage } from "../shared/page.utils";
+import QuotationItemsTable, { type QuotationItemTableRow } from "./components/QuotationItemsTable";
+import QuotationPreviewPanel from "./components/QuotationPreviewPanel";
+import { formatQuotationCurrency } from "./quotation.ui";
 
 interface QuotationItemForm {
   productId: string;
   quantity: number;
+}
+
+interface QuotationCreateFormValues {
+  projectId?: string;
+  productId?: string;
+  quantityToAdd?: number;
+  deliveryRequirements?: string;
+  promotionCode?: string;
+  note?: string;
 }
 
 const MAX_ITEMS = 20;
@@ -31,15 +63,18 @@ const PROMOTION_MAX_LENGTH = 50;
 
 const QuotationCreatePage = () => {
   const navigate = useNavigate();
-  const [selectedProductId, setSelectedProductId] = useState<string[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string[]>([]);
-  const [draftQuantity, setDraftQuantity] = useState("1");
-  const [deliveryRequirement, setDeliveryRequirement] = useState("");
-  const [selectedPromotionCode, setSelectedPromotionCode] = useState<string[]>([]);
-  const [note, setNote] = useState("");
-  const [productOptions, setProductOptions] = useState<{ label: string; value: string }[]>([]);
-  const [projectOptions, setProjectOptions] = useState<{ label: string; value: string }[]>([]);
-  const [promotionOptions, setPromotionOptions] = useState<{ label: string; value: string }[]>([]);
+  const { notify } = useNotify();
+  const screens = Grid.useBreakpoint();
+
+  const [form] = Form.useForm<QuotationCreateFormValues>();
+  const watchedProjectId = Form.useWatch("projectId", form);
+  const watchedPromotionCode = Form.useWatch("promotionCode", form);
+  const watchedDeliveryRequirement = Form.useWatch("deliveryRequirements", form);
+  const watchedNote = Form.useWatch("note", form);
+
+  const [productOptions, setProductOptions] = useState<Array<{ label: string; value: string }>>([]);
+  const [projectOptions, setProjectOptions] = useState<Array<{ label: string; value: string }>>([]);
+  const [promotionOptions, setPromotionOptions] = useState<Array<{ label: string; value: string }>>([]);
   const [products, setProducts] = useState<QuotationFormInitProduct[]>([]);
   const [projects, setProjects] = useState<QuotationFormInitProject[]>([]);
   const [customerInfo, setCustomerInfo] = useState<{
@@ -51,14 +86,21 @@ const QuotationCreatePage = () => {
   const [previewResult, setPreviewResult] = useState<QuotationPreviewResponseData | null>(null);
   const [isPreviewStale, setIsPreviewStale] = useState(true);
   const [pageLoading, setPageLoading] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { notify } = useNotify();
+  const [actionLoading, setActionLoading] = useState<"preview" | "draft" | "submit" | null>(null);
+  const [inlineAlert, setInlineAlert] = useState<{
+    type: AlertProps["type"];
+    message: string;
+    description?: string;
+  } | null>(null);
+  const [initError, setInitError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadInit = async () => {
       try {
         setPageLoading(true);
+        setInitError(null);
         const response = await quotationService.getFormInit({ page: 1, pageSize: 100 });
+
         setCustomerInfo(response.customer ?? null);
         setProducts(response.products ?? []);
         setProjects(response.projects ?? []);
@@ -80,106 +122,156 @@ const QuotationCreatePage = () => {
             value: item.code,
           })),
         );
-      } catch {
+      } catch (error) {
+        const message = getErrorMessage(error, "Không thể tải dữ liệu khởi tạo báo giá.");
+        setInitError(message);
         setCustomerInfo(null);
         setProducts([]);
         setProjects([]);
         setProductOptions([]);
         setProjectOptions([]);
         setPromotionOptions([]);
+        notify(message, "warning");
       } finally {
         setPageLoading(false);
       }
     };
 
     void loadInit();
-  }, []);
+  }, [notify]);
 
-  const productsById = useMemo(() => {
-    return new Map(products.map((item) => [item.id, item]));
-  }, [products]);
+  useEffect(() => {
+    setIsPreviewStale(true);
+  }, [watchedDeliveryRequirement, watchedNote, watchedProjectId, watchedPromotionCode, quotationItems]);
 
-  const projectsById = useMemo(() => {
-    return new Map(projects.map((item) => [item.id, item]));
-  }, [projects]);
+  const productsById = useMemo(() => new Map(products.map((item) => [item.id, item])), [products]);
+  const projectsById = useMemo(() => new Map(projects.map((item) => [item.id, item])), [projects]);
 
-  const totalAmount = useMemo(() => {
+  const estimatedSubTotal = useMemo(() => {
     return quotationItems.reduce((sum, item) => {
       const referenceUnitPrice = Number(productsById.get(item.productId)?.referenceUnitPrice ?? 0);
       return sum + item.quantity * referenceUnitPrice;
     }, 0);
   }, [productsById, quotationItems]);
 
-  useEffect(() => {
-    setIsPreviewStale(true);
-  }, [deliveryRequirement, note, quotationItems, selectedProjectId, selectedPromotionCode]);
+  const quotationItemRows = useMemo<QuotationItemTableRow[]>(() => {
+    return quotationItems.map((item) => {
+      const product = productsById.get(item.productId);
+      const unitPrice = Number(product?.referenceUnitPrice ?? 0);
 
-  const parseInputNumber = (value: string, fallback = 0) => {
-    const parsed = Number(value);
-    if (Number.isNaN(parsed) || parsed < 0) {
-      return fallback;
-    }
-    return parsed;
+      return {
+        key: item.productId,
+        productCode: product?.productCode ?? item.productId,
+        productName: product?.productName ?? "Sản phẩm",
+        productMeta: [product?.type, product?.size, product?.thickness].filter(Boolean).join(" • "),
+        quantity: item.quantity,
+        unit: product?.unit,
+        unitPrice,
+        amount: item.quantity * unitPrice,
+      };
+    });
+  }, [productsById, quotationItems]);
+
+  const selectedProject = watchedProjectId ? projectsById.get(watchedProjectId) : undefined;
+  const previewValidationMessages = previewResult?.validation?.messages ?? [];
+  const isPreviewValid = previewResult?.validation ? previewResult.validation.valid : true;
+  const canSubmitQuotation =
+    Boolean(previewResult) &&
+    !isPreviewStale &&
+    isPreviewValid &&
+    (previewResult?.summary?.totalAmount ?? 0) >= MIN_SUBMIT_AMOUNT;
+
+  const processStep =
+    quotationItems.length === 0 ? 0 : !previewResult ? 1 : isPreviewStale || !isPreviewValid ? 2 : canSubmitQuotation ? 3 : 2;
+
+  const clearInlineFieldErrors = () => {
+    form.setFields([
+      { name: "productId", errors: [] },
+      { name: "quantityToAdd", errors: [] },
+      { name: "deliveryRequirements", errors: [] },
+      { name: "note", errors: [] },
+      { name: "promotionCode", errors: [] },
+    ]);
   };
 
   const buildItemsPayload = (): QuotationItemModel[] =>
-    quotationItems.map((item) => {
-      return {
-        productId: item.productId,
-        quantity: item.quantity,
-      };
-    });
+    quotationItems.map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+    }));
 
   const getValidationError = (mode: "draft" | "preview" | "submit"): string | null => {
+    const deliveryRequirement = form.getFieldValue("deliveryRequirements") ?? "";
+    const note = form.getFieldValue("note") ?? "";
+    const promotionCode = form.getFieldValue("promotionCode") ?? "";
+
     if (quotationItems.length === 0) {
-      return "Please add at least one item.";
+      return "Bạn cần thêm ít nhất một sản phẩm vào báo giá.";
     }
     if (quotationItems.length > MAX_ITEMS) {
-      return `Quotation can contain at most ${MAX_ITEMS} items.`;
+      return `Mỗi báo giá chỉ được tối đa ${MAX_ITEMS} dòng sản phẩm.`;
     }
     if (deliveryRequirement.length > DELIVERY_MAX_LENGTH) {
-      return `Delivery requirements must be at most ${DELIVERY_MAX_LENGTH} characters.`;
+      return `Yêu cầu giao hàng tối đa ${DELIVERY_MAX_LENGTH} ký tự.`;
     }
     if (note.length > NOTE_MAX_LENGTH) {
-      return `Note must be at most ${NOTE_MAX_LENGTH} characters.`;
+      return `Ghi chú tối đa ${NOTE_MAX_LENGTH} ký tự.`;
     }
-    const promotionCode = selectedPromotionCode[0] ?? "";
     if (promotionCode.length > PROMOTION_MAX_LENGTH) {
-      return `Promotion code must be at most ${PROMOTION_MAX_LENGTH} characters.`;
+      return `Mã ưu đãi tối đa ${PROMOTION_MAX_LENGTH} ký tự.`;
     }
 
     const invalidItem = quotationItems.find((item) => item.quantity <= 0);
     if (invalidItem) {
-      return "Quantity must be greater than 0 for all items.";
+      return "Số lượng của từng dòng sản phẩm phải lớn hơn 0.";
     }
 
     if (mode === "submit") {
       if (!previewResult || isPreviewStale) {
-        return "Please preview quotation before submitting.";
+        return "Vui lòng xem trước lại báo giá trước khi gửi.";
       }
-      if (!previewResult.validation?.valid) {
-        return "Please resolve preview validation issues before submitting.";
+      if (previewResult.validation && !previewResult.validation.valid) {
+        return "Bản xem trước đang có cảnh báo, vui lòng xử lý trước khi gửi.";
       }
       if ((previewResult.summary?.totalAmount ?? 0) < MIN_SUBMIT_AMOUNT) {
-        return `Total amount must be at least ${toCurrency(MIN_SUBMIT_AMOUNT)}.`;
+        return `Tổng giá trị cần tối thiểu ${formatQuotationCurrency(MIN_SUBMIT_AMOUNT)} để gửi báo giá.`;
       }
     }
 
     return null;
   };
 
+  const buildRequestPayload = () => {
+    const values = form.getFieldsValue();
+    return {
+      projectId: values.projectId || undefined,
+      deliveryRequirements: values.deliveryRequirements?.trim() || undefined,
+      promotionCode: values.promotionCode || undefined,
+      note: values.note?.trim() || undefined,
+      items: buildItemsPayload(),
+    };
+  };
+
   const handleAddProduct = () => {
-    const productId = selectedProductId[0];
-    const quantity = Math.max(0.01, parseInputNumber(draftQuantity, 1));
+    const productId = form.getFieldValue("productId");
+    const draftQuantity = form.getFieldValue("quantityToAdd");
+    const quantity = typeof draftQuantity === "number" && draftQuantity > 0 ? draftQuantity : 1;
 
     if (!productId) {
-      notify("Please select a product.", "error");
+      form.setFields([{ name: "productId", errors: ["Vui lòng chọn sản phẩm trước khi thêm."] }]);
       return;
     }
+
     if (quotationItems.length >= MAX_ITEMS && !quotationItems.some((item) => item.productId === productId)) {
-      notify(`Only ${MAX_ITEMS} items are allowed in one quotation.`, "error");
+      setInlineAlert({
+        type: "error",
+        message: `Bạn chỉ có thể thêm tối đa ${MAX_ITEMS} dòng sản phẩm cho một báo giá.`,
+      });
       return;
     }
+
+    clearInlineFieldErrors();
+    setInlineAlert(null);
 
     setQuotationItems((previous) => {
       const existingIndex = previous.findIndex((item) => item.productId === productId);
@@ -196,11 +288,13 @@ const QuotationCreatePage = () => {
       return next;
     });
 
-    setSelectedProductId([]);
-    setDraftQuantity("1");
+    form.setFieldsValue({
+      productId: undefined,
+      quantityToAdd: 1,
+    });
   };
 
-  const updateItemQuantity = (productId: string, rawValue: string) => {
+  const updateItemQuantity = (productId: string, quantity: number) => {
     setQuotationItems((previous) =>
       previous.map((item) => {
         if (item.productId !== productId) {
@@ -208,7 +302,7 @@ const QuotationCreatePage = () => {
         }
         return {
           ...item,
-          quantity: Math.max(0.01, parseInputNumber(rawValue, 1)),
+          quantity: Math.max(0.01, quantity),
         };
       }),
     );
@@ -220,91 +314,129 @@ const QuotationCreatePage = () => {
 
   const handlePreview = async () => {
     try {
+      clearInlineFieldErrors();
+      await form.validateFields(["deliveryRequirements", "note", "promotionCode"]);
+
       const error = getValidationError("preview");
       if (error) {
-        notify(error, "error");
+        setInlineAlert({ type: "error", message: "Chưa thể xem trước báo giá.", description: error });
         return;
       }
 
-      setLoading(true);
-      const preview = await quotationService.preview({
-        projectId: selectedProjectId[0] || undefined,
-        deliveryRequirements: deliveryRequirement || undefined,
-        promotionCode: selectedPromotionCode[0] || undefined,
-        note: note || undefined,
-        items: buildItemsPayload(),
-      });
+      setActionLoading("preview");
+      setInlineAlert(null);
+      const preview = await quotationService.preview(buildRequestPayload());
       setPreviewResult(preview);
       setIsPreviewStale(false);
-      if ((preview.summary?.totalAmount ?? 0) < MIN_SUBMIT_AMOUNT) {
-        notify(`Quotation total is below minimum ${toCurrency(MIN_SUBMIT_AMOUNT)}.`, "error");
+
+      if (preview.validation && !preview.validation.valid && preview.validation.messages?.length) {
+        setInlineAlert({
+          type: "warning",
+          message: "Bản xem trước có cảnh báo cần xử lý.",
+          description: preview.validation.messages.join(" "),
+        });
+      } else if ((preview.summary?.totalAmount ?? 0) < MIN_SUBMIT_AMOUNT) {
+        setInlineAlert({
+          type: "warning",
+          message: "Bản xem trước thành công nhưng chưa đủ điều kiện gửi.",
+          description: `Tổng giá trị cần tối thiểu ${formatQuotationCurrency(MIN_SUBMIT_AMOUNT)}.`,
+        });
+      } else {
+        setInlineAlert({
+          type: "success",
+          message: "Đã cập nhật bản xem trước mới nhất.",
+        });
       }
-      if (preview.validation?.messages?.length) {
-        notify(preview.validation.messages.join("; "), "error");
+    } catch (error) {
+      if (typeof error === "object" && error !== null && "errorFields" in error) {
+        setInlineAlert({
+          type: "error",
+          message: "Vui lòng kiểm tra lại các trường thông tin được đánh dấu đỏ.",
+        });
+        return;
       }
-    } catch (err) {
-      notify(getErrorMessage(err, "Không thể preview quotation"), "error");
+
+      const message = getErrorMessage(error, "Không thể xem trước báo giá.");
+      setPreviewResult(null);
+      setIsPreviewStale(true);
+      setInlineAlert({ type: "error", message });
+      notify(message, "error");
     } finally {
-      setLoading(false);
+      setActionLoading(null);
     }
   };
 
   const handleSubmit = async () => {
     try {
+      clearInlineFieldErrors();
+      await form.validateFields(["deliveryRequirements", "note", "promotionCode"]);
+
       const error = getValidationError("submit");
       if (error) {
-        notify(error, "error");
+        setInlineAlert({ type: "error", message: "Chưa thể gửi báo giá.", description: error });
         return;
       }
 
-      setLoading(true);
-      const created = await quotationService.create({
-        projectId: selectedProjectId[0] || undefined,
-        deliveryRequirements: deliveryRequirement || undefined,
-        promotionCode: selectedPromotionCode[0] || undefined,
-        note: note || undefined,
-        items: buildItemsPayload(),
-      });
+      setActionLoading("submit");
+      const created = await quotationService.create(buildRequestPayload());
+      notify("Đã gửi báo giá thành công.", "success");
       navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", created.id));
-    } catch (err) {
-      notify(getErrorMessage(err, "Không thể submit quotation"), "error");
+    } catch (error) {
+      if (typeof error === "object" && error !== null && "errorFields" in error) {
+        setInlineAlert({
+          type: "error",
+          message: "Vui lòng kiểm tra lại các trường thông tin được đánh dấu đỏ.",
+        });
+        return;
+      }
+
+      const message = getErrorMessage(error, "Không thể gửi báo giá.");
+      setInlineAlert({ type: "error", message });
+      notify(message, "error");
     } finally {
-      setLoading(false);
+      setActionLoading(null);
     }
   };
 
   const handleSaveDraft = async () => {
     try {
+      clearInlineFieldErrors();
+      await form.validateFields(["deliveryRequirements", "note", "promotionCode"]);
+
       const error = getValidationError("draft");
       if (error) {
-        notify(error, "error");
+        setInlineAlert({ type: "error", message: "Chưa thể lưu nháp.", description: error });
         return;
       }
 
-      setLoading(true);
-      const draft = await quotationService.saveDraft({
-        projectId: selectedProjectId[0] || undefined,
-        deliveryRequirements: deliveryRequirement || undefined,
-        promotionCode: selectedPromotionCode[0] || undefined,
-        note: note || undefined,
-        items: buildItemsPayload(),
-      });
+      setActionLoading("draft");
+      const draft = await quotationService.saveDraft(buildRequestPayload());
+      notify("Đã lưu bản nháp báo giá.", "success");
       navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", draft.id));
-    } catch (err) {
-      notify(getErrorMessage(err, "Không thể save draft"), "error");
+    } catch (error) {
+      if (typeof error === "object" && error !== null && "errorFields" in error) {
+        setInlineAlert({
+          type: "error",
+          message: "Vui lòng kiểm tra lại các trường thông tin được đánh dấu đỏ.",
+        });
+        return;
+      }
+
+      const message = getErrorMessage(error, "Không thể lưu bản nháp.");
+      setInlineAlert({ type: "error", message });
+      notify(message, "error");
     } finally {
-      setLoading(false);
+      setActionLoading(null);
     }
   };
 
   return (
     <NoResizeScreenTemplate
-      loading={pageLoading}
-      loadingText="Đang tải biểu mẫu báo giá..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Create Quotation"
+          title="Soạn báo giá mới"
+          subtitle="Tạo báo giá theo luồng từng bước để kiểm soát đầy đủ sản phẩm, điều khoản và tổng giá trị trước khi gửi."
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
@@ -317,179 +449,286 @@ const QuotationCreatePage = () => {
         />
       }
       body={
-        <div className="space-y-4">
-          <FormSectionCard title="Customer Context">
-        <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
-          <p>
-            <span className="font-semibold">Company:</span> {customerInfo?.companyName || "-"}
-          </p>
-          <p>
-            <span className="font-semibold">Customer Type:</span> {customerInfo?.customerType || "-"}
-          </p>
-          <p>
-            <span className="font-semibold">Status:</span> {customerInfo?.status || "-"}
-          </p>
-        </div>
-      </FormSectionCard>
+        <Layout style={{ background: "transparent" }}>
+          {pageLoading ? (
+            <Card bordered={false} className="border border-slate-200">
+              <Skeleton active paragraph={{ rows: 8 }} />
+            </Card>
+          ) : (
+            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+              <Card bordered={false} className="border border-slate-200">
+                <Steps
+                  size="small"
+                  current={processStep}
+                  items={[
+                    { title: "Thông tin nền" },
+                    { title: "Sản phẩm báo giá" },
+                    { title: "Xem trước" },
+                    { title: "Gửi báo giá" },
+                  ]}
+                />
+              </Card>
 
-      <FormSectionCard title="Products">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <CustomSelect
-            title="Product"
-            options={productOptions}
-            value={selectedProductId}
-            onChange={setSelectedProductId}
-            placeholder="Chọn sản phẩm"
-            classNameSelect="w-full text-left"
-            classNameOptions="w-full left-0"
-            search
-          />
-          <CustomTextField title="Quantity" type="number" value={draftQuantity} onChange={(event) => setDraftQuantity(event.target.value)} />
-          <div className="flex items-end">
-            <CustomButton label="+ Add Item" className="w-full" onClick={handleAddProduct} disabled={!selectedProductId[0]} />
-          </div>
-        </div>
+              {initError ? <Alert type="warning" showIcon message="Dữ liệu khởi tạo chưa đầy đủ." description={initError} /> : null}
 
-        <div className="mt-4 overflow-x-auto rounded-md border border-slate-200">
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-100 text-left text-slate-700">
-              <tr>
-                <th className="px-3 py-2">Product</th>
-                <th className="px-3 py-2">Info</th>
-                <th className="px-3 py-2">Qty</th>
-                <th className="px-3 py-2">Reference Price</th>
-                <th className="px-3 py-2">Amount</th>
-                <th className="px-3 py-2">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {quotationItems.length === 0 ? (
-                <tr>
-                  <td className="px-3 py-3 text-slate-500" colSpan={6}>
-                    No items in quotation.
-                  </td>
-                </tr>
-              ) : (
-                quotationItems.map((item) => {
-                  const product = productsById.get(item.productId);
-                  const referenceUnitPrice = Number(product?.referenceUnitPrice ?? 0);
-                  const amount = item.quantity * referenceUnitPrice;
+              <Form<QuotationCreateFormValues>
+                form={form}
+                layout="vertical"
+                initialValues={{
+                  quantityToAdd: 1,
+                }}
+              >
+                <Row gutter={[16, 16]} align="top">
+                  <Col xs={24} xl={16}>
+                    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                      <Card bordered={false} className="border border-slate-200">
+                        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+                          <Typography.Title level={5} className="!mb-0">
+                            1. Thông tin khách hàng / dự án
+                          </Typography.Title>
 
-                  return (
-                    <tr key={item.productId} className="border-t border-slate-200 align-top">
-                      <td className="px-3 py-3">
-                        <div className="font-semibold text-slate-800">{product?.productName ?? "Product"}</div>
-                        <div className="text-xs text-slate-500">{product?.productCode ?? item.productId}</div>
-                      </td>
-                      <td className="px-3 py-3 text-xs text-slate-600">
-                        <p>Type: {product?.type || "-"}</p>
-                        <p>Size: {product?.size || "-"}</p>
-                        <p>Thickness: {product?.thickness || "-"}</p>
-                        <p>Unit: {product?.unit || "-"}</p>
-                      </td>
-                      <td className="px-3 py-3">
-                        <input
-                          type="number"
-                          min={1}
-                          value={String(item.quantity)}
-                          onChange={(event) => updateItemQuantity(item.productId, event.target.value)}
-                          className="w-24 rounded border border-slate-300 px-2 py-1"
+                          <Descriptions column={1} size="small" colon={false}>
+                            <Descriptions.Item label="Doanh nghiệp">{customerInfo?.companyName || "Chưa có thông tin"}</Descriptions.Item>
+                            <Descriptions.Item label="Phân loại">{customerInfo?.customerType || "Chưa có thông tin"}</Descriptions.Item>
+                            <Descriptions.Item label="Trạng thái">{customerInfo?.status || "Chưa có thông tin"}</Descriptions.Item>
+                          </Descriptions>
+
+                          <Row gutter={[12, 12]}>
+                            <Col xs={24} lg={16}>
+                              <Form.Item name="projectId" label="Dự án áp dụng (tuỳ chọn)">
+                                <Select
+                                  allowClear
+                                  showSearch
+                                  placeholder="Chọn dự án liên quan"
+                                  options={projectOptions}
+                                  optionFilterProp="label"
+                                />
+                              </Form.Item>
+                            </Col>
+                            <Col xs={24} lg={8}>
+                              <Form.Item label="Dự án đã chọn">
+                                {selectedProject ? (
+                                  <Tag color="blue">{selectedProject.name}</Tag>
+                                ) : (
+                                  <Typography.Text type="secondary">Chưa chọn dự án</Typography.Text>
+                                )}
+                              </Form.Item>
+                            </Col>
+                          </Row>
+                        </Space>
+                      </Card>
+
+                      <Card bordered={false} className="border border-slate-200">
+                        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+                          <Typography.Title level={5} className="!mb-0">
+                            2. Sản phẩm báo giá
+                          </Typography.Title>
+
+                          <Row gutter={[12, 12]} align="bottom">
+                            <Col xs={24} lg={14}>
+                              <Form.Item name="productId" label="Sản phẩm">
+                                <Select
+                                  showSearch
+                                  placeholder="Chọn sản phẩm để thêm vào báo giá"
+                                  options={productOptions}
+                                  optionFilterProp="label"
+                                />
+                              </Form.Item>
+                            </Col>
+                            <Col xs={24} sm={12} lg={5}>
+                              <Form.Item name="quantityToAdd" label="Số lượng">
+                                <InputNumber className="w-full" min={0.01} precision={2} />
+                              </Form.Item>
+                            </Col>
+                            <Col xs={24} sm={12} lg={5}>
+                              <Button block icon={<PlusOutlined />} onClick={handleAddProduct}>
+                                Thêm dòng
+                              </Button>
+                            </Col>
+                          </Row>
+
+                          {quotationItems.length === 0 ? (
+                            <Alert
+                              type="info"
+                              showIcon
+                              message="Bạn chưa thêm sản phẩm nào."
+                              description="Hãy chọn ít nhất một sản phẩm để tạo và xem trước báo giá."
+                            />
+                          ) : null}
+
+                          <QuotationItemsTable
+                            items={quotationItemRows}
+                            editable
+                            emptyDescription="Chưa có sản phẩm trong báo giá."
+                            onQuantityChange={updateItemQuantity}
+                            onRemove={removeItem}
+                          />
+
+                          <Flex justify="space-between" align="center" wrap="wrap" gap={8}>
+                            <Space>
+                              <Badge count={quotationItems.length} color="#1677ff" />
+                              <Typography.Text>{`Số dòng sản phẩm: ${quotationItems.length}/${MAX_ITEMS}`}</Typography.Text>
+                            </Space>
+                            <Typography.Text strong>{`Tạm tính tham chiếu: ${formatQuotationCurrency(estimatedSubTotal)}`}</Typography.Text>
+                          </Flex>
+                        </Space>
+                      </Card>
+
+                      <Card bordered={false} className="border border-slate-200">
+                        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+                          <Typography.Title level={5} className="!mb-0">
+                            3. Thông tin giao hàng và ghi chú
+                          </Typography.Title>
+
+                          <Row gutter={[12, 12]}>
+                            <Col xs={24}>
+                              <Form.Item
+                                name="deliveryRequirements"
+                                label="Yêu cầu giao hàng"
+                                rules={[{ max: DELIVERY_MAX_LENGTH, message: `Tối đa ${DELIVERY_MAX_LENGTH} ký tự.` }]}
+                              >
+                                <Input.TextArea
+                                  rows={4}
+                                  showCount
+                                  maxLength={DELIVERY_MAX_LENGTH}
+                                  placeholder="Mô tả điều kiện giao hàng, địa điểm hoặc mốc thời gian mong muốn"
+                                />
+                              </Form.Item>
+                            </Col>
+                            <Col xs={24}>
+                              <Form.Item name="note" label="Ghi chú nội dung báo giá" rules={[{ max: NOTE_MAX_LENGTH, message: `Tối đa ${NOTE_MAX_LENGTH} ký tự.` }]}>
+                                <Input.TextArea rows={4} showCount maxLength={NOTE_MAX_LENGTH} placeholder="Ghi chú thêm cho người duyệt hoặc người nhận báo giá" />
+                              </Form.Item>
+                            </Col>
+                          </Row>
+                        </Space>
+                      </Card>
+
+                      <Card bordered={false} className="border border-slate-200">
+                        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+                          <Typography.Title level={5} className="!mb-0">
+                            4. Khuyến mãi / mã ưu đãi
+                          </Typography.Title>
+
+                          <Form.Item
+                            name="promotionCode"
+                            label="Mã ưu đãi (tuỳ chọn)"
+                            rules={[{ max: PROMOTION_MAX_LENGTH, message: `Tối đa ${PROMOTION_MAX_LENGTH} ký tự.` }]}
+                          >
+                            <Select allowClear showSearch placeholder="Chọn mã ưu đãi nếu có" options={promotionOptions} optionFilterProp="label" />
+                          </Form.Item>
+
+                          {watchedPromotionCode ? (
+                            <Typography.Text type="secondary">
+                              Mã đã chọn: <Tag color="gold">{watchedPromotionCode}</Tag>
+                            </Typography.Text>
+                          ) : (
+                            <Typography.Text type="secondary">Chưa áp dụng mã ưu đãi.</Typography.Text>
+                          )}
+                        </Space>
+                      </Card>
+
+                      <Card bordered={false} className="border border-slate-200">
+                        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+                          <Typography.Title level={5} className="!mb-0">
+                            5. Xem trước báo giá
+                          </Typography.Title>
+
+                          {!previewResult ? (
+                            <Alert
+                              type="info"
+                              showIcon
+                              message="Bạn chưa xem trước báo giá."
+                              description="Hãy bấm “Xem trước” để kiểm tra tổng tiền, ưu đãi và hạn hiệu lực trước khi gửi."
+                            />
+                          ) : null}
+
+                          {previewResult && isPreviewStale ? (
+                            <Alert
+                              type="warning"
+                              showIcon
+                              message="Bản xem trước đã cũ do dữ liệu vừa thay đổi."
+                              description="Vui lòng xem trước lại để đảm bảo thông tin gửi đi là mới nhất."
+                            />
+                          ) : null}
+
+                          {previewResult && !isPreviewStale && !isPreviewValid ? (
+                            <Alert
+                              type="warning"
+                              showIcon
+                              message="Bản xem trước đang có cảnh báo."
+                              description={previewValidationMessages.join(" ") || "Vui lòng kiểm tra lại thông tin trước khi gửi báo giá."}
+                            />
+                          ) : null}
+
+                          {inlineAlert ? <Alert type={inlineAlert.type} showIcon message={inlineAlert.message} description={inlineAlert.description} /> : null}
+
+                          <Divider style={{ margin: 0 }} />
+
+                          <Flex wrap="wrap" gap={8}>
+                            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(ROUTE_URL.QUOTATION_LIST)}>
+                              Quay lại danh sách
+                            </Button>
+                            <Button
+                              icon={<EyeOutlined />}
+                              loading={actionLoading === "preview"}
+                              onClick={() => void handlePreview()}
+                              disabled={Boolean(actionLoading) || quotationItems.length === 0}
+                            >
+                              Xem trước
+                            </Button>
+                            <Button
+                              icon={<SaveOutlined />}
+                              loading={actionLoading === "draft"}
+                              onClick={() => void handleSaveDraft()}
+                              disabled={Boolean(actionLoading) || quotationItems.length === 0}
+                            >
+                              Lưu nháp
+                            </Button>
+                            <Button
+                              type={canSubmitQuotation ? "primary" : "default"}
+                              icon={<SendOutlined />}
+                              loading={actionLoading === "submit"}
+                              onClick={() => void handleSubmit()}
+                              disabled={Boolean(actionLoading) || quotationItems.length === 0 || !canSubmitQuotation}
+                            >
+                              Gửi báo giá
+                            </Button>
+                          </Flex>
+                        </Space>
+                      </Card>
+                    </Space>
+                  </Col>
+
+                  <Col xs={24} xl={8}>
+                    {screens.xl ? (
+                      <div style={{ position: "sticky", top: 16 }}>
+                        <QuotationPreviewPanel
+                          lineItems={quotationItems.length}
+                          estimatedSubTotal={estimatedSubTotal}
+                          preview={previewResult}
+                          previewStale={isPreviewStale}
+                          minSubmitAmount={MIN_SUBMIT_AMOUNT}
                         />
-                      </td>
-                      <td className="px-3 py-3">{referenceUnitPrice > 0 ? toCurrency(referenceUnitPrice) : "-"}</td>
-                      <td className="px-3 py-3 font-medium">{referenceUnitPrice > 0 ? toCurrency(amount) : "-"}</td>
-                      <td className="px-3 py-3">
-                        <CustomButton label="Remove" onClick={() => removeItem(item.productId)} className="bg-red-500 hover:bg-red-600" />
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm font-semibold text-slate-700">
-          <span>
-            Items: {quotationItems.length}/{MAX_ITEMS}
-          </span>
-          <span>Estimated total (reference): {toCurrency(totalAmount)}</span>
-        </div>
-      </FormSectionCard>
-
-      <FormSectionCard title="Quotation Info">
-        <div className="space-y-4">
-          <CustomSelect
-            title="Project"
-            options={projectOptions}
-            value={selectedProjectId}
-            onChange={setSelectedProjectId}
-            placeholder="Select project"
-            classNameSelect="w-full text-left"
-            classNameOptions="w-full left-0"
-            search
-          />
-          {selectedProjectId[0] ? (
-            <p className="text-xs text-slate-500">Selected: {projectsById.get(selectedProjectId[0])?.name ?? selectedProjectId[0]}</p>
-          ) : null}
-          <CustomSelect
-            title="Promotion"
-            options={promotionOptions}
-            value={selectedPromotionCode}
-            onChange={setSelectedPromotionCode}
-            placeholder="Select promotion (optional)"
-            classNameSelect="w-full text-left"
-            classNameOptions="w-full left-0"
-            search
-          />
-          <CustomTextField
-            title="Delivery Requirements"
-            type="textarea"
-            value={deliveryRequirement}
-            onChange={(event) => setDeliveryRequirement(event.target.value)}
-            placeholder="Enter delivery requirements"
-          />
-          <p className="text-xs text-slate-500">Max {DELIVERY_MAX_LENGTH} characters.</p>
-          <CustomTextField title="Note" type="textarea" value={note} onChange={(event) => setNote(event.target.value)} />
-          <p className="text-xs text-slate-500">Max {NOTE_MAX_LENGTH} characters.</p>
-          {previewResult ? (
-            <div className="rounded border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
-              <p>
-                <span className="font-semibold">Preview total:</span> {toCurrency(previewResult.summary.totalAmount)}
-              </p>
-              <p>
-                <span className="font-semibold">Sub-total:</span> {toCurrency(previewResult.summary.subTotal)}
-              </p>
-              <p>
-                <span className="font-semibold">Discount:</span> {toCurrency(previewResult.summary.discountAmount)}
-              </p>
-              <p>
-                <span className="font-semibold">Valid until:</span> {previewResult.validUntil || "-"}
-              </p>
-              {isPreviewStale ? <p className="font-semibold text-amber-700">Data changed after preview. Please preview again before submit.</p> : null}
-              {previewResult.validation?.messages?.length ? (
-                <p className="font-semibold text-red-700">{previewResult.validation.messages.join("; ")}</p>
-              ) : null}
-            </div>
-          ) : null}
-          <div className="flex flex-wrap items-center gap-3">
-            <CustomButton label={loading ? "Previewing..." : "Preview"} onClick={handlePreview} disabled={loading || quotationItems.length === 0} />
-            <CustomButton label={loading ? "Saving..." : "Save Draft"} onClick={handleSaveDraft} disabled={loading || quotationItems.length === 0} />
-            <CustomButton label={loading ? "Đang gửi duyệt..." : "Gửi duyệt báo giá"} onClick={handleSubmit} disabled={loading || quotationItems.length === 0} />
-            <CustomButton
-              label="Back"
-              className="bg-slate-200 text-slate-700 hover:bg-slate-300"
-              onClick={() => navigate(ROUTE_URL.QUOTATION_LIST)}
-            />
-          </div>
-        </div>
-          </FormSectionCard>
-        </div>
+                      </div>
+                    ) : (
+                      <QuotationPreviewPanel
+                        lineItems={quotationItems.length}
+                        estimatedSubTotal={estimatedSubTotal}
+                        preview={previewResult}
+                        previewStale={isPreviewStale}
+                        minSubmitAmount={MIN_SUBMIT_AMOUNT}
+                      />
+                    )}
+                  </Col>
+                </Row>
+              </Form>
+            </Space>
+          )}
+        </Layout>
       }
     />
   );
 };
 
 export default QuotationCreatePage;
-
-
