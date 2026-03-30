@@ -38,7 +38,7 @@ const ContractListPage = () => {
         const result = await contractService.getList({ keyword, status: status[0] as ContractModel["status"] | undefined });
         setAllItems(result);
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load contracts"), "error");
+        notify(getErrorMessage(err, "Không thể load contracts"), "error");
       } finally {
         setLoading(false);
       }
@@ -75,7 +75,7 @@ const ContractListPage = () => {
       options: [
         { label: "Draft", value: "DRAFT" },
         { label: "Pending", value: "PENDING" },
-        { label: "Approved", value: "APPROVED" },
+        { label: "Đã duyệt", value: "APPROVED" },
         { label: "Rejected", value: "REJECTED" },
         { label: "In Progress", value: "IN_PROGRESS" },
         { label: "Completed", value: "COMPLETED" },
@@ -183,3 +183,5 @@ const ContractListPage = () => {
 };
 
 export default ContractListPage;
+
+

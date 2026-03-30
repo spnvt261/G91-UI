@@ -37,7 +37,7 @@ const RecordPaymentPage = () => {
       });
       navigate(ROUTE_URL.PAYMENT_DETAIL.replace(":id", id));
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot record payment"), "error");
+      notify(getErrorMessage(err, "Không thể record payment"), "error");
     } finally {
       setLoading(false);
     }
@@ -80,3 +80,4 @@ const RecordPaymentPage = () => {
 };
 
 export default RecordPaymentPage;
+

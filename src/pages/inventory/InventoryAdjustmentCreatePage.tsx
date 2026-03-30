@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FormSectionCard from "../../components/forms/FormSectionCard";
 import CustomButton from "../../components/customButton/CustomButton";
@@ -92,7 +92,7 @@ const InventoryAdjustmentCreatePage = () => {
       notify("Inventory adjustment created successfully.", "success");
       navigate(ROUTE_URL.INVENTORY_STATUS);
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot create inventory adjustment"), "error");
+      notify(getErrorMessage(error, "Không thể create inventory adjustment"), "error");
     } finally {
       setSaving(false);
     }
@@ -101,7 +101,7 @@ const InventoryAdjustmentCreatePage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loadingProducts}
-      loadingText="Đang tải danh sách sản phẩm..."
+      loadingText="Äang táº£i danh sÃ¡ch sáº£n pháº©m..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -110,7 +110,7 @@ const InventoryAdjustmentCreatePage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chủ" },
+                { label: "Trang chá»§" },
                 { label: "Inventory", url: ROUTE_URL.INVENTORY_STATUS },
                 { label: "Adjustment" },
               ]}
@@ -131,7 +131,7 @@ const InventoryAdjustmentCreatePage = () => {
               }}
               classNameSelect="w-full text-left"
               classNameOptions="w-full left-0"
-              placeholder="Select product"
+              placeholder="Chọn sản phẩm"
               search
               disable={loadingProducts}
               helperText={errors.productId}
@@ -167,3 +167,5 @@ const InventoryAdjustmentCreatePage = () => {
 };
 
 export default InventoryAdjustmentCreatePage;
+
+

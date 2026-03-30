@@ -1,7 +1,11 @@
-const AppFooter = () => {
+﻿const AppFooter = () => {
+  const year = new Date().getFullYear();
+
   return (
-    <footer className="mt-auto border-t border-blue-100 bg-white px-6 py-3 text-sm text-slate-500">
-      � 2024 G90 Steel. Hanoi - Vietnam
+    <footer className="app-footer mt-auto border-t border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-500 backdrop-blur">
+      <span>© {year} G91 Steel.</span>
+      <span className="mx-2">•</span>
+      <span>Nền tảng điều hành doanh nghiệp.</span>
     </footer>
   );
 };

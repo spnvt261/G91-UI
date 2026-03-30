@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import BaseCard from "../../components/cards/BaseCard";
 import CustomButton from "../../components/customButton/CustomButton";
@@ -48,7 +48,7 @@ const PriceListDetailPage = () => {
         setDetail(response);
         setValues(createInitialPriceListFormValues(response));
       } catch (error) {
-        notify(getErrorMessage(error, "Cannot load price list detail"), "error");
+        notify(getErrorMessage(error, "Không thể load price list detail"), "error");
         navigate(ROUTE_URL.PRICE_LIST_LIST, { replace: true });
       } finally {
         setLoading(false);
@@ -117,7 +117,7 @@ const PriceListDetailPage = () => {
       notify("Price list updated successfully.", "success");
       handleCancelEdit();
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot update price list"), "error");
+      notify(getErrorMessage(error, "Không thể update price list"), "error");
     } finally {
       setSaving(false);
     }
@@ -126,7 +126,7 @@ const PriceListDetailPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Đang tải chi tiết bảng giá..."
+      loadingText="Äang táº£i chi tiáº¿t báº£ng giÃ¡..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -153,7 +153,7 @@ const PriceListDetailPage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chủ" },
+                { label: "Trang chá»§" },
                 { label: "Price List", url: ROUTE_URL.PRICE_LIST_LIST },
                 { label: "Detail" },
               ]}
@@ -225,3 +225,4 @@ const PriceListDetailPage = () => {
 };
 
 export default PriceListDetailPage;
+

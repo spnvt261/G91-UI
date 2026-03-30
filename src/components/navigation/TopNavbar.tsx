@@ -1,33 +1,47 @@
+﻿import { Button, Layout, Space, Typography, Tooltip } from "antd";
+import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
+import { useLocation } from "react-router-dom";
 import NotificationBell from "./NotificationBell";
 import UserAvatarDropdown from "./UserAvatarDropdown";
-import { MenuFoldOutlined } from "@ant-design/icons";
+import { getPageContextByPath } from "./AppBreadcrumb";
 
 interface TopNavbarProps {
   onToggleSidebar?: () => void;
-  title?: string;
+  sidebarCollapsed?: boolean;
 }
 
-const TopNavbar = ({ onToggleSidebar, title = "ERP SYSTEM" }: TopNavbarProps) => {
+const TopNavbar = ({ onToggleSidebar, sidebarCollapsed = false }: TopNavbarProps) => {
+  const { pathname } = useLocation();
+  const pageContext = getPageContextByPath(pathname);
+
   return (
-    <header className="flex h-16 items-center justify-between bg-gradient-to-r from-blue-800 to-blue-600 px-4 text-white shadow-sm">
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={onToggleSidebar}
-          className="rounded-md border border-white/30 px-2 py-1 hover:bg-white/10"
-        >
-          <MenuFoldOutlined style={{ fontSize: '1.2rem' }} />
-        </button>
-        <div>
-          <p className="font-semibold">{title}</p>
-          <p className="text-xs text-blue-100">G90 Steel Business Management</p>
+    <Layout.Header className="app-top-navbar border-b border-slate-200 bg-white px-4 py-0 md:px-6">
+      <div className="flex h-full w-full items-center justify-between gap-4">
+        <div className="app-top-navbar__left flex min-w-0 flex-1 items-center gap-3">
+          <Tooltip title={sidebarCollapsed ? "Mở thanh điều hướng" : "Thu gọn thanh điều hướng"}>
+            <Button
+              type="text"
+              shape="circle"
+              icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={onToggleSidebar}
+              aria-label="Chuyển trạng thái thanh điều hướng"
+            />
+          </Tooltip>
+
+          <Space direction="vertical" size={0} className="app-top-navbar__title-wrap">
+            <Typography.Text className="app-top-navbar__context">Không gian làm việc</Typography.Text>
+            <Typography.Title level={5} className="app-top-navbar__title" ellipsis={{ tooltip: pageContext.title }}>
+              {pageContext.title}
+            </Typography.Title>
+          </Space>
+        </div>
+
+        <div className="app-top-navbar__right flex shrink-0 items-center gap-2">
+          <NotificationBell />
+          <UserAvatarDropdown />
         </div>
       </div>
-      <div className="flex items-center gap-3">
-        <NotificationBell />
-        <UserAvatarDropdown />
-      </div>
-    </header>
+    </Layout.Header>
   );
 };
 

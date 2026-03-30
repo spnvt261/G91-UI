@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import FormSectionCard from "../../components/forms/FormSectionCard";
 import CustomButton from "../../components/customButton/CustomButton";
@@ -119,7 +119,7 @@ const ContractCreatePage = () => {
     }
 
     if (!quotation?.customerId) {
-      notify("Cannot create contract: missing customerId from quotation detail.", "error");
+      notify("Không thể create contract: missing customerId from quotation detail.", "error");
       return;
     }
 
@@ -152,7 +152,7 @@ const ContractCreatePage = () => {
       notify("Contract created successfully.", "success");
       navigate(ROUTE_URL.CONTRACT_DETAIL.replace(":id", created.id));
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot create contract"), "error");
+      notify(getErrorMessage(err, "Không thể create contract"), "error");
     } finally {
       setLoading(false);
     }
@@ -161,7 +161,7 @@ const ContractCreatePage = () => {
   return (
     <NoResizeScreenTemplate
       loading={pageLoading}
-      loadingText="Loading quotation detail..."
+      loadingText="Đang tải thông tin báo giá..."
       header={
         <ListScreenHeaderTemplate
           title="Create Contract From Quotation"
@@ -182,9 +182,9 @@ const ContractCreatePage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chủ" },
-                { label: "Hợp đồng", url: ROUTE_URL.CONTRACT_LIST },
-                { label: "Tạo hợp đồng" },
+                { label: "Trang chá»§" },
+                { label: "Há»£p Ä‘á»“ng", url: ROUTE_URL.CONTRACT_LIST },
+                { label: "Táº¡o há»£p Ä‘á»“ng" },
               ]}
             />
           }
@@ -227,3 +227,5 @@ const ContractCreatePage = () => {
 };
 
 export default ContractCreatePage;
+
+

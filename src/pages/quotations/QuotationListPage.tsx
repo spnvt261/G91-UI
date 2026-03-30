@@ -40,7 +40,7 @@ const QuotationListPage = () => {
       options: [
         { label: "Draft", value: "DRAFT" },
         { label: "Pending", value: "PENDING" },
-        { label: "Approved", value: "APPROVED" },
+        { label: "Đã duyệt", value: "APPROVED" },
         { label: "Converted", value: "CONVERTED" },
         { label: "Rejected", value: "REJECTED" },
       ],
@@ -118,7 +118,7 @@ const QuotationListPage = () => {
         );
         setTotal(response.pagination.totalItems);
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load quotations"), "error");
+        notify(getErrorMessage(err, "Không thể load quotations"), "error");
       } finally {
         setLoading(false);
       }
@@ -230,3 +230,5 @@ const QuotationListPage = () => {
 };
 
 export default QuotationListPage;
+
+

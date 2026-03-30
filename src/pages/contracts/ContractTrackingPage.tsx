@@ -31,7 +31,7 @@ const ContractTrackingPage = () => {
         setTimeline(tracking.timeline);
         setCurrentStatus(tracking.currentStatus);
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load contract tracking"), "error");
+        notify(getErrorMessage(err, "Không thể load contract tracking"), "error");
       } finally {
         setLoading(false);
       }
@@ -86,3 +86,4 @@ const ContractTrackingPage = () => {
 };
 
 export default ContractTrackingPage;
+

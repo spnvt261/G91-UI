@@ -17,8 +17,8 @@ const DefaultLogo = () => (
 
 const AuthHeader = ({
   logo,
-  systemName = "ERP SYSTEM",
-  tagline = "G90 Steel Business Management",
+  systemName = "G91 Điều Hành",
+  tagline = "Nền tảng quản trị vận hành doanh nghiệp",
 }: AuthHeaderProps) => {
   return (
     <header className="rounded-t-2xl bg-gradient-to-r from-blue-800 to-blue-600 px-6 py-5 text-white">

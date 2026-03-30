@@ -1,7 +1,8 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Drawer, Grid, Layout } from "antd";
+import { useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../navigation/Sidebar";
 import TopNavbar from "../navigation/TopNavbar";
-import { useLocation, useNavigate } from "react-router-dom";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -12,57 +13,70 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const desktopSidebarPaddingClass = sidebarCollapsed ? "lg:pl-20" : "lg:pl-72";
+  const screens = Grid.useBreakpoint();
+  const isDesktop = Boolean(screens.lg);
+
+  useEffect(() => {
+    if (isDesktop && mobileOpen) {
+      setMobileOpen(false);
+    }
+  }, [isDesktop, mobileOpen]);
 
   return (
-    <div className="relative h-screen overflow-hidden bg-gray-100">
-      <div className="fixed inset-y-0 left-0 z-30 hidden lg:block">
-        <Sidebar
-          className="h-full"
+    <Layout className="app-shell h-screen min-h-0 bg-slate-50">
+      {isDesktop ? (
+        <Layout.Sider
+          className="app-shell__sider"
+          collapsible
           collapsed={sidebarCollapsed}
-          activePath={location.pathname}
-          onNavigate={(path) => navigate(path)}
-        />
-      </div>
-
-      {mobileOpen ? (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-slate-900/50 lg:hidden"
-            onClick={() => setMobileOpen(false)}
-            aria-hidden
+          width={292}
+          collapsedWidth={88}
+          trigger={null}
+          theme="light"
+        >
+          <Sidebar
+            collapsed={sidebarCollapsed}
+            activePath={location.pathname}
+            onNavigate={(path) => navigate(path)}
           />
-          <div className="fixed inset-y-0 left-0 z-50 lg:hidden">
-            <Sidebar
-              className="h-full"
-              activePath={location.pathname}
-              onNavigate={(path) => {
-                navigate(path);
-                setMobileOpen(false);
-              }}
-            />
-          </div>
-        </>
+        </Layout.Sider>
       ) : null}
 
-      <main className={`flex h-full min-h-0 flex-1 flex-col transition-[padding-left] duration-200 ${desktopSidebarPaddingClass}`}>
+      <Layout className="app-shell__main min-w-0 bg-slate-50">
         <TopNavbar
+          sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={() => {
-            if (window.innerWidth < 1024) {
-              setMobileOpen((prev) => !prev);
-            } else {
-              setSidebarCollapsed((prev) => !prev);
+            if (isDesktop) {
+              setSidebarCollapsed((previous) => !previous);
+              return;
             }
+
+            setMobileOpen((previous) => !previous);
           }}
         />
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="flex h-full min-h-full flex-col">
-            <div className="flex flex-col min-h-0 flex-1">{children}</div>
-            {/* <AppFooter /> */}
-          </div>
-        </div>
-      </main>
-    </div>
+
+        <Layout.Content className="app-shell__content">
+          <div className="app-shell__content-inner">{children}</div>
+        </Layout.Content>
+      </Layout>
+
+      <Drawer
+        placement="left"
+        width={300}
+        open={!isDesktop && mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        className="app-shell__mobile-drawer"
+        styles={{ body: { padding: 0, height: "100%" } }}
+      >
+        <Sidebar
+          activePath={location.pathname}
+          onNavigate={(path) => {
+            navigate(path);
+            setMobileOpen(false);
+          }}
+        />
+      </Drawer>
+    </Layout>
   );
 };
 

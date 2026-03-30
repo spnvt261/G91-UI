@@ -1,4 +1,4 @@
-import { Modal } from "antd";
+﻿import { Modal } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BaseCard from "../../components/cards/BaseCard";
@@ -56,7 +56,7 @@ const ProductListPage = () => {
         setItems(response.items);
         setTotal(response.pagination.totalItems);
       } catch (error) {
-        notify(getErrorMessage(error, "Cannot load products"), "error");
+        notify(getErrorMessage(error, "Không thể load products"), "error");
       } finally {
         setLoading(false);
       }
@@ -137,7 +137,7 @@ const ProductListPage = () => {
       setDeletingItem(null);
       setPage(1);
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot delete product"), "error");
+      notify(getErrorMessage(error, "Không thể delete product"), "error");
     } finally {
       setDeleting(false);
     }
@@ -146,23 +146,23 @@ const ProductListPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Đang tải danh sách sản phẩm..."
+      loadingText="Äang táº£i danh sÃ¡ch sáº£n pháº©m..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Danh sách sản phẩm"
+          title="Danh sÃ¡ch sáº£n pháº©m"
           className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={
             <div className="flex flex-wrap gap-2">
-              {showCreateQuotation ? <CustomButton label="Tạo báo giá" onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)} /> : null}
+              {showCreateQuotation ? <CustomButton label="Táº¡o bÃ¡o giÃ¡" onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)} /> : null}
               {allowCreate ? <CustomButton label="Create Product" onClick={() => navigate(ROUTE_URL.PRODUCT_CREATE)} /> : null}
             </div>
           }
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chủ" },
-                { label: "Sản phẩm" },
+                { label: "Trang chá»§" },
+                { label: "Sáº£n pháº©m" },
               ]}
             />
           }
@@ -180,8 +180,8 @@ const ProductListPage = () => {
               setKeyword("");
               setPage(1);
             }}
-            searchPlaceholder="Tìm sản phẩm"
-            modalTitle="Bộ lọc sản phẩm"
+            searchPlaceholder="TÃ¬m sáº£n pháº©m"
+            modalTitle="Bá»™ lá»c sáº£n pháº©m"
             filters={filters}
             onApplyFilters={(values) => {
               setTypeFilter(Array.isArray(values.type) ? values.type : []);
@@ -194,7 +194,7 @@ const ProductListPage = () => {
 
           {!loading && items.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
-              Không tìm thấy sản phẩm phù hợp.
+              KhÃ´ng tÃ¬m tháº¥y sáº£n pháº©m phÃ¹ há»£p.
             </div>
           ) : null}
 
@@ -295,3 +295,4 @@ const ProductListPage = () => {
 };
 
 export default ProductListPage;
+

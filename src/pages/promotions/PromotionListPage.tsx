@@ -1,4 +1,4 @@
-import { Modal } from "antd";
+﻿import { Modal } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BaseCard from "../../components/cards/BaseCard";
@@ -71,7 +71,7 @@ const PromotionListPage = () => {
         const response = await promotionService.getList(query);
         setResult(response);
       } catch (error) {
-        notify(getErrorMessage(error, "Cannot load promotions"), "error");
+        notify(getErrorMessage(error, "Không thể load promotions"), "error");
       } finally {
         setLoading(false);
       }
@@ -176,7 +176,7 @@ const PromotionListPage = () => {
         ...previous,
       }));
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot delete promotion"), "error");
+      notify(getErrorMessage(error, "Không thể delete promotion"), "error");
     } finally {
       setDeleting(false);
     }
@@ -185,7 +185,7 @@ const PromotionListPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Đang tải danh sách promotion..."
+      loadingText="Äang táº£i danh sÃ¡ch promotion..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -194,7 +194,7 @@ const PromotionListPage = () => {
           actions={
             allowCreate ? <CustomButton label="Create Promotion" onClick={() => navigate(ROUTE_URL.PROMOTION_CREATE)} /> : undefined
           }
-          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Promotions" }]} />}
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chá»§" }, { label: "Promotions" }]} />}
         />
       }
       body={
@@ -309,3 +309,4 @@ const PromotionListPage = () => {
 };
 
 export default PromotionListPage;
+

@@ -19,14 +19,17 @@ const AuthInlineStatus = ({ status, closable = false, onClose }: AuthInlineStatu
     return null;
   }
 
+  const description = status.description?.trim() || undefined;
+
   return (
     <Alert
       showIcon
       type={status.type}
       message={status.message}
-      description={status.description}
+      description={description}
       closable={closable}
       onClose={onClose}
+      className="auth-inline-status"
     />
   );
 };

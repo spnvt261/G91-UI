@@ -43,7 +43,7 @@ const QuotationDetailPage = () => {
         setLoading(true);
         await loadData(id);
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load quotation detail"), "error");
+        notify(getErrorMessage(err, "Không thể load quotation detail"), "error");
       } finally {
         setLoading(false);
       }
@@ -63,7 +63,7 @@ const QuotationDetailPage = () => {
       await loadData(id);
       notify("Quotation submitted successfully.", "success");
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot submit draft quotation"), "error");
+      notify(getErrorMessage(err, "Không thể submit draft quotation"), "error");
     } finally {
       setSubmitting(false);
     }
@@ -83,7 +83,7 @@ const QuotationDetailPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Dang tai bao gia..."
+      loadingText="Đang tải báo giá..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -93,7 +93,7 @@ const QuotationDetailPage = () => {
             <div className="flex gap-2">
               {canSubmitDraft ? (
                 <CustomButton
-                  label={submitting ? "Submitting..." : "Submit Draft"}
+                  label={submitting ? "Đang gửi duyệt..." : "Gửi duyệt bản nháp"}
                   onClick={handleSubmitDraft}
                   disabled={!quotation || !quotation.actions?.customerCanEdit || quotation.status !== "DRAFT" || submitting}
                 />
@@ -175,3 +175,6 @@ const QuotationDetailPage = () => {
 };
 
 export default QuotationDetailPage;
+
+
+

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FormSectionCard from "../../components/forms/FormSectionCard";
 import CustomButton from "../../components/customButton/CustomButton";
@@ -243,7 +243,7 @@ const QuotationCreatePage = () => {
         notify(preview.validation.messages.join("; "), "error");
       }
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot preview quotation"), "error");
+      notify(getErrorMessage(err, "Không thể preview quotation"), "error");
     } finally {
       setLoading(false);
     }
@@ -267,7 +267,7 @@ const QuotationCreatePage = () => {
       });
       navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", created.id));
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot submit quotation"), "error");
+      notify(getErrorMessage(err, "Không thể submit quotation"), "error");
     } finally {
       setLoading(false);
     }
@@ -291,7 +291,7 @@ const QuotationCreatePage = () => {
       });
       navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", draft.id));
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot save draft"), "error");
+      notify(getErrorMessage(err, "Không thể save draft"), "error");
     } finally {
       setLoading(false);
     }
@@ -300,7 +300,7 @@ const QuotationCreatePage = () => {
   return (
     <NoResizeScreenTemplate
       loading={pageLoading}
-      loadingText="Loading quotation form..."
+      loadingText="Đang tải biểu mẫu báo giá..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -309,9 +309,9 @@ const QuotationCreatePage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chủ" },
-                { label: "Báo giá", url: ROUTE_URL.QUOTATION_LIST },
-                { label: "Tạo mới" },
+                { label: "Trang chá»§" },
+                { label: "BÃ¡o giÃ¡", url: ROUTE_URL.QUOTATION_LIST },
+                { label: "Táº¡o má»›i" },
               ]}
             />
           }
@@ -340,7 +340,7 @@ const QuotationCreatePage = () => {
             options={productOptions}
             value={selectedProductId}
             onChange={setSelectedProductId}
-            placeholder="Select product"
+            placeholder="Chọn sản phẩm"
             classNameSelect="w-full text-left"
             classNameOptions="w-full left-0"
             search
@@ -476,7 +476,7 @@ const QuotationCreatePage = () => {
           <div className="flex flex-wrap items-center gap-3">
             <CustomButton label={loading ? "Previewing..." : "Preview"} onClick={handlePreview} disabled={loading || quotationItems.length === 0} />
             <CustomButton label={loading ? "Saving..." : "Save Draft"} onClick={handleSaveDraft} disabled={loading || quotationItems.length === 0} />
-            <CustomButton label={loading ? "Submitting..." : "Submit Quotation"} onClick={handleSubmit} disabled={loading || quotationItems.length === 0} />
+            <CustomButton label={loading ? "Đang gửi duyệt..." : "Gửi duyệt báo giá"} onClick={handleSubmit} disabled={loading || quotationItems.length === 0} />
             <CustomButton
               label="Back"
               className="bg-slate-200 text-slate-700 hover:bg-slate-300"
@@ -492,3 +492,5 @@ const QuotationCreatePage = () => {
 };
 
 export default QuotationCreatePage;
+
+

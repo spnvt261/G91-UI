@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FormSectionCard from "../../components/forms/FormSectionCard";
 import CustomButton from "../../components/customButton/CustomButton";
@@ -85,7 +85,7 @@ const PromotionCreatePage = () => {
       notify("Promotion created successfully.", "success");
       navigate(ROUTE_URL.PROMOTION_DETAIL.replace(":id", response.promotion.id));
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot create promotion"), "error");
+      notify(getErrorMessage(error, "Không thể create promotion"), "error");
     } finally {
       setSaving(false);
     }
@@ -101,7 +101,7 @@ const PromotionCreatePage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chủ" },
+                { label: "Trang chá»§" },
                 { label: "Promotions", url: ROUTE_URL.PROMOTION_LIST },
                 { label: "Create" },
               ]}
@@ -173,7 +173,7 @@ const PromotionCreatePage = () => {
               onChange={(values) => setFormValues((previous) => ({ ...previous, productIds: values }))}
               classNameSelect="w-full text-left"
               classNameOptions="w-full left-0"
-              placeholder={loadingProducts ? "Loading products..." : "Select products"}
+              placeholder={loadingProducts ? "Đang tải danh sách sản phẩm..." : "Chọn sản phẩm"}
               multiple
               search
               disable={loadingProducts}
@@ -195,3 +195,5 @@ const PromotionCreatePage = () => {
 };
 
 export default PromotionCreatePage;
+
+

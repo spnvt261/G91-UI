@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FormSectionCard from "../../components/forms/FormSectionCard";
 import CustomButton from "../../components/customButton/CustomButton";
@@ -99,7 +99,7 @@ const InventoryReceiptCreatePage = () => {
       notify("Inventory receipt created successfully.", "success");
       navigate(ROUTE_URL.INVENTORY_STATUS);
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot create inventory receipt"), "error");
+      notify(getErrorMessage(error, "Không thể create inventory receipt"), "error");
     } finally {
       setSaving(false);
     }
@@ -108,7 +108,7 @@ const InventoryReceiptCreatePage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loadingProducts}
-      loadingText="Đang tải danh sách sản phẩm..."
+      loadingText="Äang táº£i danh sÃ¡ch sáº£n pháº©m..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -117,7 +117,7 @@ const InventoryReceiptCreatePage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chủ" },
+                { label: "Trang chá»§" },
                 { label: "Inventory", url: ROUTE_URL.INVENTORY_STATUS },
                 { label: "Receipt" },
               ]}
@@ -138,7 +138,7 @@ const InventoryReceiptCreatePage = () => {
               }}
               classNameSelect="w-full text-left"
               classNameOptions="w-full left-0"
-              placeholder="Select product"
+              placeholder="Chọn sản phẩm"
               search
               disable={loadingProducts}
               helperText={errors.productId}
@@ -185,3 +185,5 @@ const InventoryReceiptCreatePage = () => {
 };
 
 export default InventoryReceiptCreatePage;
+
+

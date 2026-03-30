@@ -31,7 +31,7 @@ const ContractApprovalDetailPage = () => {
         const detail = await contractService.getDetail(id);
         setContract(detail);
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load contract approval detail"), "error");
+        notify(getErrorMessage(err, "Không thể load contract approval detail"), "error");
       } finally {
         setLoading(false);
       }
@@ -58,7 +58,7 @@ const ContractApprovalDetailPage = () => {
       }
       navigate(ROUTE_URL.CONTRACT_APPROVAL_LIST);
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot submit contract decision"), "error");
+      notify(getErrorMessage(err, "Không thể submit contract decision"), "error");
     } finally {
       setActionLoading(false);
     }
@@ -101,7 +101,7 @@ const ContractApprovalDetailPage = () => {
                 <span className="font-semibold">Tổng tiền:</span> {toCurrency(contract.totalAmount)}
               </p>
               <div className="flex flex-wrap gap-3">
-                <CustomButton label="Approve" onClick={() => handleDecision("APPROVE")} disabled={actionLoading} />
+                <CustomButton label="Phê duyệt" onClick={() => handleDecision("APPROVE")} disabled={actionLoading} />
                 <CustomButton
                   label="Reject"
                   className="bg-red-500 hover:bg-red-600"
@@ -126,3 +126,5 @@ const ContractApprovalDetailPage = () => {
 };
 
 export default ContractApprovalDetailPage;
+
+

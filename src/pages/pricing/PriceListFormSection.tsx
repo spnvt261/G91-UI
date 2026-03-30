@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import dayjs, { type Dayjs } from "dayjs";
 import { ConfigProvider, DatePicker } from "antd";
 import FormSectionCard from "../../components/forms/FormSectionCard";
@@ -326,7 +326,7 @@ const PriceListFormSection = ({
                 options={availableProductOptions}
                 value={draftProductId ? [draftProductId] : []}
                 helperText={draftErrors.productId}
-                placeholder={loadingProducts ? "Loading products..." : noRemainingProducts ? "All products have been added" : "Select product"}
+                placeholder={loadingProducts ? "Đang tải danh sách sản phẩm..." : noRemainingProducts ? "Tất cả sản phẩm đã được thêm" : "Chọn sản phẩm"}
                 disable={addFromDraftDisabled}
                 search
                 onChange={(selected) => {
@@ -442,3 +442,4 @@ const PriceListFormSection = ({
 };
 
 export default PriceListFormSection;
+

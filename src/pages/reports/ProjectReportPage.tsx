@@ -31,7 +31,7 @@ const ProjectReportPage = () => {
         const projects = await reportService.getProjectReport();
         setRows(projects);
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load project report"), "error");
+        notify(getErrorMessage(err, "Không thể load project report"), "error");
       } finally {
         setLoading(false);
       }
@@ -48,7 +48,7 @@ const ProjectReportPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Loading project report..."
+      loadingText="Đang tải báo cáo dự án..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -87,3 +87,5 @@ const ProjectReportPage = () => {
 };
 
 export default ProjectReportPage;
+
+

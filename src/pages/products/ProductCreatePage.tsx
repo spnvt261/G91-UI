@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FormSectionCard from "../../components/forms/FormSectionCard";
 import CustomButton from "../../components/customButton/CustomButton";
@@ -43,7 +43,7 @@ const ProductCreatePage = () => {
       notify("Product created successfully.", "success");
       navigate(ROUTE_URL.PRODUCT_DETAIL.replace(":id", created.id));
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot create product"), "error");
+      notify(getErrorMessage(error, "Không thể create product"), "error");
     } finally {
       setSaving(false);
     }
@@ -59,7 +59,7 @@ const ProductCreatePage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chủ" },
+                { label: "Trang chá»§" },
                 { label: "Products", url: ROUTE_URL.PRODUCT_LIST },
                 { label: "Create" },
               ]}
@@ -163,3 +163,4 @@ const ProductCreatePage = () => {
 };
 
 export default ProductCreatePage;
+

@@ -5,7 +5,11 @@ interface ContentWrapperProps {
 }
 
 const ContentWrapper = ({ children }: ContentWrapperProps) => {
-  return <div className="min-h-screen bg-gray-100 p-6">{children}</div>;
+  return (
+    <div className="min-h-screen bg-slate-50 p-4 md:p-6">
+      <div className="mx-auto max-w-[1360px]">{children}</div>
+    </div>
+  );
 };
 
 export default ContentWrapper;

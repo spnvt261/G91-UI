@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import BaseCard from "../../components/cards/BaseCard";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable from "../../components/table/DataTable";
@@ -23,7 +23,7 @@ const SalesReportPage = () => {
         const report = await reportService.getSalesReport();
         setItems(report);
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load sales report"), "error");
+        notify(getErrorMessage(err, "Không thể load sales report"), "error");
       } finally {
         setLoading(false);
       }
@@ -37,7 +37,7 @@ const SalesReportPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Loading sales report..."
+      loadingText="Đang tải báo cáo doanh số..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -47,7 +47,7 @@ const SalesReportPage = () => {
             <CustomBreadcrumb
               breadcrumbs={[
                 { label: "Trang ch?" },
-                { label: "B�o c�o", url: ROUTE_URL.REPORT_SALES },
+                { label: "Báo cáo", url: ROUTE_URL.REPORT_SALES },
                 { label: "Doanh s?" },
               ]}
             />
@@ -59,7 +59,7 @@ const SalesReportPage = () => {
           <TableFilterBar searchValue={keyword} onSearchChange={setKeyword} />
           <DataTable
             columns={[
-              { key: "period", header: "K? b�o c�o" },
+              { key: "period", header: "K? báo cáo" },
               { key: "revenue", header: "Doanh thu", render: (row) => toCurrency((row as { revenue: number }).revenue) },
             ]}
             data={filtered}
@@ -71,4 +71,6 @@ const SalesReportPage = () => {
 };
 
 export default SalesReportPage;
+
+
 

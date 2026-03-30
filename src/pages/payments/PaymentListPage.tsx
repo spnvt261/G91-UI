@@ -50,7 +50,7 @@ const PaymentListPage = () => {
         setAllInvoices(invoices);
         setDebtItems(debts);
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load payments"), "error");
+        notify(getErrorMessage(err, "Không thể load payments"), "error");
       } finally {
         setLoading(false);
       }
@@ -142,7 +142,7 @@ const PaymentListPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Loading invoices..."
+      loadingText="Đang tải danh sách hóa đơn..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -238,3 +238,5 @@ const PaymentListPage = () => {
 };
 
 export default PaymentListPage;
+
+

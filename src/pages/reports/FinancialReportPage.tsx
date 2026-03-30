@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import BaseCard from "../../components/cards/BaseCard";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable from "../../components/table/DataTable";
@@ -27,7 +27,7 @@ const FinancialReportPage = () => {
         setSummaryRevenue(dashboard.summary.totalRevenue ?? 0);
         setSummaryDebt(dashboard.summary.totalDebt ?? 0);
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load financial report"), "error");
+        notify(getErrorMessage(err, "Không thể load financial report"), "error");
       } finally {
         setLoading(false);
       }
@@ -43,7 +43,7 @@ const FinancialReportPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Loading financial report..."
+      loadingText="Đang tải báo cáo tài chính..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -53,8 +53,8 @@ const FinancialReportPage = () => {
             <CustomBreadcrumb
               breadcrumbs={[
                 { label: "Trang ch?" },
-                { label: "B�o c�o", url: ROUTE_URL.REPORT_PROJECT },
-                { label: "T�i ch�nh" },
+                { label: "Báo cáo", url: ROUTE_URL.REPORT_PROJECT },
+                { label: "Tài chính" },
               ]}
             />
           }
@@ -62,14 +62,14 @@ const FinancialReportPage = () => {
       }
       body={
         <div className="space-y-4">
-          <BaseCard title="T?ng quan t�i ch�nh">
+          <BaseCard title="T?ng quan tài chính">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="rounded-lg bg-slate-50 p-4">
                 <p className="text-sm text-slate-500">T?ng doanh thu</p>
                 <p className="text-2xl font-semibold text-blue-900">{toCurrency(summaryRevenue)}</p>
               </div>
               <div className="rounded-lg bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">T?ng c�ng n?</p>
+                <p className="text-sm text-slate-500">T?ng công n?</p>
                 <p className="text-2xl font-semibold text-red-500">{toCurrency(summaryDebt)}</p>
               </div>
             </div>
@@ -93,4 +93,6 @@ const FinancialReportPage = () => {
 };
 
 export default FinancialReportPage;
+
+
 

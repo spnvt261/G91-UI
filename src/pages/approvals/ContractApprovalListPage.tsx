@@ -31,7 +31,7 @@ const ContractApprovalListPage = () => {
         const items = await contractService.getList({ keyword, status: "PENDING" });
         setAllItems(items);
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load pending contracts"), "error");
+        notify(getErrorMessage(err, "Không thể load pending contracts"), "error");
       } finally {
         setLoading(false);
       }
@@ -100,3 +100,4 @@ const ContractApprovalListPage = () => {
 };
 
 export default ContractApprovalListPage;
+

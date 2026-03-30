@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import BaseCard from "../../components/cards/BaseCard";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import DataTable from "../../components/table/DataTable";
@@ -29,7 +29,7 @@ const InventoryReportPage = () => {
         const report = await reportService.getInventoryReport();
         setItems(report);
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load inventory report"), "error");
+        notify(getErrorMessage(err, "Không thể load inventory report"), "error");
       } finally {
         setLoading(false);
       }
@@ -45,7 +45,7 @@ const InventoryReportPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Loading inventory report..."
+      loadingText="Đang tải báo cáo tồn kho..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -55,7 +55,7 @@ const InventoryReportPage = () => {
             <CustomBreadcrumb
               breadcrumbs={[
                 { label: "Trang ch?" },
-                { label: "B�o c�o", url: ROUTE_URL.REPORT_INVENTORY },
+                { label: "Báo cáo", url: ROUTE_URL.REPORT_INVENTORY },
                 { label: "T?n kho" },
               ]}
             />
@@ -67,10 +67,10 @@ const InventoryReportPage = () => {
           <TableFilterBar searchValue={keyword} onSearchChange={setKeyword} />
           <DataTable
             columns={[
-              { key: "productCode", header: "M� SP" },
-              { key: "productName", header: "T�n s?n ph?m" },
+              { key: "productCode", header: "Mã SP" },
+              { key: "productName", header: "Tên s?n ph?m" },
               { key: "availableQty", header: "T?n kh? d?ng" },
-              { key: "reservedQty", header: "�� gi? cho" },
+              { key: "reservedQty", header: "Ðã gi? cho" },
             ]}
             data={filtered}
           />
@@ -81,4 +81,6 @@ const InventoryReportPage = () => {
 };
 
 export default InventoryReportPage;
+
+
 

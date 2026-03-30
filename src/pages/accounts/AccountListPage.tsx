@@ -1,4 +1,4 @@
-import { Modal } from "antd";
+﻿import { Modal } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import BaseCard from "../../components/cards/BaseCard";
 import CustomButton from "../../components/customButton/CustomButton";
@@ -136,7 +136,7 @@ const AccountListPage = () => {
 
       setRoleIdByName(nextRoleIdByName);
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot load roles"), "error");
+      notify(getErrorMessage(error, "Không thể load roles"), "error");
     }
   }, [notify]);
 
@@ -168,7 +168,7 @@ const AccountListPage = () => {
       setEditTarget((previous) => (previous ? allItems.find((item) => item.id === previous.id) ?? previous : previous));
       setActionTarget((previous) => (previous ? allItems.find((item) => item.id === previous.id) ?? previous : previous));
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot load accounts"), "error");
+      notify(getErrorMessage(error, "Không thể load accounts"), "error");
     } finally {
       setLoading(false);
     }
@@ -241,7 +241,7 @@ const AccountListPage = () => {
       });
       setFormMode("edit");
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot load account detail"), "error");
+      notify(getErrorMessage(error, "Không thể load account detail"), "error");
     }
   };
 
@@ -257,7 +257,7 @@ const AccountListPage = () => {
       });
       setDetailOpen(true);
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot load account detail"), "error");
+      notify(getErrorMessage(error, "Không thể load account detail"), "error");
     }
   };
 
@@ -345,7 +345,7 @@ const AccountListPage = () => {
       setEditTarget(null);
       await loadAccounts();
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot save account"), "error");
+      notify(getErrorMessage(error, "Không thể save account"), "error");
     } finally {
       setCreating(false);
       setEditing(false);
@@ -358,7 +358,7 @@ const AccountListPage = () => {
     }
 
     if (actionTarget.role === "OWNER") {
-      notify("Cannot deactivate OWNER account.", "error");
+      notify("Không thể deactivate OWNER account.", "error");
       return;
     }
 
@@ -373,7 +373,7 @@ const AccountListPage = () => {
       );
       await loadAccounts();
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot deactivate account"), "error");
+      notify(getErrorMessage(error, "Không thể deactivate account"), "error");
     } finally {
       setDeactivating(false);
     }
@@ -381,7 +381,7 @@ const AccountListPage = () => {
 
   const handleActivate = async (item: AccountListItem) => {
     if (item.role === "OWNER") {
-      notify("Cannot activate OWNER account from this screen.", "error");
+      notify("Không thể activate OWNER account from this screen.", "error");
       return;
     }
 
@@ -415,7 +415,7 @@ const AccountListPage = () => {
       );
       await loadAccounts();
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot activate account"), "error");
+      notify(getErrorMessage(error, "Không thể activate account"), "error");
     } finally {
       setActivatingId(null);
     }
@@ -424,14 +424,14 @@ const AccountListPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Loading user accounts..."
+      loadingText="Đang tải danh sách tài khoản người dùng..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
           title="User Management"
           className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={<CustomButton label="Create Account" onClick={openCreateModal} />}
-          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "User Management" }]} />}
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chá»§" }, { label: "User Management" }]} />}
         />
       }
       body={
@@ -649,3 +649,5 @@ const AccountListPage = () => {
 };
 
 export default AccountListPage;
+
+

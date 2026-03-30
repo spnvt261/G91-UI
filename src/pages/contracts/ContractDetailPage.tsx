@@ -44,7 +44,7 @@ const ContractDetailPage = () => {
         setLoading(true);
         await loadContractDetail(id);
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load contract detail"), "error");
+        notify(getErrorMessage(err, "Không thể tải chi tiết hợp đồng."), "error");
       } finally {
         setLoading(false);
       }
@@ -62,9 +62,9 @@ const ContractDetailPage = () => {
       setActionLoading(true);
       await contractService.submit(id);
       await loadContractDetail(id);
-      notify("Submit contract successfully.", "success");
+      notify("Đã gửi hợp đồng để duyệt.", "success");
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot submit contract"), "error");
+      notify(getErrorMessage(err, "Không thể gửi duyệt hợp đồng."), "error");
     } finally {
       setActionLoading(false);
     }
@@ -79,9 +79,9 @@ const ContractDetailPage = () => {
       setActionLoading(true);
       await contractService.approve(id, {});
       await loadContractDetail(id);
-      notify("Approve contract successfully.", "success");
+      notify("Đã phê duyệt hợp đồng.", "success");
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot approve contract"), "error");
+      notify(getErrorMessage(err, "Không thể phê duyệt hợp đồng."), "error");
     } finally {
       setActionLoading(false);
     }
@@ -96,9 +96,9 @@ const ContractDetailPage = () => {
       setActionLoading(true);
       await contractService.reject(id, {});
       await loadContractDetail(id);
-      notify("Reject contract successfully.", "success");
+      notify("Đã từ chối hợp đồng.", "success");
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot reject contract"), "error");
+      notify(getErrorMessage(err, "Không thể từ chối hợp đồng."), "error");
     } finally {
       setActionLoading(false);
     }
@@ -109,7 +109,11 @@ const ContractDetailPage = () => {
       return;
     }
 
-    const cancellationReason = window.prompt("Nh?p lý do h?y h?p d?ng", "Cancelled by accountant from UI")?.trim();
+    const cancellationReason = window.prompt(
+      "Nhập lý do hủy hợp đồng",
+      "Hủy theo yêu cầu từ bộ phận nghiệp vụ",
+    )?.trim();
+
     if (!cancellationReason) {
       return;
     }
@@ -118,12 +122,12 @@ const ContractDetailPage = () => {
       setActionLoading(true);
       await contractService.cancel(id, {
         cancellationReason,
-        cancellationNote: "Cancelled from contract detail page",
+        cancellationNote: "Hủy từ màn hình chi tiết hợp đồng",
       });
       await loadContractDetail(id);
-      notify("Cancel contract successfully.", "success");
+      notify("Đã hủy hợp đồng.", "success");
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot cancel contract"), "error");
+      notify(getErrorMessage(err, "Không thể hủy hợp đồng."), "error");
     } finally {
       setActionLoading(false);
     }
@@ -143,7 +147,7 @@ const ContractDetailPage = () => {
 
       const selectedDocument = documents.find((item) => item.id);
       if (!selectedDocument) {
-        throw new Error("No contract document available to print.");
+        throw new Error("Không có tài liệu hợp đồng để in.");
       }
 
       const fileBlob = await contractService.exportDocument(id, selectedDocument.id);
@@ -151,9 +155,9 @@ const ContractDetailPage = () => {
       window.open(fileUrl, "_blank", "noopener,noreferrer");
       window.setTimeout(() => URL.revokeObjectURL(fileUrl), 60_000);
 
-      notify("Ðã m? tài li?u h?p d?ng d? in/xu?t.", "success");
+      notify("Đã mở tài liệu hợp đồng để in/xuất.", "success");
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot print contract documents"), "error");
+      notify(getErrorMessage(err, "Không thể in tài liệu hợp đồng."), "error");
     } finally {
       setActionLoading(false);
     }
@@ -161,11 +165,11 @@ const ContractDetailPage = () => {
 
   const columns = useMemo<DataTableColumn<ContractItemModel>[]>(
     () => [
-      { key: "productCode", header: "Mã SP" },
-      { key: "productName", header: "Tên s?n ph?m" },
-      { key: "quantity", header: "S? lu?ng" },
-      { key: "unitPrice", header: "Ðon giá", render: (row) => toCurrency(row.unitPrice) },
-      { key: "amount", header: "Thành ti?n", render: (row) => toCurrency(row.amount) },
+      { key: "productCode", header: "Mã sản phẩm" },
+      { key: "productName", header: "Tên sản phẩm" },
+      { key: "quantity", header: "Số lượng" },
+      { key: "unitPrice", header: "Đơn giá", render: (row) => toCurrency(row.unitPrice) },
+      { key: "amount", header: "Thành tiền", render: (row) => toCurrency(row.amount) },
     ],
     [],
   );
@@ -173,31 +177,31 @@ const ContractDetailPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Ðang t?i h?p d?ng..."
+      loadingText="Đang tải hợp đồng..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Chi ti?t h?p d?ng"
+          title="Chi tiết hợp đồng"
           className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={
             <div className="flex flex-wrap gap-2">
               {canSubmit ? (
                 <CustomButton
-                  label={actionLoading ? "Submitting..." : "Submit h?p d?ng"}
+                  label={actionLoading ? "Đang gửi duyệt..." : "Gửi duyệt hợp đồng"}
                   onClick={handleSubmitContract}
                   disabled={!contract || actionLoading}
                 />
               ) : null}
               {canApprove ? (
                 <CustomButton
-                  label={actionLoading ? "Approving..." : "Ch?p nh?n h?p d?ng"}
+                  label={actionLoading ? "Đang phê duyệt..." : "Phê duyệt hợp đồng"}
                   onClick={handleApproveContract}
                   disabled={!contract || actionLoading}
                 />
               ) : null}
               {canApprove ? (
                 <CustomButton
-                  label={actionLoading ? "Rejecting..." : "T? ch?i h?p d?ng"}
+                  label={actionLoading ? "Đang từ chối..." : "Từ chối hợp đồng"}
                   className="bg-red-500 hover:bg-red-600"
                   onClick={handleRejectContract}
                   disabled={!contract || actionLoading}
@@ -205,7 +209,7 @@ const ContractDetailPage = () => {
               ) : null}
               {canCancel ? (
                 <CustomButton
-                  label={actionLoading ? "Cancelling..." : "H?y h?p d?ng"}
+                  label={actionLoading ? "Đang hủy..." : "Hủy hợp đồng"}
                   className="bg-orange-500 hover:bg-orange-600"
                   onClick={handleCancelContract}
                   disabled={!contract || actionLoading}
@@ -213,7 +217,7 @@ const ContractDetailPage = () => {
               ) : null}
               {canPrint ? (
                 <CustomButton
-                  label={actionLoading ? "Preparing..." : "In tài li?u"}
+                  label={actionLoading ? "Đang chuẩn bị..." : "In tài liệu"}
                   onClick={handlePrintContract}
                   disabled={!contract || actionLoading}
                 />
@@ -225,7 +229,7 @@ const ContractDetailPage = () => {
               />
               {canEdit ? (
                 <CustomButton
-                  label="Ch?nh s?a"
+                  label="Chỉnh sửa"
                   onClick={() => navigate(ROUTE_URL.CONTRACT_EDIT.replace(":id", contract?.id ?? ""))}
                   disabled={!contract || actionLoading}
                 />
@@ -235,9 +239,9 @@ const ContractDetailPage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang ch?" },
-                { label: "H?p d?ng", url: ROUTE_URL.CONTRACT_LIST },
-                { label: "Chi ti?t" },
+                { label: "Trang chủ" },
+                { label: "Hợp đồng", url: ROUTE_URL.CONTRACT_LIST },
+                { label: "Chi tiết" },
               ]}
             />
           }
@@ -249,7 +253,7 @@ const ContractDetailPage = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
                 <p>
-                  <span className="font-semibold">S? h?p d?ng:</span> {contract.contractNumber || contract.id}
+                  <span className="font-semibold">Số hợp đồng:</span> {contract.contractNumber || contract.id}
                 </p>
                 <p>
                   <span className="font-semibold">Báo giá:</span> {contract.quotationId}
@@ -258,13 +262,13 @@ const ContractDetailPage = () => {
                   <span className="font-semibold">Khách hàng:</span> {contract.customerName || contract.customerId || "-"}
                 </p>
                 <p>
-                  <span className="font-semibold">Tr?ng thái:</span> {contract.status}
+                  <span className="font-semibold">Trạng thái:</span> {contract.status}
                 </p>
                 <p>
-                  <span className="font-semibold">Payment Terms:</span> {contract.paymentTerms ?? "-"}
+                  <span className="font-semibold">Điều khoản thanh toán:</span> {contract.paymentTerms ?? "-"}
                 </p>
                 <p>
-                  <span className="font-semibold">T?ng ti?n:</span> {toCurrency(contract.totalAmount)}
+                  <span className="font-semibold">Tổng tiền:</span> {toCurrency(contract.totalAmount)}
                 </p>
               </div>
               <DataTable columns={columns} data={contract.items} />
@@ -277,4 +281,3 @@ const ContractDetailPage = () => {
 };
 
 export default ContractDetailPage;
-

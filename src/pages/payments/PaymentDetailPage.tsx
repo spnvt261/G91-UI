@@ -39,7 +39,7 @@ const PaymentDetailPage = () => {
         const detail = await paymentService.getInvoiceDetail(id);
         setInvoice(detail);
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load invoice detail"), "error");
+        notify(getErrorMessage(err, "Không thể load invoice detail"), "error");
       } finally {
         setLoading(false);
       }
@@ -70,7 +70,7 @@ const PaymentDetailPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Ðang t?i thông tin hóa don..."
+      loadingText="Đang tải thông tin hóa đơn..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -155,4 +155,6 @@ const PaymentDetailPage = () => {
 };
 
 export default PaymentDetailPage;
+
+
 

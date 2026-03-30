@@ -28,7 +28,7 @@ const DashboardReportPage = () => {
         setTotalOrders(dashboard.summary.totalOrders ?? 0);
         setTotalDebt(dashboard.summary.totalDebt ?? 0);
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load dashboard report"), "error");
+        notify(getErrorMessage(err, "Không thể load dashboard report"), "error");
       } finally {
         setLoading(false);
       }
@@ -50,7 +50,7 @@ const DashboardReportPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Loading dashboard report..."
+      loadingText="Đang tải báo cáo tổng quan..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -83,3 +83,5 @@ const DashboardReportPage = () => {
 };
 
 export default DashboardReportPage;
+
+

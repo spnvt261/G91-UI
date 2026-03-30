@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { BellOutlined } from "@ant-design/icons";
+import { BellOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { Badge, Button, Card, Divider, Dropdown, Empty, Space, Typography } from "antd";
 
 interface NotificationItem {
   id: number;
@@ -7,53 +7,68 @@ interface NotificationItem {
   time: string;
 }
 
-const dummyNotifications: NotificationItem[] = [
-  { id: 1, title: "New order #SO0053 created", time: "2 minutes ago" },
-  { id: 2, title: "Stock alert: G90 1.3mm is low", time: "10 minutes ago" },
-  { id: 3, title: "Customer payment received", time: "1 hour ago" },
+const placeholderNotifications: NotificationItem[] = [
+  { id: 1, title: "Báo cáo doanh số tuần đã sẵn sàng.", time: "2 phút trước" },
+  { id: 2, title: "Kho thép tấm G90 sắp chạm ngưỡng cảnh báo.", time: "10 phút trước" },
 ];
 
 const NotificationBell = () => {
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const count = useMemo(() => dummyNotifications.length, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const hasData = placeholderNotifications.length > 0;
 
   return (
-    <div className="relative" ref={containerRef}>
-      <button
-        type="button"
-        className="relative rounded-full p-2 text-white hover:bg-white/10"
-        onClick={() => setOpen((prev) => !prev)}
-      >
-        <BellOutlined style={{ fontSize: '1.25rem' }} />
-        <span className="absolute -right-1 -top-1 rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">{count}</span>
-      </button>
+    <Dropdown
+      trigger={["click"]}
+      placement="bottomRight"
+      dropdownRender={() => (
+        <Card
+          bordered={false}
+          className="app-notification-dropdown"
+          styles={{ body: { padding: 14 } }}
+        >
+          <Space direction="vertical" size={10} style={{ width: "100%" }}>
+            <Space align="center" size={8}>
+              <InfoCircleOutlined style={{ color: "#1677ff" }} />
+              <Typography.Text strong>Thông báo</Typography.Text>
+            </Space>
 
-      {open ? (
-        <div className="absolute right-0 z-40 mt-2 w-72 rounded-lg bg-white p-2 text-slate-800 shadow-lg">
-          <p className="px-2 py-1 text-sm font-semibold text-slate-500">Notifications</p>
-          <ul className="max-h-64 overflow-y-auto">
-            {dummyNotifications.map((item) => (
-              <li key={item.id} className="rounded-md px-2 py-2 hover:bg-blue-50">
-                <p className="text-sm font-medium">{item.title}</p>
-                <p className="text-xs text-slate-500">{item.time}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-    </div>
+            <Typography.Text type="secondary">
+              Đây là khu vực thông báo tổng hợp. Dữ liệu sẽ đầy đủ hơn khi module realtime hoàn tất.
+            </Typography.Text>
+
+            <Divider style={{ margin: "2px 0" }} />
+
+            {hasData ? (
+              <Space direction="vertical" size={10} style={{ width: "100%" }}>
+                {placeholderNotifications.map((item) => (
+                  <div key={item.id} className="app-notification-dropdown__item">
+                    <Typography.Text>{item.title}</Typography.Text>
+                    <Typography.Text type="secondary" className="app-notification-dropdown__time">
+                      {item.time}
+                    </Typography.Text>
+                  </div>
+                ))}
+              </Space>
+            ) : (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="Hiện chưa có thông báo mới."
+              />
+            )}
+          </Space>
+        </Card>
+      )}
+    >
+      <Button
+        type="text"
+        shape="circle"
+        aria-label="Mở danh sách thông báo"
+        icon={
+          <Badge count={placeholderNotifications.length} size="small" offset={[-1, 1]}>
+            <BellOutlined />
+          </Badge>
+        }
+      />
+    </Dropdown>
   );
 };
 

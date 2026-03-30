@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BaseCard from "../../components/cards/BaseCard";
 import CustomButton from "../../components/customButton/CustomButton";
@@ -37,7 +37,7 @@ const InventoryStatusPage = () => {
         setItems(response.items);
         setTotal(response.totalElements);
       } catch (error) {
-        notify(getErrorMessage(error, "Cannot load inventory status"), "error");
+        notify(getErrorMessage(error, "Không thể load inventory status"), "error");
       } finally {
         setLoading(false);
       }
@@ -62,7 +62,7 @@ const InventoryStatusPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Đang tải tồn kho..."
+      loadingText="Äang táº£i tá»“n kho..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -80,7 +80,7 @@ const InventoryStatusPage = () => {
               />
             </div>
           }
-          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Inventory" }]} />}
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chá»§" }, { label: "Inventory" }]} />}
         />
       }
       body={
@@ -108,3 +108,4 @@ const InventoryStatusPage = () => {
 };
 
 export default InventoryStatusPage;
+

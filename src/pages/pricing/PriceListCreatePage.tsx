@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomButton from "../../components/customButton/CustomButton";
 import type { Option } from "../../components/customSelect/CustomSelect";
@@ -46,7 +46,7 @@ const PriceListCreatePage = () => {
       );
     } catch (error) {
       setProductOptions([]);
-      setProductLoadError(getErrorMessage(error, "Cannot load active products. Please retry."));
+      setProductLoadError(getErrorMessage(error, "Không thể load active products. Vui lòng thử lại."));
     } finally {
       setLoadingProducts(false);
     }
@@ -74,7 +74,7 @@ const PriceListCreatePage = () => {
       notify("Price list created successfully.", "success");
       navigate(ROUTE_URL.PRICE_LIST_DETAIL.replace(":id", created.id));
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot create price list"), "error");
+      notify(getErrorMessage(error, "Không thể create price list"), "error");
     } finally {
       setSaving(false);
     }
@@ -90,7 +90,7 @@ const PriceListCreatePage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chủ" },
+                { label: "Trang chá»§" },
                 { label: "Price List", url: ROUTE_URL.PRICE_LIST_LIST },
                 { label: "Create" },
               ]}
@@ -132,3 +132,4 @@ const PriceListCreatePage = () => {
 };
 
 export default PriceListCreatePage;
+

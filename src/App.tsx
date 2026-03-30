@@ -63,6 +63,7 @@ import type { AppDispatch, RootState } from "./store";
 import { loginSuccess, logout as logoutAction } from "./store/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { clearAuthSession, getStoredAccessToken, getStoredUserRole, persistAuthSession } from "./utils/authSession";
+import Loading from "./components/loading/Loading";
 
 const AppAuthenticatedLayout = () => {
   const location = useLocation();
@@ -117,7 +118,7 @@ const AppAuthenticatedLayout = () => {
   }
 
   if (!currentUser) {
-    return <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">Loading user...</div>;
+    return <Loading mode="page" text="Đang đồng bộ thông tin tài khoản..." fullScreen />;
   }
 
   if (!canAccessPathByRole(role, location.pathname)) {

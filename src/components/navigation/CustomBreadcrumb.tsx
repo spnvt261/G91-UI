@@ -31,14 +31,18 @@ const CustomBreadcrumb = ({ breadcrumbs, className }: CustomBreadcrumbProps) => 
   return (
     <Breadcrumb className={className}>
       {breadcrumbs.map((item, index) => {
-        const isEdgeItem = index === 0 || index === breadcrumbs.length - 1;
-        const isClickable = !isEdgeItem && (Boolean(item.url) || Boolean(item.onClick));
+        const isLast = index === breadcrumbs.length - 1;
+        const isClickable = !isLast && (Boolean(item.url) || Boolean(item.onClick));
 
         return (
           <Breadcrumb.Item
             key={`${index}-${String(item.label)}`}
             className={isClickable ? "cursor-pointer" : "pointer-events-none"}
-            onClick={() => handleClick(item)}
+            onClick={() => {
+              if (isClickable) {
+                handleClick(item);
+              }
+            }}
           >
             {item.label}
           </Breadcrumb.Item>

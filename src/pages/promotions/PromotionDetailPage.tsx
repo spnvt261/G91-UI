@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import BaseCard from "../../components/cards/BaseCard";
 import FormSectionCard from "../../components/forms/FormSectionCard";
@@ -63,7 +63,7 @@ const PromotionDetailPage = () => {
         setPromotion(response.promotion);
         setFormValues(createInitialPromotionFormValues(response.promotion));
       } catch (error) {
-        notify(getErrorMessage(error, "Cannot load promotion detail"), "error");
+        notify(getErrorMessage(error, "Không thể load promotion detail"), "error");
         navigate(ROUTE_URL.PROMOTION_LIST, { replace: true });
       } finally {
         setLoading(false);
@@ -181,7 +181,7 @@ const PromotionDetailPage = () => {
         return next;
       });
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot update promotion"), "error");
+      notify(getErrorMessage(error, "Không thể update promotion"), "error");
     } finally {
       setSaving(false);
     }
@@ -190,7 +190,7 @@ const PromotionDetailPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Đang tải promotion..."
+      loadingText="Äang táº£i promotion..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -217,7 +217,7 @@ const PromotionDetailPage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chủ" },
+                { label: "Trang chá»§" },
                 { label: "Promotions", url: ROUTE_URL.PROMOTION_LIST },
                 { label: "Detail" },
               ]}
@@ -358,7 +358,7 @@ const PromotionDetailPage = () => {
                   onChange={(values) => setFormValues((previous) => ({ ...previous, productIds: values }))}
                   classNameSelect="w-full text-left"
                   classNameOptions="w-full left-0"
-                  placeholder={loadingProducts ? "Loading products..." : "Select products"}
+                  placeholder={loadingProducts ? "Đang tải danh sách sản phẩm..." : "Chọn sản phẩm"}
                   multiple
                   search
                   disable={loadingProducts}
@@ -383,3 +383,5 @@ const PromotionDetailPage = () => {
 };
 
 export default PromotionDetailPage;
+
+

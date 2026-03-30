@@ -1,4 +1,4 @@
-import { Modal } from "antd";
+﻿import { Modal } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BaseCard from "../../components/cards/BaseCard";
@@ -45,7 +45,7 @@ const PriceListListPage = () => {
         setItems(response.items);
         setTotal(response.totalElements);
       } catch (error) {
-        notify(getErrorMessage(error, "Cannot load price lists"), "error");
+        notify(getErrorMessage(error, "Không thể load price lists"), "error");
       } finally {
         setLoading(false);
       }
@@ -120,7 +120,7 @@ const PriceListListPage = () => {
       setDeletingItem(null);
       setQuery((previous) => ({ ...previous }));
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot delete price list"), "error");
+      notify(getErrorMessage(error, "Không thể delete price list"), "error");
     } finally {
       setDeleting(false);
     }
@@ -129,14 +129,14 @@ const PriceListListPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Đang tải danh sách bảng giá..."
+      loadingText="Äang táº£i danh sÃ¡ch báº£ng giÃ¡..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
           title="Price List Management"
           className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={canCreate ? <CustomButton label="Create Price List" onClick={() => navigate(ROUTE_URL.PRICE_LIST_CREATE)} /> : undefined}
-          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Price List" }]} />}
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chá»§" }, { label: "Price List" }]} />}
         />
       }
       body={
@@ -241,3 +241,4 @@ const PriceListListPage = () => {
 };
 
 export default PriceListListPage;
+

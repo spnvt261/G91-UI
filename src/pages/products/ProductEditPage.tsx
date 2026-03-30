@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import FormSectionCard from "../../components/forms/FormSectionCard";
 import CustomButton from "../../components/customButton/CustomButton";
@@ -38,7 +38,7 @@ const ProductEditPage = () => {
         const detail = await productService.getDetail(id);
         setValues(createInitialProductFormValues(detail));
       } catch (error) {
-        notify(getErrorMessage(error, "Cannot load product"), "error");
+        notify(getErrorMessage(error, "Không thể load product"), "error");
         navigate(ROUTE_URL.PRODUCT_LIST, { replace: true });
       } finally {
         setLoading(false);
@@ -70,7 +70,7 @@ const ProductEditPage = () => {
       notify("Product updated successfully.", "success");
       navigate(ROUTE_URL.PRODUCT_DETAIL.replace(":id", id));
     } catch (error) {
-      notify(getErrorMessage(error, "Cannot update product"), "error");
+      notify(getErrorMessage(error, "Không thể update product"), "error");
     } finally {
       setSaving(false);
     }
@@ -79,7 +79,7 @@ const ProductEditPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Loading product..."
+      loadingText="Đang tải thông tin sản phẩm..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -88,7 +88,7 @@ const ProductEditPage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chủ" },
+                { label: "Trang chá»§" },
                 { label: "Products", url: ROUTE_URL.PRODUCT_LIST },
                 { label: "Update" },
               ]}
@@ -192,3 +192,5 @@ const ProductEditPage = () => {
 };
 
 export default ProductEditPage;
+
+

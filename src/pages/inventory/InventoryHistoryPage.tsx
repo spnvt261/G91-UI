@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BaseCard from "../../components/cards/BaseCard";
 import CustomButton from "../../components/customButton/CustomButton";
@@ -35,7 +35,7 @@ const InventoryHistoryPage = () => {
         setItems(response.items);
         setTotal(response.totalElements);
       } catch (error) {
-        notify(getErrorMessage(error, "Cannot load inventory history"), "error");
+        notify(getErrorMessage(error, "Không thể load inventory history"), "error");
       } finally {
         setLoading(false);
       }
@@ -85,7 +85,7 @@ const InventoryHistoryPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Đang tải lịch sử kho..."
+      loadingText="Äang táº£i lá»‹ch sá»­ kho..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -95,7 +95,7 @@ const InventoryHistoryPage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chủ" },
+                { label: "Trang chá»§" },
                 { label: "Inventory", url: ROUTE_URL.INVENTORY_STATUS },
                 { label: "History" },
               ]}
@@ -160,3 +160,4 @@ const InventoryHistoryPage = () => {
 };
 
 export default InventoryHistoryPage;
+

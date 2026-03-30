@@ -1,84 +1,115 @@
-import { useMemo, useState, type ReactNode } from "react";
-import { DownOutlined } from "@ant-design/icons";
+import { Badge, Space, Typography } from "antd";
+import type { ItemType } from "antd/es/menu/interface";
+import type { ReactNode } from "react";
 
 export interface SidebarNode {
   id: string;
   icon?: ReactNode;
   label: string;
+  description?: string;
   path?: string;
+  badgeText?: string;
   children?: SidebarNode[];
 }
 
-interface SidebarItemProps {
-  item: SidebarNode;
-  activePath?: string;
-  collapsed?: boolean;
-  depth?: number;
-  onNavigate?: (path: string) => void;
+interface SidebarActiveState {
+  selectedKeys: string[];
+  openKeys: string[];
+  activeNode?: SidebarNode;
 }
 
-const SidebarItem = ({
-  item,
-  activePath,
-  collapsed = false,
-  depth = 0,
-  onNavigate,
-}: SidebarItemProps) => {
-  const hasChildren = Boolean(item.children?.length);
-  const isActive = useMemo(() => {
-    if (!activePath) return false;
-    if (item.path && activePath === item.path) return true;
-    return item.children?.some((child) => child.path && activePath.startsWith(child.path)) ?? false;
-  }, [activePath, item.children, item.path]);
+const normalizePath = (path: string) => path.replace(/\/+$/, "") || "/";
 
-  const [open, setOpen] = useState(isActive);
+const nodeKey = (node: SidebarNode) => node.path ?? node.id;
 
-  const handleClick = () => {
-    if (hasChildren) {
-      setOpen((prev) => !prev);
-      return;
-    }
+const isPathActive = (currentPath: string, nodePath: string) => {
+  const normalizedCurrent = normalizePath(currentPath);
+  const normalizedNodePath = normalizePath(nodePath);
 
-    if (item.path) {
-      onNavigate?.(item.path);
-    }
-  };
+  if (normalizedCurrent === normalizedNodePath) {
+    return true;
+  }
+
+  if (normalizedNodePath === "/") {
+    return normalizedCurrent === "/";
+  }
+
+  return normalizedCurrent.startsWith(`${normalizedNodePath}/`);
+};
+
+const renderNodeLabel = (node: SidebarNode, collapsed: boolean) => {
+  if (collapsed) {
+    return node.label;
+  }
 
   return (
-    <li>
-      <button
-        type="button"
-        onClick={handleClick}
-        className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition ${
-          isActive ? "bg-blue-500/30 text-white" : "text-blue-100 hover:bg-blue-500/20"
-        }`}
-        style={{ paddingLeft: `${12 + depth * 16}px` }}
-      >
-        <span className="shrink-0">{item.icon}</span>
-        {!collapsed ? <span className="flex-1 truncate text-sm font-medium">{item.label}</span> : null}
-        {hasChildren && !collapsed ? (
-          <span className={`text-xs transition ${open ? "rotate-180" : ""}`}>
-            <DownOutlined style={{ fontSize: '0.75rem' }} />
-          </span>
+    <Space direction="vertical" size={1} style={{ width: "100%", lineHeight: 1.2 }}>
+      <Space size={6} align="center" wrap>
+        <Typography.Text className="app-sidebar__item-label">{node.label}</Typography.Text>
+        {node.badgeText ? (
+          <Badge
+            count={node.badgeText}
+            color="#1677ff"
+            style={{ boxShadow: "none", fontWeight: 600 }}
+          />
         ) : null}
-      </button>
-
-      {hasChildren && open && !collapsed ? (
-        <ul className="mt-1 space-y-1">
-          {item.children?.map((child) => (
-            <SidebarItem
-              key={child.id}
-              item={child}
-              activePath={activePath}
-              collapsed={collapsed}
-              depth={depth + 1}
-              onNavigate={onNavigate}
-            />
-          ))}
-        </ul>
+      </Space>
+      {node.description ? (
+        <Typography.Text className="app-sidebar__item-description">
+          {node.description}
+        </Typography.Text>
       ) : null}
-    </li>
+    </Space>
   );
 };
 
-export default SidebarItem;
+export const buildSidebarMenuItems = (nodes: SidebarNode[], collapsed: boolean): ItemType[] =>
+  nodes.map((node) => {
+    const children = node.children?.length ? buildSidebarMenuItems(node.children, collapsed) : undefined;
+
+    return {
+      key: nodeKey(node),
+      icon: node.icon,
+      label: renderNodeLabel(node, collapsed),
+      children,
+      title: node.label,
+    };
+  });
+
+export const resolveSidebarActiveState = (nodes: SidebarNode[], currentPath?: string): SidebarActiveState => {
+  if (!currentPath) {
+    return { selectedKeys: [], openKeys: [] };
+  }
+
+  const matches: Array<{
+    score: number;
+    node: SidebarNode;
+    parentKeys: string[];
+  }> = [];
+
+  const visit = (node: SidebarNode, parentKeys: string[]) => {
+    if (node.path && isPathActive(currentPath, node.path)) {
+      const score = normalizePath(node.path).length;
+      matches.push({ score, node, parentKeys });
+    }
+
+    if (node.children?.length) {
+      const nextParentKeys = [...parentKeys, nodeKey(node)];
+      node.children.forEach((child) => visit(child, nextParentKeys));
+    }
+  };
+
+  nodes.forEach((node) => visit(node, []));
+
+  const matchedNode = matches.sort((left, right) => right.score - left.score)[0];
+
+  if (!matchedNode) {
+    return { selectedKeys: [], openKeys: [] };
+  }
+
+  return {
+    selectedKeys: [nodeKey(matchedNode.node)],
+    openKeys: matchedNode.parentKeys,
+    activeNode: matchedNode.node,
+  };
+};

@@ -26,7 +26,7 @@ const DashboardPage = () => {
         setPendingQuotations(dashboard.openProjectCount ?? 0);
         setInventoryValue((dashboard.inventoryAlertCount ?? 0) * 1000000);
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load dashboard report"), "error");
+        notify(getErrorMessage(err, "Không thể load dashboard report"), "error");
       } finally {
         setLoading(false);
       }
@@ -48,7 +48,7 @@ const DashboardPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Loading dashboard..."
+      loadingText="Đang tải dữ liệu tổng quan..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -71,3 +71,5 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+
+

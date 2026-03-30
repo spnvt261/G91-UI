@@ -1,10 +1,225 @@
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --primary-color: 30, 91, 168;
-  --primary-text-color: 255,255,255;
-  --primary-border-color: 217,217,217;
-  --primary-rounded:1rem;
+  --app-shell-bg: #f6f8fb;
+  --app-card-bg: #ffffff;
+  --app-border: #e2e8f0;
+  --app-text-strong: #0f172a;
+  --app-text-muted: #64748b;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--app-shell-bg);
+  color: var(--app-text-strong);
+  font-family: "Be Vietnam Pro", "Segoe UI", sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+.app-shell__sider {
+  border-right: 1px solid var(--app-border);
+  background: #fff !important;
+}
+
+.app-shell__main {
+  min-width: 0;
+}
+
+.app-shell__content {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app-shell__content-inner {
+  height: 100%;
+  min-height: 0;
+}
+
+.app-top-navbar {
+  min-height: 68px;
+  height: auto;
+  line-height: normal;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.app-top-navbar__context {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--app-text-muted);
+  line-height: 1.2;
+}
+
+.app-top-navbar__title-wrap {
+  min-width: 0;
+}
+
+.app-top-navbar__left {
+  min-width: 0;
+}
+
+.app-top-navbar__right {
+  margin-left: auto;
+}
+
+.app-top-navbar__title {
+  margin: 0 !important;
+  line-height: 1.25 !important;
+  max-width: min(46vw, 560px);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.app-sidebar__logo {
+  height: 38px;
+  width: 38px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: #f8fbff;
+  background: linear-gradient(145deg, #0f5ca8, #1d74c9);
+}
+
+.app-sidebar__menu {
+  background: transparent;
+}
+
+.app-sidebar__menu .ant-menu-item,
+.app-sidebar__menu .ant-menu-submenu-title {
+  margin-inline: 0 !important;
+  width: 100% !important;
+}
+
+.app-sidebar__menu .ant-menu-submenu-title {
+  font-weight: 500;
+}
+
+.app-sidebar__menu .ant-menu-item-selected,
+.app-sidebar__menu .ant-menu-submenu-selected > .ant-menu-submenu-title {
+  background: #e8f2ff !important;
+  color: #0f5ca8 !important;
+}
+
+.app-sidebar__item-label {
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.app-sidebar__item-description {
+  font-size: 12px;
+  color: #94a3b8 !important;
+}
+
+.app-breadcrumb {
+  margin-bottom: 0;
+}
+
+.app-breadcrumb__home-link,
+.app-breadcrumb__link {
+  color: #64748b;
+}
+
+.app-breadcrumb__home-link:hover,
+.app-breadcrumb__link:hover {
+  color: #0f5ca8;
+}
+
+.app-breadcrumb__current {
+  color: #0f172a !important;
+}
+
+.app-page-header {
+  background: linear-gradient(165deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+}
+
+.app-page-header__meta {
+  border-top: 1px solid var(--app-border);
+  padding-top: 12px;
+}
+
+.app-user-dropdown {
+  height: auto;
+  padding: 3px 8px !important;
+  border-radius: 999px;
+}
+
+.app-user-dropdown__meta {
+  max-width: 170px;
+  text-align: left;
+}
+
+.app-user-dropdown__name {
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.app-user-dropdown__role {
+  font-size: 12px;
+}
+
+.app-notification-dropdown {
+  width: min(360px, 90vw);
+  border: 1px solid var(--app-border);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
+}
+
+.app-notification-dropdown__item {
+  border: 1px solid #e6edf5;
+  border-radius: 10px;
+  padding: 10px;
+  background: #f9fbff;
+}
+
+.app-notification-dropdown__time {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.app-footer {
+  border-radius: 12px;
+}
+
+@media (max-width: 991px) {
+  .app-user-dropdown__meta {
+    display: none;
+  }
+
+  .app-top-navbar {
+    min-height: 62px;
+    height: auto;
+    line-height: normal;
+    padding-inline: 12px !important;
+  }
+
+  .app-top-navbar__title {
+    max-width: min(54vw, 280px);
+    font-size: 16px !important;
+  }
 }

@@ -57,7 +57,7 @@ const ContractEditPage = () => {
         setConfidential(String(Boolean(detail.confidential)));
         setStatus(detail.status);
       } catch (err) {
-        notify(getErrorMessage(err, "Cannot load contract for editing"), "error");
+        notify(getErrorMessage(err, "Không thể load contract for editing"), "error");
       } finally {
         setPageLoading(false);
       }
@@ -101,7 +101,7 @@ const ContractEditPage = () => {
       await contractService.update(id, payload);
       navigate(ROUTE_URL.CONTRACT_DETAIL.replace(":id", id));
     } catch (err) {
-      notify(getErrorMessage(err, "Cannot update contract"), "error");
+      notify(getErrorMessage(err, "Không thể update contract"), "error");
     } finally {
       setSaving(false);
     }
@@ -164,3 +164,4 @@ const ContractEditPage = () => {
 };
 
 export default ContractEditPage;
+
