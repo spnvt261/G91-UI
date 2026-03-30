@@ -418,6 +418,11 @@ export const canAccessPathByRole = (role: UserRole, pathname: string): boolean =
     return role === "GUEST";
   }
 
+  // Guests are only allowed on explicit public auth routes.
+  if (role === "GUEST") {
+    return false;
+  }
+
   const permission = resolveRoutePermission(pathname);
   if (!permission) {
     return false;

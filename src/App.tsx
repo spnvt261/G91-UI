@@ -136,7 +136,7 @@ function App() {
   return (
     <div className="min-h-screen w-full">
       <Routes>
-        <Route path="/" element={<Navigate to={token && userRole ? getDefaultRouteByRole(userRole) : ROUTE_URL.PRODUCT_LIST} replace />} />
+        <Route path="/" element={<Navigate to={token && userRole ? getDefaultRouteByRole(userRole) : ROUTE_URL.LOGIN} replace />} />
 
         <Route path={ROUTE_URL.LOGIN} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <LoginPage />} />
         <Route path={ROUTE_URL.REGISTER} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <RegisterPage />} />
