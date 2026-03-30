@@ -1,29 +1,30 @@
-﻿import { useState } from "react";
+﻿import { ArrowLeftOutlined, SaveOutlined } from "@ant-design/icons";
+import { Alert, Breadcrumb, Button, Card, Space } from "antd";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import FormSectionCard from "../../components/forms/FormSectionCard";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomSelect, { type Option } from "../../components/customSelect/CustomSelect";
-import CustomTextField from "../../components/customTextField/CustomTextField";
-import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import { productService } from "../../services/product/product.service";
 import { getErrorMessage } from "../shared/page.utils";
-import { createInitialProductFormValues, toProductWritePayload, validateProductForm } from "./productForm.utils";
-
-const STATUS_OPTIONS: Option[] = [
-  { label: "ACTIVE", value: "ACTIVE" },
-  { label: "INACTIVE", value: "INACTIVE" },
-];
+import ProductFormSections from "./components/ProductFormSections";
+import { createInitialProductFormValues, type ProductFormValues, toProductWritePayload, validateProductForm } from "./productForm.utils";
 
 const ProductCreatePage = () => {
   const navigate = useNavigate();
   const { notify } = useNotify();
+
   const [values, setValues] = useState(createInitialProductFormValues());
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+
+  const handleFieldChange = <TField extends keyof ProductFormValues>(field: TField, value: ProductFormValues[TField]) => {
+    setValues((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+  };
 
   const handleSubmit = async () => {
     const validationErrors = validateProductForm(values);
@@ -40,10 +41,10 @@ const ProductCreatePage = () => {
     try {
       setSaving(true);
       const created = await productService.create(toProductWritePayload(values));
-      notify("Product created successfully.", "success");
+      notify("Đã tạo sản phẩm thành công.", "success");
       navigate(ROUTE_URL.PRODUCT_DETAIL.replace(":id", created.id));
     } catch (error) {
-      notify(getErrorMessage(error, "Không thể create product"), "error");
+      notify(getErrorMessage(error, "Không thể tạo sản phẩm."), "error");
     } finally {
       setSaving(false);
     }
@@ -51,115 +52,52 @@ const ProductCreatePage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={false}
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Create Product"
+          title="Tạo sản phẩm mới"
+          subtitle="Điền thông tin theo từng nhóm nghiệp vụ để sản phẩm hiển thị đẹp và đầy đủ trong catalog."
           breadcrumb={
-            <CustomBreadcrumb
-              breadcrumbs={[
-                { label: "Trang chủ" },
-                { label: "Products", url: ROUTE_URL.PRODUCT_LIST },
-                { label: "Create" },
+            <Breadcrumb
+              items={[
+                { title: "Trang chủ" },
+                { title: "Sản phẩm" },
+                { title: "Tạo mới" },
               ]}
             />
           }
         />
       }
       body={
-        <FormSectionCard title="Product Information">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <CustomTextField
-              title="Product Code"
-              value={values.productCode}
-              helperText={errors.productCode}
-              error={Boolean(errors.productCode)}
-              onChange={(event) => setValues((previous) => ({ ...previous, productCode: event.target.value }))}
-            />
-            <CustomTextField
-              title="Product Name"
-              value={values.productName}
-              helperText={errors.productName}
-              error={Boolean(errors.productName)}
-              onChange={(event) => setValues((previous) => ({ ...previous, productName: event.target.value }))}
-            />
-            <CustomTextField
-              title="Type"
-              value={values.type}
-              helperText={errors.type}
-              error={Boolean(errors.type)}
-              onChange={(event) => setValues((previous) => ({ ...previous, type: event.target.value }))}
-            />
-            <CustomTextField
-              title="Size"
-              value={values.size}
-              helperText={errors.size}
-              error={Boolean(errors.size)}
-              onChange={(event) => setValues((previous) => ({ ...previous, size: event.target.value }))}
-            />
-            <CustomTextField
-              title="Thickness"
-              value={values.thickness}
-              helperText={errors.thickness}
-              error={Boolean(errors.thickness)}
-              onChange={(event) => setValues((previous) => ({ ...previous, thickness: event.target.value }))}
-            />
-            <CustomTextField
-              title="Unit"
-              value={values.unit}
-              helperText={errors.unit}
-              error={Boolean(errors.unit)}
-              onChange={(event) => setValues((previous) => ({ ...previous, unit: event.target.value }))}
-            />
-            <CustomTextField
-              title="Weight Conversion"
-              type="number"
-              value={values.weightConversion}
-              helperText={errors.weightConversion}
-              error={Boolean(errors.weightConversion)}
-              onChange={(event) => setValues((previous) => ({ ...previous, weightConversion: event.target.value }))}
-            />
-            <CustomTextField
-              title="Reference Weight"
-              type="number"
-              value={values.referenceWeight}
-              helperText={errors.referenceWeight}
-              error={Boolean(errors.referenceWeight)}
-              onChange={(event) => setValues((previous) => ({ ...previous, referenceWeight: event.target.value }))}
-            />
-            <CustomSelect
-              title="Status"
-              options={STATUS_OPTIONS}
-              value={values.status ? [values.status] : []}
-              onChange={(selected) => setValues((previous) => ({ ...previous, status: (selected[0] as "ACTIVE" | "INACTIVE") ?? "ACTIVE" }))}
-              classNameSelect="w-full text-left"
-              classNameOptions="w-full left-0"
-            />
-            <div className="md:col-span-2">
-              <CustomTextField
-                title="Image URLs (one per line or comma separated)"
-                value={values.imageUrlsText}
-                helperText={errors.imageUrlsText}
-                error={Boolean(errors.imageUrlsText)}
-                onChange={(event) => setValues((previous) => ({ ...previous, imageUrlsText: event.target.value }))}
-              />
-            </div>
-          </div>
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Alert
+            type="info"
+            showIcon
+            message="Gợi ý nhập liệu"
+            description="Bạn có thể nhập nhiều URL ảnh trong một ô để tạo gallery sản phẩm ngay sau khi lưu."
+          />
 
-          <div className="mt-4 flex flex-wrap gap-3">
-            <CustomButton label={saving ? "Saving..." : "Create Product"} onClick={handleSubmit} disabled={saving} />
-            <CustomButton
-              label="Back"
-              className="bg-slate-200 text-slate-700 hover:bg-slate-300"
-              onClick={() => navigate(ROUTE_URL.PRODUCT_LIST)}
-              disabled={saving}
-            />
-          </div>
-        </FormSectionCard>
+          <ProductFormSections values={values} errors={errors} onFieldChange={handleFieldChange} disabled={saving} />
+
+          <Card
+            bordered
+            styles={{ body: { padding: 16 } }}
+            style={{ position: "sticky", bottom: 12, zIndex: 8, boxShadow: "0 8px 20px rgba(15, 23, 42, 0.08)" }}
+          >
+            <Space wrap>
+              <Button type="primary" icon={<SaveOutlined />} loading={saving} onClick={() => void handleSubmit()}>
+                Lưu sản phẩm
+              </Button>
+              <Button icon={<ArrowLeftOutlined />} disabled={saving} onClick={() => navigate(ROUTE_URL.PRODUCT_LIST)}>
+                Quay lại
+              </Button>
+            </Space>
+          </Card>
+        </Space>
       }
     />
   );
 };
 
 export default ProductCreatePage;
-

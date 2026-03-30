@@ -37,17 +37,51 @@ interface ProductApiListResponse {
     page?: number;
     pageSize?: number;
     size?: number;
+    total?: number;
+    totalCount?: number;
+    totalElements?: number;
     totalItems?: number;
     totalPages?: number;
   };
   page?: number;
   pageSize?: number;
   size?: number;
+  total?: number;
+  totalCount?: number;
+  totalItems?: number;
   totalElements?: number;
   filters?: Record<string, string | undefined>;
 }
 
-const toStatus = (value: string | undefined): ProductStatus => (value === "INACTIVE" ? "INACTIVE" : "ACTIVE");
+const toStatus = (value: string | undefined): ProductStatus => {
+  const normalized = value?.trim().toUpperCase();
+
+  if (!normalized) {
+    return "ACTIVE";
+  }
+
+  if (normalized === "ACTIVE" || normalized === "AVAILABLE" || normalized === "ENABLED") {
+    return "ACTIVE";
+  }
+
+  return "INACTIVE";
+};
+
+const toFiniteNumber = (value: unknown): number | undefined => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const resolvePaginationNumber = (candidates: unknown[], fallback: number): number => {
+  for (const candidate of candidates) {
+    const value = toFiniteNumber(candidate);
+    if (value != null) {
+      return value;
+    }
+  }
+
+  return fallback;
+};
 
 const toUniqueImageUrls = (...sources: Array<string[] | undefined>): string[] => {
   const all = sources.flatMap((source) => source ?? []).map((item) => item.trim()).filter(Boolean);
@@ -113,18 +147,38 @@ export const productService = {
     return {
       items,
       pagination: {
-        page: Number(pagination?.page ?? (payload && typeof payload === "object" && "page" in payload ? payload.page : query?.page) ?? 1),
-        pageSize: Number(
-          pagination?.pageSize ??
-            pagination?.size ??
-            (payload && typeof payload === "object" && "pageSize" in payload ? payload.pageSize : undefined) ??
-            (payload && typeof payload === "object" && "size" in payload ? payload.size : query?.pageSize) ??
-            10,
+        page: resolvePaginationNumber(
+          [
+            pagination?.page,
+            payload && typeof payload === "object" && "page" in payload ? payload.page : undefined,
+            query?.page,
+          ],
+          1,
         ),
-        totalItems: Number(
-          pagination?.totalItems ?? (payload && typeof payload === "object" && "totalElements" in payload ? payload.totalElements : items.length) ?? items.length,
+        pageSize: resolvePaginationNumber(
+          [
+            pagination?.pageSize,
+            pagination?.size,
+            payload && typeof payload === "object" && "pageSize" in payload ? payload.pageSize : undefined,
+            payload && typeof payload === "object" && "size" in payload ? payload.size : undefined,
+            query?.pageSize,
+          ],
+          10,
         ),
-        totalPages: Number(pagination?.totalPages ?? 0),
+        totalItems: resolvePaginationNumber(
+          [
+            pagination?.totalItems,
+            pagination?.totalElements,
+            pagination?.totalCount,
+            pagination?.total,
+            payload && typeof payload === "object" && "totalItems" in payload ? payload.totalItems : undefined,
+            payload && typeof payload === "object" && "totalElements" in payload ? payload.totalElements : undefined,
+            payload && typeof payload === "object" && "totalCount" in payload ? payload.totalCount : undefined,
+            payload && typeof payload === "object" && "total" in payload ? payload.total : undefined,
+          ],
+          items.length,
+        ),
+        totalPages: resolvePaginationNumber([pagination?.totalPages], 0),
       },
       filters: {
         keyword: query?.keyword ?? query?.search,

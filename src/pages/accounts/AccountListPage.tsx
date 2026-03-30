@@ -1,127 +1,180 @@
-﻿import { Modal } from "antd";
+﻿import {
+  CheckCircleOutlined,
+  EditOutlined,
+  EyeOutlined,
+  MoreOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  SearchOutlined,
+  StopOutlined,
+  TeamOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
+import {
+  Alert,
+  Avatar,
+  Breadcrumb,
+  Button,
+  Col,
+  Descriptions,
+  Drawer,
+  Dropdown,
+  Empty,
+  Form,
+  Input,
+  Modal,
+  Row,
+  Select,
+  Space,
+  Table,
+  Typography,
+} from "antd";
+import type { ColumnsType } from "antd/es/table";
+import type { MenuProps } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import BaseCard from "../../components/cards/BaseCard";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomSelect from "../../components/customSelect/CustomSelect";
-import CustomTextField from "../../components/customTextField/CustomTextField";
-import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
-import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
-import FilterSearchModalBar, { type FilterModalGroup } from "../../components/table/FilterSearchModalBar";
-import Pagination from "../../components/table/Pagination";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { useNotify } from "../../context/notifyContext";
 import type { UserStatus } from "../../models/auth/auth.model";
-import type { AccountListItem, AccountRoleId, InternalAccountRoleId } from "../../models/account/account.model";
+import type { AccountDetailResponse, AccountListItem, AccountRoleId, InternalAccountRoleId } from "../../models/account/account.model";
 import { accountService } from "../../services/account/account.service";
+import PageSectionCard from "../shared/components/PageSectionCard";
+import PageSummaryStats from "../shared/components/PageSummaryStats";
 import { getErrorMessage } from "../shared/page.utils";
+import AccountRoleTag from "./components/AccountRoleTag";
+import AccountStatusTag from "./components/AccountStatusTag";
+import { ACCOUNT_ROLE_LABEL, ACCOUNT_STATUS_LABEL, formatAccountDateTime } from "./accountPresentation";
 
 const PAGE_SIZE = 8;
+const SEARCH_BATCH_SIZE = 100;
+
+interface AccountSummaryState {
+  totalAccounts: number;
+  activeAccounts: number;
+  inactiveAccounts: number;
+  pendingAccounts: number;
+}
+
+interface AccountQueryState {
+  page: number;
+  size: number;
+  role?: AccountRoleId;
+  status?: UserStatus;
+  keyword: string;
+}
+
+interface AccountFormValues {
+  fullName: string;
+  email: string;
+  password?: string;
+  phone?: string;
+  address?: string;
+  role: AccountRoleId;
+  status: UserStatus;
+}
+
+interface AccountDetailView extends AccountListItem {
+  phone?: string;
+  address?: string;
+}
 
 interface RoleOption {
   label: string;
   roleName: AccountRoleId;
 }
 
-interface AccountFormValues {
-  fullName: string;
-  email: string;
-  password: string;
-  phone: string;
-  address: string;
-  roleOption: RoleOption | null;
-  status: UserStatus;
-}
-
 const ACCOUNTANT_ROLE_OPTION: RoleOption = {
-  label: "ACCOUNTANT",
+  label: "Kế toán",
   roleName: "ACCOUNTANT",
 };
 
 const WAREHOUSE_ROLE_OPTION: RoleOption = {
-  label: "WAREHOUSE",
+  label: "Kho vận",
   roleName: "WAREHOUSE",
 };
 
 const CUSTOMER_ROLE_OPTION: RoleOption = {
-  label: "CUSTOMER",
+  label: "Khách hàng",
   roleName: "CUSTOMER",
 };
 
 const OWNER_ROLE_OPTION: RoleOption = {
-  label: "OWNER",
+  label: "Chủ hệ thống",
   roleName: "OWNER",
-};
-
-const ROLE_OPTION_BY_NAME: Record<AccountRoleId, RoleOption> = {
-  ACCOUNTANT: ACCOUNTANT_ROLE_OPTION,
-  WAREHOUSE: WAREHOUSE_ROLE_OPTION,
-  CUSTOMER: CUSTOMER_ROLE_OPTION,
-  OWNER: OWNER_ROLE_OPTION,
 };
 
 const INTERNAL_ROLE_OPTIONS: RoleOption[] = [ACCOUNTANT_ROLE_OPTION, WAREHOUSE_ROLE_OPTION, CUSTOMER_ROLE_OPTION];
 const FILTER_ROLE_OPTIONS: RoleOption[] = [OWNER_ROLE_OPTION, ...INTERNAL_ROLE_OPTIONS];
 
-const toSelectOptions = (options: RoleOption[]) =>
-  options.map((option) => ({
-    label: option.label,
-    value: option.roleName,
-  }));
-
 const STATUS_OPTIONS: Array<{ label: string; value: UserStatus }> = [
-  { label: "ACTIVE", value: "ACTIVE" },
-  { label: "INACTIVE", value: "INACTIVE" },
-  { label: "LOCKED", value: "LOCKED" },
-  { label: "PENDING_VERIFICATION", value: "PENDING_VERIFICATION" },
+  { label: "Đang hoạt động", value: "ACTIVE" },
+  { label: "Tạm ngưng", value: "INACTIVE" },
+  { label: "Đang khóa", value: "LOCKED" },
+  { label: "Chờ xác thực", value: "PENDING_VERIFICATION" },
 ];
-
-const toRoleOption = (role?: AccountRoleId): RoleOption | null => {
-  if (!role) {
-    return null;
-  }
-  return ROLE_OPTION_BY_NAME[role] ?? null;
-};
-
-const createEmptyFormValues = (): AccountFormValues => ({
-  fullName: "",
-  email: "",
-  password: "",
-  phone: "",
-  address: "",
-  roleOption: ACCOUNTANT_ROLE_OPTION,
-  status: "ACTIVE",
-});
 
 const isInternalRole = (role: AccountRoleId): role is InternalAccountRoleId =>
   role === "ACCOUNTANT" || role === "WAREHOUSE" || role === "CUSTOMER";
+
 const isAccountRoleId = (role: string): role is AccountRoleId =>
   role === "ACCOUNTANT" || role === "WAREHOUSE" || role === "CUSTOMER" || role === "OWNER";
 
+const toDetailView = (item: AccountListItem, detail?: AccountDetailResponse): AccountDetailView => ({
+  id: item.id,
+  fullName: detail?.fullName ?? item.fullName,
+  email: detail?.email ?? item.email,
+  role: detail?.role ?? item.role,
+  status: detail?.status ?? item.status,
+  createdAt: detail?.createdAt ?? item.createdAt,
+  phone: detail?.phone,
+  address: detail?.address,
+});
+
 const AccountListPage = () => {
   const { notify } = useNotify();
-  const [items, setItems] = useState<AccountListItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [query, setQuery] = useState({
+
+  const [query, setQuery] = useState<AccountQueryState>({
     page: 1,
     size: PAGE_SIZE,
-    role: undefined as AccountRoleId | undefined,
-    status: undefined as UserStatus | undefined,
     keyword: "",
   });
+  const [searchDraft, setSearchDraft] = useState("");
+
+  const [items, setItems] = useState<AccountListItem[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [listError, setListError] = useState<string | null>(null);
+
+  const [summary, setSummary] = useState<AccountSummaryState>({
+    totalAccounts: 0,
+    activeAccounts: 0,
+    inactiveAccounts: 0,
+    pendingAccounts: 0,
+  });
+  const [summaryLoading, setSummaryLoading] = useState(false);
 
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState(false);
   const [deactivating, setDeactivating] = useState(false);
   const [activatingId, setActivatingId] = useState<string | null>(null);
-  const [detailItem, setDetailItem] = useState<AccountListItem | null>(null);
-  const [editTarget, setEditTarget] = useState<AccountListItem | null>(null);
-  const [actionTarget, setActionTarget] = useState<AccountListItem | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
+
   const [formMode, setFormMode] = useState<"create" | "edit" | null>(null);
-  const [formValues, setFormValues] = useState<AccountFormValues>(createEmptyFormValues);
+  const [editTarget, setEditTarget] = useState<AccountListItem | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailItem, setDetailItem] = useState<AccountDetailView | null>(null);
+  const [actionTarget, setActionTarget] = useState<AccountListItem | null>(null);
+
   const [roleIdByName, setRoleIdByName] = useState<Partial<Record<AccountRoleId, string>>>({});
+  const [form] = Form.useForm<AccountFormValues>();
+  const selectedRole = Form.useWatch("role", form);
+
+  const formRoleOptions = useMemo(() => {
+    if (formMode === "edit" && selectedRole === "OWNER") {
+      return FILTER_ROLE_OPTIONS;
+    }
+
+    return INTERNAL_ROLE_OPTIONS;
+  }, [formMode, selectedRole]);
 
   const loadRoles = useCallback(async () => {
     try {
@@ -136,47 +189,127 @@ const AccountListPage = () => {
 
       setRoleIdByName(nextRoleIdByName);
     } catch (error) {
-      notify(getErrorMessage(error, "Không thể load roles"), "error");
+      notify(getErrorMessage(error, "Không thể tải danh sách vai trò."), "error");
     }
   }, [notify]);
+
+  const loadSummary = useCallback(async () => {
+    try {
+      setSummaryLoading(true);
+      const [totalResponse, activeResponse, inactiveResponse, lockedResponse, pendingResponse] = await Promise.all([
+        accountService.getList({ page: 1, size: 1 }),
+        accountService.getList({ page: 1, size: 1, status: "ACTIVE" }),
+        accountService.getList({ page: 1, size: 1, status: "INACTIVE" }),
+        accountService.getList({ page: 1, size: 1, status: "LOCKED" }),
+        accountService.getList({ page: 1, size: 1, status: "PENDING_VERIFICATION" }),
+      ]);
+
+      setSummary({
+        totalAccounts: Number(totalResponse.totalElements ?? 0),
+        activeAccounts: Number(activeResponse.totalElements ?? 0),
+        inactiveAccounts: Number(inactiveResponse.totalElements ?? 0) + Number(lockedResponse.totalElements ?? 0),
+        pendingAccounts: Number(pendingResponse.totalElements ?? 0),
+      });
+    } catch (error) {
+      notify(getErrorMessage(error, "Không thể tải thống kê tài khoản."), "warning");
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, [notify]);
+
+  const syncLiveTargets = useCallback((source: AccountListItem[]) => {
+    setEditTarget((previous) => (previous ? source.find((item) => item.id === previous.id) ?? previous : previous));
+    setActionTarget((previous) => (previous ? source.find((item) => item.id === previous.id) ?? previous : previous));
+    setDetailItem((previous) => {
+      if (!previous) {
+        return previous;
+      }
+
+      const matched = source.find((item) => item.id === previous.id);
+      if (!matched) {
+        return previous;
+      }
+
+      return {
+        ...previous,
+        ...matched,
+      };
+    });
+  }, []);
 
   const loadAccounts = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await accountService.getList({
-        page: query.page,
-        size: query.size,
+      setListError(null);
+
+      if (!query.keyword.trim()) {
+        const response = await accountService.getList({
+          page: query.page,
+          size: query.size,
+          role: query.role,
+          status: query.status,
+        });
+
+        const pageItems = response.content ?? [];
+        setItems(pageItems);
+        setTotalItems(Number(response.totalElements ?? pageItems.length));
+        syncLiveTargets(pageItems);
+        return;
+      }
+
+      const firstPage = await accountService.getList({
+        page: 1,
+        size: SEARCH_BATCH_SIZE,
         role: query.role,
         status: query.status,
       });
 
-      const keywordLower = query.keyword.trim().toLowerCase();
-      const allItems = response.content ?? [];
-      const filtered = keywordLower
-        ? allItems.filter(
-            (item) =>
-              item.fullName.toLowerCase().includes(keywordLower) ||
-              item.email.toLowerCase().includes(keywordLower) ||
-              item.id.toLowerCase().includes(keywordLower),
-          )
-        : allItems;
-      const hasKeyword = keywordLower.length > 0;
+      const expectedTotal = Number(firstPage.totalElements ?? firstPage.content?.length ?? 0);
+      const totalPages = Math.max(1, Math.ceil(expectedTotal / SEARCH_BATCH_SIZE));
 
-      setItems(filtered);
-      setTotal(hasKeyword ? filtered.length : Number(response.totalElements ?? filtered.length));
-      setDetailItem((previous) => (previous ? allItems.find((item) => item.id === previous.id) ?? previous : previous));
-      setEditTarget((previous) => (previous ? allItems.find((item) => item.id === previous.id) ?? previous : previous));
-      setActionTarget((previous) => (previous ? allItems.find((item) => item.id === previous.id) ?? previous : previous));
+      const pageRequests: Promise<{ content: AccountListItem[] }>[] = [];
+      for (let pageIndex = 2; pageIndex <= totalPages; pageIndex += 1) {
+        pageRequests.push(
+          accountService.getList({
+            page: pageIndex,
+            size: SEARCH_BATCH_SIZE,
+            role: query.role,
+            status: query.status,
+          }).then((response) => ({ content: response.content ?? [] })),
+        );
+      }
+
+      const restPages = await Promise.all(pageRequests);
+      const allItems = [firstPage.content ?? [], ...restPages.map((page) => page.content)].flat();
+
+      const keywordLower = query.keyword.trim().toLowerCase();
+      const filteredItems = allItems.filter((item) => {
+        return (
+          item.fullName.toLowerCase().includes(keywordLower) ||
+          item.email.toLowerCase().includes(keywordLower) ||
+          item.id.toLowerCase().includes(keywordLower)
+        );
+      });
+
+      const startIndex = (query.page - 1) * query.size;
+      const nextItems = filteredItems.slice(startIndex, startIndex + query.size);
+
+      setItems(nextItems);
+      setTotalItems(filteredItems.length);
+      syncLiveTargets(filteredItems);
     } catch (error) {
-      notify(getErrorMessage(error, "Không thể load accounts"), "error");
+      const message = getErrorMessage(error, "Không thể tải danh sách tài khoản.");
+      setListError(message);
+      notify(message, "error");
     } finally {
       setLoading(false);
     }
-  }, [notify, query.keyword, query.page, query.role, query.size, query.status]);
+  }, [notify, query.keyword, query.page, query.role, query.size, query.status, syncLiveTargets]);
 
   useEffect(() => {
     void loadRoles();
-  }, [loadRoles]);
+    void loadSummary();
+  }, [loadRoles, loadSummary]);
 
   useEffect(() => {
     void loadAccounts();
@@ -187,77 +320,46 @@ const AccountListPage = () => {
     [roleIdByName],
   );
 
-  const formRoleOptions = useMemo(() => {
-    if (formMode === "edit" && formValues.roleOption?.roleName === "OWNER") {
-      return [OWNER_ROLE_OPTION, ...INTERNAL_ROLE_OPTIONS];
-    }
-    return INTERNAL_ROLE_OPTIONS;
-  }, [formMode, formValues.roleOption?.roleName]);
-
-  const filters: FilterModalGroup[] = [
-    {
-      key: "role",
-      label: "Role",
-      options: toSelectOptions(FILTER_ROLE_OPTIONS),
-      value: query.role ? [query.role] : [],
-    },
-    {
-      key: "status",
-      label: "Status",
-      options: STATUS_OPTIONS,
-      value: query.status ? [query.status] : [],
-    },
-  ];
-
-  const columns = useMemo<DataTableColumn<AccountListItem>[]>(
-    () => [
-      { key: "fullName", header: "Full Name", className: "font-semibold text-blue-900" },
-      { key: "email", header: "Email" },
-      { key: "role", header: "Role" },
-      { key: "status", header: "Status" },
-      { key: "createdAt", header: "Created At" },
-    ],
-    [],
-  );
-
   const openCreateModal = () => {
-    setFormValues(createEmptyFormValues());
-    setEditTarget(null);
     setFormMode("create");
+    setEditTarget(null);
+    form.setFieldsValue({
+      fullName: "",
+      email: "",
+      password: "",
+      phone: "",
+      address: "",
+      role: "ACCOUNTANT",
+      status: "ACTIVE",
+    });
   };
 
   const openEditModal = async (item: AccountListItem) => {
     try {
       const detail = await accountService.getDetail(item.id);
       setEditTarget(item);
-      setFormValues({
+      setFormMode("edit");
+      form.setFieldsValue({
         fullName: detail.fullName,
         email: detail.email,
         password: "",
         phone: detail.phone ?? "",
         address: detail.address ?? "",
-        roleOption: toRoleOption(detail.role),
-        status: detail.status,
-      });
-      setFormMode("edit");
-    } catch (error) {
-      notify(getErrorMessage(error, "Không thể load account detail"), "error");
-    }
-  };
-
-  const openDetailModal = async (item: AccountListItem) => {
-    try {
-      const detail = await accountService.getDetail(item.id);
-      setDetailItem({
-        ...item,
-        fullName: detail.fullName,
-        email: detail.email,
         role: detail.role,
         status: detail.status,
       });
+    } catch (error) {
+      notify(getErrorMessage(error, "Không thể tải chi tiết tài khoản."), "error");
+    }
+  };
+
+  const openDetailDrawer = async (item: AccountListItem) => {
+    try {
+      const detail = await accountService.getDetail(item.id);
+      setDetailItem(toDetailView(item, detail));
       setDetailOpen(true);
     } catch (error) {
-      notify(getErrorMessage(error, "Không thể load account detail"), "error");
+      notify(getErrorMessage(error, "Không thể tải chi tiết tài khoản."), "error");
     }
   };
 
@@ -268,9 +370,10 @@ const AccountListPage = () => {
 
     setFormMode(null);
     setEditTarget(null);
+    form.resetFields();
   };
 
-  const closeDetailModal = () => {
+  const closeDetailDrawer = () => {
     setDetailOpen(false);
     setDetailItem(null);
   };
@@ -285,67 +388,57 @@ const AccountListPage = () => {
   };
 
   const handleSubmitForm = async () => {
-    if (!formValues.fullName.trim()) {
-      notify("Full name is required.", "error");
-      return;
-    }
-
-    if (!formValues.email.trim()) {
-      notify("Email is required.", "error");
-      return;
-    }
-
-    if (formMode === "create" && !formValues.password.trim()) {
-      notify("Password is required.", "error");
-      return;
-    }
-
-    const roleName = formValues.roleOption?.roleName;
-    if (!roleName) {
-      notify("Role is required.", "error");
-      return;
-    }
-
-    const roleId = resolveRoleId(roleName);
-    if (!roleId) {
-      notify(`Role ID for ${roleName} is not configured.`, "error");
-      return;
-    }
-
     try {
+      const values = await form.validateFields();
+      const roleId = resolveRoleId(values.role);
+
+      if (!roleId) {
+        notify(`Không tìm thấy định danh vai trò cho ${ACCOUNT_ROLE_LABEL[values.role]}.`, "error");
+        return;
+      }
+
       if (formMode === "create") {
-        if (!isInternalRole(roleName)) {
-          notify("Role must be ACCOUNTANT, WAREHOUSE, or CUSTOMER.", "error");
+        if (!isInternalRole(values.role)) {
+          notify("Tài khoản mới chỉ được phép chọn vai trò Kế toán, Kho vận hoặc Khách hàng.", "error");
           return;
         }
 
         setCreating(true);
         await accountService.create({
-          fullName: formValues.fullName.trim(),
-          email: formValues.email.trim(),
-          password: formValues.password,
-          phone: formValues.phone.trim() || undefined,
-          address: formValues.address.trim() || undefined,
+          fullName: values.fullName.trim(),
+          email: values.email.trim(),
+          password: values.password ?? "",
+          phone: values.phone?.trim() || undefined,
+          address: values.address?.trim() || undefined,
           roleId,
         });
-        notify("Account created successfully.", "success");
-      } else if (formMode === "edit" && editTarget) {
+
+        notify("Đã tạo tài khoản thành công.", "success");
+      }
+
+      if (formMode === "edit" && editTarget) {
         setEditing(true);
         await accountService.update(editTarget.id, {
-          fullName: formValues.fullName.trim(),
-          phone: formValues.phone.trim() || undefined,
-          address: formValues.address.trim() || undefined,
+          fullName: values.fullName.trim(),
+          phone: values.phone?.trim() || undefined,
+          address: values.address?.trim() || undefined,
           roleId,
-          status: formValues.status,
+          status: values.status,
         });
-        notify("Account updated successfully.", "success");
+
+        notify("Đã cập nhật tài khoản thành công.", "success");
       }
 
       setFormMode(null);
       setEditTarget(null);
-      await loadAccounts();
+      form.resetFields();
+      await Promise.all([loadAccounts(), loadSummary()]);
     } catch (error) {
-      notify(getErrorMessage(error, "Không thể save account"), "error");
+      if (typeof error === "object" && error !== null && "errorFields" in error) {
+        return;
+      }
+
+      notify(getErrorMessage(error, "Không thể lưu thông tin tài khoản."), "error");
     } finally {
       setCreating(false);
       setEditing(false);
@@ -358,22 +451,26 @@ const AccountListPage = () => {
     }
 
     if (actionTarget.role === "OWNER") {
-      notify("Không thể deactivate OWNER account.", "error");
+      notify("Không thể tạm ngưng tài khoản Chủ hệ thống.", "error");
       return;
     }
 
     try {
       setDeactivating(true);
-      await accountService.deactivate(actionTarget.id, { reason: "Deactivated by owner" });
-      notify("Account deactivated successfully.", "success");
+      await accountService.deactivate(actionTarget.id, { reason: "Tạm ngưng bởi quản trị viên" });
+      notify("Đã tạm ngưng tài khoản thành công.", "success");
       setActionTarget(null);
-      setDetailItem((previous) => (previous && previous.id === actionTarget.id ? { ...previous, status: "INACTIVE" } : previous));
-      setFormValues((previous) =>
-        formMode === "edit" && editTarget?.id === actionTarget.id ? { ...previous, status: "INACTIVE" } : previous,
-      );
-      await loadAccounts();
+
+      if (detailItem?.id === actionTarget.id) {
+        setDetailItem((previous) => (previous ? { ...previous, status: "INACTIVE" } : previous));
+      }
+      if (formMode === "edit" && editTarget?.id === actionTarget.id) {
+        form.setFieldValue("status", "INACTIVE");
+      }
+
+      await Promise.all([loadAccounts(), loadSummary()]);
     } catch (error) {
-      notify(getErrorMessage(error, "Không thể deactivate account"), "error");
+      notify(getErrorMessage(error, "Không thể tạm ngưng tài khoản."), "error");
     } finally {
       setDeactivating(false);
     }
@@ -381,7 +478,7 @@ const AccountListPage = () => {
 
   const handleActivate = async (item: AccountListItem) => {
     if (item.role === "OWNER") {
-      notify("Không thể activate OWNER account from this screen.", "error");
+      notify("Không thể kích hoạt tài khoản Chủ hệ thống từ màn hình này.", "error");
       return;
     }
 
@@ -390,7 +487,7 @@ const AccountListPage = () => {
       const detail = await accountService.getDetail(item.id);
       const roleId = resolveRoleId(detail.role);
       if (!roleId) {
-        notify(`Role ID for ${detail.role} is not configured.`, "error");
+        notify(`Không tìm thấy định danh vai trò cho ${ACCOUNT_ROLE_LABEL[detail.role]}.`, "error");
         return;
       }
 
@@ -401,252 +498,417 @@ const AccountListPage = () => {
         roleId,
         status: "ACTIVE",
       });
-      notify("Account activated successfully.", "success");
+
+      notify("Đã kích hoạt lại tài khoản.", "success");
       setActionTarget((previous) => (previous?.id === item.id ? null : previous));
-      setDetailItem((previous) => (previous && previous.id === item.id ? { ...previous, status: "ACTIVE" } : previous));
-      setFormValues((previous) =>
-        formMode === "edit" && editTarget?.id === item.id
-          ? {
-              ...previous,
-              status: "ACTIVE",
-              roleOption: toRoleOption(detail.role),
-            }
-          : previous,
-      );
-      await loadAccounts();
+      if (detailItem?.id === item.id) {
+        setDetailItem((previous) => (previous ? { ...previous, status: "ACTIVE" } : previous));
+      }
+      if (formMode === "edit" && editTarget?.id === item.id) {
+        form.setFieldValue("status", "ACTIVE");
+        form.setFieldValue("role", detail.role);
+      }
+
+      await Promise.all([loadAccounts(), loadSummary()]);
     } catch (error) {
-      notify(getErrorMessage(error, "Không thể activate account"), "error");
+      notify(getErrorMessage(error, "Không thể kích hoạt tài khoản."), "error");
     } finally {
       setActivatingId(null);
     }
   };
 
+  const columns: ColumnsType<AccountListItem> = [
+    {
+      title: "Tài khoản",
+      key: "identity",
+      render: (_, row) => (
+        <Space size={12} align="start">
+          <Avatar icon={<UserOutlined />} style={{ backgroundColor: "#e6f4ff", color: "#1677ff" }} />
+          <Space direction="vertical" size={2}>
+            <Typography.Text strong>{row.fullName}</Typography.Text>
+            <Typography.Text type="secondary">{row.email}</Typography.Text>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              Mã người dùng: {row.id}
+            </Typography.Text>
+          </Space>
+        </Space>
+      ),
+    },
+    {
+      title: "Vai trò",
+      dataIndex: "role",
+      key: "role",
+      width: 170,
+      render: (value: AccountRoleId) => <AccountRoleTag role={value} />,
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      width: 170,
+      render: (value: UserStatus) => <AccountStatusTag status={value} compact />,
+    },
+    {
+      title: "Ngày tạo",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      width: 190,
+      render: (value: string) => formatAccountDateTime(value),
+    },
+    {
+      title: "Hành động",
+      key: "actions",
+      width: 170,
+      render: (_, row) => {
+        const canDeactivate = row.status === "ACTIVE" && row.role !== "OWNER";
+        const canActivate = row.status === "INACTIVE" && isInternalRole(row.role);
+
+        const actionItems: MenuProps["items"] = [
+          {
+            key: `edit-${row.id}`,
+            label: "Chỉnh sửa",
+            icon: <EditOutlined />,
+            onClick: () => void openEditModal(row),
+          },
+        ];
+
+        if (canDeactivate) {
+          actionItems.push({
+            key: `deactivate-${row.id}`,
+            label: "Tạm ngưng",
+            icon: <StopOutlined />,
+            danger: true,
+            onClick: () => setActionTarget(row),
+          });
+        }
+
+        if (canActivate) {
+          actionItems.push({
+            key: `activate-${row.id}`,
+            label: activatingId === row.id ? "Đang kích hoạt..." : "Kích hoạt lại",
+            icon: <CheckCircleOutlined />,
+            disabled: Boolean(activatingId),
+            onClick: () => void handleActivate(row),
+          });
+        }
+
+        return (
+          <Space>
+            <Button type="link" icon={<EyeOutlined />} onClick={() => void openDetailDrawer(row)}>
+              Chi tiết
+            </Button>
+            <Dropdown menu={{ items: actionItems }} trigger={["click"]}>
+              <Button icon={<MoreOutlined />} />
+            </Dropdown>
+          </Space>
+        );
+      },
+    },
+  ];
+
   return (
     <NoResizeScreenTemplate
-      loading={loading}
-      loadingText="Đang tải danh sách tài khoản người dùng..."
+      loading={false}
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="User Management"
-          actions={<CustomButton label="Create Account" onClick={openCreateModal} />}
-          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "User Management" }]} />}
+          title="Quản trị tài khoản người dùng"
+          subtitle="Tập trung theo dõi trạng thái và quyền truy cập để vận hành hệ thống an toàn, rõ ràng."
+          actions={
+            <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
+              Tạo tài khoản
+            </Button>
+          }
+          breadcrumb={
+            <Breadcrumb
+              items={[
+                { title: "Trang chủ" },
+                { title: "Quản trị tài khoản" },
+              ]}
+            />
+          }
         />
       }
       body={
-        <BaseCard>
-          <FilterSearchModalBar
-            searchValue={query.keyword}
-            onSearchChange={(value) =>
-              setQuery((previous) => ({
-                ...previous,
-                keyword: value,
-                page: 1,
-              }))
-            }
-            onSearchReset={() =>
-              setQuery((previous) => ({
-                ...previous,
-                keyword: "",
-                page: 1,
-              }))
-            }
-            searchPlaceholder="Search account"
-            filters={filters}
-            onApplyFilters={(values) => {
-              setQuery((previous) => ({
-                ...previous,
-                role: Array.isArray(values.role) ? (values.role[0] as AccountRoleId | undefined) : undefined,
-                status: Array.isArray(values.status) ? (values.status[0] as UserStatus | undefined) : undefined,
-                page: 1,
-              }));
-            }}
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <PageSummaryStats
+            loading={summaryLoading}
+            items={[
+              { key: "total", title: "Tổng tài khoản", value: summary.totalAccounts, icon: <TeamOutlined />, valueColor: "#1d4ed8" },
+              { key: "active", title: "Đang hoạt động", value: summary.activeAccounts, valueColor: "#16a34a" },
+              { key: "inactive", title: "Tạm ngưng", value: summary.inactiveAccounts, valueColor: "#f97316" },
+              { key: "pending", title: "Chờ xác thực", value: summary.pendingAccounts, valueColor: "#a855f7" },
+            ]}
           />
 
-          <DataTable
-            columns={columns}
-            data={items}
-            emptyText="No accounts found."
-            actions={(row) => {
-              const canDeactivate = row.status === "ACTIVE" && row.role !== "OWNER";
-              const canActivate = row.status === "INACTIVE" && isInternalRole(row.role);
+          <PageSectionCard title="Tìm kiếm và lọc" subtitle="Lọc nhanh theo vai trò, trạng thái hoặc tìm theo tên, email, mã tài khoản.">
+            <Row gutter={[12, 12]}>
+              <Col xs={24} lg={12}>
+                <Input.Search
+                  value={searchDraft}
+                  placeholder="Nhập tên, email hoặc mã tài khoản"
+                  allowClear
+                  enterButton="Tìm"
+                  prefix={<SearchOutlined />}
+                  onChange={(event) => setSearchDraft(event.target.value)}
+                  onSearch={(value) =>
+                    setQuery((previous) => ({
+                      ...previous,
+                      keyword: value.trim(),
+                      page: 1,
+                    }))
+                  }
+                />
+              </Col>
+              <Col xs={24} sm={12} lg={4}>
+                <Select
+                  allowClear
+                  style={{ width: "100%" }}
+                  placeholder="Vai trò"
+                  options={FILTER_ROLE_OPTIONS.map((option) => ({ label: option.label, value: option.roleName }))}
+                  value={query.role}
+                  onChange={(value) =>
+                    setQuery((previous) => ({
+                      ...previous,
+                      role: value,
+                      page: 1,
+                    }))
+                  }
+                />
+              </Col>
+              <Col xs={24} sm={12} lg={4}>
+                <Select
+                  allowClear
+                  style={{ width: "100%" }}
+                  placeholder="Trạng thái"
+                  options={STATUS_OPTIONS}
+                  value={query.status}
+                  onChange={(value) =>
+                    setQuery((previous) => ({
+                      ...previous,
+                      status: value,
+                      page: 1,
+                    }))
+                  }
+                />
+              </Col>
+              <Col xs={24} lg={4}>
+                <Button
+                  icon={<ReloadOutlined />}
+                  style={{ width: "100%" }}
+                  onClick={() => {
+                    setSearchDraft("");
+                    setQuery({ page: 1, size: PAGE_SIZE, keyword: "", role: undefined, status: undefined });
+                  }}
+                >
+                  Đặt lại bộ lọc
+                </Button>
+              </Col>
+            </Row>
 
-              return (
-                <div className="flex flex-wrap gap-2">
-                  <CustomButton label="View" className="px-2 py-1 text-sm" onClick={() => void openDetailModal(row)} />
-                  <CustomButton label="Edit" className="px-2 py-1 text-sm" onClick={() => void openEditModal(row)} />
-                  {canDeactivate ? (
-                    <CustomButton
-                      label="Deactivate"
-                      className="bg-red-500 px-2 py-1 text-sm hover:bg-red-600"
-                      onClick={() => setActionTarget(row)}
-                    />
-                  ) : null}
-                  {canActivate ? (
-                    <CustomButton
-                      label={activatingId === row.id ? "Activating..." : "Activate"}
-                      className="bg-emerald-600 px-2 py-1 text-sm hover:bg-emerald-700"
-                      onClick={() => void handleActivate(row)}
-                      disabled={Boolean(activatingId)}
-                    />
-                  ) : null}
-                </div>
-              );
-            }}
-          />
+            {query.keyword.trim() ? (
+              <Alert
+                style={{ marginTop: 12 }}
+                type="info"
+                showIcon
+                message="Tìm kiếm theo từ khóa đang được áp dụng trên toàn bộ tập dữ liệu tài khoản."
+                description="Quá trình này có thể mất thêm một chút thời gian nếu số lượng tài khoản lớn."
+              />
+            ) : null}
+          </PageSectionCard>
 
-          <Pagination
-            page={query.page}
-            pageSize={query.size}
-            total={total}
-            onChange={(nextPage) => setQuery((previous) => ({ ...previous, page: nextPage }))}
-          />
+          <PageSectionCard title="Danh sách tài khoản" subtitle={`Hiển thị ${items.length} / ${totalItems} tài khoản`}>
+            {listError ? (
+              <Alert
+                type="error"
+                showIcon
+                message="Không thể tải dữ liệu tài khoản"
+                description={listError}
+                action={
+                  <Button size="small" onClick={() => void loadAccounts()}>
+                    Thử lại
+                  </Button>
+                }
+                style={{ marginBottom: 12 }}
+              />
+            ) : null}
+
+            <Table<AccountListItem>
+              rowKey="id"
+              columns={columns}
+              dataSource={items}
+              loading={loading}
+              pagination={{
+                current: query.page,
+                pageSize: query.size,
+                total: totalItems,
+                showSizeChanger: false,
+                showTotal: (value) => `Tổng ${value} tài khoản`,
+                onChange: (nextPage) =>
+                  setQuery((previous) => ({
+                    ...previous,
+                    page: nextPage,
+                  })),
+              }}
+              locale={{
+                emptyText: (
+                  <Empty
+                    description={
+                      query.keyword.trim()
+                        ? "Không tìm thấy tài khoản phù hợp với từ khóa hiện tại."
+                        : "Hiện chưa có tài khoản nào trong danh sách."
+                    }
+                  />
+                ),
+              }}
+            />
+          </PageSectionCard>
 
           <Modal
-            title={formMode === "create" ? "Create User Account" : "Update User Account"}
+            title={formMode === "create" ? "Tạo tài khoản mới" : "Chỉnh sửa tài khoản"}
             open={Boolean(formMode)}
             onCancel={closeFormModal}
             closable={!creating && !editing}
             maskClosable={!creating && !editing}
-            footer={
-              <div className="flex justify-end gap-2">
-                <CustomButton
-                  label="Cancel"
-                  className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                  onClick={closeFormModal}
-                  disabled={creating || editing}
-                />
-                <CustomButton label={creating || editing ? "Saving..." : "Save"} onClick={handleSubmitForm} disabled={creating || editing} />
-              </div>
-            }
+            okText={creating || editing ? "Đang lưu..." : formMode === "create" ? "Tạo tài khoản" : "Lưu thay đổi"}
+            okButtonProps={{ loading: creating || editing }}
+            cancelText="Hủy"
+            cancelButtonProps={{ disabled: creating || editing }}
+            onOk={() => void handleSubmitForm()}
+            width={760}
           >
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <CustomTextField title="Full Name" value={formValues.fullName} onChange={(event) => setFormValues((previous) => ({ ...previous, fullName: event.target.value }))} />
-              <CustomTextField
-                title="Email"
-                value={formValues.email}
-                disabled={formMode === "edit"}
-                onChange={(event) => setFormValues((previous) => ({ ...previous, email: event.target.value }))}
-              />
-              {formMode === "create" ? (
-                <CustomTextField
-                  title="Password"
-                  type="password"
-                  value={formValues.password}
-                  onChange={(event) => setFormValues((previous) => ({ ...previous, password: event.target.value }))}
-                />
-              ) : null}
-              <CustomTextField title="Phone" value={formValues.phone} onChange={(event) => setFormValues((previous) => ({ ...previous, phone: event.target.value }))} />
-              <CustomTextField
-                title="Address"
-                value={formValues.address}
-                onChange={(event) => setFormValues((previous) => ({ ...previous, address: event.target.value }))}
-              />
-              <CustomSelect
-                title="Role"
-                options={toSelectOptions(formRoleOptions)}
-                value={formValues.roleOption?.roleName ? [formValues.roleOption.roleName] : []}
-                onChange={(selected) => {
-                  const selectedRoleName = selected[0] as AccountRoleId | undefined;
-                  const selectedRole =
-                    formRoleOptions.find((option) => option.roleName === selectedRoleName) ??
-                    (selectedRoleName ? toRoleOption(selectedRoleName) : null);
-                  setFormValues((previous) => ({ ...previous, roleOption: selectedRole }));
-                }}
-                classNameSelect="w-full text-left"
-                classNameOptions="w-full left-0"
-              />
-              {formMode === "edit" ? (
-                <CustomSelect
-                  title="Status"
-                  options={STATUS_OPTIONS}
-                  value={formValues.status ? [formValues.status] : []}
-                  onChange={(selected) => setFormValues((previous) => ({ ...previous, status: (selected[0] as UserStatus) ?? "ACTIVE" }))}
-                  classNameSelect="w-full text-left"
-                  classNameOptions="w-full left-0"
-                />
-              ) : null}
-            </div>
+            <Form form={form} layout="vertical" requiredMark={false}>
+              <Row gutter={12}>
+                <Col xs={24} md={12}>
+                  <Form.Item label="Họ và tên" name="fullName" rules={[{ required: true, message: "Vui lòng nhập họ và tên." }]}> 
+                    <Input placeholder="Nguyễn Văn A" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Form.Item
+                    label="Email"
+                    name="email"
+                    rules={[
+                      { required: true, message: "Vui lòng nhập email." },
+                      { type: "email", message: "Email không hợp lệ." },
+                    ]}
+                  >
+                    <Input placeholder="user@example.com" disabled={formMode === "edit"} />
+                  </Form.Item>
+                </Col>
+
+                {formMode === "create" ? (
+                  <Col xs={24} md={12}>
+                    <Form.Item label="Mật khẩu" name="password" rules={[{ required: true, message: "Vui lòng nhập mật khẩu." }]}> 
+                      <Input.Password placeholder="Nhập mật khẩu" />
+                    </Form.Item>
+                  </Col>
+                ) : null}
+
+                <Col xs={24} md={12}>
+                  <Form.Item label="Số điện thoại" name="phone">
+                    <Input placeholder="0912 345 678" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Form.Item label="Vai trò" name="role" rules={[{ required: true, message: "Vui lòng chọn vai trò." }]}> 
+                    <Select
+                      options={formRoleOptions.map((option) => ({
+                        label: option.label,
+                        value: option.roleName,
+                      }))}
+                    />
+                  </Form.Item>
+                </Col>
+                {formMode === "edit" ? (
+                  <Col xs={24} md={12}>
+                    <Form.Item label="Trạng thái" name="status" rules={[{ required: true, message: "Vui lòng chọn trạng thái." }]}> 
+                      <Select options={STATUS_OPTIONS} />
+                    </Form.Item>
+                  </Col>
+                ) : null}
+                <Col xs={24}>
+                  <Form.Item label="Địa chỉ" name="address">
+                    <Input.TextArea rows={3} placeholder="Địa chỉ liên hệ" />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Form>
           </Modal>
 
-          <Modal
-            title="User Account Detail"
+          <Drawer
+            title="Chi tiết tài khoản"
             open={detailOpen}
-            onCancel={closeDetailModal}
-            footer={
-              <div className="flex justify-end gap-2">
+            onClose={closeDetailDrawer}
+            width={520}
+            extra={
+              <Space>
                 {detailItem?.status === "ACTIVE" && detailItem.role !== "OWNER" ? (
-                  <CustomButton label="Deactivate" className="bg-red-500 hover:bg-red-600" onClick={deactivateFromDetail} />
+                  <Button danger icon={<StopOutlined />} onClick={deactivateFromDetail}>
+                    Tạm ngưng
+                  </Button>
                 ) : null}
                 {detailItem?.status === "INACTIVE" && isInternalRole(detailItem.role) ? (
-                  <CustomButton
-                    label={activatingId === detailItem.id ? "Activating..." : "Activate"}
-                    className="bg-emerald-600 hover:bg-emerald-700"
+                  <Button
+                    type="primary"
+                    icon={<CheckCircleOutlined />}
+                    loading={activatingId === detailItem.id}
                     onClick={() => void handleActivate(detailItem)}
-                    disabled={Boolean(activatingId)}
-                  />
+                  >
+                    Kích hoạt lại
+                  </Button>
                 ) : null}
-                <CustomButton
-                  label="Close"
-                  className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                  onClick={closeDetailModal}
-                />
-              </div>
+              </Space>
             }
           >
             {detailItem ? (
-              <div className="space-y-2 text-sm text-slate-700">
-                <p>
-                  <span className="font-semibold">Full Name:</span> {detailItem.fullName}
-                </p>
-                <p>
-                  <span className="font-semibold">Email:</span> {detailItem.email}
-                </p>
-                <p>
-                  <span className="font-semibold">Role:</span> {detailItem.role}
-                </p>
-                <p>
-                  <span className="font-semibold">Status:</span> {detailItem.status}
-                </p>
-                <p>
-                  <span className="font-semibold">Created At:</span> {detailItem.createdAt}
-                </p>
-              </div>
+              <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                <Descriptions column={1} bordered size="small" title={detailItem.fullName}>
+                  <Descriptions.Item label="Email">{detailItem.email}</Descriptions.Item>
+                  <Descriptions.Item label="Vai trò">
+                    <AccountRoleTag role={detailItem.role} />
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Trạng thái">
+                    <AccountStatusTag status={detailItem.status} />
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Số điện thoại">{detailItem.phone || "Chưa cập nhật"}</Descriptions.Item>
+                  <Descriptions.Item label="Địa chỉ">{detailItem.address || "Chưa cập nhật"}</Descriptions.Item>
+                  <Descriptions.Item label="Ngày tạo">{formatAccountDateTime(detailItem.createdAt)}</Descriptions.Item>
+                </Descriptions>
+              </Space>
             ) : null}
-          </Modal>
+          </Drawer>
 
           <Modal
-            title="Deactivate User Account"
+            title="Xác nhận tạm ngưng tài khoản"
             open={Boolean(actionTarget)}
             onCancel={() => (deactivating ? undefined : setActionTarget(null))}
             closable={!deactivating}
             maskClosable={!deactivating}
-            footer={
-              <div className="flex justify-end gap-2">
-                <CustomButton
-                  label="Cancel"
-                  className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                  onClick={() => setActionTarget(null)}
-                  disabled={deactivating}
-                />
-                <CustomButton
-                  label={deactivating ? "Deactivating..." : "Deactivate"}
-                  className="bg-red-500 hover:bg-red-600"
-                  onClick={handleDeactivate}
-                  disabled={deactivating}
-                />
-              </div>
-            }
+            okText={deactivating ? "Đang tạm ngưng..." : "Tạm ngưng tài khoản"}
+            okButtonProps={{ danger: true, loading: deactivating }}
+            cancelButtonProps={{ disabled: deactivating }}
+            cancelText="Hủy"
+            onOk={() => void handleDeactivate()}
           >
-            <p className="text-sm text-slate-600">Are you sure you want to deactivate this user account?</p>
-            {actionTarget ? <p className="mt-2 text-sm font-semibold text-slate-800">{actionTarget.fullName}</p> : null}
+            <Space direction="vertical" size={12}>
+              <Alert
+                type="warning"
+                showIcon
+                message="Tài khoản sẽ mất quyền truy cập cho đến khi được kích hoạt lại."
+                description="Bạn chỉ nên tạm ngưng khi thật sự cần thiết để đảm bảo an toàn dữ liệu."
+              />
+              <Typography.Text>
+                Bạn có chắc chắn muốn tạm ngưng tài khoản <Typography.Text strong>{actionTarget?.fullName}</Typography.Text>?
+              </Typography.Text>
+              <Typography.Text type="secondary">Vai trò hiện tại: {actionTarget ? ACCOUNT_ROLE_LABEL[actionTarget.role] : "-"}</Typography.Text>
+              <Typography.Text type="secondary">Trạng thái hiện tại: {actionTarget ? ACCOUNT_STATUS_LABEL[actionTarget.status] : "-"}</Typography.Text>
+            </Space>
           </Modal>
-        </BaseCard>
+        </Space>
       }
     />
   );
 };
 
 export default AccountListPage;
-
-

@@ -54,35 +54,35 @@ export const validateProductForm = (values: ProductFormValues): ProductFormError
   const errors: ProductFormErrors = {};
 
   if (!values.productCode.trim()) {
-    errors.productCode = "Product code is required.";
+    errors.productCode = "Vui lòng nhập mã sản phẩm.";
   }
   if (!values.productName.trim()) {
-    errors.productName = "Product name is required.";
+    errors.productName = "Vui lòng nhập tên sản phẩm.";
   }
   if (!values.type.trim()) {
-    errors.type = "Type is required.";
+    errors.type = "Vui lòng nhập loại sản phẩm.";
   }
   if (!values.size.trim()) {
-    errors.size = "Size is required.";
+    errors.size = "Vui lòng nhập kích thước.";
   }
   if (!values.thickness.trim()) {
-    errors.thickness = "Thickness is required.";
+    errors.thickness = "Vui lòng nhập độ dày.";
   }
   if (!values.unit.trim()) {
-    errors.unit = "Unit is required.";
+    errors.unit = "Vui lòng nhập đơn vị.";
   }
 
   if (values.weightConversion.trim() && toOptionalNumber(values.weightConversion) == null) {
-    errors.weightConversion = "Weight conversion must be a number.";
+    errors.weightConversion = "Hệ số quy đổi phải là số hợp lệ.";
   }
 
   if (values.referenceWeight.trim() && toOptionalNumber(values.referenceWeight) == null) {
-    errors.referenceWeight = "Reference weight must be a number.";
+    errors.referenceWeight = "Khối lượng tham chiếu phải là số hợp lệ.";
   }
 
   const imageUrls = parseImageUrls(values.imageUrlsText);
   if (imageUrls.some((item) => !isValidUrl(item))) {
-    errors.imageUrlsText = "Each image URL must be a valid http/https URL.";
+    errors.imageUrlsText = "Mỗi URL ảnh phải bắt đầu bằng http hoặc https hợp lệ.";
   }
 
   return errors;

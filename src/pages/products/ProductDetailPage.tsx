@@ -1,8 +1,7 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿import { ArrowLeftOutlined, EditOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+import { Alert, Breadcrumb, Button, Col, Divider, Row, Space, Typography } from "antd";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import BaseCard from "../../components/cards/BaseCard";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { canPerformAction } from "../../const/authz.const";
@@ -11,159 +10,164 @@ import { useNotify } from "../../context/notifyContext";
 import type { ProductModel } from "../../models/product/product.model";
 import { productService } from "../../services/product/product.service";
 import { getStoredUserRole } from "../../utils/authSession";
+import InlinePageStatus from "../shared/components/InlinePageStatus";
+import PageSectionCard from "../shared/components/PageSectionCard";
 import { getErrorMessage } from "../shared/page.utils";
+import ProductGallery from "./components/ProductGallery";
+import ProductInfoCard from "./components/ProductInfoCard";
+import ProductStatusTag from "./components/ProductStatusTag";
 
 const ProductDetailPage = () => {
   const navigate = useNavigate();
   const role = getStoredUserRole() ?? "GUEST";
   const { id } = useParams();
-  const [product, setProduct] = useState<ProductModel | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [activeImage, setActiveImage] = useState("");
   const { notify } = useNotify();
 
-  useEffect(() => {
-    const load = async () => {
-      if (!id) {
-        return;
-      }
+  const [product, setProduct] = useState<ProductModel | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-      try {
-        setLoading(true);
-        const detail = await productService.getDetail(id);
-        setProduct(detail);
-        setActiveImage(detail.mainImage || detail.images?.[0] || "");
-      } catch (error) {
-        notify(getErrorMessage(error, "Không thể load product detail"), "error");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void load();
-  }, [id, notify]);
-
-  const gallery = useMemo(() => (product?.images ?? product?.imageUrls ?? []).filter(Boolean).slice(0, 6), [product]);
   const canUpdate = canPerformAction(role, "product.update");
   const showRequestQuotation = canPerformAction(role, "quotation.create");
 
+  const loadDetail = useCallback(async () => {
+    if (!id) {
+      setLoadError("Không tìm thấy mã sản phẩm hợp lệ.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setLoadError(null);
+      const detail = await productService.getDetail(id);
+      setProduct(detail);
+    } catch (error) {
+      const message = getErrorMessage(error, "Không thể tải thông tin chi tiết sản phẩm.");
+      setLoadError(message);
+      notify(message, "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [id, notify]);
+
+  useEffect(() => {
+    void loadDetail();
+  }, [loadDetail]);
+
+  const subtitle = useMemo(() => {
+    if (!product) {
+      return "Trang hiển thị thông tin kỹ thuật, hình ảnh và trạng thái sản phẩm.";
+    }
+
+    return `Mã sản phẩm: ${product.productCode || "Chưa cập nhật"}`;
+  }, [product]);
+
   return (
     <NoResizeScreenTemplate
-      loading={loading}
-      loadingText="Đang tải chi tiết sản phẩm..."
+      loading={false}
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title={product?.productName || "Chi tiết sản phẩm"}
+          title={
+            <Space wrap>
+              <span>{product?.productName || "Chi tiết sản phẩm"}</span>
+              {product ? <ProductStatusTag status={product.status} /> : null}
+            </Space>
+          }
+          subtitle={subtitle}
           actions={
-            <div className="flex flex-wrap gap-2">
-              {canUpdate && id ? <CustomButton label="Edit" onClick={() => navigate(ROUTE_URL.PRODUCT_EDIT.replace(":id", id))} /> : null}
-              {showRequestQuotation ? (
-                <CustomButton
-                  label="Yêu cầu báo giá"
-                  className="bg-amber-300 text-slate-800 hover:bg-amber-400"
-                  onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)}
-                />
+            <Space wrap>
+              {canUpdate && id ? (
+                <Button icon={<EditOutlined />} onClick={() => navigate(ROUTE_URL.PRODUCT_EDIT.replace(":id", id))}>
+                  Chỉnh sửa
+                </Button>
               ) : null}
-              <CustomButton
-                label="Quay lại"
-                className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                onClick={() => navigate(ROUTE_URL.PRODUCT_LIST)}
-              />
-            </div>
+              {showRequestQuotation ? (
+                <Button icon={<ShoppingCartOutlined />} onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)}>
+                  Yêu cầu báo giá
+                </Button>
+              ) : null}
+              <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(ROUTE_URL.PRODUCT_LIST)}>
+                Quay lại danh sách
+              </Button>
+            </Space>
           }
           breadcrumb={
-            <CustomBreadcrumb
-              breadcrumbs={[
-                { label: "Trang chủ" },
-                { label: "Sản phẩm", url: ROUTE_URL.PRODUCT_LIST },
-                { label: product?.productName || "Chi tiết" },
+            <Breadcrumb
+              items={[
+                { title: "Trang chủ" },
+                { title: "Sản phẩm" },
+                { title: product?.productName || "Chi tiết" },
               ]}
             />
           }
         />
       }
       body={
-        <BaseCard className="border border-slate-200">
-          {product ? (
-            <div className="space-y-5">
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <div className="space-y-3 rounded-lg border border-slate-200 p-3">
-                  {activeImage || product.mainImage ? (
-                    <img src={activeImage || product.mainImage} alt={product.productName} className="h-72 w-full rounded-md object-cover md:h-[360px]" />
-                  ) : (
-                    <div className="flex h-72 items-center justify-center rounded-md bg-slate-100 text-sm text-slate-500 md:h-[360px]">No image</div>
-                  )}
-                  <div className="flex gap-2 overflow-x-auto pb-1">
-                    {gallery.map((image, index) => {
-                      const isActive = image === activeImage;
-                      return (
-                        <button
-                          key={`${image}-${index}`}
-                          type="button"
-                          onClick={() => setActiveImage(image)}
-                          className={`h-16 w-24 shrink-0 overflow-hidden rounded-md border transition ${
-                            isActive ? "border-blue-600 ring-2 ring-blue-100" : "border-slate-300 hover:border-slate-400"
-                          }`}
-                        >
-                          <img src={image} alt={`${product.productName} thumbnail`} className="h-full w-full object-cover" />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          {loading ? <InlinePageStatus mode="loading" title="Đang tải chi tiết sản phẩm..." /> : null}
 
-                <div className="rounded-lg border border-slate-200 p-4">
-                  <h2 className="mb-4 text-3xl font-semibold text-blue-950">Thông tin sản phẩm</h2>
-                  <div className="space-y-3 text-base">
-                    <div className="grid grid-cols-2 border-b border-slate-100 pb-2">
-                      <p className="text-slate-500">Mã sản phẩm:</p>
-                      <p className="font-semibold text-slate-700">{product.productCode || "-"}</p>
-                    </div>
-                    <div className="grid grid-cols-2 border-b border-slate-100 pb-2">
-                      <p className="text-slate-500">Loại:</p>
-                      <p className="font-semibold text-slate-700">{product.type || "-"}</p>
-                    </div>
-                    <div className="grid grid-cols-2 border-b border-slate-100 pb-2">
-                      <p className="text-slate-500">Kích thước:</p>
-                      <p className="font-semibold text-slate-700">{product.size || "-"}</p>
-                    </div>
-                    <div className="grid grid-cols-2 border-b border-slate-100 pb-2">
-                      <p className="text-slate-500">Bề dày:</p>
-                      <p className="font-semibold text-slate-700">{product.thickness || "-"}</p>
-                    </div>
-                    <div className="grid grid-cols-2 border-b border-slate-100 pb-2">
-                      <p className="text-slate-500">Đơn vị:</p>
-                      <p className="font-semibold text-slate-700">{product.unit || "-"}</p>
-                    </div>
-                    <div className="grid grid-cols-2 border-b border-slate-100 pb-2">
-                      <p className="text-slate-500">Khối lượng tham khảo:</p>
-                      <p className="font-semibold text-slate-700">
-                        {product.referenceWeight != null ? `${product.referenceWeight} ${product.unit || ""}`.trim() : "-"}
-                      </p>
-                    </div>
-                    <div className="grid grid-cols-2 items-center border-b border-slate-100 pb-2">
-                      <p className="text-slate-500">Trạng thái:</p>
-                      <p>
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${
-                            product.status === "ACTIVE" ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"
-                          }`}
-                        >
-                          {product.status}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {!loading && loadError ? (
+            <InlinePageStatus
+              mode="error"
+              title="Không thể hiển thị thông tin sản phẩm"
+              description={loadError}
+              actionLabel="Tải lại"
+              onAction={() => void loadDetail()}
+            />
           ) : null}
-        </BaseCard>
+
+          {!loading && !loadError && !product ? (
+            <InlinePageStatus
+              mode="empty"
+              title="Sản phẩm không tồn tại hoặc đã bị xóa"
+              description="Bạn có thể quay lại danh sách để chọn sản phẩm khác."
+              actionLabel="Về danh sách sản phẩm"
+              onAction={() => navigate(ROUTE_URL.PRODUCT_LIST)}
+            />
+          ) : null}
+
+          {!loading && !loadError && product ? (
+            <>
+              <Alert
+                type="info"
+                showIcon
+                message="Trải nghiệm catalog"
+                description="Trang chi tiết tập trung vào hình ảnh và thông số quan trọng để hỗ trợ báo giá và tư vấn nhanh."
+              />
+
+              <Row gutter={[16, 16]}>
+                <Col xs={24} xl={14}>
+                  <PageSectionCard title="Bộ sưu tập hình ảnh" subtitle="Hình ảnh sản phẩm giúp đội kinh doanh tư vấn trực quan hơn.">
+                    <ProductGallery productName={product.productName || "Sản phẩm"} mainImage={product.mainImage} imageUrls={product.images ?? product.imageUrls} />
+                  </PageSectionCard>
+                </Col>
+
+                <Col xs={24} xl={10}>
+                  <PageSectionCard title="Thông tin chi tiết" subtitle="Các thông số kỹ thuật và trạng thái hiện tại của sản phẩm.">
+                    <ProductInfoCard product={product} />
+                  </PageSectionCard>
+                </Col>
+              </Row>
+
+              <PageSectionCard title="Tóm tắt nhanh" subtitle="Những điểm nổi bật để nắm nhanh trước khi báo giá.">
+                <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                  <Typography.Text>
+                    {product.productName || "Sản phẩm"} thuộc nhóm <Typography.Text strong>{product.type || "chưa phân loại"}</Typography.Text>,
+                    độ dày <Typography.Text strong>{product.thickness || "chưa cập nhật"}</Typography.Text> và đơn vị <Typography.Text strong>{product.unit || "chưa cập nhật"}</Typography.Text>.
+                  </Typography.Text>
+                  <Divider style={{ margin: "8px 0" }} />
+                  <Typography.Text type="secondary">
+                    Nếu cần báo giá nhanh, bạn có thể dùng nút "Yêu cầu báo giá" ngay trên đầu trang để chuyển sang luồng xử lý tiếp theo.
+                  </Typography.Text>
+                </Space>
+              </PageSectionCard>
+            </>
+          ) : null}
+        </Space>
       }
     />
   );
 };
 
 export default ProductDetailPage;
-

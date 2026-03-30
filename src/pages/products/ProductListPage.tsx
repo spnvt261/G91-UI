@@ -1,11 +1,7 @@
-﻿import { Modal } from "antd";
-import { useEffect, useMemo, useState } from "react";
+﻿import { PlusOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+import { Alert, Breadcrumb, Button, Card, Col, Modal, Pagination, Row, Space, Typography } from "antd";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import BaseCard from "../../components/cards/BaseCard";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
-import FilterSearchModalBar, { type FilterModalGroup } from "../../components/table/FilterSearchModalBar";
-import Pagination from "../../components/table/Pagination";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { canPerformAction } from "../../const/authz.const";
@@ -14,9 +10,45 @@ import { useNotify } from "../../context/notifyContext";
 import type { ProductModel } from "../../models/product/product.model";
 import { productService } from "../../services/product/product.service";
 import { getStoredUserRole } from "../../utils/authSession";
+import InlinePageStatus from "../shared/components/InlinePageStatus";
+import PageSectionCard from "../shared/components/PageSectionCard";
+import PageSummaryStats from "../shared/components/PageSummaryStats";
 import { getErrorMessage } from "../shared/page.utils";
+import ProductCatalogCard from "./components/ProductCatalogCard";
+import ProductCatalogToolbar from "./components/ProductCatalogToolbar";
 
 const PAGE_SIZE = 8;
+const SNAPSHOT_PAGE_SIZE = 200;
+const SNAPSHOT_MAX_PAGES = 50;
+
+interface ProductListQueryState {
+  page: number;
+  pageSize: number;
+  keyword: string;
+  type?: string;
+  status?: ProductModel["status"];
+  unit?: string;
+  thickness?: string;
+}
+
+interface ProductSummaryState {
+  totalProducts: number;
+  activeProducts: number;
+  inactiveProducts: number;
+}
+
+interface ProductFilterSeedState {
+  types: string[];
+  units: string[];
+  thicknesses: string[];
+}
+
+const toUniqueValues = (values: Array<string | undefined>) =>
+  [...new Set(values.map((value) => value?.trim()).filter(Boolean) as string[])].sort((a, b) =>
+    a.localeCompare(b, "vi", { sensitivity: "base" }),
+  );
+
+const toSelectOptions = (values: string[]) => values.map((value) => ({ label: value, value }));
 
 const ProductListPage = () => {
   const navigate = useNavigate();
@@ -27,103 +59,152 @@ const ProductListPage = () => {
   const showCreateQuotation = canPerformAction(role, "quotation.create");
   const { notify } = useNotify();
 
+  const [query, setQuery] = useState<ProductListQueryState>({
+    page: 1,
+    pageSize: PAGE_SIZE,
+    keyword: "",
+  });
   const [items, setItems] = useState<ProductModel[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [keyword, setKeyword] = useState("");
-  const [typeFilter, setTypeFilter] = useState<string[]>([]);
-  const [statusFilter, setStatusFilter] = useState<ProductModel["status"][]>([]);
-  const [unitFilter, setUnitFilter] = useState<string[]>([]);
-  const [thicknessFilter, setThicknessFilter] = useState<string[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [summary, setSummary] = useState<ProductSummaryState>({
+    totalProducts: 0,
+    activeProducts: 0,
+    inactiveProducts: 0,
+  });
+  const [filterSeed, setFilterSeed] = useState<ProductFilterSeedState>({
+    types: [],
+    units: [],
+    thicknesses: [],
+  });
   const [loading, setLoading] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [listError, setListError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deletingItem, setDeletingItem] = useState<ProductModel | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const response = await productService.getList({
-          page,
-          pageSize: PAGE_SIZE,
-          keyword: keyword || undefined,
-          type: typeFilter[0],
-          status: statusFilter[0],
-          unit: unitFilter[0],
-          thickness: thicknessFilter[0],
-        });
+  const loadCatalogSnapshot = useCallback(async (): Promise<ProductModel[]> => {
+    const collected: ProductModel[] = [];
+    const idSet = new Set<string>();
+    let page = 1;
+    let expectedTotalPages: number | undefined;
 
-        setItems(response.items);
-        setTotal(response.pagination.totalItems);
-      } catch (error) {
-        notify(getErrorMessage(error, "Không thể load products"), "error");
-      } finally {
-        setLoading(false);
+    while (page <= SNAPSHOT_MAX_PAGES) {
+      const response = await productService.getList({
+        page,
+        pageSize: SNAPSHOT_PAGE_SIZE,
+      });
+
+      if (expectedTotalPages == null && response.pagination.totalPages > 0) {
+        expectedTotalPages = response.pagination.totalPages;
       }
-    };
 
-    void load();
-  }, [keyword, notify, page, statusFilter, thicknessFilter, typeFilter, unitFilter]);
+      if (response.items.length === 0) {
+        break;
+      }
+
+      response.items.forEach((item) => {
+        if (!idSet.has(item.id)) {
+          idSet.add(item.id);
+          collected.push(item);
+        }
+      });
+
+      if (expectedTotalPages != null) {
+        if (page >= expectedTotalPages) {
+          break;
+        }
+      } else if (response.items.length < SNAPSHOT_PAGE_SIZE) {
+        break;
+      }
+
+      page += 1;
+    }
+
+    return collected;
+  }, []);
+
+  const loadProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      setListError(null);
+      const response = await productService.getList({
+        page: query.page,
+        pageSize: query.pageSize,
+        keyword: query.keyword.trim() || undefined,
+        type: query.type,
+        status: query.status,
+        unit: query.unit,
+        thickness: query.thickness,
+      });
+
+      setItems(response.items);
+      setTotalItems(response.pagination.totalItems);
+    } catch (error) {
+      const message = getErrorMessage(error, "Không thể tải danh mục sản phẩm.");
+      setListError(message);
+      notify(message, "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [notify, query.keyword, query.page, query.pageSize, query.status, query.thickness, query.type, query.unit]);
+
+  const loadSummaryAndFilterSeed = useCallback(async () => {
+    try {
+      setSummaryLoading(true);
+      const allProducts = await loadCatalogSnapshot();
+      const activeCount = allProducts.filter((item) => item.status === "ACTIVE").length;
+      const inactiveCount = allProducts.filter((item) => item.status === "INACTIVE").length;
+
+      setSummary({
+        totalProducts: allProducts.length,
+        activeProducts: activeCount,
+        inactiveProducts: inactiveCount,
+      });
+
+      setFilterSeed({
+        types: toUniqueValues(allProducts.map((item) => item.type)),
+        units: toUniqueValues(allProducts.map((item) => item.unit)),
+        thicknesses: toUniqueValues(allProducts.map((item) => item.thickness)),
+      });
+    } catch (error) {
+      notify(getErrorMessage(error, "Không thể tải thống kê và dữ liệu bộ lọc sản phẩm."), "warning");
+      setSummary({
+        totalProducts: 0,
+        activeProducts: 0,
+        inactiveProducts: 0,
+      });
+      setFilterSeed({
+        types: [],
+        units: [],
+        thicknesses: [],
+      });
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, [loadCatalogSnapshot, notify]);
+
+  useEffect(() => {
+    void loadProducts();
+  }, [loadProducts]);
+
+  useEffect(() => {
+    void loadSummaryAndFilterSeed();
+  }, [loadSummaryAndFilterSeed]);
 
   const typeOptions = useMemo(
-    () =>
-      [...new Set(items.map((item) => item.type).filter(Boolean))].map((value) => ({
-        label: value,
-        value,
-      })),
-    [items],
+    () => toSelectOptions(toUniqueValues([...filterSeed.types, ...items.map((item) => item.type), query.type])),
+    [filterSeed.types, items, query.type],
   );
 
   const unitOptions = useMemo(
-    () =>
-      [...new Set(items.map((item) => item.unit).filter(Boolean))].map((value) => ({
-        label: value,
-        value,
-      })),
-    [items],
+    () => toSelectOptions(toUniqueValues([...filterSeed.units, ...items.map((item) => item.unit), query.unit])),
+    [filterSeed.units, items, query.unit],
   );
 
   const thicknessOptions = useMemo(
-    () =>
-      [...new Set(items.map((item) => item.thickness).filter(Boolean))].map((value) => ({
-        label: value,
-        value,
-      })),
-    [items],
+    () => toSelectOptions(toUniqueValues([...filterSeed.thicknesses, ...items.map((item) => item.thickness), query.thickness])),
+    [filterSeed.thicknesses, items, query.thickness],
   );
-
-  const filters: FilterModalGroup[] = [
-    {
-      key: "type",
-      label: "Type",
-      options: typeOptions,
-      value: typeFilter,
-    },
-    {
-      key: "status",
-      label: "Status",
-      options: [
-        { label: "ACTIVE", value: "ACTIVE" },
-        { label: "INACTIVE", value: "INACTIVE" },
-      ],
-      value: statusFilter,
-    },
-    {
-      key: "unit",
-      label: "Unit",
-      options: unitOptions,
-      value: unitFilter,
-    },
-    {
-      key: "thickness",
-      label: "Thickness",
-      options: thicknessOptions,
-      value: thicknessFilter,
-    },
-  ];
-
-  const statusClassName = (status: ProductModel["status"]) =>
-    status === "ACTIVE" ? "border-emerald-100 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-100 text-slate-600";
 
   const handleDelete = async () => {
     if (!deletingItem) {
@@ -133,11 +214,20 @@ const ProductListPage = () => {
     try {
       setDeleting(true);
       await productService.remove(deletingItem.id);
-      notify("Product deleted successfully.", "success");
+      notify("Đã xóa sản phẩm thành công.", "success");
       setDeletingItem(null);
-      setPage(1);
+      const nextPage = items.length === 1 && query.page > 1 ? query.page - 1 : query.page;
+      if (nextPage !== query.page) {
+        setQuery((previous) => ({
+          ...previous,
+          page: nextPage,
+        }));
+      } else {
+        await loadProducts();
+      }
+      await loadSummaryAndFilterSeed();
     } catch (error) {
-      notify(getErrorMessage(error, "Không thể delete product"), "error");
+      notify(getErrorMessage(error, "Không thể xóa sản phẩm."), "error");
     } finally {
       setDeleting(false);
     }
@@ -145,153 +235,205 @@ const ProductListPage = () => {
 
   return (
     <NoResizeScreenTemplate
-      loading={loading}
-      loadingText="Đang tải danh sách sản phẩm..."
+      loading={false}
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Danh sách sản phẩm"
+          title="Danh mục sản phẩm"
+          subtitle="Theo dõi, tìm kiếm và thao tác sản phẩm theo cách trực quan như một catalog thương mại."
           actions={
-            <div className="flex flex-wrap gap-2">
-              {showCreateQuotation ? <CustomButton label="Tạo báo giá" onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)} /> : null}
-              {allowCreate ? <CustomButton label="Create Product" onClick={() => navigate(ROUTE_URL.PRODUCT_CREATE)} /> : null}
-            </div>
+            <Space wrap>
+              {showCreateQuotation ? (
+                <Button icon={<ShoppingCartOutlined />} onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)}>
+                  Tạo yêu cầu báo giá
+                </Button>
+              ) : null}
+              {allowCreate ? (
+                <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(ROUTE_URL.PRODUCT_CREATE)}>
+                  Tạo sản phẩm
+                </Button>
+              ) : null}
+            </Space>
           }
           breadcrumb={
-            <CustomBreadcrumb
-              breadcrumbs={[
-                { label: "Trang chủ" },
-                { label: "Sản phẩm" },
+            <Breadcrumb
+              items={[
+                { title: "Trang chủ" },
+                { title: "Sản phẩm" },
               ]}
             />
           }
         />
       }
       body={
-        <BaseCard>
-          <FilterSearchModalBar
-            searchValue={keyword}
-            onSearchChange={(value) => {
-              setKeyword(value);
-              setPage(1);
-            }}
-            onSearchReset={() => {
-              setKeyword("");
-              setPage(1);
-            }}
-            searchPlaceholder="Tìm sản phẩm"
-            modalTitle="Bộ lọc sản phẩm"
-            filters={filters}
-            onApplyFilters={(values) => {
-              setTypeFilter(Array.isArray(values.type) ? values.type : []);
-              setStatusFilter(Array.isArray(values.status) ? (values.status as ProductModel["status"][]) : []);
-              setUnitFilter(Array.isArray(values.unit) ? values.unit : []);
-              setThicknessFilter(Array.isArray(values.thickness) ? values.thickness : []);
-              setPage(1);
-            }}
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <PageSummaryStats
+            loading={summaryLoading}
+            items={[
+              { key: "total", title: "Tổng sản phẩm", value: summary.totalProducts, valueColor: "#1d4ed8" },
+              { key: "active", title: "Đang kinh doanh", value: summary.activeProducts, valueColor: "#16a34a" },
+              { key: "inactive", title: "Ngừng kinh doanh", value: summary.inactiveProducts, valueColor: "#f97316" },
+            ]}
           />
 
-          {!loading && items.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
-              Không tìm thấy sản phẩm phù hợp.
+          <PageSectionCard title="Bộ lọc danh mục" subtitle="Tìm nhanh theo thông tin sản phẩm và dùng bộ lọc để thu gọn kết quả hiển thị.">
+            <ProductCatalogToolbar
+              keyword={query.keyword}
+              typeValue={query.type}
+              statusValue={query.status}
+              unitValue={query.unit}
+              thicknessValue={query.thickness}
+              typeOptions={typeOptions}
+              unitOptions={unitOptions}
+              thicknessOptions={thicknessOptions}
+              onKeywordChange={(value) =>
+                setQuery((previous) => ({
+                  ...previous,
+                  keyword: value,
+                  page: 1,
+                }))
+              }
+              onTypeChange={(value) =>
+                setQuery((previous) => ({
+                  ...previous,
+                  type: value,
+                  page: 1,
+                }))
+              }
+              onStatusChange={(value) =>
+                setQuery((previous) => ({
+                  ...previous,
+                  status: value,
+                  page: 1,
+                }))
+              }
+              onUnitChange={(value) =>
+                setQuery((previous) => ({
+                  ...previous,
+                  unit: value,
+                  page: 1,
+                }))
+              }
+              onThicknessChange={(value) =>
+                setQuery((previous) => ({
+                  ...previous,
+                  thickness: value,
+                  page: 1,
+                }))
+              }
+              onReset={() =>
+                setQuery({
+                  page: 1,
+                  pageSize: PAGE_SIZE,
+                  keyword: "",
+                  type: undefined,
+                  status: undefined,
+                  unit: undefined,
+                  thickness: undefined,
+                })
+              }
+            />
+          </PageSectionCard>
+
+          <PageSectionCard
+            title="Danh sách sản phẩm"
+            subtitle={`Hiển thị ${items.length} / ${totalItems} sản phẩm`}
+            extra={<Typography.Text type="secondary">Trang {query.page}</Typography.Text>}
+          >
+            {listError ? (
+              <Alert
+                type="error"
+                showIcon
+                message="Không thể tải danh sách sản phẩm"
+                description={listError}
+                action={
+                  <Button size="small" onClick={() => void loadProducts()}>
+                    Thử lại
+                  </Button>
+                }
+              />
+            ) : null}
+
+            {loading ? (
+              <Row gutter={[16, 16]}>
+                {Array.from({ length: PAGE_SIZE }).map((_, index) => (
+                  <Col key={index} xs={24} md={12} xl={8}>
+                    <Card loading />
+                  </Col>
+                ))}
+              </Row>
+            ) : null}
+
+            {!loading && !listError && items.length === 0 ? (
+              <InlinePageStatus
+                mode="empty"
+                title="Chưa có sản phẩm phù hợp với bộ lọc hiện tại"
+                description="Bạn có thể thay đổi từ khóa hoặc đặt lại bộ lọc để xem thêm kết quả."
+                actionLabel={allowCreate ? "Tạo sản phẩm mới" : undefined}
+                onAction={allowCreate ? () => navigate(ROUTE_URL.PRODUCT_CREATE) : undefined}
+              />
+            ) : null}
+
+            {!loading && !listError && items.length > 0 ? (
+              <Row gutter={[16, 16]}>
+                {items.map((item) => (
+                  <Col key={item.id} xs={24} md={12} xl={8}>
+                    <ProductCatalogCard
+                      product={item}
+                      allowUpdate={allowUpdate}
+                      allowDelete={allowDelete}
+                      showCreateQuotation={showCreateQuotation}
+                      deleting={deleting && deletingItem?.id === item.id}
+                      onView={() => navigate(ROUTE_URL.PRODUCT_DETAIL.replace(":id", item.id))}
+                      onEdit={() => navigate(ROUTE_URL.PRODUCT_EDIT.replace(":id", item.id))}
+                      onDelete={() => setDeletingItem(item)}
+                      onRequestQuotation={() => navigate(ROUTE_URL.QUOTATION_CREATE)}
+                    />
+                  </Col>
+                ))}
+              </Row>
+            ) : null}
+
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+              <Pagination
+                current={query.page}
+                pageSize={query.pageSize}
+                total={totalItems}
+                showSizeChanger={false}
+                showTotal={(value) => `Tổng ${value} sản phẩm`}
+                onChange={(nextPage) =>
+                  setQuery((previous) => ({
+                    ...previous,
+                    page: nextPage,
+                  }))
+                }
+              />
             </div>
-          ) : null}
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {items.map((item) => (
-              <article
-                key={item.id}
-                className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
-              >
-                {item.mainImage ? (
-                  <img src={item.mainImage} alt={item.productName} className="h-44 w-full object-cover" />
-                ) : (
-                  <div className="flex h-44 items-center justify-center bg-slate-100 text-sm text-slate-500">No image</div>
-                )}
-
-                <div className="space-y-3 p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{item.productCode}</p>
-                      <h3 className="line-clamp-2 text-base font-semibold text-slate-800">{item.productName}</h3>
-                    </div>
-                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClassName(item.status)}`}>{item.status}</span>
-                  </div>
-
-                  <dl className="space-y-1 text-sm text-slate-600">
-                    <div className="flex items-center justify-between gap-2">
-                      <dt>Type</dt>
-                      <dd className="font-semibold text-slate-700">{item.type || "-"}</dd>
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <dt>Size</dt>
-                      <dd className="font-semibold text-slate-700">{item.size || "-"}</dd>
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <dt>Thickness</dt>
-                      <dd className="font-semibold text-slate-700">{item.thickness || "-"}</dd>
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <dt>Unit</dt>
-                      <dd className="font-semibold text-slate-700">{item.unit || "-"}</dd>
-                    </div>
-                  </dl>
-
-                  <div className="flex flex-wrap gap-2">
-                    <CustomButton label="View" className="px-2 py-1 text-sm" onClick={() => navigate(ROUTE_URL.PRODUCT_DETAIL.replace(":id", item.id))} />
-                    {allowUpdate ? (
-                      <CustomButton
-                        label="Edit"
-                        className="px-2 py-1 text-sm"
-                        onClick={() => navigate(ROUTE_URL.PRODUCT_EDIT.replace(":id", item.id))}
-                      />
-                    ) : null}
-                    {allowDelete ? (
-                      <CustomButton
-                        label="Delete"
-                        className="bg-red-500 px-2 py-1 text-sm hover:bg-red-600"
-                        onClick={() => setDeletingItem(item)}
-                      />
-                    ) : null}
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={setPage} />
+          </PageSectionCard>
 
           <Modal
-            title="Delete Product"
+            title="Xác nhận xóa sản phẩm"
             open={Boolean(deletingItem)}
             onCancel={() => (deleting ? undefined : setDeletingItem(null))}
             closable={!deleting}
             maskClosable={!deleting}
-            footer={
-              <div className="flex justify-end gap-2">
-                <CustomButton
-                  label="Cancel"
-                  className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                  onClick={() => setDeletingItem(null)}
-                  disabled={deleting}
-                />
-                <CustomButton
-                  label={deleting ? "Deleting..." : "Delete"}
-                  className="bg-red-500 hover:bg-red-600"
-                  onClick={handleDelete}
-                  disabled={deleting}
-                />
-              </div>
-            }
+            okText={deleting ? "Đang xóa..." : "Xóa sản phẩm"}
+            okButtonProps={{ danger: true, loading: deleting }}
+            cancelButtonProps={{ disabled: deleting }}
+            cancelText="Hủy"
+            onOk={() => void handleDelete()}
           >
-            <p className="text-sm text-slate-600">Are you sure you want to soft-delete this product?</p>
-            {deletingItem ? <p className="mt-2 text-sm font-semibold text-slate-800">{deletingItem.productName}</p> : null}
+            <Space direction="vertical" size={12}>
+              <Alert type="warning" showIcon message="Hành động này sẽ xóa mềm sản phẩm khỏi danh mục hiển thị." />
+              <Typography.Text>
+                Bạn có chắc chắn muốn xóa sản phẩm <Typography.Text strong>{deletingItem?.productName}</Typography.Text>?
+              </Typography.Text>
+            </Space>
           </Modal>
-        </BaseCard>
+        </Space>
       }
     />
   );
 };
 
 export default ProductListPage;
-
