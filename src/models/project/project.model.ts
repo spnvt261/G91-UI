@@ -148,6 +148,25 @@ export interface ProjectDetailResponseData {
   project: ProjectModel;
 }
 
+export interface ProjectFinancialBreakdownItem {
+  category: string;
+  amount?: number;
+}
+
+export interface ProjectFinancialSummaryModel {
+  budget?: number;
+  actualSpend?: number;
+  commitments?: number;
+  variance?: number;
+  breakdownByCategory?: ProjectFinancialBreakdownItem[];
+  paymentsReceived?: number;
+  paymentsDue?: number;
+  outstandingBalance?: number;
+  profitabilityAmount?: number;
+  profitabilityMargin?: number;
+  aggregationMode?: string;
+}
+
 export interface ProjectProgressResponse {
   id: string;
   projectId: string;

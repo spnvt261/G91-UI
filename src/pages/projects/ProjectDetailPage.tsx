@@ -45,6 +45,7 @@ const ProjectDetailPage = () => {
   const canUpdateProject = canPerformAction(role, "project.update");
   const canAssignWarehouse = canPerformAction(role, "project.assign-warehouse");
   const canUpdateProgress = canPerformAction(role, "project.progress.update");
+  const canViewFinancialSummary = canPerformAction(role, "project.financial-summary.view");
   const canDeleteProject = canPerformAction(role, "project.delete");
   const canCloseProject = canPerformAction(role, "project.close");
   const canConfirmMilestone = canPerformAction(role, "project.milestone.confirm");
@@ -209,8 +210,16 @@ const ProjectDetailPage = () => {
       });
     }
 
+    if (canViewFinancialSummary) {
+      items.push({
+        key: "financial-summary",
+        label: "Thống kê tài chính",
+        onClick: () => navigateToActionPage(ROUTE_URL.PROJECT_FINANCIAL_SUMMARY),
+      });
+    }
+
     return items;
-  }, [canAssignWarehouse, canConfirmMilestone, canUpdateProject, navigateToActionPage, requestConfirmMilestone]);
+  }, [canAssignWarehouse, canConfirmMilestone, canUpdateProject, canViewFinancialSummary, navigateToActionPage, requestConfirmMilestone]);
 
   const dangerActionItems = useMemo<NonNullable<MenuProps["items"]>>(() => {
     const items: NonNullable<MenuProps["items"]> = [];

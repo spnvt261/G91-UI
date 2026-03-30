@@ -50,6 +50,7 @@ export const ROUTE_URL = {
   PROJECT_EDIT: "/projects/:id/edit",
   PROJECT_ASSIGN_WAREHOUSE: "/projects/:id/assign-warehouse",
   PROJECT_PROGRESS_UPDATE: "/projects/:id/progress",
+  PROJECT_FINANCIAL_SUMMARY: "/projects/:id/financial-summary",
 
   PAYMENT_LIST: "/payments",
   PAYMENT_DETAIL: "/payments/:id",

@@ -117,6 +117,7 @@ export type AppAction =
   | "project.progress.update"
   | "project.close"
   | "project.milestone.confirm"
+  | "project.financial-summary.view"
   | "invoice.create"
   | "invoice.update"
   | "invoice.cancel"
@@ -182,7 +183,7 @@ const PERMISSION_ROLE_MAP: Record<PermissionKey, UserRole[]> = {
   "project.assign-warehouse": ACCOUNTANT_ONLY,
   "project.progress.update": ACCOUNTANT_ONLY,
   "project.milestone.confirm": ["CUSTOMER"],
-  "project.financial-summary.view": ACCOUNTANT_ONLY,
+  "project.financial-summary.view": ACCOUNTANT_OWNER,
   "project.close": ACCOUNTANT_ONLY,
   "invoice.create": ACCOUNTANT_ONLY,
   "invoice.view": CUSTOMER_ACCOUNTANT,
@@ -231,6 +232,7 @@ const ACTION_PERMISSION_MAP: Record<AppAction, PermissionKey> = {
   "project.progress.update": "project.progress.update",
   "project.close": "project.close",
   "project.milestone.confirm": "project.milestone.confirm",
+  "project.financial-summary.view": "project.financial-summary.view",
   "invoice.create": "invoice.create",
   "invoice.update": "invoice.update",
   "invoice.cancel": "invoice.cancel",
@@ -305,6 +307,7 @@ const PROTECTED_ROUTE_RULES: RoutePermissionRule[] = [
   { path: ROUTE_URL.PROJECT_EDIT, permission: "project.update" },
   { path: ROUTE_URL.PROJECT_ASSIGN_WAREHOUSE, permission: "project.assign-warehouse" },
   { path: ROUTE_URL.PROJECT_PROGRESS_UPDATE, permission: "project.progress.update" },
+  { path: ROUTE_URL.PROJECT_FINANCIAL_SUMMARY, permission: "project.financial-summary.view" },
   { path: ROUTE_URL.PROJECT_DETAIL, permission: "project.view" },
   { path: ROUTE_URL.PROJECT_LIST, permission: "project.view" },
 

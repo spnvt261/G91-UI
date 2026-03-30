@@ -47,6 +47,7 @@ import ProjectAssignWarehousePage from "./pages/projects/ProjectAssignWarehouseP
 import ProjectCreatePage from "./pages/projects/ProjectCreatePage";
 import ProjectDetailPage from "./pages/projects/ProjectDetailPage";
 import ProjectEditPage from "./pages/projects/ProjectEditPage";
+import ProjectFinancialSummaryPage from "./pages/projects/ProjectFinancialSummaryPage";
 import ProjectListPage from "./pages/projects/ProjectListPage";
 import ProjectProgressUpdatePage from "./pages/projects/ProjectProgressUpdatePage";
 import QuotationCreatePage from "./pages/quotations/QuotationCreatePage";
@@ -190,6 +191,7 @@ function App() {
           <Route path={ROUTE_URL.PROJECT_EDIT} element={<ProjectEditPage />} />
           <Route path={ROUTE_URL.PROJECT_ASSIGN_WAREHOUSE} element={<ProjectAssignWarehousePage />} />
           <Route path={ROUTE_URL.PROJECT_PROGRESS_UPDATE} element={<ProjectProgressUpdatePage />} />
+          <Route path={ROUTE_URL.PROJECT_FINANCIAL_SUMMARY} element={<ProjectFinancialSummaryPage />} />
 
           <Route path={ROUTE_URL.PAYMENT_LIST} element={<PaymentListPage />} />
           <Route path={ROUTE_URL.PAYMENT_DETAIL} element={<PaymentDetailPage />} />

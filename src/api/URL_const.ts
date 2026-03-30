@@ -116,6 +116,7 @@ export const API = {
     ASSIGN_WAREHOUSE: "/api/projects/{id}/warehouses",
     ADD_PROGRESS: "/api/projects/{id}/progress",
     UPDATE_PROGRESS: "/api/projects/{id}/progress/{progressUpdateId}",
+    FINANCIAL_SUMMARY: "/api/projects/{id}/financial-summary",
   },
 
   PAYMENT: {

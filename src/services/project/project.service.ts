@@ -4,6 +4,7 @@ import type {
   AssignWarehouseRequest,
   ProjectCreateRequest,
   ProjectDetailResponseData,
+  ProjectFinancialSummaryModel,
   ProjectListQuery,
   ProjectListResponseData,
   ProjectModel,
@@ -22,6 +23,11 @@ const toProjectModel = (payload: ProjectModel): ProjectModel => ({
   progressPercent: payload.progressPercent ?? payload.progress,
   startedAt: payload.startDate ?? payload.startedAt,
   endedAt: payload.endDate ?? payload.endedAt,
+});
+
+const toProjectFinancialSummary = (payload: ProjectFinancialSummaryModel): ProjectFinancialSummaryModel => ({
+  ...payload,
+  breakdownByCategory: Array.isArray(payload.breakdownByCategory) ? payload.breakdownByCategory : [],
 });
 
 const todayDate = () => new Date().toISOString().slice(0, 10);
@@ -105,6 +111,11 @@ export const projectService = {
   async getDetail(id: string): Promise<ProjectModel> {
     const response = await api.get<ProjectDetailResponseData>(withId(API.PROJECT.DETAIL, id));
     return toProjectModel(response.data.project);
+  },
+
+  async getFinancialSummary(id: string): Promise<ProjectFinancialSummaryModel> {
+    const response = await api.get<ProjectFinancialSummaryModel>(withId(API.PROJECT.FINANCIAL_SUMMARY, id));
+    return toProjectFinancialSummary(response.data);
   },
 
   async update(id: string, request: ProjectUpdateRequest): Promise<ProjectModel> {

@@ -40,6 +40,7 @@ const ProjectListPage = () => {
   const canUpdateProject = canPerformAction(role, "project.update");
   const canAssignWarehouse = canPerformAction(role, "project.assign-warehouse");
   const canUpdateProgress = canPerformAction(role, "project.progress.update");
+  const canViewFinancialSummary = canPerformAction(role, "project.financial-summary.view");
   const { notify } = useNotify();
 
   const [query, setQuery] = useState<ProjectListQueryState>({ page: 1, pageSize: 10 });
@@ -184,6 +185,14 @@ const ProjectListPage = () => {
             });
           }
 
+          if (canViewFinancialSummary) {
+            menuItems.push({
+              key: "financial-summary",
+              label: "Thống kê tài chính",
+              onClick: () => navigate(ROUTE_URL.PROJECT_FINANCIAL_SUMMARY.replace(":id", row.id)),
+            });
+          }
+
           if (canDeleteProject) {
             if (menuItems.length > 0) {
               menuItems.push({ type: "divider" });
@@ -214,6 +223,7 @@ const ProjectListPage = () => {
     [
       canAssignWarehouse,
       canDeleteProject,
+      canViewFinancialSummary,
       canUpdateProgress,
       canUpdateProject,
       deletingProjectId,
