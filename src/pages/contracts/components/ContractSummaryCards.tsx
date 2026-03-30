@@ -18,11 +18,11 @@ const ContractSummaryCards = ({ items, loading = false }: ContractSummaryCardsPr
     <Row gutter={[16, 16]}>
       {items.map((item) => (
         <Col key={item.key} xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="shadow-sm" styles={{ body: { padding: 16 } }}>
+          <Card variant="borderless" className="shadow-sm" styles={{ body: { padding: 16 } }}>
             {loading ? (
               <Skeleton active paragraph={{ rows: 2 }} title={false} />
             ) : (
-              <Space direction="vertical" size={2} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={2} style={{ width: "100%" }}>
                 <Typography.Text type="secondary">{item.label}</Typography.Text>
                 <Statistic value={item.value} valueStyle={item.valueColor ? { color: item.valueColor } : undefined} />
                 {item.description ? <Typography.Text type="secondary">{item.description}</Typography.Text> : null}

@@ -108,7 +108,7 @@ const LoginPage = () => {
         description="Nhập email và mật khẩu để truy cập hệ thống điều hành doanh nghiệp G91."
         icon={<LoginOutlined />}
         footer={
-          <Space direction="vertical" size={8} className="auth-footer-links">
+          <Space orientation="vertical" size={8} className="auth-footer-links">
             <Typography.Text className="auth-footer-links__text">
               Chưa có tài khoản?{" "}
               <Link to={ROUTE_URL.REGISTER} className="auth-footer-links__primary">
@@ -124,7 +124,7 @@ const LoginPage = () => {
           </Space>
         }
       >
-        <Space direction="vertical" size={18} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={18} style={{ width: "100%" }}>
           <AuthInlineStatus status={status} />
 
           <Form form={form} layout="vertical" onFinish={handleSubmit} requiredMark={false} autoComplete="off" disabled={loading}>

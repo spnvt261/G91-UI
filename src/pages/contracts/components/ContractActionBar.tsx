@@ -8,7 +8,7 @@ interface ContractActionBarProps {
 
 const ContractActionBar = ({ children, justify = "flex-end" }: ContractActionBarProps) => {
   return (
-    <Card bordered={false} className="shadow-sm" styles={{ body: { padding: 12 } }}>
+    <Card variant="borderless" className="shadow-sm" styles={{ body: { padding: 12 } }}>
       <Flex wrap gap={8} justify={justify}>
         {children}
       </Flex>

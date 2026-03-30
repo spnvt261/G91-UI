@@ -57,7 +57,7 @@ const PriceListItemsTable = ({
           const code = row.productCode?.trim();
 
           return (
-            <Space direction="vertical" size={2}>
+            <Space orientation="vertical" size={2}>
               <Typography.Text strong>{title}</Typography.Text>
               <Typography.Text type="secondary">{code ? `Mã sản phẩm: ${code}` : `ID: ${row.productId || "Chưa xác định"}`}</Typography.Text>
             </Space>
@@ -72,7 +72,7 @@ const PriceListItemsTable = ({
         render: (value: number | undefined, row) => {
           if (editableUnitPrice && onUnitPriceChange) {
             return (
-              <Space direction="vertical" size={4} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={4} style={{ width: "100%" }}>
                 <InputNumber<number>
                   className="w-full"
                   min={1}

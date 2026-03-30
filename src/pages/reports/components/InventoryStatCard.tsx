@@ -11,11 +11,11 @@ interface InventoryStatCardProps {
 
 const InventoryStatCard = ({ label, value, description, extra, loading = false }: InventoryStatCardProps) => {
   return (
-    <Card bordered={false} styles={{ body: { padding: 18 } }}>
+    <Card variant="borderless" styles={{ body: { padding: 18 } }}>
       {loading ? (
         <Skeleton active paragraph={{ rows: 2 }} title={{ width: "65%" }} />
       ) : (
-        <Space direction="vertical" size={8} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={8} style={{ width: "100%" }}>
           <Typography.Text type="secondary">{label}</Typography.Text>
           <Typography.Title level={4} className="!mb-0">
             {value}

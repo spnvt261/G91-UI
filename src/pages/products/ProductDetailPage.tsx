@@ -104,7 +104,7 @@ const ProductDetailPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           {loading ? <InlinePageStatus mode="loading" title="Đang tải chi tiết sản phẩm..." /> : null}
 
           {!loading && loadError ? (
@@ -151,7 +151,7 @@ const ProductDetailPage = () => {
               </Row>
 
               <PageSectionCard title="Tóm tắt nhanh" subtitle="Những điểm nổi bật để nắm nhanh trước khi báo giá.">
-                <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={8} style={{ width: "100%" }}>
                   <Typography.Text>
                     {product.productName || "Sản phẩm"} thuộc nhóm <Typography.Text strong>{product.type || "chưa phân loại"}</Typography.Text>,
                     độ dày <Typography.Text strong>{product.thickness || "chưa cập nhật"}</Typography.Text> và đơn vị <Typography.Text strong>{product.unit || "chưa cập nhật"}</Typography.Text>.

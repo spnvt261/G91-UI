@@ -74,8 +74,8 @@ const ProductCatalogCard = ({
       }
       styles={{ body: { padding: 16 } }}
     >
-      <Space direction="vertical" size={12} style={{ width: "100%" }}>
-        <Space direction="vertical" size={2} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={12} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={2} style={{ width: "100%" }}>
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
             Mã: {product.productCode || "Chưa cập nhật"}
           </Typography.Text>
@@ -85,7 +85,7 @@ const ProductCatalogCard = ({
           <ProductStatusTag status={product.status} />
         </Space>
 
-        <Space direction="vertical" size={4} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={4} style={{ width: "100%" }}>
           <Typography.Text>Loại: <Typography.Text strong>{product.type || "Chưa cập nhật"}</Typography.Text></Typography.Text>
           <Typography.Text>Kích thước: <Typography.Text strong>{product.size || "Chưa cập nhật"}</Typography.Text></Typography.Text>
           <Typography.Text>Độ dày: <Typography.Text strong>{product.thickness || "Chưa cập nhật"}</Typography.Text></Typography.Text>

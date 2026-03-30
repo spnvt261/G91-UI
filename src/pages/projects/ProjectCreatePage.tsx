@@ -101,7 +101,7 @@ const ProjectCreatePage = () => {
         }}
         onFinish={handleCreate}
       >
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <ProjectFormSection title="Thông tin cơ bản" description="Nhập các thông tin nền của dự án để dễ nhận diện và điều phối.">
             <Row gutter={[16, 0]}>
               <Col xs={24} md={12}>

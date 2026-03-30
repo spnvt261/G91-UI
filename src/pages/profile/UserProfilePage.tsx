@@ -228,14 +228,14 @@ const UserProfilePage = () => {
         </Card>
       ) : (
         <>
-          <Card bordered={false} className="shadow-sm">
+          <Card variant="borderless" className="shadow-sm">
             <Row gutter={[16, 16]} align="middle" justify="space-between">
               <Col xs={24} lg={16}>
                 <Space align="start" size={16}>
                   <Avatar size={80} icon={<UserOutlined />}>
                     {getInitials(profile.fullName)}
                   </Avatar>
-                  <Space direction="vertical" size={4}>
+                  <Space orientation="vertical" size={4}>
                     <Typography.Title level={3} className="!mb-0">
                       {profile.fullName || "Chưa cập nhật tên"}
                     </Typography.Title>
@@ -273,7 +273,7 @@ const UserProfilePage = () => {
                 <Statistic title="Trạng thái" value={STATUS_META[profile.status].label} />
               </Col>
               <Col xs={24} sm={8}>
-                <Space direction="vertical" size={2}>
+                <Space orientation="vertical" size={2}>
                   <Typography.Text type="secondary">Cập nhật gần nhất</Typography.Text>
                   <Typography.Text strong>{formatDateTime(profile.updatedAt)}</Typography.Text>
                 </Space>
@@ -283,10 +283,10 @@ const UserProfilePage = () => {
 
           <Row gutter={[16, 16]}>
             <Col xs={24} xl={16}>
-              <Space direction="vertical" size={16} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                 {editMode ? (
-                  <Card title="Chỉnh sửa hồ sơ người dùng" bordered={false} className="shadow-sm">
-                    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                  <Card title="Chỉnh sửa hồ sơ người dùng" variant="borderless" className="shadow-sm">
+                    <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                       <AuthInlineStatus status={profileStatus} />
 
                       <Form form={profileForm} layout="vertical" requiredMark={false} disabled={savingProfile}>
@@ -344,14 +344,14 @@ const UserProfilePage = () => {
                   </Card>
                 ) : (
                   <>
-                    <Card title="Thông tin cá nhân" bordered={false} className="shadow-sm">
+                    <Card title="Thông tin cá nhân" variant="borderless" className="shadow-sm">
                       <Descriptions column={1} size="middle" colon={false}>
                         <Descriptions.Item label="Họ và tên">{profile.fullName || "Chưa cập nhật"}</Descriptions.Item>
                         <Descriptions.Item label="Email">{profile.email || "Chưa cập nhật"}</Descriptions.Item>
                       </Descriptions>
                     </Card>
 
-                    <Card title="Thông tin liên hệ" bordered={false} className="shadow-sm">
+                    <Card title="Thông tin liên hệ" variant="borderless" className="shadow-sm">
                       <Descriptions column={1} size="middle" colon={false}>
                         <Descriptions.Item label="Số điện thoại">{profile.phone || "Chưa cập nhật"}</Descriptions.Item>
                         <Descriptions.Item label="Địa chỉ">{profile.address || "Chưa cập nhật"}</Descriptions.Item>
@@ -363,8 +363,8 @@ const UserProfilePage = () => {
             </Col>
 
             <Col xs={24} xl={8}>
-              <Card title="Thông tin tài khoản" bordered={false} className="shadow-sm">
-                <Space direction="vertical" size={10} style={{ width: "100%" }}>
+              <Card title="Thông tin tài khoản" variant="borderless" className="shadow-sm">
+                <Space orientation="vertical" size={10} style={{ width: "100%" }}>
                   <Space>
                     <Typography.Text type="secondary">Vai trò:</Typography.Text>
                     <Typography.Text>{ROLE_LABELS[profile.role]}</Typography.Text>

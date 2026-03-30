@@ -75,10 +75,10 @@ const ApprovalDecisionModal = ({
       okText={content.okText}
       cancelText="Hủy"
       okButtonProps={decision === "REJECT" ? { danger: true } : undefined}
-      maskClosable={!loading}
+      mask={{ closable: !loading }}
       closable={!loading}
     >
-      <Space direction="vertical" size={12} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={12} style={{ width: "100%" }}>
         <Alert type={content.messageType} showIcon message={content.description} />
         {contractNumber ? <Typography.Text strong>Hợp đồng: {contractNumber}</Typography.Text> : null}
 

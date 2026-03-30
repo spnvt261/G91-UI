@@ -101,7 +101,7 @@ const CustomerCreatePage = () => {
           initialValues={{ createPortalAccount: false }}
           onFinish={(values) => void handleCreate(values)}
         >
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <Alert
               type="info"
               showIcon
@@ -259,7 +259,7 @@ const CustomerCreatePage = () => {
               title="Thiết lập tài khoản"
               description="Bật tùy chọn này nếu bạn muốn khách hàng có tài khoản truy cập portal ngay khi tạo hồ sơ."
             >
-              <Space direction="vertical" size={12} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={12} style={{ width: "100%" }}>
                 <Form.Item name="createPortalAccount" label="Tạo tài khoản portal cho khách hàng" valuePropName="checked" style={{ marginBottom: 0 }}>
                   <Switch checkedChildren="Bật" unCheckedChildren="Tắt" />
                 </Form.Item>

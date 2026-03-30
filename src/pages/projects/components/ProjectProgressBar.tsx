@@ -35,7 +35,7 @@ const ProjectProgressBar = ({ value, size = "default", showMeta = false, showInf
   const percent = normalizeProgress(value);
 
   return (
-    <Space direction="vertical" size={4} style={{ width: "100%" }}>
+    <Space orientation="vertical" size={4} style={{ width: "100%" }}>
       <Progress
         percent={percent}
         size={size}

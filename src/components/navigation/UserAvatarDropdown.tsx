@@ -84,7 +84,7 @@ const UserAvatarDropdown = () => {
           <Avatar size={32} style={{ backgroundColor: "#dbeafe", color: "#1d4ed8" }}>
             {initials}
           </Avatar>
-          <Space direction="vertical" size={0} className="app-user-dropdown__meta">
+          <Space orientation="vertical" size={0} className="app-user-dropdown__meta">
             <Typography.Text className="app-user-dropdown__name">{displayName}</Typography.Text>
             <Typography.Text type="secondary" className="app-user-dropdown__role">
               Tài khoản đang hoạt động

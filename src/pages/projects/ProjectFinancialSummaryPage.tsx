@@ -126,7 +126,7 @@ const ProjectFinancialSummaryPage = () => {
           showIcon
           message="Không thể tải thống kê tài chính."
           description={(
-            <Space direction="vertical" size={6}>
+            <Space orientation="vertical" size={6}>
               <Typography.Text>{pageError}</Typography.Text>
               <Button size="small" onClick={() => void loadData()} loading={loading} disabled={!id}>
                 Thử lại
@@ -139,12 +139,12 @@ const ProjectFinancialSummaryPage = () => {
       {loading ? (
         <Loading mode="section" text="Đang tải dữ liệu tài chính dự án..." />
       ) : project && summary ? (
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <ProjectContextCard project={project} title="Ngữ cảnh dự án" />
 
           <Row gutter={[16, 16]}>
             <Col xs={24} md={12} xl={6}>
-              <Card bordered={false} style={{ border: "1px solid #e6edf5" }}>
+              <Card variant="borderless" style={{ border: "1px solid #e6edf5" }}>
                 <Typography.Text type="secondary">Ngân sách</Typography.Text>
                 <Typography.Title level={3} style={{ margin: "8px 0 0" }}>
                   {toCurrency(summary.budget)}
@@ -152,7 +152,7 @@ const ProjectFinancialSummaryPage = () => {
               </Card>
             </Col>
             <Col xs={24} md={12} xl={6}>
-              <Card bordered={false} style={{ border: "1px solid #e6edf5" }}>
+              <Card variant="borderless" style={{ border: "1px solid #e6edf5" }}>
                 <Typography.Text type="secondary">Chi phí thực tế</Typography.Text>
                 <Typography.Title level={3} style={{ margin: "8px 0 0" }}>
                   {toCurrency(summary.actualSpend)}
@@ -160,7 +160,7 @@ const ProjectFinancialSummaryPage = () => {
               </Card>
             </Col>
             <Col xs={24} md={12} xl={6}>
-              <Card bordered={false} style={{ border: "1px solid #e6edf5" }}>
+              <Card variant="borderless" style={{ border: "1px solid #e6edf5" }}>
                 <Typography.Text type="secondary">Cam kết chi</Typography.Text>
                 <Typography.Title level={3} style={{ margin: "8px 0 0" }}>
                   {toCurrency(summary.commitments)}
@@ -168,7 +168,7 @@ const ProjectFinancialSummaryPage = () => {
               </Card>
             </Col>
             <Col xs={24} md={12} xl={6}>
-              <Card bordered={false} style={{ border: "1px solid #e6edf5" }}>
+              <Card variant="borderless" style={{ border: "1px solid #e6edf5" }}>
                 <Typography.Text type="secondary">Độ lệch ngân sách</Typography.Text>
                 <Typography.Title level={3} style={{ margin: "8px 0 0", color: isVarianceNegative ? "#cf1322" : "#389e0d" }}>
                   {toCurrency(summary.variance)}
@@ -179,8 +179,8 @@ const ProjectFinancialSummaryPage = () => {
 
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={12}>
-              <Card title="Dòng tiền" bordered={false} style={{ border: "1px solid #e6edf5" }}>
-                <Space direction="vertical" size={12} style={{ width: "100%" }}>
+              <Card title="Dòng tiền" variant="borderless" style={{ border: "1px solid #e6edf5" }}>
+                <Space orientation="vertical" size={12} style={{ width: "100%" }}>
                   <Row justify="space-between">
                     <Typography.Text type="secondary">Thanh toán đã nhận</Typography.Text>
                     <Typography.Text strong>{toCurrency(summary.paymentsReceived)}</Typography.Text>
@@ -197,8 +197,8 @@ const ProjectFinancialSummaryPage = () => {
               </Card>
             </Col>
             <Col xs={24} lg={12}>
-              <Card title="Hiệu quả lợi nhuận" bordered={false} style={{ border: "1px solid #e6edf5" }}>
-                <Space direction="vertical" size={12} style={{ width: "100%" }}>
+              <Card title="Hiệu quả lợi nhuận" variant="borderless" style={{ border: "1px solid #e6edf5" }}>
+                <Space orientation="vertical" size={12} style={{ width: "100%" }}>
                   <Row justify="space-between">
                     <Typography.Text type="secondary">Lợi nhuận</Typography.Text>
                     <Typography.Text strong>{toCurrency(summary.profitabilityAmount)}</Typography.Text>
@@ -216,7 +216,7 @@ const ProjectFinancialSummaryPage = () => {
             </Col>
           </Row>
 
-          <Card title="Chi tiết theo hạng mục" bordered={false} style={{ border: "1px solid #e6edf5" }}>
+          <Card title="Chi tiết theo hạng mục" variant="borderless" style={{ border: "1px solid #e6edf5" }}>
             <Table<ProjectFinancialBreakdownItem>
               rowKey={(record, index) => `${record.category ?? "UNKNOWN"}-${index ?? 0}`}
               columns={breakdownColumns}
@@ -226,15 +226,15 @@ const ProjectFinancialSummaryPage = () => {
             />
           </Card>
 
-          <Card bordered={false} style={{ border: "1px solid #e6edf5" }}>
-            <Space direction="vertical" size={8}>
+          <Card variant="borderless" style={{ border: "1px solid #e6edf5" }}>
+            <Space orientation="vertical" size={8}>
               <Typography.Text type="secondary">Chế độ tổng hợp</Typography.Text>
               <Tag color="blue">{toReadableToken(summary.aggregationMode)}</Tag>
             </Space>
           </Card>
         </Space>
       ) : (
-        <Card bordered={false} style={{ border: "1px solid #e6edf5" }}>
+        <Card variant="borderless" style={{ border: "1px solid #e6edf5" }}>
           <Empty description="Không có dữ liệu tài chính để hiển thị." />
         </Card>
       )}

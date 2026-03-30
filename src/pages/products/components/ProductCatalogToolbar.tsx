@@ -36,7 +36,7 @@ const ProductCatalogToolbar = ({
   onReset,
 }: ProductCatalogToolbarProps) => {
   return (
-    <Space direction="vertical" size={12} style={{ width: "100%" }}>
+    <Space orientation="vertical" size={12} style={{ width: "100%" }}>
       <Row gutter={[12, 12]}>
         <Col xs={24} lg={10}>
           <Input

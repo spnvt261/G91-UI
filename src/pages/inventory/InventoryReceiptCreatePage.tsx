@@ -111,7 +111,7 @@ const InventoryReceiptCreatePage = () => {
           sectionThreeTitle="Nguồn nhập / nhà cung cấp"
           sectionFourTitle="Lý do và ghi chú"
           sectionTwo={
-            <Space direction="vertical" size={12} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={12} style={{ width: "100%" }}>
               <Form.Item
                 name="quantity"
                 label="Số lượng nhập"
@@ -128,14 +128,14 @@ const InventoryReceiptCreatePage = () => {
             </Space>
           }
           sectionThree={
-            <Space direction="vertical" size={12} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={12} style={{ width: "100%" }}>
               <Form.Item name="supplierName" label="Nhà cung cấp">
                 <Input placeholder="Nhập tên nhà cung cấp hoặc đơn vị giao hàng" />
               </Form.Item>
             </Space>
           }
           sectionFour={
-            <Space direction="vertical" size={12} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={12} style={{ width: "100%" }}>
               <Form.Item name="reason" label="Lý do nhập kho">
                 <Input placeholder="Ví dụ: Nhập bổ sung tồn kho, nhập theo PO..." />
               </Form.Item>

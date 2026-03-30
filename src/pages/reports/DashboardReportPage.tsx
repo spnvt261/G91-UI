@@ -124,7 +124,7 @@ const DashboardReportPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           {pageError ? (
             <Alert
               showIcon
@@ -136,8 +136,8 @@ const DashboardReportPage = () => {
             />
           ) : null}
 
-          <Card bordered={false} loading={isInitialLoading}>
-            <Space direction="vertical" size={12} style={{ width: "100%" }}>
+          <Card variant="borderless" loading={isInitialLoading}>
+            <Space orientation="vertical" size={12} style={{ width: "100%" }}>
               <Space size={8} wrap>
                 <Tag color="blue">Tổng quan điều hành</Tag>
                 <Tag color={debtRatio >= 0.5 ? "volcano" : "green"}>
@@ -163,11 +163,11 @@ const DashboardReportPage = () => {
 
           <Row gutter={[16, 16]}>
             <Col xs={24} xl={14}>
-              <Card bordered={false} title="Xu hướng doanh thu theo kỳ" loading={isInitialLoading}>
+              <Card variant="borderless" title="Xu hướng doanh thu theo kỳ" loading={isInitialLoading}>
                 {trendRows.length === 0 ? (
                   <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có dữ liệu xu hướng doanh thu để hiển thị." />
                 ) : (
-                  <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                  <Space orientation="vertical" size={12} style={{ width: "100%" }}>
                     {trendRows.map((row) => (
                       <div key={row.key}>
                         <Row justify="space-between" align="middle">
@@ -191,8 +191,8 @@ const DashboardReportPage = () => {
             </Col>
 
             <Col xs={24} xl={10}>
-              <Card bordered={false} title="Theo dõi rủi ro vận hành" loading={isInitialLoading}>
-                <Space direction="vertical" size={14} style={{ width: "100%" }}>
+              <Card variant="borderless" title="Theo dõi rủi ro vận hành" loading={isInitialLoading}>
+                <Space orientation="vertical" size={14} style={{ width: "100%" }}>
                   <div>
                     <Typography.Text type="secondary">Cảnh báo tồn kho</Typography.Text>
                     <Typography.Title level={4} className="!mb-0" style={{ color: inventoryAlertCount > 0 ? "#d4380d" : undefined }}>

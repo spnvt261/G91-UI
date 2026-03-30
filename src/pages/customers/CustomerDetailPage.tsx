@@ -186,7 +186,7 @@ const CustomerDetailPage = () => {
           />
         }
         body={
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             {!id ? <Alert type="warning" showIcon message="Không tìm thấy mã khách hàng trên đường dẫn." /> : null}
             {customer?.status === "INACTIVE" ? (
               <Alert
@@ -225,7 +225,7 @@ const CustomerDetailPage = () => {
                         <Avatar size={64} style={{ backgroundColor: "#1677ff" }}>
                           {avatarLabel || "K"}
                         </Avatar>
-                        <Space direction="vertical" size={2}>
+                        <Space orientation="vertical" size={2}>
                           <Typography.Title level={4} style={{ margin: 0 }}>
                             {displayCustomerText(customer.companyName)}
                           </Typography.Title>
@@ -258,7 +258,7 @@ const CustomerDetailPage = () => {
 
                 <Row gutter={[16, 16]}>
                   <Col xs={24} xl={15}>
-                    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                    <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                       <CustomerInfoSection
                         title="Thông tin doanh nghiệp"
                         description="Các thông tin pháp lý và nhận diện của khách hàng."
@@ -272,7 +272,7 @@ const CustomerDetailPage = () => {
                     </Space>
                   </Col>
                   <Col xs={24} xl={9}>
-                    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                    <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                       <CustomerInfoSection
                         title="Thông tin thương mại và thanh toán"
                         description="Phục vụ quản lý giá bán, công nợ và điều khoản thanh toán."

@@ -19,7 +19,7 @@ interface CustomerInfoSectionProps {
 const CustomerInfoSection = ({ title, description, items, column = { xs: 1, md: 2 }, extra }: CustomerInfoSectionProps) => {
   return (
     <Card extra={extra}>
-      <Space direction="vertical" size={14} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={14} style={{ width: "100%" }}>
         <div>
           <Typography.Title level={5} style={{ margin: 0 }}>
             {title}

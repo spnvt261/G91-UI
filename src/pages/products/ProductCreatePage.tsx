@@ -70,7 +70,7 @@ const ProductCreatePage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <Alert
             type="info"
             showIcon

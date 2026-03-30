@@ -62,7 +62,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
       <Drawer
         placement="left"
-        width={300}
+        size={300}
         open={!isDesktop && mobileOpen}
         onClose={() => setMobileOpen(false)}
         className="app-shell__mobile-drawer"

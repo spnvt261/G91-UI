@@ -204,7 +204,7 @@ const ResetPasswordPage = () => {
             }
           />
         ) : (
-          <Space direction="vertical" size={18} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={18} style={{ width: "100%" }}>
             <AuthInlineStatus status={status} closable onClose={() => setStatus(null)} />
 
             <Form

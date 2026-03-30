@@ -10,7 +10,7 @@ interface PageHeaderProps {
 const PageHeader = ({ title, subtitle, rightActions }: PageHeaderProps) => {
   return (
     <Flex align="flex-start" justify="space-between" wrap="wrap" gap={12}>
-      <Space direction="vertical" size={4}>
+      <Space orientation="vertical" size={4}>
         <Typography.Title level={3} style={{ margin: 0 }}>
           {title}
         </Typography.Title>

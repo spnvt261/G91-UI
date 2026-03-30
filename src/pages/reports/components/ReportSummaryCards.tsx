@@ -22,11 +22,11 @@ const ReportSummaryCards = ({ items, loading = false }: ReportSummaryCardsProps)
     <Row gutter={[16, 16]}>
       {items.map((item) => (
         <Col key={item.key} xs={24} sm={12} xl={xlSpan}>
-          <Card bordered={false} styles={{ body: { padding: 18 } }}>
+          <Card variant="borderless" styles={{ body: { padding: 18 } }}>
             {loading ? (
               <Skeleton active paragraph={{ rows: 2 }} title={{ width: "70%" }} />
             ) : (
-              <Space direction="vertical" size={8} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={8} style={{ width: "100%" }}>
                 <Space size={8}>
                   {item.icon}
                   <Typography.Text type="secondary">{item.title}</Typography.Text>

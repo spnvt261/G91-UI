@@ -307,15 +307,15 @@ const PromotionDetailPage = () => {
               ]}
             />
           ) : loading && !promotion ? (
-            <Card bordered={false} className="shadow-sm">
-              <Spin spinning tip="Đang tải dữ liệu khuyến mãi..." />
+            <Card variant="borderless" className="shadow-sm">
+              <Spin spinning description="Đang tải dữ liệu khuyến mãi..." />
             </Card>
           ) : promotion ? (
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <Row gutter={[12, 12]}>
               <Col xs={24} sm={12} xl={6}>
-                <Card bordered={false} className="h-full shadow-sm">
-                  <Space direction="vertical" size={4}>
+                <Card variant="borderless" className="h-full shadow-sm">
+                  <Space orientation="vertical" size={4}>
                     <Typography.Text type="secondary">Loại khuyến mãi</Typography.Text>
                     <Typography.Title level={4} className="!mb-0">
                       {getPromotionTypeLabel(promotion.promotionType)}
@@ -325,7 +325,7 @@ const PromotionDetailPage = () => {
               </Col>
 
               <Col xs={24} sm={12} xl={6}>
-                <Card bordered={false} className="h-full shadow-sm">
+                <Card variant="borderless" className="h-full shadow-sm">
                   <Statistic
                     title="Giá trị giảm"
                     value={promotion.discountValue}
@@ -335,8 +335,8 @@ const PromotionDetailPage = () => {
               </Col>
 
               <Col xs={24} sm={12} xl={6}>
-                <Card bordered={false} className="h-full shadow-sm">
-                  <Space direction="vertical" size={4}>
+                <Card variant="borderless" className="h-full shadow-sm">
+                  <Space orientation="vertical" size={4}>
                     <Typography.Text type="secondary">Trạng thái</Typography.Text>
                     <PromotionStatusTag status={promotion.status} withDot />
                   </Space>
@@ -344,7 +344,7 @@ const PromotionDetailPage = () => {
               </Col>
 
               <Col xs={24} sm={12} xl={6}>
-                <Card bordered={false} className="h-full shadow-sm">
+                <Card variant="borderless" className="h-full shadow-sm">
                   <Statistic title="Sản phẩm áp dụng" value={promotion.productCount ?? 0} />
                 </Card>
               </Col>
@@ -411,7 +411,7 @@ const PromotionDetailPage = () => {
 
       <Drawer
         title="Chỉnh sửa chương trình khuyến mãi"
-        width={980}
+        size={980}
         placement="right"
         open={editMode}
         destroyOnClose={false}
@@ -428,7 +428,7 @@ const PromotionDetailPage = () => {
         }
       >
         <Form layout="vertical">
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             {saveError ? (
               <Alert
                 type="error"

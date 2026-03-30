@@ -13,9 +13,9 @@ interface ContractInfoCardProps {
 
 const ContractInfoCard = ({ title, subtitle, items, extra, loading = false, columns = 2 }: ContractInfoCardProps) => {
   return (
-    <Card bordered={false} className="shadow-sm" loading={loading}>
-      <Space direction="vertical" size={14} style={{ width: "100%" }}>
-        <Space direction="vertical" size={2} style={{ width: "100%" }}>
+    <Card variant="borderless" className="shadow-sm" loading={loading}>
+      <Space orientation="vertical" size={14} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={2} style={{ width: "100%" }}>
           <Space align="start" style={{ width: "100%", justifyContent: "space-between" }}>
             <Typography.Title level={5} className="!mb-0">
               {title}

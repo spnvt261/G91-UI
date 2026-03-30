@@ -130,7 +130,7 @@ const CustomerEditPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           {!id ? <Alert type="warning" showIcon message="Không tìm thấy mã khách hàng để cập nhật." /> : null}
           {errorMessage ? <Alert type="error" showIcon message="Không thể tải dữ liệu khách hàng." description={errorMessage} /> : null}
 
@@ -145,7 +145,7 @@ const CustomerEditPage = () => {
             </>
           ) : (
             <Form<CustomerEditFormValues> form={form} layout="vertical" onFinish={(values) => void handleUpdate(values)}>
-              <Space direction="vertical" size={16} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                 <CustomerFormSection
                   title="Thông tin cơ bản"
                   description="Thông tin nhận diện doanh nghiệp của khách hàng."

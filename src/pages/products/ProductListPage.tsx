@@ -266,7 +266,7 @@ const ProductListPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <PageSummaryStats
             loading={summaryLoading}
             items={[
@@ -416,14 +416,14 @@ const ProductListPage = () => {
             open={Boolean(deletingItem)}
             onCancel={() => (deleting ? undefined : setDeletingItem(null))}
             closable={!deleting}
-            maskClosable={!deleting}
+            mask={{ closable: !deleting }}
             okText={deleting ? "Đang xóa..." : "Xóa sản phẩm"}
             okButtonProps={{ danger: true, loading: deleting }}
             cancelButtonProps={{ disabled: deleting }}
             cancelText="Hủy"
             onOk={() => void handleDelete()}
           >
-            <Space direction="vertical" size={12}>
+            <Space orientation="vertical" size={12}>
               <Alert type="warning" showIcon message="Hành động này sẽ xóa mềm sản phẩm khỏi danh mục hiển thị." />
               <Typography.Text>
                 Bạn có chắc chắn muốn xóa sản phẩm <Typography.Text strong>{deletingItem?.productName}</Typography.Text>?

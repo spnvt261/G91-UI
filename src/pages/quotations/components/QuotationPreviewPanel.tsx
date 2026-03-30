@@ -27,9 +27,9 @@ const QuotationPreviewPanel = ({
   const subTotal = summary?.subTotal ?? estimatedSubTotal;
 
   return (
-    <Card bordered={false} className="border border-slate-200">
-      <Space direction="vertical" size={14} style={{ width: "100%" }}>
-        <Space direction="vertical" size={0}>
+    <Card variant="borderless" className="border border-slate-200">
+      <Space orientation="vertical" size={14} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={0}>
           <Typography.Title level={5} className="!mb-0">
             Xem trước báo giá
           </Typography.Title>

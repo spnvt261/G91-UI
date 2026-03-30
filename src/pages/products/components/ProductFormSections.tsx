@@ -14,7 +14,7 @@ const ProductFormSections = ({ values, errors, disabled = false, onFieldChange }
   const imageUrls = parseImageUrls(values.imageUrlsText);
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+    <Space orientation="vertical" size={16} style={{ width: "100%" }}>
       <PageSectionCard title="Thông tin cơ bản" subtitle="Nhập các trường định danh chính để phân biệt sản phẩm trong danh mục.">
         <Row gutter={16}>
           <Col xs={24} md={12}>

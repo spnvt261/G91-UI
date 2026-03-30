@@ -15,14 +15,14 @@ const PriceListDeleteModal = ({ open, submitting = false, priceListName, onCance
       open={open}
       onCancel={submitting ? undefined : onCancel}
       closable={!submitting}
-      maskClosable={!submitting}
+      mask={{ closable: !submitting }}
       onOk={onConfirm}
       okText="Xoá bảng giá"
       cancelText="Huỷ"
       okButtonProps={{ danger: true, loading: submitting }}
       destroyOnClose
     >
-      <Space direction="vertical" size={14} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={14} style={{ width: "100%" }}>
         <Alert
           type="warning"
           showIcon

@@ -21,14 +21,14 @@ const CustomerDisableModal = ({ open, customerName, submitting = false, form, on
       open={open}
       onCancel={submitting ? undefined : onCancel}
       closable={!submitting}
-      maskClosable={!submitting}
+      mask={{ closable: !submitting }}
       onOk={onConfirm}
       okText="Xác nhận vô hiệu hóa"
       okButtonProps={{ danger: true, loading: submitting }}
       cancelText="Hủy"
       destroyOnClose
     >
-      <Space direction="vertical" size={14} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={14} style={{ width: "100%" }}>
         <Alert
           type="warning"
           showIcon

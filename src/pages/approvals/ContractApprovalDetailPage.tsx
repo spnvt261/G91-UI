@@ -119,7 +119,7 @@ const ContractApprovalDetailPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           {loadError ? (
             <Alert
               type="error"
@@ -135,7 +135,7 @@ const ContractApprovalDetailPage = () => {
           ) : null}
 
           {!loading && !contract ? (
-            <Card bordered={false} className="shadow-sm">
+            <Card variant="borderless" className="shadow-sm">
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description="Không tìm thấy dữ liệu hợp đồng để phê duyệt."
@@ -143,8 +143,8 @@ const ContractApprovalDetailPage = () => {
             </Card>
           ) : (
             <>
-              <Card bordered={false} className="shadow-sm" loading={loading}>
-                <Space direction="vertical" size={14} style={{ width: "100%" }}>
+              <Card variant="borderless" className="shadow-sm" loading={loading}>
+                <Space orientation="vertical" size={14} style={{ width: "100%" }}>
                   <Typography.Title level={5} className="!mb-0">
                     1. Tổng quan hợp đồng
                   </Typography.Title>
@@ -201,8 +201,8 @@ const ContractApprovalDetailPage = () => {
                 ]}
               />
 
-              <Card bordered={false} className="shadow-sm" loading={loading}>
-                <Space direction="vertical" size={12} style={{ width: "100%" }}>
+              <Card variant="borderless" className="shadow-sm" loading={loading}>
+                <Space orientation="vertical" size={12} style={{ width: "100%" }}>
                   <Typography.Title level={5} className="!mb-0">
                     3. Danh sách sản phẩm / giá trị
                   </Typography.Title>
@@ -210,8 +210,8 @@ const ContractApprovalDetailPage = () => {
                 </Space>
               </Card>
 
-              <Card bordered={false} className="shadow-sm" loading={loading}>
-                <Space direction="vertical" size={8} style={{ width: "100%" }}>
+              <Card variant="borderless" className="shadow-sm" loading={loading}>
+                <Space orientation="vertical" size={8} style={{ width: "100%" }}>
                   <Typography.Title level={5} className="!mb-0">
                     4. Ghi chú phê duyệt
                   </Typography.Title>

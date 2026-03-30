@@ -15,8 +15,8 @@ interface ExportOptionCardProps {
 const ExportOptionCard = ({ format, title, description, previewItems, disabledReason, statusText, icon }: ExportOptionCardProps) => {
   return (
     <Badge.Ribbon text={statusText ?? "Sắp hỗ trợ"} color="gold">
-      <Card bordered={false} styles={{ body: { padding: 18 } }}>
-        <Space direction="vertical" size={12} style={{ width: "100%" }}>
+      <Card variant="borderless" styles={{ body: { padding: 18 } }}>
+        <Space orientation="vertical" size={12} style={{ width: "100%" }}>
           <Space align="center" size={10}>
             {icon ?? <ClockCircleOutlined style={{ color: "#faad14" }} />}
             <Typography.Title level={4} className="!mb-0">

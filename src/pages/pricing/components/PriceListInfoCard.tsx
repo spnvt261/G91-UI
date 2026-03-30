@@ -42,7 +42,7 @@ const PriceListInfoCard = ({ detail }: PriceListInfoCardProps) => {
   return (
     <Card
       title={
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Typography.Text strong style={{ fontSize: 16 }}>
             Tổng quan bảng giá
           </Typography.Text>
@@ -92,12 +92,12 @@ const PriceListInfoCard = ({ detail }: PriceListInfoCardProps) => {
         </Col>
         <Col xs={24} lg={10}>
           <Card size="small" title="Theo dõi chu kỳ hiệu lực">
-            <Space direction="vertical" size={10} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={10} style={{ width: "100%" }}>
               <Typography.Text type="secondary">
                 Tiến độ hiệu lực hiện tại: <Typography.Text strong>{validityProgress}%</Typography.Text>
               </Typography.Text>
               <Progress percent={validityProgress} showInfo={false} status={validityProgress >= 100 ? "normal" : "active"} />
-              <Space direction="vertical" size={2}>
+              <Space orientation="vertical" size={2}>
                 <Typography.Text type="secondary">
                   <ClockCircleOutlined /> Tạo lúc: {formatDateTimeVi(detail.createdAt)}
                 </Typography.Text>

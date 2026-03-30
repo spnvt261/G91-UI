@@ -106,7 +106,7 @@ const PriceListCreatePage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           {isCreateBlocked ? (
             <Alert
               type="error"
@@ -135,7 +135,7 @@ const PriceListCreatePage = () => {
           />
 
           <Card>
-            <Space direction="vertical" size={10} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={10} style={{ width: "100%" }}>
               <Typography.Text type="secondary">
                 Sau khi lưu, hệ thống sẽ chuyển bạn sang trang chi tiết để kiểm tra lại bảng giá vừa tạo.
               </Typography.Text>

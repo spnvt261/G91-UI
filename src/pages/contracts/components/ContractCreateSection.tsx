@@ -10,9 +10,9 @@ interface ContractCreateSectionProps {
 
 const ContractCreateSection = ({ title, subtitle, content, loading = false }: ContractCreateSectionProps) => {
   return (
-    <Card bordered={false} className="shadow-sm" loading={loading}>
-      <Space direction="vertical" size={12} style={{ width: "100%" }}>
-        <Space direction="vertical" size={2} style={{ width: "100%" }}>
+    <Card variant="borderless" className="shadow-sm" loading={loading}>
+      <Space orientation="vertical" size={12} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={2} style={{ width: "100%" }}>
           <Typography.Title level={5} className="!mb-0">
             {title}
           </Typography.Title>

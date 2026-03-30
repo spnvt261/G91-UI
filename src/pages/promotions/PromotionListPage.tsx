@@ -173,7 +173,7 @@ const PromotionListPage = () => {
         key: "name",
         width: 280,
         render: (_, row) => (
-          <Space direction="vertical" size={2}>
+          <Space orientation="vertical" size={2}>
             <Typography.Text strong>{row.name}</Typography.Text>
             <Typography.Text type="secondary">{row.code ? `Mã: ${row.code}` : "Chưa có mã khuyến mãi"}</Typography.Text>
           </Space>
@@ -202,7 +202,7 @@ const PromotionListPage = () => {
         key: "validity",
         width: 220,
         render: (_, row) => (
-          <Space direction="vertical" size={2}>
+          <Space orientation="vertical" size={2}>
             <Typography.Text>
               {formatPromotionDate(row.startDate)} - {formatPromotionDate(row.endDate)}
             </Typography.Text>
@@ -216,7 +216,7 @@ const PromotionListPage = () => {
         key: "status",
         width: 160,
         render: (_, row) => (
-          <Space direction="vertical" size={4}>
+          <Space orientation="vertical" size={4}>
             <PromotionStatusTag status={row.status} withDot />
             {row.status === "ACTIVE" && isPromotionExpiringSoon(row.endDate) ? (
               <Tag color="volcano" style={{ marginInlineEnd: 0 }}>
@@ -340,7 +340,7 @@ const PromotionListPage = () => {
       }
       body={
         <>
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <PromotionSummaryCards
               totalPromotions={summary.totalPromotions}
               activePromotions={summary.activePromotions}
@@ -412,8 +412,8 @@ const PromotionListPage = () => {
               }}
             />
 
-            <Card bordered={false} className="shadow-sm">
-              <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Card variant="borderless" className="shadow-sm">
+              <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                 {listError ? (
                   <Alert
                     type="error"
@@ -428,11 +428,11 @@ const PromotionListPage = () => {
                   size="middle"
                   columns={columns}
                   dataSource={result.items}
-                  loading={{ spinning: loading, tip: "Đang tải danh sách khuyến mãi..." }}
+                  loading={{ spinning: loading, description: "Đang tải danh sách khuyến mãi..." }}
                   scroll={{ x: 1200 }}
                   locale={{ emptyText: emptyNode }}
                   pagination={{
-                    position: ["bottomRight"],
+                    placement: ["bottomEnd"],
                     current: result.pagination.page,
                     pageSize: result.pagination.pageSize,
                     total: result.pagination.totalItems,
@@ -459,7 +459,7 @@ const PromotionListPage = () => {
             okButtonProps={{ danger: true, loading: deleting }}
             cancelButtonProps={{ disabled: deleting }}
             closable={!deleting}
-            maskClosable={!deleting}
+            mask={{ closable: !deleting }}
             onOk={() => void handleDelete()}
             onCancel={() => {
               if (!deleting) {
@@ -467,7 +467,7 @@ const PromotionListPage = () => {
               }
             }}
           >
-            <Space direction="vertical" size={8}>
+            <Space orientation="vertical" size={8}>
               <Typography.Text>
                 Sau khi xóa, chương trình sẽ không còn xuất hiện trong danh sách và không thể phục hồi.
               </Typography.Text>

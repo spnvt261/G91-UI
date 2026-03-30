@@ -105,7 +105,7 @@ const InventoryIssueCreatePage = () => {
           sectionThreeTitle="Liên kết đơn hàng / dự án"
           sectionFourTitle="Lý do và ghi chú"
           sectionTwo={
-            <Space direction="vertical" size={12} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={12} style={{ width: "100%" }}>
               <Form.Item
                 name="quantity"
                 label="Số lượng xuất"
@@ -122,7 +122,7 @@ const InventoryIssueCreatePage = () => {
             </Space>
           }
           sectionThree={
-            <Space direction="vertical" size={12} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={12} style={{ width: "100%" }}>
               <Typography.Text type="secondary">
                 Bạn có thể để trống nếu xuất kho không gắn trực tiếp với đơn hàng hoặc dự án cụ thể.
               </Typography.Text>
@@ -135,7 +135,7 @@ const InventoryIssueCreatePage = () => {
             </Space>
           }
           sectionFour={
-            <Space direction="vertical" size={12} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={12} style={{ width: "100%" }}>
               <Form.Item name="reason" label="Lý do xuất kho">
                 <Input placeholder="Ví dụ: Xuất theo đơn hàng đã duyệt" />
               </Form.Item>

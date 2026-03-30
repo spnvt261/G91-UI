@@ -74,7 +74,7 @@ const ContractTrackingPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           {loadError ? (
             <Alert
               type="error"
@@ -89,8 +89,8 @@ const ContractTrackingPage = () => {
             />
           ) : null}
 
-          <Card bordered={false} className="shadow-sm" loading={loading}>
-            <Space direction="vertical" size={8} style={{ width: "100%" }}>
+          <Card variant="borderless" className="shadow-sm" loading={loading}>
+            <Space orientation="vertical" size={8} style={{ width: "100%" }}>
               <Typography.Title level={5} className="!mb-0">
                 Trạng thái hiện tại
               </Typography.Title>
@@ -99,8 +99,8 @@ const ContractTrackingPage = () => {
             </Space>
           </Card>
 
-          <Card bordered={false} className="shadow-sm" loading={loading}>
-            <Space direction="vertical" size={12} style={{ width: "100%" }}>
+          <Card variant="borderless" className="shadow-sm" loading={loading}>
+            <Space orientation="vertical" size={12} style={{ width: "100%" }}>
               <Typography.Title level={5} className="!mb-0">
                 Lịch sử theo dõi xử lý
               </Typography.Title>

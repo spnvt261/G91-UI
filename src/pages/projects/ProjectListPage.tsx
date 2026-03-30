@@ -124,7 +124,7 @@ const ProjectListPage = () => {
         title: "Dự án",
         key: "project",
         render: (_, row) => (
-          <Space direction="vertical" size={2}>
+          <Space orientation="vertical" size={2}>
             <Typography.Text strong>{displayText(row.name)}</Typography.Text>
             <Typography.Text type="secondary">
               Mã: {displayText(row.projectCode ?? row.code)} • Khách hàng: {displayText(row.customerName ?? row.customerId)}
@@ -261,8 +261,8 @@ const ProjectListPage = () => {
         loading={summaryLoading}
       />
 
-      <Card bordered={false} style={{ border: "1px solid #e6edf5" }}>
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      <Card variant="borderless" style={{ border: "1px solid #e6edf5" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <Row gutter={[12, 12]} align="middle">
             <Col xs={24} lg={12}>
               <Input.Search
@@ -310,7 +310,7 @@ const ProjectListPage = () => {
               showIcon
               message="Không thể tải danh sách dự án."
               description={
-                <Space direction="vertical" size={4}>
+                <Space orientation="vertical" size={4}>
                   <Typography.Text>{listError}</Typography.Text>
                   <Button size="small" onClick={() => void loadProjects()}>
                     Tải lại
@@ -324,7 +324,7 @@ const ProjectListPage = () => {
             rowKey="id"
             columns={columns}
             dataSource={items}
-            loading={{ spinning: loading, tip: "Đang tải danh sách dự án..." }}
+            loading={{ spinning: loading, description: "Đang tải danh sách dự án..." }}
             locale={{
               emptyText: (
                 <Empty

@@ -187,7 +187,7 @@ const CustomerListPage = () => {
           return (
             <Space size={12} align="start">
               <Avatar icon={<UserOutlined />} style={{ backgroundColor: "#e6f4ff", color: "#1677ff" }} />
-              <Space direction="vertical" size={2}>
+              <Space orientation="vertical" size={2}>
                 <Typography.Text strong>{displayCustomerText(row.companyName)}</Typography.Text>
                 <Typography.Text type="secondary">{customerCode ? `Mã khách hàng: ${customerCode}` : "Mã khách hàng: Chưa cập nhật"}</Typography.Text>
                 <Typography.Text type="secondary">{subInfo.length > 0 ? subInfo.join(" • ") : "Chưa có thông tin liên hệ nổi bật."}</Typography.Text>
@@ -207,7 +207,7 @@ const CustomerListPage = () => {
         dataIndex: "customerType",
         key: "customerType",
         render: (value: string, row) => (
-          <Space direction="vertical" size={2}>
+          <Space orientation="vertical" size={2}>
             <Typography.Text>{getCustomerTypeLabel(value)}</Typography.Text>
             <Typography.Text type="secondary">Nhóm giá: {displayCustomerText(row.priceGroup)}</Typography.Text>
           </Space>
@@ -217,7 +217,7 @@ const CustomerListPage = () => {
         title: "Tài chính",
         key: "financial",
         render: (_, row) => (
-          <Space direction="vertical" size={2}>
+          <Space orientation="vertical" size={2}>
             <Typography.Text>Hạn mức: {row.creditLimit != null ? toCurrency(row.creditLimit) : "Chưa thiết lập"}</Typography.Text>
             <Typography.Text type="secondary">Công nợ: {row.currentDebt != null ? toCurrency(row.currentDebt) : "Chưa cập nhật"}</Typography.Text>
           </Space>
@@ -299,7 +299,7 @@ const CustomerListPage = () => {
           />
         }
         body={
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <CustomerSummaryCards
               totalCustomers={summary.totalCustomers}
               activeCustomers={summary.activeCustomers}
@@ -308,7 +308,7 @@ const CustomerListPage = () => {
             />
 
             <Card>
-              <Space direction="vertical" size={16} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                 <Row gutter={[12, 12]} align="middle">
                   <Col xs={24} lg={12}>
                     <Input.Search
@@ -350,7 +350,7 @@ const CustomerListPage = () => {
                   rowKey="id"
                   columns={columns}
                   dataSource={items}
-                  loading={{ spinning: loading, tip: "Đang tải danh sách khách hàng..." }}
+                  loading={{ spinning: loading, description: "Đang tải danh sách khách hàng..." }}
                   locale={{
                     emptyText: (
                       <Empty

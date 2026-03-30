@@ -313,7 +313,7 @@ const ProjectDetailPage = () => {
           showIcon
           message="Không thể tải trung tâm dự án."
           description={
-            <Space direction="vertical" size={6}>
+            <Space orientation="vertical" size={6}>
               <Typography.Text>{detailError}</Typography.Text>
               <Button size="small" onClick={() => void loadProjectDetail()}>
                 Tải lại
@@ -324,11 +324,11 @@ const ProjectDetailPage = () => {
       ) : null}
 
       {loading ? (
-        <Card bordered={false} style={{ border: "1px solid #e6edf5" }}>
+        <Card variant="borderless" style={{ border: "1px solid #e6edf5" }}>
           <Skeleton active paragraph={{ rows: 10 }} />
         </Card>
       ) : project ? (
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <Row gutter={[16, 16]}>
             <Col xs={24} md={12} lg={12}>
               <Card>
@@ -337,7 +337,7 @@ const ProjectDetailPage = () => {
             </Col>
             <Col xs={24} md={12} lg={12}>
               <Card>
-                <Space direction="vertical" size={6}>
+                <Space orientation="vertical" size={6}>
                   <Typography.Text type="secondary">Trạng thái dự án</Typography.Text>
                   <ProjectStatusTag status={project.status} />
                   <Typography.Text type="secondary">{displayText(getProjectStatusLabel(project.status))}</Typography.Text>
@@ -346,7 +346,7 @@ const ProjectDetailPage = () => {
             </Col>
             <Col xs={24} md={12} lg={12}>
               <Card>
-                <Space direction="vertical" size={6}>
+                <Space orientation="vertical" size={6}>
                   <Typography.Text type="secondary">Khách hàng</Typography.Text>
                   <Typography.Text strong style={{ wordBreak: "break-word" }}>
                     {displayText(project.customerName ?? project.customerId)}
@@ -359,7 +359,7 @@ const ProjectDetailPage = () => {
             </Col>
             <Col xs={24} md={12} lg={12}>
               <Card>
-                <Space direction="vertical" size={6}>
+                <Space orientation="vertical" size={6}>
                   <Typography.Text type="secondary">Kho triển khai</Typography.Text>
                   <Typography.Text strong style={{ wordBreak: "break-word" }}>
                     {primaryWarehouseLabel}
@@ -375,8 +375,8 @@ const ProjectDetailPage = () => {
 
           <Row gutter={[16, 16]}>
             <Col xs={24} xl={16}>
-              <Card title="Tổng quan dự án" bordered={false} style={{ border: "1px solid #e6edf5" }}>
-                <Space direction="vertical" size={18} style={{ width: "100%" }}>
+              <Card title="Tổng quan dự án" variant="borderless" style={{ border: "1px solid #e6edf5" }}>
+                <Space orientation="vertical" size={18} style={{ width: "100%" }}>
                   <ProjectProgressBar value={progressPercent} showMeta />
                   <Descriptions column={{ xs: 1, md: 2 }} size="middle">
                     <Descriptions.Item label="Mã dự án">{displayText(project.projectCode ?? project.code)}</Descriptions.Item>
@@ -392,7 +392,7 @@ const ProjectDetailPage = () => {
               </Card>
             </Col>
             <Col xs={24} xl={8}>
-              <Card title="Nhịp điều phối" bordered={false} style={{ border: "1px solid #e6edf5" }}>
+              <Card title="Nhịp điều phối" variant="borderless" style={{ border: "1px solid #e6edf5" }}>
                 <Timeline
                   items={[
                     {
@@ -419,7 +419,7 @@ const ProjectDetailPage = () => {
 
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={8}>
-              <Card title="Thông tin khách hàng" bordered={false} style={{ border: "1px solid #e6edf5" }}>
+              <Card title="Thông tin khách hàng" variant="borderless" style={{ border: "1px solid #e6edf5" }}>
                 <Descriptions column={1} size="small">
                   <Descriptions.Item label="Tên khách hàng">{displayText(project.customerName ?? project.customerId)}</Descriptions.Item>
                   <Descriptions.Item label="Quản lý phụ trách">{displayText(project.assignedProjectManager)}</Descriptions.Item>
@@ -428,7 +428,7 @@ const ProjectDetailPage = () => {
               </Card>
             </Col>
             <Col xs={24} lg={8}>
-              <Card title="Kho và triển khai" bordered={false} style={{ border: "1px solid #e6edf5" }}>
+              <Card title="Kho và triển khai" variant="borderless" style={{ border: "1px solid #e6edf5" }}>
                 <Descriptions column={1} size="small">
                   <Descriptions.Item label="Kho chính">{primaryWarehouseLabel}</Descriptions.Item>
                   <Descriptions.Item label="Kho dự phòng">{backupWarehouseLabel}</Descriptions.Item>
@@ -437,7 +437,7 @@ const ProjectDetailPage = () => {
               </Card>
             </Col>
             <Col xs={24} lg={8}>
-              <Card title="Thông tin hệ thống" bordered={false} style={{ border: "1px solid #e6edf5" }}>
+              <Card title="Thông tin hệ thống" variant="borderless" style={{ border: "1px solid #e6edf5" }}>
                 <Descriptions column={1} size="small">
                   <Descriptions.Item label="Ngân sách">{displayText(project.budget)}</Descriptions.Item>
                   <Descriptions.Item label="Tạo lúc">{formatProjectDate(project.createdAt)}</Descriptions.Item>
@@ -448,7 +448,7 @@ const ProjectDetailPage = () => {
           </Row>
         </Space>
       ) : (
-        <Card bordered={false} style={{ border: "1px solid #e6edf5" }}>
+        <Card variant="borderless" style={{ border: "1px solid #e6edf5" }}>
           <Empty description="Không có dữ liệu dự án để hiển thị." />
         </Card>
       )}

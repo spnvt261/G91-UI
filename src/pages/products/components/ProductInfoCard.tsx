@@ -9,7 +9,7 @@ interface ProductInfoCardProps {
 
 const ProductInfoCard = ({ product }: ProductInfoCardProps) => {
   return (
-    <Space direction="vertical" size={12} style={{ width: "100%" }}>
+    <Space orientation="vertical" size={12} style={{ width: "100%" }}>
       <Typography.Title level={4} style={{ margin: 0 }}>
         Thông tin sản phẩm
       </Typography.Title>

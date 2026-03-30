@@ -68,8 +68,8 @@ const ChangePasswordPage = () => {
     <div className="space-y-6 p-6 md:p-8">
       <Breadcrumb items={[{ title: "Trang chủ" }, { title: "Tài khoản" }, { title: "Đổi mật khẩu" }]} />
 
-      <Card bordered={false} className="shadow-sm">
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      <Card variant="borderless" className="shadow-sm">
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <div>
             <Typography.Title level={3} className="!mb-1">
               Đổi mật khẩu
@@ -87,7 +87,7 @@ const ChangePasswordPage = () => {
               description="Vui lòng liên hệ quản trị viên nếu bạn cần hỗ trợ tài khoản."
             />
           ) : (
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
               <AuthInlineStatus status={status} />
 
               <Form

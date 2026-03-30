@@ -15,11 +15,11 @@ const RevenueStatCard = ({ title, value, trendRatio, trendLabel, loading = false
   const normalizedTrend = Math.max(0, Math.min(1, trendRatio ?? 0));
 
   return (
-    <Card bordered={false} styles={{ body: { padding: 18 } }} loading={loading}>
-      <Space direction="vertical" size={10} style={{ width: "100%" }}>
+    <Card variant="borderless" styles={{ body: { padding: 18 } }} loading={loading}>
+      <Space orientation="vertical" size={10} style={{ width: "100%" }}>
         <Statistic title={title} value={toCurrency(value)} prefix={<DollarOutlined style={{ color: "#1677ff" }} />} />
         {trendLabel ? (
-          <Space direction="vertical" size={4} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={4} style={{ width: "100%" }}>
             <Typography.Text type="secondary">{trendLabel}</Typography.Text>
             <Progress
               percent={Number((normalizedTrend * 100).toFixed(1))}

@@ -159,7 +159,7 @@ const PaymentListPage = () => {
         dataIndex: "id",
         key: "id",
         render: (value: string) => (
-          <Space direction="vertical" size={0}>
+          <Space orientation="vertical" size={0}>
             <Typography.Text strong>{value}</Typography.Text>
             <Typography.Text type="secondary">Mã tham chiếu</Typography.Text>
           </Space>
@@ -275,7 +275,7 @@ const PaymentListPage = () => {
         title: "Khách hàng",
         key: "customer",
         render: (_, row) => (
-          <Space direction="vertical" size={0}>
+          <Space orientation="vertical" size={0}>
             <Typography.Text strong>{row.customerName || row.customerId || "Chưa cập nhật"}</Typography.Text>
             <Typography.Text type="secondary">{row.customerId || "-"}</Typography.Text>
           </Space>
@@ -322,7 +322,7 @@ const PaymentListPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <PaymentSummaryCards
             totalInvoices={summary.totalInvoices}
             unpaidInvoices={summary.unpaidInvoices}
@@ -333,7 +333,7 @@ const PaymentListPage = () => {
           />
 
           <Card title="Danh sách hóa đơn">
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
               <Row gutter={[12, 12]} align="middle">
                 <Col xs={24} lg={9}>
                   <Input.Search
@@ -422,7 +422,7 @@ const PaymentListPage = () => {
                 rowKey="id"
                 columns={invoiceColumns}
                 dataSource={pagedInvoices}
-                loading={{ spinning: loading, tip: "Đang tải hóa đơn..." }}
+                loading={{ spinning: loading, description: "Đang tải hóa đơn..." }}
                 locale={{
                   emptyText: (
                     <Empty
@@ -459,7 +459,7 @@ const PaymentListPage = () => {
               rowKey={(record) => `${record.customerId}-${record.customerName ?? ""}`}
               columns={debtColumns}
               dataSource={debtItems}
-              loading={{ spinning: loading, tip: "Đang tải công nợ..." }}
+              loading={{ spinning: loading, description: "Đang tải công nợ..." }}
               locale={{
                 emptyText: (
                   <Empty

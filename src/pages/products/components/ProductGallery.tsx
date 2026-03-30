@@ -17,14 +17,14 @@ const ProductGallery = ({ productName, mainImage, imageUrls }: ProductGalleryPro
 
   if (images.length === 0) {
     return (
-      <Space direction="vertical" size={12} align="center" style={{ width: "100%", padding: "24px 0" }}>
+      <Space orientation="vertical" size={12} align="center" style={{ width: "100%", padding: "24px 0" }}>
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Sản phẩm chưa có hình ảnh" />
       </Space>
     );
   }
 
   return (
-    <Space direction="vertical" size={12} style={{ width: "100%" }}>
+    <Space orientation="vertical" size={12} style={{ width: "100%" }}>
       <Image src={activeImage} alt={productName} preview style={{ width: "100%", maxHeight: 460, objectFit: "cover", borderRadius: 12 }} />
 
       <Image.PreviewGroup>

@@ -26,7 +26,7 @@ const ProjectContextCard = ({
 
   return (
     <Card title={title}>
-      <Space direction="vertical" size={14} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={14} style={{ width: "100%" }}>
         {shouldShowWarehouseWarning ? (
           <Alert
             type="warning"
@@ -38,7 +38,7 @@ const ProjectContextCard = ({
 
         <Row gutter={[16, 12]}>
           <Col xs={24} xl={14}>
-            <Space direction="vertical" size={12} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={12} style={{ width: "100%" }}>
               <Space size={10} wrap>
                 <Typography.Title level={4} style={{ margin: 0 }}>
                   {displayText(project.name)}
@@ -54,7 +54,7 @@ const ProjectContextCard = ({
             </Space>
           </Col>
           <Col xs={24} xl={10}>
-            <Space direction="vertical" size={8} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={8} style={{ width: "100%" }}>
               <Typography.Text strong>Tiến độ hiện tại</Typography.Text>
               <ProjectProgressBar value={currentProgress} showMeta />
             </Space>

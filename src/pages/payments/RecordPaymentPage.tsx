@@ -113,7 +113,7 @@ const RecordPaymentPage = () => {
             }
           />
         ) : (
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             {errorMessage ? <Alert type="error" showIcon message="Không thể tải dữ liệu hóa đơn." description={errorMessage} /> : null}
 
             {loadingInvoice ? (
@@ -130,7 +130,7 @@ const RecordPaymentPage = () => {
                 onBack={() => navigate(ROUTE_URL.PAYMENT_DETAIL.replace(":id", id))}
                 maxAmount={invoice.dueAmount}
                 summaryCard={
-                  <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                  <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                     <Card title="Thông tin hóa đơn liên quan">
                       <Descriptions column={1} size="small" colon={false}>
                         <Descriptions.Item label="Mã hóa đơn">{invoice.id}</Descriptions.Item>

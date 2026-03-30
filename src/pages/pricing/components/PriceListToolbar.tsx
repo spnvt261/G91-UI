@@ -51,7 +51,7 @@ const PriceListToolbar = ({
 
   return (
     <Card>
-      <Space direction="vertical" size={14} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={14} style={{ width: "100%" }}>
         <Row gutter={[12, 12]} align="middle">
           <Col xs={24} xl={9}>
             <Input.Search

@@ -26,7 +26,7 @@ const RecordPaymentForm = ({ form, submitting, onSubmit, onBack, maxAmount, summ
     <Row gutter={[16, 16]} align="top">
       <Col xs={24} lg={16}>
         <Form form={form} layout="vertical" onFinish={onSubmit} requiredMark="optional" initialValues={{ method: "BANK_TRANSFER" }}>
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <Card title="Thông tin thanh toán">
               <Row gutter={[16, 12]}>
                 <Col xs={24} md={12}>

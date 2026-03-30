@@ -28,7 +28,7 @@ const TopNavbar = ({ onToggleSidebar, sidebarCollapsed = false }: TopNavbarProps
             />
           </Tooltip>
 
-          <Space direction="vertical" size={0} className="app-top-navbar__title-wrap">
+          <Space orientation="vertical" size={0} className="app-top-navbar__title-wrap">
             <Typography.Text className="app-top-navbar__context">Không gian làm việc</Typography.Text>
             <Typography.Title level={5} className="app-top-navbar__title" ellipsis={{ tooltip: pageContext.title }}>
               {pageContext.title}

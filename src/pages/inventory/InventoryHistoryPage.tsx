@@ -142,7 +142,7 @@ const InventoryHistoryPage = () => {
         title: "Sản phẩm",
         key: "product",
         render: (_, row) => (
-          <Space direction="vertical" size={0}>
+          <Space orientation="vertical" size={0}>
             <Typography.Text strong>{row.productName || "Chưa cập nhật tên sản phẩm"}</Typography.Text>
             <Typography.Text type="secondary">{row.productCode || row.productId}</Typography.Text>
           </Space>
@@ -164,7 +164,7 @@ const InventoryHistoryPage = () => {
         title: "Lý do / ghi chú",
         key: "reasonNote",
         render: (_, row) => (
-          <Space direction="vertical" size={0}>
+          <Space orientation="vertical" size={0}>
             <Typography.Text>{row.reason || "Không có lý do chi tiết"}</Typography.Text>
             <Typography.Text type="secondary">{row.note || "Không có ghi chú"}</Typography.Text>
           </Space>
@@ -206,11 +206,11 @@ const InventoryHistoryPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <InventorySummaryCards items={summaryItems} loading={summaryLoading} />
 
           <Card title="Bộ lọc lịch sử">
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
               <InventoryHistoryFilterBar
                 searchValue={query.search ?? ""}
                 transactionType={query.transactionType}
@@ -258,14 +258,14 @@ const InventoryHistoryPage = () => {
           </Card>
 
           <Card title="Danh sách giao dịch kho">
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
               {errorMessage ? <Alert type="error" showIcon message="Không thể tải lịch sử kho." description={errorMessage} /> : null}
 
               <Table<InventoryHistoryItem>
                 rowKey="id"
                 columns={columns}
                 dataSource={items}
-                loading={{ spinning: loading, tip: "Đang tải lịch sử giao dịch..." }}
+                loading={{ spinning: loading, description: "Đang tải lịch sử giao dịch..." }}
                 locale={{
                   emptyText: (
                     <Empty

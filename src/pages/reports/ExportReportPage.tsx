@@ -20,8 +20,8 @@ const ExportReportPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
-          <Card bordered={false}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
+          <Card variant="borderless">
             <Result
               status="info"
               title="Tính năng xuất báo cáo đang trong giai đoạn tích hợp backend"
@@ -74,7 +74,7 @@ const ExportReportPage = () => {
             </Col>
           </Row>
 
-          <Card bordered={false} title="Xem trước cấu trúc dữ liệu sẽ hỗ trợ">
+          <Card variant="borderless" title="Xem trước cấu trúc dữ liệu sẽ hỗ trợ">
             <Descriptions column={{ xs: 1, md: 2, xl: 3 }} bordered>
               <Descriptions.Item label="Doanh số">
                 Kỳ báo cáo, doanh thu, tỷ trọng, ghi chú xu hướng.

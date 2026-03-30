@@ -10,7 +10,7 @@ interface CustomerFormSectionProps {
 const CustomerFormSection = ({ title, description, children }: CustomerFormSectionProps) => {
   return (
     <Card>
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={16} style={{ width: "100%" }}>
         <div>
           <Typography.Title level={5} style={{ margin: 0 }}>
             {title}

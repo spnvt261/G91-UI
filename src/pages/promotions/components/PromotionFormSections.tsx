@@ -42,9 +42,9 @@ const PromotionFormSections = ({
   const isPercentage = formValues.promotionType === "PERCENTAGE";
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }}>
-      <Card bordered={false} className="shadow-sm">
-        <Space direction="vertical" size={2} style={{ width: "100%", marginBottom: 16 }}>
+    <Space orientation="vertical" size={16} style={{ width: "100%" }}>
+      <Card variant="borderless" className="shadow-sm">
+        <Space orientation="vertical" size={2} style={{ width: "100%", marginBottom: 16 }}>
           <Typography.Title level={5} className="!mb-0">
             Thông tin cơ bản
           </Typography.Title>
@@ -81,8 +81,8 @@ const PromotionFormSections = ({
         </Row>
       </Card>
 
-      <Card bordered={false} className="shadow-sm">
-        <Space direction="vertical" size={2} style={{ width: "100%", marginBottom: 16 }}>
+      <Card variant="borderless" className="shadow-sm">
+        <Space orientation="vertical" size={2} style={{ width: "100%", marginBottom: 16 }}>
           <Typography.Title level={5} className="!mb-0">
             Cấu hình ưu đãi
           </Typography.Title>
@@ -155,8 +155,8 @@ const PromotionFormSections = ({
         </Row>
       </Card>
 
-      <Card bordered={false} className="shadow-sm">
-        <Space direction="vertical" size={2} style={{ width: "100%", marginBottom: 16 }}>
+      <Card variant="borderless" className="shadow-sm">
+        <Space orientation="vertical" size={2} style={{ width: "100%", marginBottom: 16 }}>
           <Typography.Title level={5} className="!mb-0">
             Thời gian áp dụng
           </Typography.Title>
@@ -202,8 +202,8 @@ const PromotionFormSections = ({
         </Row>
       </Card>
 
-      <Card bordered={false} className="shadow-sm">
-        <Space direction="vertical" size={2} style={{ width: "100%", marginBottom: 16 }}>
+      <Card variant="borderless" className="shadow-sm">
+        <Space orientation="vertical" size={2} style={{ width: "100%", marginBottom: 16 }}>
           <Typography.Title level={5} className="!mb-0">
             Phạm vi sản phẩm
           </Typography.Title>

@@ -169,7 +169,7 @@ const QuotationDetailPage = () => {
       body={
         <Layout style={{ background: "transparent" }}>
           {loading ? (
-            <Card bordered={false} className="border border-slate-200">
+            <Card variant="borderless" className="border border-slate-200">
               <Skeleton active paragraph={{ rows: 10 }} />
             </Card>
           ) : pageError ? (
@@ -185,11 +185,11 @@ const QuotationDetailPage = () => {
               }
             />
           ) : !detail ? (
-            <Card bordered={false} className="border border-slate-200">
+            <Card variant="borderless" className="border border-slate-200">
               <Empty description="Không tìm thấy báo giá cần xem." />
             </Card>
           ) : (
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
               {quotation?.status === "DRAFT" ? (
                 <Alert
                   type="warning"
@@ -208,9 +208,9 @@ const QuotationDetailPage = () => {
 
               <Row gutter={[16, 16]} align="top">
                 <Col xs={24} xl={16}>
-                  <Space direction="vertical" size={16} style={{ width: "100%" }}>
-                    <Card bordered={false} className="border border-slate-200">
-                      <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                  <Space orientation="vertical" size={16} style={{ width: "100%" }}>
+                    <Card variant="borderless" className="border border-slate-200">
+                      <Space orientation="vertical" size={12} style={{ width: "100%" }}>
                         <Typography.Title level={5} className="!mb-0">
                           1. Tổng quan báo giá
                         </Typography.Title>
@@ -225,8 +225,8 @@ const QuotationDetailPage = () => {
                       </Space>
                     </Card>
 
-                    <Card bordered={false} className="border border-slate-200">
-                      <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                    <Card variant="borderless" className="border border-slate-200">
+                      <Space orientation="vertical" size={12} style={{ width: "100%" }}>
                         <Typography.Title level={5} className="!mb-0">
                           2. Khách hàng / dự án
                         </Typography.Title>
@@ -240,8 +240,8 @@ const QuotationDetailPage = () => {
                       </Space>
                     </Card>
 
-                    <Card bordered={false} className="border border-slate-200">
-                      <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                    <Card variant="borderless" className="border border-slate-200">
+                      <Space orientation="vertical" size={12} style={{ width: "100%" }}>
                         <Typography.Title level={5} className="!mb-0">
                           3. Thông tin thương mại
                         </Typography.Title>
@@ -257,8 +257,8 @@ const QuotationDetailPage = () => {
                       </Space>
                     </Card>
 
-                    <Card bordered={false} className="border border-slate-200">
-                      <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                    <Card variant="borderless" className="border border-slate-200">
+                      <Space orientation="vertical" size={12} style={{ width: "100%" }}>
                         <Typography.Title level={5} className="!mb-0">
                           4. Giao hàng / ghi chú
                         </Typography.Title>
@@ -266,8 +266,8 @@ const QuotationDetailPage = () => {
                       </Space>
                     </Card>
 
-                    <Card bordered={false} className="border border-slate-200">
-                      <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                    <Card variant="borderless" className="border border-slate-200">
+                      <Space orientation="vertical" size={12} style={{ width: "100%" }}>
                         <Typography.Title level={5} className="!mb-0">
                           Danh sách sản phẩm
                         </Typography.Title>
@@ -279,9 +279,9 @@ const QuotationDetailPage = () => {
                 </Col>
 
                 <Col xs={24} xl={8}>
-                  <Space direction="vertical" size={16} style={{ width: "100%" }}>
-                    <Card bordered={false} className="border border-slate-200">
-                      <Space direction="vertical" size={10} style={{ width: "100%" }}>
+                  <Space orientation="vertical" size={16} style={{ width: "100%" }}>
+                    <Card variant="borderless" className="border border-slate-200">
+                      <Space orientation="vertical" size={10} style={{ width: "100%" }}>
                         <Typography.Title level={5} className="!mb-0">
                           Tổng tiền báo giá
                         </Typography.Title>
@@ -318,8 +318,8 @@ const QuotationDetailPage = () => {
                       </Space>
                     </Card>
 
-                    <Card bordered={false} className="border border-slate-200">
-                      <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                    <Card variant="borderless" className="border border-slate-200">
+                      <Space orientation="vertical" size={12} style={{ width: "100%" }}>
                         <Typography.Title level={5} className="!mb-0">
                           Lịch sử xử lý
                         </Typography.Title>

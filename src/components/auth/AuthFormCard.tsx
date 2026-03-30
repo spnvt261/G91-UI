@@ -13,9 +13,9 @@ interface AuthFormCardProps {
 
 const AuthFormCard = ({ title, description, icon, children, footer, extraTop, eyebrow }: AuthFormCardProps) => {
   return (
-    <Card bordered={false} className="auth-form-card">
-      <Space direction="vertical" size={24} style={{ width: "100%" }}>
-        <Space direction="vertical" size={12} style={{ width: "100%" }}>
+    <Card variant="borderless" className="auth-form-card">
+      <Space orientation="vertical" size={24} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={12} style={{ width: "100%" }}>
           <Space align="start" size={14} className="auth-form-card__headline">
             {icon ? (
               <Avatar size={46} className="auth-form-card__icon">
@@ -23,7 +23,7 @@ const AuthFormCard = ({ title, description, icon, children, footer, extraTop, ey
               </Avatar>
             ) : null}
 
-            <Space direction="vertical" size={2}>
+            <Space orientation="vertical" size={2}>
               {eyebrow ? <Typography.Text className="auth-form-card__eyebrow">{eyebrow}</Typography.Text> : null}
               <Typography.Title level={2} className="auth-form-card__title">
                 {title}

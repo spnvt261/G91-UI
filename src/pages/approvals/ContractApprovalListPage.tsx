@@ -77,7 +77,7 @@ const ContractApprovalListPage = () => {
         key: "contractNumber",
         width: 250,
         render: (_, row) => (
-          <Space direction="vertical" size={2}>
+          <Space orientation="vertical" size={2}>
             <Space size={6}>
               <Typography.Text strong>{getContractDisplayNumber(row)}</Typography.Text>
               {isRecentContract(row.createdAt) ? (
@@ -99,7 +99,7 @@ const ContractApprovalListPage = () => {
         title: "Khách hàng",
         key: "customer",
         render: (_, row) => (
-          <Space direction="vertical" size={1}>
+          <Space orientation="vertical" size={1}>
             <Typography.Text>{row.customerName || "Chưa cập nhật tên khách hàng"}</Typography.Text>
             <Typography.Text type="secondary">{row.customerId || "-"}</Typography.Text>
           </Space>
@@ -199,11 +199,11 @@ const ContractApprovalListPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <ContractSummaryCards items={summaryCards} loading={loading} />
 
-          <Card bordered={false} className="shadow-sm">
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Card variant="borderless" className="shadow-sm">
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
               <Space wrap style={{ width: "100%", justifyContent: "space-between" }}>
                 <Input.Search
                   allowClear
@@ -247,7 +247,7 @@ const ContractApprovalListPage = () => {
                 size="middle"
                 columns={columns}
                 dataSource={pagedItems}
-                loading={{ spinning: loading, tip: "Đang tải danh sách chờ phê duyệt..." }}
+                loading={{ spinning: loading, description: "Đang tải danh sách chờ phê duyệt..." }}
                 rowClassName={() => "cursor-pointer"}
                 onRow={(record) => ({
                   onClick: () => navigate(ROUTE_URL.CONTRACT_APPROVAL_DETAIL.replace(":id", record.id)),
@@ -269,7 +269,7 @@ const ContractApprovalListPage = () => {
                   current: page,
                   pageSize,
                   total: allItems.length,
-                  position: ["bottomRight"],
+                  placement: ["bottomEnd"],
                   showSizeChanger: true,
                   pageSizeOptions: [8, 16, 24, 32],
                   showTotal: (total, range) => `${range[0]}-${range[1]} trên ${total} hợp đồng`,

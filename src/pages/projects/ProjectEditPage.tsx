@@ -142,7 +142,7 @@ const ProjectEditPage = () => {
       {project ? <ProjectContextCard project={project} title="Dự án đang chỉnh sửa" /> : null}
 
       <Form<ProjectEditFormValues> form={form} layout="vertical" onFinish={handleUpdate}>
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <ProjectFormSection title="Thông tin cơ bản" description="Điều chỉnh thông tin nhận diện và phạm vi để các bộ phận phối hợp dễ hơn.">
             <Row gutter={[16, 0]}>
               <Col xs={24} md={12}>

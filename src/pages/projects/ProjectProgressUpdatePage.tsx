@@ -163,7 +163,7 @@ const ProjectProgressUpdatePage = () => {
       {project ? <ProjectContextCard project={project} title="Dự án đang cập nhật tiến độ" /> : null}
 
       <Form<ProjectProgressFormValues> form={form} layout="vertical" onFinish={handleSubmit}>
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <ProjectFormSection title="Thông tin cập nhật tiến độ" description="Cập nhật tỷ lệ hoàn thành và ghi chú triển khai để đội dự án theo dõi thống nhất.">
             <Row gutter={[16, 0]}>
               <Col xs={24} md={12}>
@@ -215,7 +215,7 @@ const ProjectProgressUpdatePage = () => {
           >
             <Form.List name="evidenceDocuments">
               {(fields, { add, remove }) => (
-                <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={8} style={{ width: "100%" }}>
                   {fields.map((field, index) => (
                     <Row key={field.key} gutter={[12, 0]} align="bottom">
                       <Col xs={24} md={6}>

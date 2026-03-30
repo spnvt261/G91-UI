@@ -53,7 +53,7 @@ const InventoryTransactionForm = <TValues extends object>({
     <Row gutter={[16, 16]} align="top">
       <Col xs={24} lg={16}>
         <Form form={form} layout="vertical" onFinish={onSubmit} requiredMark="optional">
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <Card title="1. Chọn sản phẩm">
               {productLoadError ? (
                 <Alert
@@ -99,7 +99,7 @@ const InventoryTransactionForm = <TValues extends object>({
 
       <Col xs={24} lg={8}>
         <Card title={summaryTitle} extra={<InboxOutlined style={{ color: "#94a3b8" }} />}>
-          <Space direction="vertical" size={8} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={8} style={{ width: "100%" }}>
             {summaryItems.map((item) => (
               <div key={item.key}>
                 <Typography.Text type="secondary">{item.label}</Typography.Text>

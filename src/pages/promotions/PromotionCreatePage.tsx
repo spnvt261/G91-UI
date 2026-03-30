@@ -126,7 +126,7 @@ const PromotionCreatePage = () => {
       }
       body={
         <Form layout="vertical" onFinish={() => void handleSubmit()}>
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <Alert
               type="info"
               showIcon
@@ -157,7 +157,7 @@ const PromotionCreatePage = () => {
               </Col>
 
               <Col xs={24} xl={8}>
-                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                   <PromotionFormSummaryCard
                     formValues={formValues}
                     className="xl:sticky xl:top-4"
@@ -166,7 +166,7 @@ const PromotionCreatePage = () => {
               </Col>
             </Row>
 
-            <Card bordered={false} className="sticky bottom-4 z-10 shadow-md">
+            <Card variant="borderless" className="sticky bottom-4 z-10 shadow-md">
               <Row justify="space-between" align="middle" gutter={[12, 12]}>
                 <Col xs={24} md={14}>
                   <Typography.Text type="secondary">

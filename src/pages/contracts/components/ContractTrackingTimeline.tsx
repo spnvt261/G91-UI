@@ -26,7 +26,7 @@ const ContractTrackingTimeline = ({
       items={events.map((event, index) => ({
         key: `${event.status}-${event.at}-${index}`,
         children: (
-          <Space direction="vertical" size={4}>
+          <Space orientation="vertical" size={4}>
             <Space size={8}>
               <ContractStatusTag status={event.status} />
               <Typography.Text type="secondary">{formatContractDateTime(event.at)}</Typography.Text>

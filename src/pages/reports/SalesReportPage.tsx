@@ -164,7 +164,7 @@ const SalesReportPage = () => {
         dataIndex: "period",
         key: "period",
         render: (_, row) => (
-          <Space direction="vertical" size={2}>
+          <Space orientation="vertical" size={2}>
             <Typography.Text strong>{row.period}</Typography.Text>
             <Typography.Text type="secondary">{PERIOD_KIND_LABEL[row.periodKind]}</Typography.Text>
           </Space>
@@ -176,7 +176,7 @@ const SalesReportPage = () => {
         key: "revenue",
         align: "right",
         render: (value: number, row) => (
-          <Space direction="vertical" size={0} style={{ width: "100%", textAlign: "right" }}>
+          <Space orientation="vertical" size={0} style={{ width: "100%", textAlign: "right" }}>
             <Typography.Text strong style={{ color: row.isTopPeriod ? "#d46b08" : undefined }}>
               {toCurrency(value)}
             </Typography.Text>
@@ -227,7 +227,7 @@ const SalesReportPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           {pageError ? (
             <Alert
               showIcon
@@ -322,7 +322,7 @@ const SalesReportPage = () => {
           </ReportFilterBar>
 
           <Card
-            bordered={false}
+            variant="borderless"
             title="Chi tiết doanh thu theo kỳ"
             extra={<Typography.Text type="secondary">{`Hiển thị ${tableRows.length} kỳ`}</Typography.Text>}
             styles={{ body: { padding: 0 } }}
@@ -331,7 +331,7 @@ const SalesReportPage = () => {
               rowKey="key"
               columns={columns}
               dataSource={tableRows}
-              loading={{ spinning: loading && items.length > 0, tip: "Đang cập nhật báo cáo doanh số..." }}
+              loading={{ spinning: loading && items.length > 0, description: "Đang cập nhật báo cáo doanh số..." }}
               rowClassName={(record) => (record.isTopPeriod ? "bg-amber-50" : "")}
               locale={{
                 emptyText: (

@@ -10,9 +10,9 @@ interface PromotionInfoCardProps {
 
 const PromotionInfoCard = ({ title, description, extra, children }: PromotionInfoCardProps) => {
   return (
-    <Card bordered={false} className="shadow-sm" extra={extra}>
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
-        <Space direction="vertical" size={2}>
+    <Card variant="borderless" className="shadow-sm" extra={extra}>
+      <Space orientation="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={2}>
           <Typography.Title level={5} className="!mb-0">
             {title}
           </Typography.Title>

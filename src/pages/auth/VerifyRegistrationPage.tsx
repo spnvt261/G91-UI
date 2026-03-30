@@ -167,7 +167,7 @@ const VerifyRegistrationPage = () => {
             }
           />
         ) : (
-          <Space direction="vertical" size={18} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={18} style={{ width: "100%" }}>
             <AuthInlineStatus status={status} />
 
             <Form
@@ -204,7 +204,7 @@ const VerifyRegistrationPage = () => {
 
               <Typography.Text className="auth-form-helper">Nếu chưa nhận được email, hãy kiểm tra mục thư rác trước khi gửi lại mã.</Typography.Text>
 
-              <Space direction="vertical" size={10} style={{ width: "100%", marginTop: 8 }}>
+              <Space orientation="vertical" size={10} style={{ width: "100%", marginTop: 8 }}>
                 <Button type="primary" htmlType="submit" size="large" loading={verifyLoading} className="auth-primary-btn" block>
                   Xác thực tài khoản
                 </Button>

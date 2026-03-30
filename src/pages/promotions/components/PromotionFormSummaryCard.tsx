@@ -22,9 +22,9 @@ const PromotionFormSummaryCard = ({ formValues, title = "Tóm tắt chương tr�
   const hasDiscountValue = Number.isFinite(Number(formValues.discountValue)) && Number(formValues.discountValue) > 0;
 
   return (
-    <Card bordered={false} className={`shadow-sm ${className ?? ""}`.trim()}>
-      <Space direction="vertical" size={12} style={{ width: "100%" }}>
-        <Space direction="vertical" size={2} style={{ width: "100%" }}>
+    <Card variant="borderless" className={`shadow-sm ${className ?? ""}`.trim()}>
+      <Space orientation="vertical" size={12} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={2} style={{ width: "100%" }}>
           <Typography.Title level={5} className="!mb-0">
             {title}
           </Typography.Title>

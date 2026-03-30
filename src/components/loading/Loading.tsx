@@ -51,7 +51,7 @@ const Loading = ({
   if (mode === "section") {
     return (
       <Card className="border border-slate-200 shadow-sm" styles={{ body: { padding: 18 } }}>
-        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={14} style={{ width: "100%" }}>
           <Space align="center" size={10}>
             <Spin size="small" />
             <Typography.Text strong>{text}</Typography.Text>
@@ -76,7 +76,7 @@ const Loading = ({
       className={`${fullScreen ? "fixed z-[1000]" : "absolute z-30"} inset-0 flex items-center justify-center bg-slate-100/55 backdrop-blur-[1.5px]`}
     >
       <Card className="w-[min(92vw,420px)] border border-slate-200 shadow-lg" styles={{ body: { padding: 18 } }}>
-        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={14} style={{ width: "100%" }}>
           <Space align="center" size={10}>
             <Spin />
             <Typography.Text strong>{text}</Typography.Text>

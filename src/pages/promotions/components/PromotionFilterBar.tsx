@@ -41,8 +41,8 @@ const PromotionFilterBar = ({
   onReset,
 }: PromotionFilterBarProps) => {
   return (
-    <Card bordered={false} className="shadow-sm">
-      <Space direction="vertical" size={14} style={{ width: "100%" }}>
+    <Card variant="borderless" className="shadow-sm">
+      <Space orientation="vertical" size={14} style={{ width: "100%" }}>
         <Typography.Title level={5} className="!mb-0">
           Bộ lọc chương trình
         </Typography.Title>

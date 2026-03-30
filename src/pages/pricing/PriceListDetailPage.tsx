@@ -289,7 +289,7 @@ const PriceListDetailPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           {loadingDetail ? (
             <Card>
               <Skeleton active paragraph={{ rows: 10 }} />
@@ -298,7 +298,7 @@ const PriceListDetailPage = () => {
 
           {!loadingDetail && detailError ? (
             <Card>
-              <Space direction="vertical" size={12} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={12} style={{ width: "100%" }}>
                 <Alert type="error" showIcon message="Không thể tải chi tiết bảng giá" description={detailError} />
                 <Space>
                   <Button onClick={() => void loadDetail()}>Thử tải lại</Button>
@@ -319,13 +319,13 @@ const PriceListDetailPage = () => {
           {!loadingDetail && !detailError && detail ? (
             <>
               {!editMode ? (
-                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                   <Row gutter={[16, 16]}>
                     <Col xs={24} xl={16}>
                       <PriceListInfoCard detail={detail} />
                     </Col>
                     <Col xs={24} xl={8}>
-                      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                      <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                         <Card
                           title="Phân tích đơn giá"
                           extra={<Tag color="blue">{`${productPriceInsights.pricedCount}/${detailItemRows.length} sản phẩm đã có đơn giá`}</Tag>}
@@ -365,7 +365,7 @@ const PriceListDetailPage = () => {
                   </Card>
                 </Space>
               ) : (
-                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                   <Alert
                     type="info"
                     showIcon
@@ -392,7 +392,7 @@ const PriceListDetailPage = () => {
                   />
 
                   <Card>
-                    <Space direction="vertical" size={10} style={{ width: "100%" }}>
+                    <Space orientation="vertical" size={10} style={{ width: "100%" }}>
                       <Typography.Text type="secondary">
                         Lưu ý: thay đổi sẽ áp dụng cho các nghiệp vụ sử dụng bảng giá này ngay sau khi lưu thành công.
                       </Typography.Text>

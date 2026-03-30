@@ -12,9 +12,9 @@ interface PageSectionCardProps {
 const PageSectionCard = ({ title, subtitle, extra, children, className }: PageSectionCardProps) => {
   return (
     <Card className={className} bordered>
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={16} style={{ width: "100%" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
-          <Space direction="vertical" size={4}>
+          <Space orientation="vertical" size={4}>
             <Typography.Title level={4} style={{ margin: 0 }}>
               {title}
             </Typography.Title>

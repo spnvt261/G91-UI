@@ -113,7 +113,7 @@ const ForgotPasswordPage = () => {
             }
           />
         ) : (
-          <Space direction="vertical" size={18} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={18} style={{ width: "100%" }}>
             <AuthInlineStatus status={status} />
 
             <Form form={form} layout="vertical" onFinish={handleSubmit} requiredMark={false} autoComplete="off" disabled={loading}>

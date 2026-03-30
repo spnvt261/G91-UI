@@ -10,7 +10,7 @@ type ProjectFormSectionProps = {
 const ProjectFormSection = ({ title, description, children }: ProjectFormSectionProps) => {
   return (
     <Card size="small" styles={{ body: { padding: 18 } }}>
-      <Space direction="vertical" size={14} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={14} style={{ width: "100%" }}>
         <div>
           <Typography.Title level={5} style={{ margin: 0 }}>
             {title}

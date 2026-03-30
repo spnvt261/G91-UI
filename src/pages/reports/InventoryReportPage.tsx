@@ -146,7 +146,7 @@ const InventoryReportPage = () => {
         key: "normalizedReservedQty",
         align: "right",
         render: (value: number, row) => (
-          <Space direction="vertical" size={0} style={{ width: "100%", textAlign: "right" }}>
+          <Space orientation="vertical" size={0} style={{ width: "100%", textAlign: "right" }}>
             <Typography.Text>{formatNumber(value)}</Typography.Text>
             <Typography.Text type="secondary">{formatPercent(row.reservedRatio)}</Typography.Text>
           </Space>
@@ -187,7 +187,7 @@ const InventoryReportPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           {pageError ? (
             <Alert
               showIcon
@@ -282,7 +282,7 @@ const InventoryReportPage = () => {
           </ReportFilterBar>
 
           <Card
-            bordered={false}
+            variant="borderless"
             title="Chi tiết tồn kho theo sản phẩm"
             extra={<Typography.Text type="secondary">{`Hiển thị ${filteredRows.length} sản phẩm`}</Typography.Text>}
             styles={{ body: { padding: 0 } }}
@@ -291,7 +291,7 @@ const InventoryReportPage = () => {
               rowKey="key"
               columns={columns}
               dataSource={filteredRows}
-              loading={{ spinning: loading && items.length > 0, tip: "Đang cập nhật báo cáo tồn kho..." }}
+              loading={{ spinning: loading && items.length > 0, description: "Đang cập nhật báo cáo tồn kho..." }}
               rowClassName={(record) => (record.health === "OUT_OF_STOCK" ? "bg-red-50" : record.health === "LOW_STOCK" ? "bg-amber-50" : "")}
               locale={{
                 emptyText: (

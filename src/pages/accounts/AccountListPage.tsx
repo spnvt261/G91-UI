@@ -524,7 +524,7 @@ const AccountListPage = () => {
       render: (_, row) => (
         <Space size={12} align="start">
           <Avatar icon={<UserOutlined />} style={{ backgroundColor: "#e6f4ff", color: "#1677ff" }} />
-          <Space direction="vertical" size={2}>
+          <Space orientation="vertical" size={2}>
             <Typography.Text strong>{row.fullName}</Typography.Text>
             <Typography.Text type="secondary">{row.email}</Typography.Text>
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
@@ -630,7 +630,7 @@ const AccountListPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <PageSummaryStats
             loading={summaryLoading}
             items={[
@@ -769,7 +769,7 @@ const AccountListPage = () => {
             open={Boolean(formMode)}
             onCancel={closeFormModal}
             closable={!creating && !editing}
-            maskClosable={!creating && !editing}
+            mask={{ closable: !creating && !editing }}
             okText={creating || editing ? "Đang lưu..." : formMode === "create" ? "Tạo tài khoản" : "Lưu thay đổi"}
             okButtonProps={{ loading: creating || editing }}
             cancelText="Hủy"
@@ -840,7 +840,7 @@ const AccountListPage = () => {
             title="Chi tiết tài khoản"
             open={detailOpen}
             onClose={closeDetailDrawer}
-            width={520}
+            size={520}
             extra={
               <Space>
                 {detailItem?.status === "ACTIVE" && detailItem.role !== "OWNER" ? (
@@ -862,7 +862,7 @@ const AccountListPage = () => {
             }
           >
             {detailItem ? (
-              <Space direction="vertical" size={16} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                 <Descriptions column={1} bordered size="small" title={detailItem.fullName}>
                   <Descriptions.Item label="Email">{detailItem.email}</Descriptions.Item>
                   <Descriptions.Item label="Vai trò">
@@ -884,14 +884,14 @@ const AccountListPage = () => {
             open={Boolean(actionTarget)}
             onCancel={() => (deactivating ? undefined : setActionTarget(null))}
             closable={!deactivating}
-            maskClosable={!deactivating}
+            mask={{ closable: !deactivating }}
             okText={deactivating ? "Đang tạm ngưng..." : "Tạm ngưng tài khoản"}
             okButtonProps={{ danger: true, loading: deactivating }}
             cancelButtonProps={{ disabled: deactivating }}
             cancelText="Hủy"
             onOk={() => void handleDeactivate()}
           >
-            <Space direction="vertical" size={12}>
+            <Space orientation="vertical" size={12}>
               <Alert
                 type="warning"
                 showIcon

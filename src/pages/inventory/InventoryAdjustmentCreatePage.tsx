@@ -108,7 +108,7 @@ const InventoryAdjustmentCreatePage = () => {
           sectionThreeTitle="Lý do điều chỉnh"
           sectionFourTitle="Ghi chú"
           sectionTwo={
-            <Space direction="vertical" size={12} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={12} style={{ width: "100%" }}>
               <Form.Item
                 name="adjustmentQuantity"
                 label="Số lượng điều chỉnh"

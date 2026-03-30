@@ -339,9 +339,9 @@ const ContractDetailPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           {canApprove || canCancel ? (
-            <Card bordered={false} className="shadow-sm" styles={{ body: { padding: 12 } }}>
+            <Card variant="borderless" className="shadow-sm" styles={{ body: { padding: 12 } }}>
               <Space wrap>
                 <Typography.Text strong>Thao tác nhạy cảm:</Typography.Text>
                 {canApprove ? (
@@ -394,7 +394,7 @@ const ContractDetailPage = () => {
           ) : null}
 
           {!loading && !contract ? (
-            <Card bordered={false} className="shadow-sm">
+            <Card variant="borderless" className="shadow-sm">
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description="Không tìm thấy dữ liệu hợp đồng."
@@ -409,7 +409,7 @@ const ContractDetailPage = () => {
                 subtitle="Thông tin tóm tắt để nắm nhanh tình trạng và phạm vi hợp đồng."
                 loading={loading}
                 content={(
-                  <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                  <Space orientation="vertical" size={12} style={{ width: "100%" }}>
                     <Row gutter={[16, 16]}>
                       <Col xs={24} sm={8}>
                         <Statistic
@@ -496,7 +496,7 @@ const ContractDetailPage = () => {
             okButtonProps={{ danger: true, loading: actionLoading === "cancel" }}
             cancelButtonProps={{ disabled: actionLoading === "cancel" }}
             closable={actionLoading !== "cancel"}
-            maskClosable={actionLoading !== "cancel"}
+            mask={{ closable: actionLoading !== "cancel" }}
             onCancel={() => {
               if (actionLoading !== "cancel") {
                 setCancelModalOpen(false);
@@ -526,7 +526,7 @@ const ContractDetailPage = () => {
               );
             }}
           >
-            <Space direction="vertical" size={12} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={12} style={{ width: "100%" }}>
               <Alert
                 type="warning"
                 showIcon
@@ -565,10 +565,10 @@ const ContractDetailPage = () => {
             onOk={() => void handleConfirmDocumentSelection()}
             okButtonProps={{ loading: actionLoading === "print" }}
             cancelButtonProps={{ disabled: actionLoading === "print" }}
-            maskClosable={actionLoading !== "print"}
+            mask={{ closable: actionLoading !== "print" }}
             closable={actionLoading !== "print"}
           >
-            <Space direction="vertical" size={12} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={12} style={{ width: "100%" }}>
               <Typography.Text type="secondary">
                 Có nhiều tài liệu hợp đồng được tạo. Vui lòng chọn tài liệu bạn muốn mở.
               </Typography.Text>

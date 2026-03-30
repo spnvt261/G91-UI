@@ -160,7 +160,7 @@ const PriceListListPage = () => {
         title: "Bảng giá",
         key: "name",
         render: (_, row) => (
-          <Space direction="vertical" size={2}>
+          <Space orientation="vertical" size={2}>
             <Typography.Text strong>{row.name}</Typography.Text>
             <Typography.Text type="secondary">{row.customerGroup?.trim() ? `Nhóm: ${row.customerGroup}` : "Nhóm: Chưa chỉ định"}</Typography.Text>
           </Space>
@@ -170,7 +170,7 @@ const PriceListListPage = () => {
         title: "Hiệu lực",
         key: "validity",
         render: (_, row) => (
-          <Space direction="vertical" size={2}>
+          <Space orientation="vertical" size={2}>
             <Typography.Text>{`${formatDateVi(row.validFrom)} - ${formatDateVi(row.validTo)}`}</Typography.Text>
             <Typography.Text type="secondary">Cập nhật theo khung thời gian áp dụng</Typography.Text>
           </Space>
@@ -276,7 +276,7 @@ const PriceListListPage = () => {
           />
         }
         body={
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <PriceListSummaryCards
               total={summaryData.total}
               activeNow={summaryData.activeNow}
@@ -334,7 +334,7 @@ const PriceListListPage = () => {
             />
 
             <Card>
-              <Space direction="vertical" size={14} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={14} style={{ width: "100%" }}>
                 {listError ? (
                   <Alert
                     type="error"
@@ -353,7 +353,7 @@ const PriceListListPage = () => {
                   rowKey="id"
                   columns={columns}
                   dataSource={items}
-                  loading={{ spinning: loading, tip: "Đang tải danh sách bảng giá..." }}
+                  loading={{ spinning: loading, description: "Đang tải danh sách bảng giá..." }}
                   locale={{
                     emptyText: (
                       <Empty

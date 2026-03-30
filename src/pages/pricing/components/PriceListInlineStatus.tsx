@@ -42,7 +42,7 @@ const PriceListInlineStatus = ({ status, validFrom, validTo, showBadge = false, 
 
   if (showBadge) {
     return (
-      <Space direction="vertical" size={2}>
+      <Space orientation="vertical" size={2}>
         <Badge status={statusColor.badge} text={statusText} />
         {showValidity ? <Tag color={mapValidityColor(validityState)}>{validityText}</Tag> : null}
       </Space>

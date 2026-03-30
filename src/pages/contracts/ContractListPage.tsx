@@ -112,7 +112,7 @@ const ContractListPage = () => {
         key: "contractNumber",
         width: 230,
         render: (_, row) => (
-          <Space direction="vertical" size={1}>
+          <Space orientation="vertical" size={1}>
             <Typography.Text strong>{getContractDisplayNumber(row)}</Typography.Text>
             <Typography.Text type="secondary">Mã hệ thống: {row.id}</Typography.Text>
           </Space>
@@ -130,7 +130,7 @@ const ContractListPage = () => {
         title: "Khách hàng",
         key: "customer",
         render: (_, row) => (
-          <Space direction="vertical" size={1}>
+          <Space orientation="vertical" size={1}>
             <Typography.Text>{row.customerName || "Chưa cập nhật tên khách hàng"}</Typography.Text>
             <Typography.Text type="secondary">{row.customerId || "-"}</Typography.Text>
           </Space>
@@ -250,7 +250,7 @@ const ContractListPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <ContractSummaryCards
             loading={loading}
             items={[
@@ -284,8 +284,8 @@ const ContractListPage = () => {
             ]}
           />
 
-          <Card bordered={false} className="shadow-sm">
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Card variant="borderless" className="shadow-sm">
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
               <Row gutter={[12, 12]} align="middle">
                 <Col xs={24} lg={8}>
                   <Input.Search
@@ -390,7 +390,7 @@ const ContractListPage = () => {
                 size="middle"
                 columns={columns}
                 dataSource={pagedItems}
-                loading={{ spinning: loading, tip: "Đang tải danh sách hợp đồng..." }}
+                loading={{ spinning: loading, description: "Đang tải danh sách hợp đồng..." }}
                 rowClassName={() => "cursor-pointer"}
                 onRow={(record) => ({
                   onClick: (event) => {
@@ -409,7 +409,7 @@ const ContractListPage = () => {
                   total: filteredItems.length,
                   showSizeChanger: true,
                   pageSizeOptions: [8, 16, 24, 32],
-                  position: ["bottomRight"],
+                  placement: ["bottomEnd"],
                   showTotal: (total, range) => `${range[0]}-${range[1]} trên ${total} hợp đồng`,
                 }}
                 onChange={(pagination) => {

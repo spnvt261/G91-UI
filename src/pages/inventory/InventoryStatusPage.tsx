@@ -140,7 +140,7 @@ const InventoryStatusPage = () => {
         dataIndex: "productCode",
         key: "productCode",
         render: (value: string | undefined, row) => (
-          <Space direction="vertical" size={0}>
+          <Space orientation="vertical" size={0}>
             <Typography.Text strong>{value || row.productId || "Chưa cập nhật"}</Typography.Text>
             <Typography.Text type="secondary">{row.productId || "-"}</Typography.Text>
           </Space>
@@ -203,7 +203,7 @@ const InventoryStatusPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <InventorySummaryCards items={summaryItems} loading={loading} />
 
           <Card title="Thao tác nhanh">
@@ -251,7 +251,7 @@ const InventoryStatusPage = () => {
           </Card>
 
           <Card title="Danh sách tồn kho">
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
               <Row gutter={[12, 12]}>
                 <Col xs={24} lg={12}>
                   <Input.Search
@@ -300,7 +300,7 @@ const InventoryStatusPage = () => {
                 rowKey={(record) => `${record.productId}-${record.productCode ?? ""}`}
                 columns={columns}
                 dataSource={pagedItems}
-                loading={{ spinning: loading, tip: "Đang tải tồn kho..." }}
+                loading={{ spinning: loading, description: "Đang tải tồn kho..." }}
                 locale={{
                   emptyText: (
                     <Empty

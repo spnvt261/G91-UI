@@ -176,7 +176,7 @@ const FinancialReportPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           {pageError ? (
             <Alert
               showIcon
@@ -190,10 +190,10 @@ const FinancialReportPage = () => {
 
           <FinancialOverviewCards totalRevenue={summaryRevenue} totalDebt={summaryDebt} loading={isInitialLoading} />
 
-          <Card bordered={false} title="Điểm nổi bật tài chính" loading={isInitialLoading}>
+          <Card variant="borderless" title="Điểm nổi bật tài chính" loading={isInitialLoading}>
             <Row gutter={[16, 16]}>
               <Col xs={24} md={8}>
-                <Space direction="vertical" size={4}>
+                <Space orientation="vertical" size={4}>
                   <Typography.Text type="secondary">Dự án đang theo dõi</Typography.Text>
                   <Typography.Title level={4} className="!mb-0">
                     {formatNumber(overview.total)}
@@ -202,7 +202,7 @@ const FinancialReportPage = () => {
                 </Space>
               </Col>
               <Col xs={24} md={8}>
-                <Space direction="vertical" size={4}>
+                <Space orientation="vertical" size={4}>
                   <Typography.Text type="secondary">Dự án tiến độ tốt</Typography.Text>
                   <Typography.Title level={4} className="!mb-0" style={{ color: "#389e0d" }}>
                     {formatNumber(overview.onTrack)}
@@ -211,7 +211,7 @@ const FinancialReportPage = () => {
                 </Space>
               </Col>
               <Col xs={24} md={8}>
-                <Space direction="vertical" size={4}>
+                <Space orientation="vertical" size={4}>
                   <Typography.Text type="secondary">Dự án cần chú ý</Typography.Text>
                   <Typography.Title level={4} className="!mb-0" style={{ color: "#d4380d" }}>
                     {formatNumber(overview.atRisk)}
@@ -267,7 +267,7 @@ const FinancialReportPage = () => {
           </ReportFilterBar>
 
           <Card
-            bordered={false}
+            variant="borderless"
             title="Chi tiết tài chính theo dự án"
             extra={<Typography.Text type="secondary">{`Hiển thị ${filteredRows.length} dự án`}</Typography.Text>}
             styles={{ body: { padding: 0 } }}
@@ -276,7 +276,7 @@ const FinancialReportPage = () => {
               rowKey="key"
               columns={columns}
               dataSource={filteredRows}
-              loading={{ spinning: loading && projectRows.length > 0, tip: "Đang cập nhật báo cáo tài chính..." }}
+              loading={{ spinning: loading && projectRows.length > 0, description: "Đang cập nhật báo cáo tài chính..." }}
               rowClassName={(record) => {
                 const statusMeta = getStatusMeta(record.status);
                 return statusMeta.riskLevel === "critical" ? "bg-red-50" : statusMeta.riskLevel === "warning" ? "bg-amber-50" : "";

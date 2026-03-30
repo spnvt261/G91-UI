@@ -22,7 +22,7 @@ const ProjectPageLayout = ({ title, subtitle, breadcrumbItems, actions, children
         </div>
       }
       body={
-        <Space direction="vertical" size={18} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={18} style={{ width: "100%" }}>
           {children}
         </Space>
       }

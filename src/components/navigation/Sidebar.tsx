@@ -98,7 +98,7 @@ const Sidebar = ({ collapsed = false, activePath, onNavigate, className = "" }: 
             </div>
           </Tooltip>
           {!collapsed ? (
-            <Space direction="vertical" size={2}>
+            <Space orientation="vertical" size={2}>
               <Typography.Title level={5} style={{ margin: 0 }}>
                 G91 Điều Hành
               </Typography.Title>

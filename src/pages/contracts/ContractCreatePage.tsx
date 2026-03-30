@@ -242,12 +242,12 @@ const ContractCreatePage = () => {
 
   const summaryCard = (
     <Card
-      bordered={false}
+      variant="borderless"
       className="shadow-sm"
       style={{ position: "sticky", top: 16 }}
       styles={{ body: { padding: 16 } }}
     >
-      <Space direction="vertical" size={12} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={12} style={{ width: "100%" }}>
         <Typography.Title level={5} className="!mb-0">
           Tóm tắt nhanh
         </Typography.Title>
@@ -341,10 +341,10 @@ const ContractCreatePage = () => {
             }
           />
         ) : (
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <Row gutter={[16, 16]} align="top">
               <Col xs={24} lg={16}>
-                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                   <ContractCreateSection
                     title="Thông tin báo giá nguồn"
                     subtitle="Dữ liệu tham chiếu từ báo giá đã chọn."
@@ -385,7 +385,7 @@ const ContractCreatePage = () => {
                     subtitle="Xác nhận rõ địa điểm giao hàng trước khi tạo hợp đồng."
                     loading={pageLoading}
                     content={
-                      <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                      <Space orientation="vertical" size={12} style={{ width: "100%" }}>
                         <Input.TextArea
                           rows={3}
                           maxLength={DELIVERY_ADDRESS_MAX_LENGTH}
@@ -418,11 +418,11 @@ const ContractCreatePage = () => {
 
               <Col xs={24} lg={8}>
                 {pageLoading ? (
-                  <Card bordered={false} className="shadow-sm" loading />
+                  <Card variant="borderless" className="shadow-sm" loading />
                 ) : quotation ? (
                   summaryCard
                 ) : (
-                  <Card bordered={false} className="shadow-sm">
+                  <Card variant="borderless" className="shadow-sm">
                     <Empty
                       image={Empty.PRESENTED_IMAGE_SIMPLE}
                       description="Không có dữ liệu báo giá để hiển thị."

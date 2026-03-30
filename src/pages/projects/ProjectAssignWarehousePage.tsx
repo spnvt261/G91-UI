@@ -120,7 +120,7 @@ const ProjectAssignWarehousePage = () => {
       ) : null}
 
       <Form<AssignWarehouseFormValues> form={form} layout="vertical" onFinish={handleAssign}>
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <ProjectFormSection title="Thông tin gán kho" description="Chọn kho mới và ghi lý do để đội vận hành dễ kiểm tra về sau.">
             <Row gutter={[16, 0]}>
               <Col xs={24} md={12}>

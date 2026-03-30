@@ -24,9 +24,9 @@ interface AuthHeroPanelProps {
 
 const AuthHeroPanel = ({ eyebrow, title, description, highlights = [], steps = [], currentStep = 0, note }: AuthHeroPanelProps) => {
   return (
-    <Card bordered={false} className="auth-hero-panel">
-      <Space direction="vertical" size={24} style={{ width: "100%" }}>
-        <Space direction="vertical" size={8} style={{ width: "100%" }}>
+    <Card variant="borderless" className="auth-hero-panel">
+      <Space orientation="vertical" size={24} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={8} style={{ width: "100%" }}>
           <Typography.Text className="auth-hero-panel__eyebrow">{eyebrow}</Typography.Text>
           <Typography.Title level={2} className="auth-hero-panel__title">
             {title}
@@ -35,7 +35,7 @@ const AuthHeroPanel = ({ eyebrow, title, description, highlights = [], steps = [
         </Space>
 
         {highlights.length > 0 ? (
-          <Space direction="vertical" size={14} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={14} style={{ width: "100%" }}>
             {highlights.map((item) => (
               <div key={item.title} className="auth-hero-panel__item">
                 <span className="auth-hero-panel__item-icon">{item.icon}</span>

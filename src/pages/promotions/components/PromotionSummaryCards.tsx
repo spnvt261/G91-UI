@@ -60,11 +60,11 @@ const PromotionSummaryCards = ({
     <Row gutter={[12, 12]}>
       {items.map((item) => (
         <Col key={item.key} xs={24} sm={12} xl={6}>
-          <Card bordered={false} className="h-full shadow-sm">
+          <Card variant="borderless" className="h-full shadow-sm">
             {loading ? (
               <Skeleton active paragraph={{ rows: 1 }} title={false} />
             ) : (
-              <Space direction="vertical" size={4} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={4} style={{ width: "100%" }}>
                 <Space align="center" size={8}>
                   {item.icon}
                   <Typography.Text type="secondary">{item.title}</Typography.Text>

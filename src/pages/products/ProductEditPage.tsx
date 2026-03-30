@@ -102,7 +102,7 @@ const ProductEditPage = () => {
         />
       }
       body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           {loading ? <InlinePageStatus mode="loading" title="Đang tải dữ liệu sản phẩm..." /> : null}
 
           {!loading && loadError ? (

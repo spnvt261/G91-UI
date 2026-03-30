@@ -166,9 +166,9 @@ const PriceListFormSection = ({
     .filter((row) => row.productError || row.unitPriceError);
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+    <Space orientation="vertical" size={16} style={{ width: "100%" }}>
       <Card>
-        <Space direction="vertical" size={4}>
+        <Space orientation="vertical" size={4}>
           <Typography.Title level={4} style={{ marginBottom: 0 }}>
             {title}
           </Typography.Title>
@@ -269,14 +269,14 @@ const PriceListFormSection = ({
           </Space>
         }
       >
-        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={14} style={{ width: "100%" }}>
           {productLoadError ? (
             <Alert
               type="error"
               showIcon
               message="Không thể tải danh sách sản phẩm"
               description={
-                <Space direction="vertical" size={8}>
+                <Space orientation="vertical" size={8}>
                   <Typography.Text>{productLoadError}</Typography.Text>
                   {onRetryLoadProducts ? (
                     <Button icon={<ReloadOutlined />} onClick={onRetryLoadProducts} loading={loadingProducts}>
@@ -386,7 +386,7 @@ const PriceListFormSection = ({
               showIcon
               message="Danh sách sản phẩm còn dữ liệu chưa hợp lệ"
               description={
-                <Space direction="vertical" size={2}>
+                <Space orientation="vertical" size={2}>
                   {itemValidationRows.map((row) => (
                     <Typography.Text key={`item-validation-${row.index}`}>
                       Sản phẩm #{row.index}: {[row.productError, row.unitPriceError].filter(Boolean).join(" ")}
