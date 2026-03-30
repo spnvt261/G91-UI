@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { Button, Card, Descriptions, Form, Input, Modal, Space, Tag, Typography } from "antd";
+﻿import { EditOutlined, StopOutlined } from "@ant-design/icons";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Alert, Avatar, Button, Card, Col, Empty, Form, Row, Skeleton, Space, Statistic, Typography } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
-import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
-import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { canPerformAction } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
@@ -11,18 +10,12 @@ import type { CustomerModel } from "../../models/customer/customer.model";
 import { customerService } from "../../services/customer/customer.service";
 import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
-
-interface DisableFormValues {
-  reason: string;
-}
-
-const formatStatusTag = (status: CustomerModel["status"]) => {
-  if (status === "INACTIVE") {
-    return <Tag color="error">INACTIVE</Tag>;
-  }
-
-  return <Tag color="success">ACTIVE</Tag>;
-};
+import CustomerDisableModal, { type CustomerDisableFormValues } from "./components/CustomerDisableModal";
+import CustomerInfoSection from "./components/CustomerInfoSection";
+import CustomerPageHeader from "./components/CustomerPageHeader";
+import CustomerStatusTag from "./components/CustomerStatusTag";
+import { getCustomerTypeLabel } from "./customer.constants";
+import { displayCustomerText, formatCustomerDateTime } from "./customer.utils";
 
 const CustomerDetailPage = () => {
   const navigate = useNavigate();
@@ -35,47 +28,32 @@ const CustomerDetailPage = () => {
   const [customer, setCustomer] = useState<CustomerModel | null>(null);
   const [loading, setLoading] = useState(false);
   const [disabling, setDisabling] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isDisableModalOpen, setIsDisableModalOpen] = useState(false);
-  const [disableForm] = Form.useForm<DisableFormValues>();
+  const [disableForm] = Form.useForm<CustomerDisableFormValues>();
 
-  useEffect(() => {
-    const load = async () => {
-      if (!id) {
-        return;
-      }
+  const loadCustomerDetail = useCallback(async () => {
+    if (!id) {
+      return;
+    }
 
-      try {
-        setLoading(true);
-        const detail = await customerService.getDetail(id);
-        setCustomer(detail);
-      } catch (err) {
-        notify(getErrorMessage(err, "Không thể tải chi tiết khách hàng"), "error");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void load();
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+      const detail = await customerService.getDetail(id);
+      setCustomer(detail);
+    } catch (err) {
+      const message = getErrorMessage(err, "Không thể tải chi tiết khách hàng.");
+      setErrorMessage(message);
+      notify(message, "error");
+    } finally {
+      setLoading(false);
+    }
   }, [id, notify]);
 
-  const detailItems = useMemo(
-    () => [
-      { key: "customerCode", label: "Mã khách hàng", children: customer?.customerCode ?? "-" },
-      { key: "companyName", label: "Tên công ty", children: customer?.companyName ?? "-" },
-      { key: "taxCode", label: "Mã số thuế", children: customer?.taxCode ?? "-" },
-      { key: "customerType", label: "Loại khách hàng", children: customer?.customerType ?? "-" },
-      { key: "contactPerson", label: "Người liên hệ", children: customer?.contactPerson ?? "-" },
-      { key: "email", label: "Email", children: customer?.email ?? "-" },
-      { key: "phone", label: "Số điện thoại", children: customer?.phone ?? "-" },
-      { key: "address", label: "Địa chỉ", children: customer?.address ?? "-" },
-      { key: "priceGroup", label: "Nhóm giá", children: customer?.priceGroup ?? "-" },
-      { key: "paymentTerms", label: "Điều khoản thanh toán", children: customer?.paymentTerms ?? "-" },
-      { key: "creditLimit", label: "Hạn mức tín dụng", children: customer?.creditLimit != null ? toCurrency(customer.creditLimit) : "-" },
-      { key: "currentDebt", label: "Công nợ hiện tại", children: customer?.currentDebt != null ? toCurrency(customer.currentDebt) : "-" },
-      { key: "status", label: "Trạng thái", children: formatStatusTag(customer?.status) },
-    ],
-    [customer],
-  );
+  useEffect(() => {
+    void loadCustomerDetail();
+  }, [loadCustomerDetail]);
 
   const handleDisableCustomer = async () => {
     if (!id || !customer || customer.status === "INACTIVE") {
@@ -102,39 +80,102 @@ const CustomerDetailPage = () => {
         return;
       }
 
-      notify(getErrorMessage(err, "Không thể vô hiệu hóa khách hàng"), "error");
+      notify(getErrorMessage(err, "Không thể vô hiệu hóa khách hàng."), "error");
     } finally {
       setDisabling(false);
     }
   };
 
+  const businessInfoItems = useMemo(
+    () => [
+      { key: "companyName", label: "Tên công ty", value: displayCustomerText(customer?.companyName) },
+      { key: "customerCode", label: "Mã khách hàng", value: displayCustomerText(customer?.customerCode) },
+      { key: "taxCode", label: "Mã số thuế", value: displayCustomerText(customer?.taxCode) },
+      { key: "customerType", label: "Loại khách hàng", value: getCustomerTypeLabel(customer?.customerType) },
+      { key: "address", label: "Địa chỉ", value: displayCustomerText(customer?.address) },
+    ],
+    [customer],
+  );
+
+  const contactInfoItems = useMemo(
+    () => [
+      { key: "contactPerson", label: "Người liên hệ", value: displayCustomerText(customer?.contactPerson) },
+      { key: "phone", label: "Số điện thoại", value: displayCustomerText(customer?.phone) },
+      { key: "email", label: "Email", value: displayCustomerText(customer?.email) },
+    ],
+    [customer],
+  );
+
+  const financialInfoItems = useMemo(
+    () => [
+      { key: "priceGroup", label: "Nhóm giá", value: displayCustomerText(customer?.priceGroup) },
+      { key: "paymentTerms", label: "Điều khoản thanh toán", value: displayCustomerText(customer?.paymentTerms) },
+      {
+        key: "creditLimit",
+        label: "Hạn mức tín dụng",
+        value: customer?.creditLimit != null ? toCurrency(customer.creditLimit) : "Chưa thiết lập",
+      },
+      {
+        key: "currentDebt",
+        label: "Công nợ hiện tại",
+        value: customer?.currentDebt != null ? toCurrency(customer.currentDebt) : "Chưa cập nhật",
+      },
+    ],
+    [customer],
+  );
+
+  const systemInfoItems = useMemo(
+    () => [
+      { key: "status", label: "Trạng thái", value: <CustomerStatusTag status={customer?.status} showBadge /> },
+      { key: "createdAt", label: "Ngày tạo", value: formatCustomerDateTime(customer?.createdAt) },
+      { key: "updatedAt", label: "Cập nhật gần nhất", value: formatCustomerDateTime(customer?.updatedAt) },
+    ],
+    [customer],
+  );
+
+  const avatarLabel = displayCustomerText(customer?.companyName).charAt(0).toUpperCase();
+
   return (
     <>
       <NoResizeScreenTemplate
-        loading={loading}
-        loadingText="Đang tải thông tin khách hàng..."
+        loading={false}
         bodyClassName="px-0 pb-0 pt-4"
         header={
-          <ListScreenHeaderTemplate
-            title="Chi tiết khách hàng"
-            className="rounded-none border-x-0 border-t-0 bg-gray-100"
+          <CustomerPageHeader
+            title={
+              customer ? (
+                <Space size={8} wrap>
+                  <span>{displayCustomerText(customer.companyName)}</span>
+                  <CustomerStatusTag status={customer.status} />
+                </Space>
+              ) : (
+                "Hồ sơ khách hàng"
+              )
+            }
+            subtitle={customer ? `Mã khách hàng: ${displayCustomerText(customer.customerCode)}` : "Xem đầy đủ thông tin doanh nghiệp và lịch sử cập nhật."}
+            breadcrumbItems={[
+              { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Trang chủ</span> },
+              { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)}>Khách hàng</span> },
+              { title: "Chi tiết" },
+            ]}
             actions={
               <Space wrap>
                 {canUpdateCustomer ? (
-                  <Button onClick={() => navigate(ROUTE_URL.CUSTOMER_EDIT.replace(":id", id ?? ""))} disabled={!customer || disabling}>
+                  <Button type="primary" icon={<EditOutlined />} onClick={() => navigate(ROUTE_URL.CUSTOMER_EDIT.replace(":id", id ?? ""))} disabled={!id || !customer || disabling}>
                     Chỉnh sửa
                   </Button>
                 ) : null}
                 {canDisableCustomer ? (
                   <Button
                     danger
+                    icon={<StopOutlined />}
                     onClick={() => {
                       disableForm.resetFields();
                       setIsDisableModalOpen(true);
                     }}
                     disabled={!customer || customer.status === "INACTIVE" || disabling}
                   >
-                    {customer?.status === "INACTIVE" ? "Đã vô hiệu" : "Vô hiệu hóa"}
+                    {customer?.status === "INACTIVE" ? "Đã ngừng hoạt động" : "Vô hiệu hóa"}
                   </Button>
                 ) : null}
                 <Button onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)} disabled={disabling}>
@@ -142,59 +183,124 @@ const CustomerDetailPage = () => {
                 </Button>
               </Space>
             }
-            breadcrumb={
-              <CustomBreadcrumb
-                breadcrumbs={[
-                  { label: "Trang chủ" },
-                  { label: "Khách hàng", url: ROUTE_URL.CUSTOMER_LIST },
-                  { label: "Chi tiết" },
-                ]}
-              />
-            }
           />
         }
         body={
-          <Card>
-            {customer ? (
-              <Descriptions bordered size="middle" column={{ xs: 1, sm: 1, md: 2 }}>
-                {detailItems.map((item) => (
-                  <Descriptions.Item key={item.key} label={item.label}>
-                    {item.children}
-                  </Descriptions.Item>
-                ))}
-              </Descriptions>
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            {!id ? <Alert type="warning" showIcon message="Không tìm thấy mã khách hàng trên đường dẫn." /> : null}
+            {customer?.status === "INACTIVE" ? (
+              <Alert
+                type="warning"
+                showIcon
+                message="Khách hàng đang ngừng hoạt động"
+                description="Khách hàng này đã được vô hiệu hóa. Hãy kiểm tra trước khi thực hiện các thao tác liên quan đến hợp đồng hoặc thanh toán."
+              />
+            ) : null}
+            {errorMessage ? <Alert type="error" showIcon message="Không thể tải hồ sơ khách hàng." description={errorMessage} /> : null}
+
+            {loading ? (
+              <>
+                <Card>
+                  <Skeleton active paragraph={{ rows: 4 }} />
+                </Card>
+                <Row gutter={[16, 16]}>
+                  <Col xs={24} xl={12}>
+                    <Card>
+                      <Skeleton active paragraph={{ rows: 6 }} />
+                    </Card>
+                  </Col>
+                  <Col xs={24} xl={12}>
+                    <Card>
+                      <Skeleton active paragraph={{ rows: 6 }} />
+                    </Card>
+                  </Col>
+                </Row>
+              </>
+            ) : customer ? (
+              <>
+                <Card>
+                  <Row gutter={[16, 16]} align="middle">
+                    <Col xs={24} lg={14}>
+                      <Space size={16} align="start">
+                        <Avatar size={64} style={{ backgroundColor: "#1677ff" }}>
+                          {avatarLabel || "K"}
+                        </Avatar>
+                        <Space direction="vertical" size={2}>
+                          <Typography.Title level={4} style={{ margin: 0 }}>
+                            {displayCustomerText(customer.companyName)}
+                          </Typography.Title>
+                          <Typography.Text type="secondary">Người liên hệ: {displayCustomerText(customer.contactPerson)}</Typography.Text>
+                          <Typography.Text type="secondary">Email: {displayCustomerText(customer.email)}</Typography.Text>
+                          <Typography.Text type="secondary">Điện thoại: {displayCustomerText(customer.phone)}</Typography.Text>
+                        </Space>
+                      </Space>
+                    </Col>
+                    <Col xs={24} lg={10}>
+                      <Row gutter={[12, 12]}>
+                        <Col xs={12}>
+                          <Statistic
+                            title="Hạn mức tín dụng"
+                            value={customer.creditLimit ?? 0}
+                            formatter={(value) => (customer.creditLimit != null ? toCurrency(Number(value)) : "Chưa thiết lập")}
+                          />
+                        </Col>
+                        <Col xs={12}>
+                          <Statistic
+                            title="Công nợ hiện tại"
+                            value={customer.currentDebt ?? 0}
+                            formatter={(value) => (customer.currentDebt != null ? toCurrency(Number(value)) : "Chưa cập nhật")}
+                          />
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>
+                </Card>
+
+                <Row gutter={[16, 16]}>
+                  <Col xs={24} xl={15}>
+                    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                      <CustomerInfoSection
+                        title="Thông tin doanh nghiệp"
+                        description="Các thông tin pháp lý và nhận diện của khách hàng."
+                        items={businessInfoItems}
+                      />
+                      <CustomerInfoSection
+                        title="Thông tin liên hệ"
+                        description="Đầu mối liên hệ chính phục vụ chăm sóc và hỗ trợ."
+                        items={contactInfoItems}
+                      />
+                    </Space>
+                  </Col>
+                  <Col xs={24} xl={9}>
+                    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                      <CustomerInfoSection
+                        title="Thông tin thương mại và thanh toán"
+                        description="Phục vụ quản lý giá bán, công nợ và điều khoản thanh toán."
+                        items={financialInfoItems}
+                        column={1}
+                      />
+                      <CustomerInfoSection title="Thông tin hệ thống" items={systemInfoItems} column={1} />
+                    </Space>
+                  </Col>
+                </Row>
+              </>
             ) : (
-              <Typography.Text type="secondary">Không có dữ liệu khách hàng.</Typography.Text>
+              <Card>
+                <Empty description="Không tìm thấy dữ liệu khách hàng." image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              </Card>
             )}
-          </Card>
+          </Space>
         }
       />
 
-      <Modal
-        title="Vô hiệu hóa khách hàng"
+      <CustomerDisableModal
         open={isDisableModalOpen}
+        customerName={customer?.companyName}
+        form={disableForm}
+        submitting={disabling}
         onCancel={() => setIsDisableModalOpen(false)}
-        onOk={() => void handleDisableCustomer()}
-        okText="Xác nhận vô hiệu"
-        okButtonProps={{ danger: true, loading: disabling }}
-        cancelText="Hủy"
-      >
-        <p className="mb-3 text-slate-600">
-          Bạn sắp vô hiệu khách hàng <strong>{customer?.companyName ?? "-"}</strong>. Vui lòng nhập lý do để tiếp tục.
-        </p>
-        <Form<DisableFormValues> form={disableForm} layout="vertical">
-          <Form.Item
-            name="reason"
-            label="Lý do vô hiệu"
-            rules={[
-              { required: true, message: "Vui lòng nhập lý do vô hiệu" },
-              { max: 1000, message: "Lý do tối đa 1000 ký tự" },
-            ]}
-          >
-            <Input.TextArea rows={4} placeholder="Ví dụ: Khách hàng tạm dừng hợp tác..." />
-          </Form.Item>
-        </Form>
-      </Modal>
+        onConfirm={() => void handleDisableCustomer()}
+      />
     </>
   );
 };
