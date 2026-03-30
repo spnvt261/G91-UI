@@ -1,16 +1,17 @@
 ﻿import { InfoCircleOutlined, SaveOutlined } from "@ant-design/icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, Button, Col, Form, Input, InputNumber, Row, Select, Space, Switch, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import { customerService } from "../../services/customer/customer.service";
+import { priceListService } from "../../services/pricing/price-list.service";
 import { getErrorMessage } from "../shared/page.utils";
 import CustomerFormSection from "./components/CustomerFormSection";
 import CustomerPageHeader from "./components/CustomerPageHeader";
 import { CUSTOMER_TYPE_OPTIONS } from "./customer.constants";
-import { trimOrUndefined } from "./customer.utils";
+import { buildPriceGroupOptionsFromPriceLists, trimOrUndefined } from "./customer.utils";
 
 interface CustomerCreateFormValues {
   companyName: string;
@@ -30,8 +31,27 @@ const CustomerCreatePage = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm<CustomerCreateFormValues>();
   const [loading, setLoading] = useState(false);
+  const [priceGroupLoading, setPriceGroupLoading] = useState(false);
+  const [priceGroupOptions, setPriceGroupOptions] = useState<Array<{ label: string; value: string }>>([]);
   const { notify } = useNotify();
   const createPortalAccount = Form.useWatch("createPortalAccount", form);
+
+  useEffect(() => {
+    const loadPriceGroupOptions = async () => {
+      try {
+        setPriceGroupLoading(true);
+        const response = await priceListService.getList({ page: 1, size: 100, status: "ACTIVE" });
+        setPriceGroupOptions(buildPriceGroupOptionsFromPriceLists(response.items));
+      } catch (error) {
+        setPriceGroupOptions([]);
+        notify(getErrorMessage(error, "Không thể tải danh sách nhóm giá từ bảng giá."), "warning");
+      } finally {
+        setPriceGroupLoading(false);
+      }
+    };
+
+    void loadPriceGroupOptions();
+  }, [notify]);
 
   const handleCreate = async (values: CustomerCreateFormValues) => {
     try {
@@ -205,7 +225,15 @@ const CustomerCreatePage = () => {
               <Row gutter={[16, 0]}>
                 <Col xs={24} md={8}>
                   <Form.Item name="priceGroup" label="Nhóm giá" rules={[{ max: 50, message: "Nhóm giá tối đa 50 ký tự." }]}>
-                    <Input placeholder="Ví dụ: Mặc định" />
+                    <Select
+                      showSearch
+                      optionFilterProp="label"
+                      allowClear
+                      options={priceGroupOptions}
+                      loading={priceGroupLoading}
+                      placeholder={priceGroupLoading ? "Đang tải nhóm giá..." : "Chọn nhóm giá"}
+                      notFoundContent="Chưa có dữ liệu nhóm giá từ bảng giá."
+                    />
                   </Form.Item>
                 </Col>
 

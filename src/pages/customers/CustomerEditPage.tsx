@@ -6,11 +6,12 @@ import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTem
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import { customerService } from "../../services/customer/customer.service";
+import { priceListService } from "../../services/pricing/price-list.service";
 import { getErrorMessage } from "../shared/page.utils";
 import CustomerFormSection from "./components/CustomerFormSection";
 import CustomerPageHeader from "./components/CustomerPageHeader";
 import { CUSTOMER_TYPE_OPTIONS } from "./customer.constants";
-import { trimOrUndefined } from "./customer.utils";
+import { buildPriceGroupOptionsFromPriceLists, trimOrUndefined } from "./customer.utils";
 
 interface CustomerEditFormValues {
   companyName: string;
@@ -31,6 +32,8 @@ const CustomerEditPage = () => {
   const { id } = useParams();
   const [form] = Form.useForm<CustomerEditFormValues>();
   const [pageLoading, setPageLoading] = useState(false);
+  const [priceGroupLoading, setPriceGroupLoading] = useState(false);
+  const [priceGroupOptions, setPriceGroupOptions] = useState<Array<{ label: string; value: string }>>([]);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { notify } = useNotify();
@@ -45,6 +48,18 @@ const CustomerEditPage = () => {
         setPageLoading(true);
         setErrorMessage(null);
         const detail = await customerService.getDetail(id);
+
+        try {
+          setPriceGroupLoading(true);
+          const response = await priceListService.getList({ page: 1, size: 100, status: "ACTIVE" });
+          setPriceGroupOptions(buildPriceGroupOptionsFromPriceLists(response.items, detail.priceGroup));
+        } catch (lookupError) {
+          setPriceGroupOptions(buildPriceGroupOptionsFromPriceLists([], detail.priceGroup));
+          notify(getErrorMessage(lookupError, "Không thể tải danh sách nhóm giá từ bảng giá."), "warning");
+        } finally {
+          setPriceGroupLoading(false);
+        }
+
         form.setFieldsValue({
           companyName: detail.companyName,
           taxCode: detail.taxCode,
@@ -236,7 +251,15 @@ const CustomerEditPage = () => {
                   <Row gutter={[16, 0]}>
                     <Col xs={24} md={8}>
                       <Form.Item name="priceGroup" label="Nhóm giá" rules={[{ max: 50, message: "Nhóm giá tối đa 50 ký tự." }]}>
-                        <Input placeholder="Ví dụ: Mặc định" />
+                        <Select
+                          showSearch
+                          optionFilterProp="label"
+                          allowClear
+                          options={priceGroupOptions}
+                          loading={priceGroupLoading}
+                          placeholder={priceGroupLoading ? "Đang tải nhóm giá..." : "Chọn nhóm giá"}
+                          notFoundContent="Chưa có dữ liệu nhóm giá từ bảng giá."
+                        />
                       </Form.Item>
                     </Col>
 

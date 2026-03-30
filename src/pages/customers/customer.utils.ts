@@ -1,3 +1,5 @@
+import type { PriceListModel } from "../../models/pricing/price-list.model";
+
 export const displayCustomerText = (value?: string | null): string => {
   const normalized = value?.trim();
   return normalized ? normalized : "Chưa cập nhật";
@@ -22,4 +24,27 @@ export const formatCustomerDateTime = (value?: string): string => {
     dateStyle: "short",
     timeStyle: "short",
   }).format(parsed);
+};
+
+export const buildPriceGroupOptionsFromPriceLists = (
+  priceLists: PriceListModel[],
+  fallbackPriceGroup?: string,
+): Array<{ label: string; value: string }> => {
+  const groups = new Set<string>();
+
+  priceLists.forEach((priceList) => {
+    const customerGroup = priceList.customerGroup?.trim();
+    if (customerGroup) {
+      groups.add(customerGroup);
+    }
+  });
+
+  const fallback = fallbackPriceGroup?.trim();
+  if (fallback) {
+    groups.add(fallback);
+  }
+
+  return [...groups]
+    .sort((a, b) => a.localeCompare(b, "vi"))
+    .map((value) => ({ label: value, value }));
 };
