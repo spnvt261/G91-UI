@@ -88,7 +88,6 @@ const QuotationDetailPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Quotation Detail"
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={
             <div className="flex gap-2">
               {canSubmitDraft ? (

@@ -16,7 +16,7 @@ const CustomerPageHeader = ({ title, subtitle, breadcrumbItems, actions }: Custo
   return (
     <ListScreenHeaderTemplate
       title={title}
-      subtitle={subtitle}
+      // subtitle={subtitle}
       breadcrumb={breadcrumbNode}
       actions={actions}
     />

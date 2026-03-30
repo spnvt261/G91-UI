@@ -131,7 +131,6 @@ const PriceListDetailPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Price List Detail"
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={
             <div className="flex flex-wrap gap-2">
               {canUpdate && !editMode ? <CustomButton label="Edit" onClick={handleStartEdit} /> : null}

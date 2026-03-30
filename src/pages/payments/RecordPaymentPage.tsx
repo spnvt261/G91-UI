@@ -49,7 +49,6 @@ const RecordPaymentPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Ghi nhận thanh toán"
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[

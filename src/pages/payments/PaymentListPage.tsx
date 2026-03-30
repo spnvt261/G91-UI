@@ -147,7 +147,6 @@ const PaymentListPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Payment Management"
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={canCreateInvoice ? <CustomButton label="Create Invoice" disabled /> : undefined}
           breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Home" }, { label: "Payments" }]} />}
         />

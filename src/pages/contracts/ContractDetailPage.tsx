@@ -182,7 +182,6 @@ const ContractDetailPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Chi tiết hợp đồng"
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={
             <div className="flex flex-wrap gap-2">
               {canSubmit ? (

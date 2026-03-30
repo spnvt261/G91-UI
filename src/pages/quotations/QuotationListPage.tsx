@@ -170,7 +170,6 @@ const QuotationListPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Quotation Management"
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={canCreateQuotation ? <CustomButton label="Create Quotation" onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)} /> : undefined}
           breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Báo giá" }]} />}
         />

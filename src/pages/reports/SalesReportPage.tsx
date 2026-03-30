@@ -42,7 +42,6 @@ const SalesReportPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Sales Report"
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[

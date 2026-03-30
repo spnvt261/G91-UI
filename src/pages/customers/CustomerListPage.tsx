@@ -284,7 +284,7 @@ const CustomerListPage = () => {
         header={
           <CustomerPageHeader
             title="Quản lý khách hàng"
-            subtitle="Theo dõi danh sách khách hàng, trạng thái hợp tác và thông tin liên hệ quan trọng."
+            // subtitle="Theo dõi danh sách khách hàng, trạng thái hợp tác và thông tin liên hệ quan trọng."
             actions={
               canCreateCustomer ? (
                 <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(ROUTE_URL.CUSTOMER_CREATE)}>

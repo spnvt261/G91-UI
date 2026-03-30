@@ -72,7 +72,6 @@ const ContractApprovalDetailPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Phê duyệt hợp đồng"
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[

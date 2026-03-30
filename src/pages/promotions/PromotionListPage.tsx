@@ -190,7 +190,6 @@ const PromotionListPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Promotion Management"
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={
             allowCreate ? <CustomButton label="Create Promotion" onClick={() => navigate(ROUTE_URL.PROMOTION_CREATE)} /> : undefined
           }

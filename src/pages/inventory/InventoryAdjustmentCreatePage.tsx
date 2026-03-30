@@ -106,7 +106,6 @@ const InventoryAdjustmentCreatePage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Create Inventory Adjustment"
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[

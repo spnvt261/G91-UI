@@ -22,7 +22,6 @@ const NotFoundPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Không tìm thấy trang"
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
           breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "404" }]} />}
         />
       }

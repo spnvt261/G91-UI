@@ -90,7 +90,6 @@ const InventoryHistoryPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Inventory History"
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={<CustomButton label="Back to Inventory" onClick={() => navigate(ROUTE_URL.INVENTORY_STATUS)} />}
           breadcrumb={
             <CustomBreadcrumb

@@ -55,7 +55,6 @@ const ProductDetailPage = () => {
       header={
         <ListScreenHeaderTemplate
           title={product?.productName || "Chi tiáº¿t sáº£n pháº©m"}
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={
             <div className="flex flex-wrap gap-2">
               {canUpdate && id ? <CustomButton label="Edit" onClick={() => navigate(ROUTE_URL.PRODUCT_EDIT.replace(":id", id))} /> : null}

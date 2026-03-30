@@ -86,7 +86,7 @@ const CustomerCreatePage = () => {
       header={
         <CustomerPageHeader
           title="Tạo khách hàng"
-          subtitle="Thiết lập hồ sơ khách hàng mới với đầy đủ thông tin doanh nghiệp và thanh toán."
+          // subtitle="Thiết lập hồ sơ khách hàng mới với đầy đủ thông tin doanh nghiệp và thanh toán."
           breadcrumbItems={[
             { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Trang chủ</span> },
             { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)}>Khách hàng</span> },

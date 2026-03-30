@@ -61,7 +61,6 @@ const ContractApprovalListPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Danh sách chờ phê duyệt"
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
           breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Phê duyệt hợp đồng" }]} />}
         />
       }

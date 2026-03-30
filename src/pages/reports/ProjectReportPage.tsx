@@ -53,7 +53,6 @@ const ProjectReportPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Project Report"
-          className="rounded-none border-x-0 border-t-0 bg-gray-100"
           actions={
             canViewFinancialSummary ? <CustomButton label="Project Financial Summary" onClick={() => navigate(ROUTE_URL.REPORT_FINANCIAL)} /> : undefined
           }
