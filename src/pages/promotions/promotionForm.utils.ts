@@ -7,7 +7,7 @@ import type {
 } from "../../models/promotion/promotion.model";
 
 const PROMOTION_TYPES: PromotionType[] = ["PERCENTAGE", "FIXED_AMOUNT"];
-const PROMOTION_STATUSES: PromotionStatus[] = ["ACTIVE", "INACTIVE", "SCHEDULED", "EXPIRED"];
+const PROMOTION_STATUSES: PromotionStatus[] = ["DRAFT", "ACTIVE", "INACTIVE"];
 
 export interface PromotionFormValues {
   code: string;
@@ -50,45 +50,45 @@ export const validatePromotionForm = (values: PromotionFormValues): PromotionFor
   const errors: PromotionFormErrors = {};
 
   if (!values.name.trim()) {
-    errors.name = "Please enter promotion name.";
+    errors.name = "Vui lòng nhập tên chương trình khuyến mãi.";
   }
 
   if (!isPromotionType(values.promotionType)) {
-    errors.promotionType = "Please select promotion type.";
+    errors.promotionType = "Vui lòng chọn loại khuyến mãi.";
   }
 
   const discountValue = Number(values.discountValue);
   if (!Number.isFinite(discountValue) || discountValue <= 0) {
-    errors.discountValue = "Discount value must be greater than 0.";
+    errors.discountValue = "Giá trị giảm phải lớn hơn 0.";
   }
   if (values.promotionType === "PERCENTAGE" && Number.isFinite(discountValue) && discountValue > 100) {
-    errors.discountValue = "Percentage discount cannot exceed 100.";
+    errors.discountValue = "Giảm theo phần trăm không được vượt quá 100%.";
   }
 
   if (!values.startDate) {
-    errors.startDate = "Please choose start date.";
+    errors.startDate = "Vui lòng chọn ngày bắt đầu.";
   }
 
   if (!values.endDate) {
-    errors.endDate = "Please choose end date.";
+    errors.endDate = "Vui lòng chọn ngày kết thúc.";
   }
 
   const startDateValue = values.startDate ? parseDateValue(values.startDate) : undefined;
   const endDateValue = values.endDate ? parseDateValue(values.endDate) : undefined;
   if (values.startDate && startDateValue == null) {
-    errors.startDate = "Start date is invalid.";
+    errors.startDate = "Ngày bắt đầu không hợp lệ.";
   }
 
   if (values.endDate && endDateValue == null) {
-    errors.endDate = "End date is invalid.";
+    errors.endDate = "Ngày kết thúc không hợp lệ.";
   }
 
   if (startDateValue != null && endDateValue != null && endDateValue < startDateValue) {
-    errors.endDate = "End date cannot be before start date.";
+    errors.endDate = "Ngày kết thúc không được sớm hơn ngày bắt đầu.";
   }
 
   if (!isPromotionStatus(values.status)) {
-    errors.status = "Please select status.";
+    errors.status = "Vui lòng chọn trạng thái.";
   }
 
   return errors;
@@ -96,7 +96,7 @@ export const validatePromotionForm = (values: PromotionFormValues): PromotionFor
 
 export const toPromotionWritePayload = (values: PromotionFormValues): PromotionCreateRequest | PromotionUpdateRequest => {
   const promotionType = isPromotionType(values.promotionType) ? values.promotionType : "PERCENTAGE";
-  const status = isPromotionStatus(values.status) ? values.status : "ACTIVE";
+  const status = isPromotionStatus(values.status) ? values.status : "DRAFT";
 
   return {
     code: values.code.trim() || undefined,

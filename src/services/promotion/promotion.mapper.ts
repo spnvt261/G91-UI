@@ -37,6 +37,20 @@ export interface PromotionStorageState {
 const sanitizeProductIds = (productIds?: string[]): string[] =>
   [...new Set((productIds ?? []).map((item) => item.trim()).filter(Boolean))];
 
+const normalizePromotionStatus = (status: string | undefined): PromotionStatus => {
+  const normalized = (status ?? "").trim().toUpperCase();
+
+  if (normalized === "ACTIVE") {
+    return "ACTIVE";
+  }
+
+  if (normalized === "DRAFT" || normalized === "SCHEDULED" || normalized === "PENDING") {
+    return "DRAFT";
+  }
+
+  return "INACTIVE";
+};
+
 export const toPromotionListItem = (
   promotion: PromotionStorageRecord,
   productIds: string[],
@@ -48,7 +62,7 @@ export const toPromotionListItem = (
   discountValue: promotion.discount_value,
   startDate: promotion.start_date,
   endDate: promotion.end_date,
-  status: promotion.status,
+  status: normalizePromotionStatus(promotion.status),
   createdBy: promotion.created_by,
   createdAt: promotion.created_at,
   updatedAt: promotion.updated_at,
@@ -112,6 +126,7 @@ export const normalizePromotionStorageState = (state: PromotionStorageState): Pr
     ...promotion,
     code: promotion.code?.trim() || undefined,
     name: promotion.name.trim(),
+    status: normalizePromotionStatus(promotion.status),
     created_at: promotion.created_at ?? promotion.updated_at ?? new Date().toISOString(),
     updated_at: promotion.updated_at ?? promotion.created_at ?? new Date().toISOString(),
   })),

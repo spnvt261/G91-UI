@@ -1,12 +1,23 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { ArrowLeftOutlined, EditOutlined, SaveOutlined } from "@ant-design/icons";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Col,
+  Descriptions,
+  Drawer,
+  Empty,
+  Form,
+  Result,
+  Row,
+  Space,
+  Spin,
+  Statistic,
+  Typography,
+} from "antd";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import BaseCard from "../../components/cards/BaseCard";
-import FormSectionCard from "../../components/forms/FormSectionCard";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomSelect, { type Option } from "../../components/customSelect/CustomSelect";
-import CustomTextField from "../../components/customTextField/CustomTextField";
-import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
-import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
@@ -14,20 +25,48 @@ import type { PromotionDetail } from "../../models/promotion/promotion.model";
 import { productService } from "../../services/product/product.service";
 import { promotionService } from "../../services/promotion/promotion.service";
 import { getStoredUserRole } from "../../utils/authSession";
-import { getErrorMessage } from "../shared/page.utils";
-import { createInitialPromotionFormValues, toPromotionWritePayload, validatePromotionForm, type PromotionFormErrors } from "./promotionForm.utils";
+import { getErrorMessage, toCurrency } from "../shared/page.utils";
+import PromotionFormSections, { type PromotionProductOption } from "./components/PromotionFormSections";
+import PromotionFormSummaryCard from "./components/PromotionFormSummaryCard";
+import PromotionInfoCard from "./components/PromotionInfoCard";
+import PromotionPageHeader from "./components/PromotionPageHeader";
+import PromotionProductsTable from "./components/PromotionProductsTable";
+import PromotionStatusTag from "./components/PromotionStatusTag";
 import {
   canEditPromotion,
   formatPromotionDate,
   formatPromotionDiscountValue,
-  getPromotionStatusBadgeClassName,
-  getPromotionStatusLabel,
   getPromotionTypeLabel,
-  PROMOTION_STATUS_OPTIONS,
-  PROMOTION_TYPE_OPTIONS,
 } from "./promotion.utils";
+import {
+  createInitialPromotionFormValues,
+  toPromotionWritePayload,
+  validatePromotionForm,
+  type PromotionFormErrors,
+  type PromotionFormValues,
+} from "./promotionForm.utils";
 
-const toOptionMap = (options: Option[]): Map<string, Option> => new Map(options.map((item) => [item.value, item]));
+const toOptionMap = (options: PromotionProductOption[]): Map<string, PromotionProductOption> =>
+  new Map(options.map((item) => [item.value, item]));
+
+const getDurationLabel = (startDate?: string, endDate?: string): string => {
+  if (!startDate || !endDate) {
+    return "Chưa xác định";
+  }
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return "Chưa xác định";
+  }
+
+  const duration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  if (!Number.isFinite(duration) || duration <= 0) {
+    return "Chưa xác định";
+  }
+
+  return `${duration} ngày`;
+};
 
 const PromotionDetailPage = () => {
   const navigate = useNavigate();
@@ -36,15 +75,19 @@ const PromotionDetailPage = () => {
   const { notify } = useNotify();
   const role = getStoredUserRole();
   const canModify = canEditPromotion(role);
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [promotion, setPromotion] = useState<PromotionDetail | null>(null);
-  const [formValues, setFormValues] = useState(createInitialPromotionFormValues());
+  const [formValues, setFormValues] = useState<PromotionFormValues>(createInitialPromotionFormValues());
   const [errors, setErrors] = useState<PromotionFormErrors>({});
-  const [productOptions, setProductOptions] = useState<Option[]>([]);
+  const [productOptions, setProductOptions] = useState<PromotionProductOption[]>([]);
+  const [productLoadError, setProductLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     const mode = searchParams.get("mode");
@@ -52,19 +95,33 @@ const PromotionDetailPage = () => {
   }, [canModify, searchParams]);
 
   useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const loadDetail = async () => {
       if (!id) {
+        setDetailError("Không tìm thấy mã chương trình khuyến mãi.");
         return;
       }
 
       try {
         setLoading(true);
+        setDetailError(null);
         const response = await promotionService.getDetail(id);
         setPromotion(response.promotion);
         setFormValues(createInitialPromotionFormValues(response.promotion));
       } catch (error) {
-        notify(getErrorMessage(error, "Không thể load promotion detail"), "error");
-        navigate(ROUTE_URL.PROMOTION_LIST, { replace: true });
+        const message = getErrorMessage(error, "Không thể tải chi tiết khuyến mãi.");
+        setDetailError(message);
+        notify(message, "error");
+        redirectTimerRef.current = setTimeout(() => {
+          navigate(ROUTE_URL.PROMOTION_LIST, { replace: true });
+        }, 3000);
       } finally {
         setLoading(false);
       }
@@ -77,6 +134,7 @@ const PromotionDetailPage = () => {
     const loadProducts = async () => {
       try {
         setLoadingProducts(true);
+        setProductLoadError(null);
         const response = await productService.getList({
           page: 1,
           pageSize: 1000,
@@ -87,8 +145,10 @@ const PromotionDetailPage = () => {
             value: item.id,
           })),
         );
-      } catch {
+      } catch (error) {
+        const message = getErrorMessage(error, "Không thể tải danh sách sản phẩm áp dụng.");
         setProductOptions([]);
+        setProductLoadError(message);
       } finally {
         setLoadingProducts(false);
       }
@@ -97,42 +157,25 @@ const PromotionDetailPage = () => {
     void loadProducts();
   }, []);
 
-  const mergedProductOptions = useMemo<Option[]>(() => {
+  const mergedProductOptions = useMemo<PromotionProductOption[]>(() => {
     const optionMap = toOptionMap(productOptions);
     const fallbackProductIds = promotion?.productIds ?? [];
 
-    fallbackProductIds.forEach((productId) => {
+    fallbackProductIds.forEach((productId, index) => {
       if (!optionMap.has(productId)) {
-        optionMap.set(productId, { label: productId, value: productId });
+        optionMap.set(productId, { label: `Sản phẩm đã ngừng hiển thị #${index + 1}`, value: productId });
       }
     });
 
     return Array.from(optionMap.values());
   }, [productOptions, promotion?.productIds]);
 
-  const typeSelectOptions = useMemo<Option[]>(
-    () =>
-      PROMOTION_TYPE_OPTIONS.map((item) => ({
-        label: item.label,
-        value: item.value,
-      })),
-    [],
-  );
-
-  const statusSelectOptions = useMemo<Option[]>(
-    () =>
-      PROMOTION_STATUS_OPTIONS.map((item) => ({
-        label: item.label,
-        value: item.value,
-      })),
-    [],
-  );
-
   const handleStartEdit = () => {
     if (!canModify) {
       return;
     }
 
+    setSaveError(null);
     setSearchParams((previous) => {
       const next = new URLSearchParams(previous);
       next.set("mode", "edit");
@@ -140,8 +183,9 @@ const PromotionDetailPage = () => {
     });
   };
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setErrors({});
+    setSaveError(null);
     if (promotion) {
       setFormValues(createInitialPromotionFormValues(promotion));
     }
@@ -151,7 +195,20 @@ const PromotionDetailPage = () => {
       next.delete("mode");
       return next;
     });
-  };
+  }, [promotion, setSearchParams]);
+
+  const handleValuesChange = useCallback((patch: Partial<PromotionFormValues>) => {
+    setFormValues((previous) => ({ ...previous, ...patch }));
+    setSaveError(null);
+
+    setErrors((previous) => {
+      const next = { ...previous };
+      (Object.keys(patch) as Array<keyof PromotionFormValues>).forEach((key) => {
+        delete next[key];
+      });
+      return next;
+    });
+  }, []);
 
   const handleSave = async () => {
     if (!id) {
@@ -162,226 +219,247 @@ const PromotionDetailPage = () => {
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
-      const firstError = Object.values(validationErrors)[0];
-      if (firstError) {
-        notify(firstError, "error");
-      }
+      setSaveError("Vui lòng kiểm tra lại thông tin trước khi lưu.");
       return;
     }
 
     try {
       setSaving(true);
+      setSaveError(null);
       const response = await promotionService.update(id, toPromotionWritePayload(formValues));
       setPromotion(response.promotion);
       setFormValues(createInitialPromotionFormValues(response.promotion));
-      notify("Promotion updated successfully.", "success");
+      notify("Đã cập nhật chương trình khuyến mãi thành công.", "success");
       setSearchParams((previous) => {
         const next = new URLSearchParams(previous);
         next.delete("mode");
         return next;
       });
     } catch (error) {
-      notify(getErrorMessage(error, "Không thể update promotion"), "error");
+      const message = getErrorMessage(error, "Không thể cập nhật chương trình khuyến mãi.");
+      setSaveError(message);
+      notify(message, "error");
     } finally {
       setSaving(false);
     }
   };
 
+  const headerTitle = promotion?.name ?? "Chi tiết chương trình khuyến mãi";
+  const headerSubtitle = promotion
+    ? `Hiệu lực từ ${formatPromotionDate(promotion.startDate)} đến ${formatPromotionDate(promotion.endDate)}`
+    : "Theo dõi hiệu lực và cập nhật cấu hình khuyến mãi.";
+
   return (
-    <NoResizeScreenTemplate
-      loading={loading}
-      loadingText="Đang tải chi tiết khuyến mãi..."
-      bodyClassName="px-0 pb-0 pt-4"
-      header={
-        <ListScreenHeaderTemplate
-          title="Promotion Detail"
-          actions={
-            <div className="flex flex-wrap gap-2">
-              {canModify && !editMode ? <CustomButton label="Edit" onClick={handleStartEdit} /> : null}
-              {canModify && editMode ? (
-                <CustomButton
-                  label="Cancel Edit"
-                  className="bg-slate-200 text-slate-700 hover:bg-slate-300"
-                  onClick={handleCancelEdit}
-                  disabled={saving}
-                />
-              ) : null}
-              <CustomButton
-                label="Back"
-                className="bg-slate-200 text-slate-700 hover:bg-slate-300"
-                onClick={() => navigate(ROUTE_URL.PROMOTION_LIST)}
-              />
-            </div>
-          }
-          breadcrumb={
-            <CustomBreadcrumb
-              breadcrumbs={[
-                { label: "Trang chủ" },
-                { label: "Promotions", url: ROUTE_URL.PROMOTION_LIST },
-                { label: "Detail" },
+    <>
+      <NoResizeScreenTemplate
+        loading={false}
+        bodyClassName="px-0 pb-0 pt-4"
+        header={
+          <PromotionPageHeader
+            title={
+              <Space wrap size={8}>
+                <span>{headerTitle}</span>
+                {promotion ? <PromotionStatusTag status={promotion.status} withDot /> : null}
+              </Space>
+            }
+            subtitle={headerSubtitle}
+            breadcrumbItems={[
+              {
+                title: (
+                  <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>
+                    Trang chủ
+                  </span>
+                ),
+              },
+              {
+                title: (
+                  <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.PROMOTION_LIST)}>
+                    Khuyến mãi
+                  </span>
+                ),
+              },
+              { title: "Chi tiết" },
+            ]}
+            actions={
+              <Space>
+                {canModify ? (
+                  <Button type="primary" icon={<EditOutlined />} onClick={handleStartEdit}>
+                    Chỉnh sửa
+                  </Button>
+                ) : null}
+                <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(ROUTE_URL.PROMOTION_LIST)}>
+                  Quay lại
+                </Button>
+              </Space>
+            }
+          />
+        }
+        body={
+          detailError ? (
+            <Result
+              status="error"
+              title="Không thể tải chi tiết chương trình"
+              subTitle={`${detailError} Hệ thống sẽ quay về danh sách khuyến mãi sau vài giây.`}
+              extra={[
+                <Button key="back-now" type="primary" onClick={() => navigate(ROUTE_URL.PROMOTION_LIST, { replace: true })}>
+                  Quay về danh sách ngay
+                </Button>,
               ]}
             />
-          }
-        />
-      }
-      body={
-        <div className="space-y-4">
-          {!editMode ? (
-            <BaseCard>
-              {promotion ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                    <p>
-                      <span className="font-semibold">Name:</span> {promotion.name}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Code:</span> {promotion.code ?? "-"}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Type:</span> {getPromotionTypeLabel(promotion.promotionType)}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Discount:</span> {formatPromotionDiscountValue(promotion)}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Start Date:</span> {formatPromotionDate(promotion.startDate)}
-                    </p>
-                    <p>
-                      <span className="font-semibold">End Date:</span> {formatPromotionDate(promotion.endDate)}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Status:</span>{" "}
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getPromotionStatusBadgeClassName(
-                          promotion.status,
-                        )}`}
-                      >
-                        {getPromotionStatusLabel(promotion.status)}
-                      </span>
-                    </p>
-                    <p>
-                      <span className="font-semibold">Product Count:</span> {promotion.productCount ?? 0}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Created By:</span> {promotion.createdBy ?? "-"}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Created At:</span> {formatPromotionDate(promotion.createdAt)}
-                    </p>
-                    <p className="sm:col-span-2">
-                      <span className="font-semibold">Updated At:</span> {formatPromotionDate(promotion.updatedAt)}
-                    </p>
-                  </div>
+          ) : loading && !promotion ? (
+            <Card bordered={false} className="shadow-sm">
+              <Spin spinning tip="Đang tải dữ liệu khuyến mãi..." />
+            </Card>
+          ) : promotion ? (
+            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Row gutter={[12, 12]}>
+              <Col xs={24} sm={12} xl={6}>
+                <Card bordered={false} className="h-full shadow-sm">
+                  <Space direction="vertical" size={4}>
+                    <Typography.Text type="secondary">Loại khuyến mãi</Typography.Text>
+                    <Typography.Title level={4} className="!mb-0">
+                      {getPromotionTypeLabel(promotion.promotionType)}
+                    </Typography.Title>
+                  </Space>
+                </Card>
+              </Col>
 
-                  <div>
-                    <h3 className="mb-2 text-sm font-semibold text-slate-700">Applicable Products</h3>
-                    {(promotion.applicableProducts?.length ?? 0) > 0 ? (
-                      <div className="space-y-2">
-                        {promotion.applicableProducts?.map((item) => (
-                          <div key={item.productId} className="rounded border border-slate-200 px-3 py-2 text-sm">
-                            <p className="font-semibold text-slate-800">{item.productName ?? item.productId}</p>
-                            <p className="text-slate-500">{item.productCode ?? item.productId}</p>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-slate-500">No product scope configured.</p>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm text-slate-500">No promotion data.</p>
-              )}
-            </BaseCard>
+              <Col xs={24} sm={12} xl={6}>
+                <Card bordered={false} className="h-full shadow-sm">
+                  <Statistic
+                    title="Giá trị giảm"
+                    value={promotion.discountValue}
+                    formatter={() => formatPromotionDiscountValue(promotion)}
+                  />
+                </Card>
+              </Col>
+
+              <Col xs={24} sm={12} xl={6}>
+                <Card bordered={false} className="h-full shadow-sm">
+                  <Space direction="vertical" size={4}>
+                    <Typography.Text type="secondary">Trạng thái</Typography.Text>
+                    <PromotionStatusTag status={promotion.status} withDot />
+                  </Space>
+                </Card>
+              </Col>
+
+              <Col xs={24} sm={12} xl={6}>
+                <Card bordered={false} className="h-full shadow-sm">
+                  <Statistic title="Sản phẩm áp dụng" value={promotion.productCount ?? 0} />
+                </Card>
+              </Col>
+            </Row>
+
+            <PromotionInfoCard
+              title="Tổng quan chương trình"
+              description="Thông tin nhận diện và lịch sử cập nhật của chương trình."
+            >
+              <Descriptions column={{ xs: 1, md: 2 }} size="small">
+                <Descriptions.Item label="Tên chương trình">{promotion.name}</Descriptions.Item>
+                <Descriptions.Item label="Mã khuyến mãi">{promotion.code || "Chưa cấu hình"}</Descriptions.Item>
+                <Descriptions.Item label="Ngày tạo">{formatPromotionDate(promotion.createdAt)}</Descriptions.Item>
+                <Descriptions.Item label="Cập nhật gần nhất">{formatPromotionDate(promotion.updatedAt)}</Descriptions.Item>
+              </Descriptions>
+            </PromotionInfoCard>
+
+            <PromotionInfoCard
+              title="Cấu hình ưu đãi"
+              description="Các thông số giảm giá đang áp dụng cho chương trình."
+            >
+              <Descriptions column={{ xs: 1, md: 2 }} size="small">
+                <Descriptions.Item label="Loại khuyến mãi">{getPromotionTypeLabel(promotion.promotionType)}</Descriptions.Item>
+                <Descriptions.Item label="Giá trị giảm">
+                  <Typography.Text strong>{formatPromotionDiscountValue(promotion)}</Typography.Text>
+                </Descriptions.Item>
+                <Descriptions.Item label="Mức giảm quy đổi">
+                  {promotion.promotionType === "FIXED_AMOUNT"
+                    ? toCurrency(promotion.discountValue)
+                    : `${promotion.discountValue}%`}
+                </Descriptions.Item>
+                <Descriptions.Item label="Trạng thái hiển thị">
+                  <Badge
+                    status="processing"
+                    text={<PromotionStatusTag status={promotion.status} withDot />}
+                  />
+                </Descriptions.Item>
+              </Descriptions>
+            </PromotionInfoCard>
+
+            <PromotionInfoCard
+              title="Thời gian áp dụng"
+              description="Theo dõi mốc hiệu lực để kiểm soát tiến độ chiến dịch."
+            >
+              <Descriptions column={{ xs: 1, md: 2 }} size="small">
+                <Descriptions.Item label="Ngày bắt đầu">{formatPromotionDate(promotion.startDate)}</Descriptions.Item>
+                <Descriptions.Item label="Ngày kết thúc">{formatPromotionDate(promotion.endDate)}</Descriptions.Item>
+                <Descriptions.Item label="Tổng thời lượng">
+                  {getDurationLabel(promotion.startDate, promotion.endDate)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Mốc kiểm soát">
+                  {promotion.status === "ACTIVE" ? "Đang triển khai" : "Theo dõi và chuẩn bị"}
+                </Descriptions.Item>
+              </Descriptions>
+            </PromotionInfoCard>
+
+              <PromotionProductsTable products={promotion.applicableProducts ?? []} loading={loading} />
+            </Space>
           ) : (
-            <FormSectionCard title="Update Promotion">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <CustomTextField
-                  title="Code (optional)"
-                  value={formValues.code}
-                  onChange={(event) => setFormValues((previous) => ({ ...previous, code: event.target.value }))}
-                />
-                <CustomTextField
-                  title="Name"
-                  value={formValues.name}
-                  helperText={errors.name}
-                  error={Boolean(errors.name)}
-                  onChange={(event) => setFormValues((previous) => ({ ...previous, name: event.target.value }))}
-                />
-                <CustomSelect
-                  title="Promotion Type"
-                  options={typeSelectOptions}
-                  value={formValues.promotionType ? [formValues.promotionType] : []}
-                  onChange={(value) => setFormValues((previous) => ({ ...previous, promotionType: value[0] ?? "" }))}
-                  classNameSelect="w-full text-left"
-                  classNameOptions="w-full left-0"
-                  placeholder="Select promotion type"
-                  helperText={errors.promotionType}
-                />
-                <CustomTextField
-                  title="Discount Value"
-                  value={formValues.discountValue}
-                  type="number"
-                  helperText={errors.discountValue}
-                  error={Boolean(errors.discountValue)}
-                  onChange={(event) => setFormValues((previous) => ({ ...previous, discountValue: event.target.value }))}
-                />
-                <CustomTextField
-                  title="Start Date (YYYY-MM-DD)"
-                  value={formValues.startDate}
-                  helperText={errors.startDate}
-                  error={Boolean(errors.startDate)}
-                  onChange={(event) => setFormValues((previous) => ({ ...previous, startDate: event.target.value }))}
-                />
-                <CustomTextField
-                  title="End Date (YYYY-MM-DD)"
-                  value={formValues.endDate}
-                  helperText={errors.endDate}
-                  error={Boolean(errors.endDate)}
-                  onChange={(event) => setFormValues((previous) => ({ ...previous, endDate: event.target.value }))}
-                />
-                <CustomSelect
-                  title="Status"
-                  options={statusSelectOptions}
-                  value={formValues.status ? [formValues.status] : []}
-                  onChange={(value) => setFormValues((previous) => ({ ...previous, status: value[0] ?? "" }))}
-                  classNameSelect="w-full text-left"
-                  classNameOptions="w-full left-0"
-                  placeholder="Select status"
-                  helperText={errors.status}
-                />
-                <CustomSelect
-                  title="Products (optional)"
-                  options={mergedProductOptions}
-                  value={formValues.productIds}
-                  onChange={(values) => setFormValues((previous) => ({ ...previous, productIds: values }))}
-                  classNameSelect="w-full text-left"
-                  classNameOptions="w-full left-0"
-                  placeholder={loadingProducts ? "Đang tải danh sách sản phẩm..." : "Chọn sản phẩm"}
-                  multiple
-                  search
-                  disable={loadingProducts}
-                />
-              </div>
+            <Empty description="Không có dữ liệu chương trình khuyến mãi." />
+          )
+        }
+      />
 
-              <div className="mt-4 flex flex-wrap gap-3">
-                <CustomButton label={saving ? "Saving..." : "Save Changes"} onClick={handleSave} disabled={saving} />
-                <CustomButton
-                  label="Cancel"
-                  className="bg-slate-200 text-slate-700 hover:bg-slate-300"
-                  onClick={handleCancelEdit}
+      <Drawer
+        title="Chỉnh sửa chương trình khuyến mãi"
+        width={980}
+        placement="right"
+        open={editMode}
+        destroyOnClose={false}
+        onClose={handleCancelEdit}
+        extra={
+          <Space>
+            <Button onClick={handleCancelEdit} disabled={saving}>
+              Hủy
+            </Button>
+            <Button type="primary" icon={<SaveOutlined />} loading={saving} onClick={() => void handleSave()}>
+              Lưu thay đổi
+            </Button>
+          </Space>
+        }
+      >
+        <Form layout="vertical">
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            {saveError ? (
+              <Alert
+                type="error"
+                showIcon
+                message="Không thể cập nhật chương trình"
+                description={saveError}
+              />
+            ) : null}
+
+            <Row gutter={[16, 16]} align="top">
+              <Col xs={24} xl={16}>
+                <PromotionFormSections
+                  formValues={formValues}
+                  errors={errors}
+                  productOptions={mergedProductOptions}
+                  loadingProducts={loadingProducts}
+                  productLoadError={productLoadError}
                   disabled={saving}
+                  onValuesChange={handleValuesChange}
                 />
-              </div>
-            </FormSectionCard>
-          )}
-        </div>
-      }
-    />
+              </Col>
+
+              <Col xs={24} xl={8}>
+                <PromotionFormSummaryCard formValues={formValues} />
+              </Col>
+            </Row>
+          </Space>
+        </Form>
+      </Drawer>
+    </>
   );
 };
 
 export default PromotionDetailPage;
-
-
-

@@ -1,13 +1,9 @@
-﻿import { Modal } from "antd";
-import { useEffect, useMemo, useState } from "react";
+import { MoreOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, Card, Empty, Modal, Space, Table, Tooltip, Typography, Alert, Badge, Dropdown, Tag } from "antd";
+import type { MenuProps } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import BaseCard from "../../components/cards/BaseCard";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
-import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
-import FilterSearchModalBar, { type FilterModalGroup } from "../../components/table/FilterSearchModalBar";
-import Pagination from "../../components/table/Pagination";
-import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
@@ -15,26 +11,65 @@ import type {
   PromotionListItem,
   PromotionListQuery,
   PromotionListResponseData,
-  PromotionStatus,
-  PromotionType,
 } from "../../models/promotion/promotion.model";
 import { promotionService } from "../../services/promotion/promotion.service";
 import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage } from "../shared/page.utils";
+import PromotionFilterBar from "./components/PromotionFilterBar";
+import PromotionPageHeader from "./components/PromotionPageHeader";
+import PromotionStatusTag from "./components/PromotionStatusTag";
+import PromotionSummaryCards from "./components/PromotionSummaryCards";
 import {
   canCreatePromotion,
   canDeletePromotion,
   canEditPromotion,
   formatPromotionDate,
   formatPromotionDiscountValue,
-  getPromotionStatusBadgeClassName,
-  getPromotionStatusLabel,
   getPromotionTypeLabel,
-  PROMOTION_STATUS_OPTIONS,
-  PROMOTION_TYPE_OPTIONS,
+  isPromotionExpiringSoon,
 } from "./promotion.utils";
 
 const PAGE_SIZE = 8;
+
+interface PromotionSummaryState {
+  totalPromotions: number;
+  activePromotions: number;
+  expiringSoonPromotions: number;
+  draftOrInactivePromotions: number;
+}
+
+const INITIAL_RESULT: PromotionListResponseData = {
+  items: [],
+  pagination: {
+    page: 1,
+    pageSize: PAGE_SIZE,
+    totalItems: 0,
+    totalPages: 0,
+  },
+  filters: {},
+};
+
+const getRemainingDaysLabel = (endDate: string): string => {
+  const parsed = new Date(endDate);
+  if (Number.isNaN(parsed.getTime())) {
+    return "Không xác định";
+  }
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endDay = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+  const diffDays = Math.ceil((endDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return "Đã hết hạn";
+  }
+
+  if (diffDays === 0) {
+    return "Kết thúc hôm nay";
+  }
+
+  return `Còn ${diffDays} ngày`;
+};
 
 const PromotionListPage = () => {
   const navigate = useNavigate();
@@ -50,117 +85,67 @@ const PromotionListPage = () => {
     sortBy: "updatedAt",
     sortDir: "desc",
   });
-  const [result, setResult] = useState<PromotionListResponseData>({
-    items: [],
-    pagination: {
-      page: 1,
-      pageSize: PAGE_SIZE,
-      totalItems: 0,
-      totalPages: 0,
-    },
-    filters: {},
-  });
+  const [searchValue, setSearchValue] = useState("");
+  const [result, setResult] = useState<PromotionListResponseData>(INITIAL_RESULT);
   const [loading, setLoading] = useState(false);
+  const [listError, setListError] = useState<string | null>(null);
+  const [summary, setSummary] = useState<PromotionSummaryState>({
+    totalPromotions: 0,
+    activePromotions: 0,
+    expiringSoonPromotions: 0,
+    draftOrInactivePromotions: 0,
+  });
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deletingItem, setDeletingItem] = useState<PromotionListItem | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const response = await promotionService.getList(query);
-        setResult(response);
-      } catch (error) {
-        notify(getErrorMessage(error, "Không thể load promotions"), "error");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void load();
+  const loadList = useCallback(async () => {
+    try {
+      setLoading(true);
+      setListError(null);
+      const response = await promotionService.getList(query);
+      setResult(response);
+    } catch (error) {
+      const message = getErrorMessage(error, "Không thể tải danh sách khuyến mãi.");
+      setListError(message);
+      notify(message, "error");
+    } finally {
+      setLoading(false);
+    }
   }, [notify, query]);
 
-  const filters: FilterModalGroup[] = [
-    {
-      key: "status",
-      label: "Status",
-      options: PROMOTION_STATUS_OPTIONS,
-      value: query.status ? [query.status] : [],
-    },
-    {
-      key: "promotionType",
-      label: "Promotion Type",
-      options: PROMOTION_TYPE_OPTIONS,
-      value: query.promotionType ? [query.promotionType] : [],
-    },
-    {
-      kind: "dateRange",
-      key: "startRange",
-      label: "Start Date",
-      value: {
-        from: query.startFrom,
-        to: query.startTo,
-      },
-      fromPlaceholder: "Start from",
-      toPlaceholder: "Start to",
-    },
-    {
-      kind: "dateRange",
-      key: "endRange",
-      label: "End Date",
-      value: {
-        from: query.endFrom,
-        to: query.endTo,
-      },
-      fromPlaceholder: "End from",
-      toPlaceholder: "End to",
-    },
-  ];
+  const loadSummary = useCallback(async () => {
+    try {
+      setSummaryLoading(true);
+      const [totalResponse, activeResponse, draftResponse, inactiveResponse] = await Promise.all([
+        promotionService.getList({ page: 1, pageSize: 1 }),
+        promotionService.getList({ page: 1, pageSize: 5000, status: "ACTIVE" }),
+        promotionService.getList({ page: 1, pageSize: 1, status: "DRAFT" }),
+        promotionService.getList({ page: 1, pageSize: 1, status: "INACTIVE" }),
+      ]);
 
-  const columns = useMemo<DataTableColumn<PromotionListItem>[]>(
-    () => [
-      {
-        key: "name",
-        header: "Name",
-        className: "font-semibold text-blue-900",
-      },
-      {
-        key: "promotionType",
-        header: "Type",
-        render: (row) => getPromotionTypeLabel(row.promotionType),
-      },
-      {
-        key: "discountValue",
-        header: "Discount Value",
-        render: (row) => formatPromotionDiscountValue(row),
-      },
-      {
-        key: "startDate",
-        header: "Start Date",
-        render: (row) => formatPromotionDate(row.startDate),
-      },
-      {
-        key: "endDate",
-        header: "End Date",
-        render: (row) => formatPromotionDate(row.endDate),
-      },
-      {
-        key: "status",
-        header: "Status",
-        render: (row) => (
-          <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getPromotionStatusBadgeClassName(row.status)}`}>
-            {getPromotionStatusLabel(row.status)}
-          </span>
-        ),
-      },
-      {
-        key: "productCount",
-        header: "Product Scope",
-        render: (row) => `${row.productCount ?? 0} products`,
-      },
-    ],
-    [],
-  );
+      const expiringSoonPromotions = activeResponse.items.filter((item) => isPromotionExpiringSoon(item.endDate)).length;
+
+      setSummary({
+        totalPromotions: totalResponse.pagination.totalItems,
+        activePromotions: activeResponse.pagination.totalItems,
+        expiringSoonPromotions,
+        draftOrInactivePromotions: inactiveResponse.pagination.totalItems + draftResponse.pagination.totalItems,
+      });
+    } catch (error) {
+      notify(getErrorMessage(error, "Không thể tải thống kê khuyến mãi."), "warning");
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, [notify]);
+
+  useEffect(() => {
+    void loadList();
+  }, [loadList]);
+
+  useEffect(() => {
+    void loadSummary();
+  }, [loadSummary]);
 
   const handleDelete = async () => {
     if (!deletingItem) {
@@ -170,143 +155,329 @@ const PromotionListPage = () => {
     try {
       setDeleting(true);
       await promotionService.delete(deletingItem.id);
-      notify("Promotion deleted successfully.", "success");
+      notify("Đã xóa chương trình khuyến mãi thành công.", "success");
       setDeletingItem(null);
-      setQuery((previous) => ({
-        ...previous,
-      }));
+      setQuery((previous) => ({ ...previous }));
+      void loadSummary();
     } catch (error) {
-      notify(getErrorMessage(error, "Không thể delete promotion"), "error");
+      notify(getErrorMessage(error, "Không thể xóa chương trình khuyến mãi."), "error");
     } finally {
       setDeleting(false);
     }
   };
 
+  const columns = useMemo<ColumnsType<PromotionListItem>>(
+    () => [
+      {
+        title: "Chương trình",
+        key: "name",
+        width: 280,
+        render: (_, row) => (
+          <Space direction="vertical" size={2}>
+            <Typography.Text strong>{row.name}</Typography.Text>
+            <Typography.Text type="secondary">{row.code ? `Mã: ${row.code}` : "Chưa có mã khuyến mãi"}</Typography.Text>
+          </Space>
+        ),
+      },
+      {
+        title: "Loại khuyến mãi",
+        dataIndex: "promotionType",
+        key: "promotionType",
+        width: 180,
+        render: (_, row) => getPromotionTypeLabel(row.promotionType),
+      },
+      {
+        title: "Giá trị giảm",
+        dataIndex: "discountValue",
+        key: "discountValue",
+        width: 160,
+        render: (_, row) => (
+          <Typography.Text strong style={{ color: "#0f5ca8" }}>
+            {formatPromotionDiscountValue(row)}
+          </Typography.Text>
+        ),
+      },
+      {
+        title: "Thời gian áp dụng",
+        key: "validity",
+        width: 220,
+        render: (_, row) => (
+          <Space direction="vertical" size={2}>
+            <Typography.Text>
+              {formatPromotionDate(row.startDate)} - {formatPromotionDate(row.endDate)}
+            </Typography.Text>
+            <Typography.Text type="secondary">{getRemainingDaysLabel(row.endDate)}</Typography.Text>
+          </Space>
+        ),
+      },
+      {
+        title: "Trạng thái",
+        dataIndex: "status",
+        key: "status",
+        width: 160,
+        render: (_, row) => (
+          <Space direction="vertical" size={4}>
+            <PromotionStatusTag status={row.status} withDot />
+            {row.status === "ACTIVE" && isPromotionExpiringSoon(row.endDate) ? (
+              <Tag color="volcano" style={{ marginInlineEnd: 0 }}>
+                Sắp hết hạn
+              </Tag>
+            ) : null}
+          </Space>
+        ),
+      },
+      {
+        title: "Phạm vi sản phẩm",
+        key: "scope",
+        width: 220,
+        render: (_, row) => {
+          const productCount = row.productCount ?? 0;
+
+          if (row.scopeSummary) {
+            return (
+              <Tooltip title={row.scopeSummary}>
+                <Typography.Text ellipsis style={{ maxWidth: 180 }}>
+                  {row.scopeSummary}
+                </Typography.Text>
+              </Tooltip>
+            );
+          }
+
+          return (
+            <Space size={8}>
+              <Badge count={productCount} showZero color="#0f5ca8" />
+              <Typography.Text type="secondary">{productCount > 0 ? "sản phẩm áp dụng" : "Chưa cấu hình sản phẩm"}</Typography.Text>
+            </Space>
+          );
+        },
+      },
+      {
+        title: "Thao tác",
+        key: "actions",
+        fixed: "right",
+        width: 170,
+        render: (_, row) => {
+          const actionItems: MenuProps["items"] = [];
+
+          if (allowEdit) {
+            actionItems.push({
+              key: "edit",
+              label: "Chỉnh sửa",
+              onClick: () => navigate(`${ROUTE_URL.PROMOTION_DETAIL.replace(":id", row.id)}?mode=edit`),
+            });
+          }
+
+          if (allowDelete) {
+            if (actionItems.length > 0) {
+              actionItems.push({ type: "divider" });
+            }
+
+            actionItems.push({
+              key: "delete",
+              label: "Xóa chương trình",
+              danger: true,
+              onClick: () => setDeletingItem(row),
+            });
+          }
+
+          return (
+            <Space>
+              <Button type="link" onClick={() => navigate(ROUTE_URL.PROMOTION_DETAIL.replace(":id", row.id))}>
+                Xem chi tiết
+              </Button>
+              {actionItems.length > 0 ? (
+                <Dropdown menu={{ items: actionItems }} trigger={["click"]}>
+                  <Button icon={<MoreOutlined />} />
+                </Dropdown>
+              ) : null}
+            </Space>
+          );
+        },
+      },
+    ],
+    [allowDelete, allowEdit, navigate],
+  );
+
+  const emptyNode = (
+    <Empty
+      image={Empty.PRESENTED_IMAGE_SIMPLE}
+      description="Chưa có chương trình phù hợp với bộ lọc hiện tại."
+    >
+      {allowCreate ? (
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(ROUTE_URL.PROMOTION_CREATE)}>
+          Tạo khuyến mãi mới
+        </Button>
+      ) : null}
+    </Empty>
+  );
+
   return (
     <NoResizeScreenTemplate
-      loading={loading}
-      loadingText="Đang tải danh sách khuyến mãi..."
+      loading={false}
       bodyClassName="px-0 pb-0 pt-4"
       header={
-        <ListScreenHeaderTemplate
-          title="Promotion Management"
+        <PromotionPageHeader
+          title="Quản lý chương trình khuyến mãi"
+          subtitle="Theo dõi toàn bộ chiến dịch ưu đãi, nhanh chóng lọc chương trình cần xử lý và thao tác ngay tại một màn hình."
+          breadcrumbItems={[
+            {
+              title: (
+                <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>
+                  Trang chủ
+                </span>
+              ),
+            },
+            { title: "Khuyến mãi" },
+          ]}
           actions={
-            allowCreate ? <CustomButton label="Create Promotion" onClick={() => navigate(ROUTE_URL.PROMOTION_CREATE)} /> : undefined
+            allowCreate ? (
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(ROUTE_URL.PROMOTION_CREATE)}>
+                Tạo khuyến mãi
+              </Button>
+            ) : undefined
           }
-          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Promotions" }]} />}
         />
       }
       body={
-        <BaseCard>
-          <FilterSearchModalBar
-            searchValue={query.keyword ?? ""}
-            onSearchChange={(value) =>
-              setQuery((previous) => ({
-                ...previous,
-                keyword: value || undefined,
-                page: 1,
-              }))
-            }
-            onSearchReset={() =>
-              setQuery((previous) => ({
-                ...previous,
-                keyword: undefined,
-                page: 1,
-              }))
-            }
-            searchPlaceholder="Search promotion"
-            modalTitle="Promotion filters"
-            filters={filters}
-            onApplyFilters={(values) => {
-              const status = Array.isArray(values.status) ? (values.status[0] as PromotionStatus | undefined) : undefined;
-              const promotionType = Array.isArray(values.promotionType)
-                ? (values.promotionType[0] as PromotionType | undefined)
-                : undefined;
-              const startRange = values.startRange;
-              const endRange = values.endRange;
+        <>
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <PromotionSummaryCards
+              totalPromotions={summary.totalPromotions}
+              activePromotions={summary.activePromotions}
+              expiringSoonPromotions={summary.expiringSoonPromotions}
+              draftOrInactivePromotions={summary.draftOrInactivePromotions}
+              loading={summaryLoading}
+            />
 
-              setQuery((previous) => ({
-                ...previous,
-                status,
-                promotionType,
-                startFrom: startRange && !Array.isArray(startRange) && "from" in startRange ? startRange.from : undefined,
-                startTo: startRange && !Array.isArray(startRange) && "to" in startRange ? startRange.to : undefined,
-                endFrom: endRange && !Array.isArray(endRange) && "from" in endRange ? endRange.from : undefined,
-                endTo: endRange && !Array.isArray(endRange) && "to" in endRange ? endRange.to : undefined,
-                page: 1,
-              }));
-            }}
-          />
+            <PromotionFilterBar
+              searchValue={searchValue}
+              status={query.status}
+              promotionType={query.promotionType}
+              startFrom={query.startFrom}
+              endTo={query.endTo}
+              onSearchValueChange={(value) => {
+                setSearchValue(value);
+                if (!value.trim()) {
+                  setQuery((previous) => ({
+                    ...previous,
+                    keyword: undefined,
+                    page: 1,
+                  }));
+                }
+              }}
+              onApplySearch={(value) =>
+                setQuery((previous) => ({
+                  ...previous,
+                  keyword: value.trim() || undefined,
+                  page: 1,
+                }))
+              }
+              onStatusChange={(status) =>
+                setQuery((previous) => ({
+                  ...previous,
+                  status,
+                  page: 1,
+                }))
+              }
+              onPromotionTypeChange={(promotionType) =>
+                setQuery((previous) => ({
+                  ...previous,
+                  promotionType,
+                  page: 1,
+                }))
+              }
+              onValidityRangeChange={(from, to) =>
+                setQuery((previous) => ({
+                  ...previous,
+                  startFrom: from,
+                  startTo: undefined,
+                  endFrom: undefined,
+                  endTo: to,
+                  page: 1,
+                }))
+              }
+              onReset={() => {
+                setSearchValue("");
+                setQuery((previous) => ({
+                  ...previous,
+                  page: 1,
+                  keyword: undefined,
+                  status: undefined,
+                  promotionType: undefined,
+                  startFrom: undefined,
+                  startTo: undefined,
+                  endFrom: undefined,
+                  endTo: undefined,
+                }));
+              }}
+            />
 
-          <DataTable
-            columns={columns}
-            data={result.items}
-            emptyText="No promotions found."
-            actions={(row) => (
-              <div className="flex flex-wrap gap-2">
-                <CustomButton label="View" className="px-2 py-1 text-sm" onClick={() => navigate(ROUTE_URL.PROMOTION_DETAIL.replace(":id", row.id))} />
-                {allowEdit ? (
-                  <CustomButton
-                    label="Edit"
-                    className="px-2 py-1 text-sm"
-                    onClick={() => navigate(`${ROUTE_URL.PROMOTION_DETAIL.replace(":id", row.id)}?mode=edit`)}
+            <Card bordered={false} className="shadow-sm">
+              <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                {listError ? (
+                  <Alert
+                    type="error"
+                    showIcon
+                    message="Không thể tải danh sách khuyến mãi"
+                    description={listError}
                   />
                 ) : null}
-                {allowDelete ? (
-                  <CustomButton
-                    label="Delete"
-                    className="bg-red-500 px-2 py-1 text-sm hover:bg-red-600"
-                    onClick={() => setDeletingItem(row)}
-                  />
-                ) : null}
-              </div>
-            )}
-          />
 
-          <Pagination
-            page={result.pagination.page}
-            pageSize={result.pagination.pageSize}
-            total={result.pagination.totalItems}
-            onChange={(page) =>
-              setQuery((previous) => ({
-                ...previous,
-                page,
-              }))
-            }
-          />
+                <Table<PromotionListItem>
+                  rowKey="id"
+                  size="middle"
+                  columns={columns}
+                  dataSource={result.items}
+                  loading={{ spinning: loading, tip: "Đang tải danh sách khuyến mãi..." }}
+                  scroll={{ x: 1200 }}
+                  locale={{ emptyText: emptyNode }}
+                  pagination={{
+                    position: ["bottomRight"],
+                    current: result.pagination.page,
+                    pageSize: result.pagination.pageSize,
+                    total: result.pagination.totalItems,
+                    showSizeChanger: true,
+                    showTotal: (total, range) => `${range[0]}-${range[1]} trên ${total} chương trình`,
+                  }}
+                  onChange={(pagination) =>
+                    setQuery((previous) => ({
+                      ...previous,
+                      page: pagination.current ?? previous.page ?? 1,
+                      pageSize: pagination.pageSize ?? previous.pageSize ?? PAGE_SIZE,
+                    }))
+                  }
+                />
+              </Space>
+            </Card>
+          </Space>
 
           <Modal
-            title="Delete Promotion"
+            title="Xóa chương trình khuyến mãi?"
             open={Boolean(deletingItem)}
-            onCancel={() => (deleting ? undefined : setDeletingItem(null))}
+            okText="Xóa chương trình"
+            cancelText="Giữ lại"
+            okButtonProps={{ danger: true, loading: deleting }}
+            cancelButtonProps={{ disabled: deleting }}
             closable={!deleting}
             maskClosable={!deleting}
-            footer={
-              <div className="flex justify-end gap-2">
-                <CustomButton
-                  label="Cancel"
-                  className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                  onClick={() => setDeletingItem(null)}
-                  disabled={deleting}
-                />
-                <CustomButton
-                  label={deleting ? "Deleting..." : "Delete"}
-                  className="bg-red-500 hover:bg-red-600"
-                  onClick={handleDelete}
-                  disabled={deleting}
-                />
-              </div>
-            }
+            onOk={() => void handleDelete()}
+            onCancel={() => {
+              if (!deleting) {
+                setDeletingItem(null);
+              }
+            }}
           >
-            <p className="text-sm text-slate-600">Are you sure you want to delete this promotion?</p>
-            {deletingItem ? <p className="mt-2 text-sm font-semibold text-slate-800">{deletingItem.name}</p> : null}
+            <Space direction="vertical" size={8}>
+              <Typography.Text>
+                Sau khi xóa, chương trình sẽ không còn xuất hiện trong danh sách và không thể phục hồi.
+              </Typography.Text>
+              <Typography.Text strong>{deletingItem?.name}</Typography.Text>
+            </Space>
           </Modal>
-        </BaseCard>
+        </>
       }
     />
   );
 };
 
 export default PromotionListPage;
-
-

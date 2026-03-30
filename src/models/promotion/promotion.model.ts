@@ -1,6 +1,6 @@
 import type { PaginationMeta } from "../common/api.model";
 
-export type PromotionStatus = "ACTIVE" | "INACTIVE" | "SCHEDULED" | "EXPIRED" | string;
+export type PromotionStatus = "DRAFT" | "ACTIVE" | "INACTIVE";
 export type PromotionType = "PERCENTAGE" | "FIXED_AMOUNT";
 export type PromotionSortBy = "name" | "promotionType" | "discountValue" | "startDate" | "endDate" | "status" | "createdAt" | "updatedAt";
 export type PromotionSortDirection = "asc" | "desc";

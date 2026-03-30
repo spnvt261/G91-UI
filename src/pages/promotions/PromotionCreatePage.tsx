@@ -1,46 +1,57 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { ArrowLeftOutlined, SaveOutlined } from "@ant-design/icons";
+import { Alert, Button, Card, Col, Form, Row, Space, Typography } from "antd";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import FormSectionCard from "../../components/forms/FormSectionCard";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomSelect, { type Option } from "../../components/customSelect/CustomSelect";
-import CustomTextField from "../../components/customTextField/CustomTextField";
-import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
-import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import { productService } from "../../services/product/product.service";
 import { promotionService } from "../../services/promotion/promotion.service";
 import { getErrorMessage } from "../shared/page.utils";
-import { createInitialPromotionFormValues, toPromotionWritePayload, validatePromotionForm } from "./promotionForm.utils";
-import { PROMOTION_STATUS_OPTIONS, PROMOTION_TYPE_OPTIONS } from "./promotion.utils";
+import PromotionFormSections, { type PromotionProductOption } from "./components/PromotionFormSections";
+import PromotionFormSummaryCard from "./components/PromotionFormSummaryCard";
+import PromotionPageHeader from "./components/PromotionPageHeader";
+import {
+  createInitialPromotionFormValues,
+  toPromotionWritePayload,
+  validatePromotionForm,
+  type PromotionFormErrors,
+  type PromotionFormValues,
+} from "./promotionForm.utils";
 
 const PromotionCreatePage = () => {
   const navigate = useNavigate();
   const { notify } = useNotify();
 
-  const [formValues, setFormValues] = useState(createInitialPromotionFormValues());
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [productOptions, setProductOptions] = useState<Option[]>([]);
+  const [formValues, setFormValues] = useState<PromotionFormValues>(createInitialPromotionFormValues());
+  const [errors, setErrors] = useState<PromotionFormErrors>({});
+  const [productOptions, setProductOptions] = useState<PromotionProductOption[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [productLoadError, setProductLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
         setLoadingProducts(true);
+        setProductLoadError(null);
+
         const response = await productService.getList({
           page: 1,
           pageSize: 1000,
         });
+
         setProductOptions(
           response.items.map((item) => ({
             label: `${item.productCode} - ${item.productName}`,
             value: item.id,
           })),
         );
-      } catch {
+      } catch (error) {
+        const message = getErrorMessage(error, "Không thể tải danh sách sản phẩm áp dụng.");
         setProductOptions([]);
+        setProductLoadError(message);
       } finally {
         setLoadingProducts(false);
       }
@@ -49,43 +60,38 @@ const PromotionCreatePage = () => {
     void loadProducts();
   }, []);
 
-  const typeSelectOptions = useMemo<Option[]>(
-    () =>
-      PROMOTION_TYPE_OPTIONS.map((item) => ({
-        label: item.label,
-        value: item.value,
-      })),
-    [],
-  );
+  const handleValuesChange = useCallback((patch: Partial<PromotionFormValues>) => {
+    setFormValues((previous) => ({ ...previous, ...patch }));
+    setSubmitError(null);
 
-  const statusSelectOptions = useMemo<Option[]>(
-    () =>
-      PROMOTION_STATUS_OPTIONS.map((item) => ({
-        label: item.label,
-        value: item.value,
-      })),
-    [],
-  );
+    setErrors((previous) => {
+      const next = { ...previous };
+      (Object.keys(patch) as Array<keyof PromotionFormValues>).forEach((key) => {
+        delete next[key];
+      });
+      return next;
+    });
+  }, []);
 
   const handleSubmit = async () => {
     const validationErrors = validatePromotionForm(formValues);
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
-      const firstError = Object.values(validationErrors)[0];
-      if (firstError) {
-        notify(firstError, "error");
-      }
+      setSubmitError("Vui lòng kiểm tra lại các thông tin bắt buộc trước khi tạo khuyến mãi.");
       return;
     }
 
     try {
       setSaving(true);
+      setSubmitError(null);
       const response = await promotionService.create(toPromotionWritePayload(formValues));
-      notify("Promotion created successfully.", "success");
+      notify("Đã tạo chương trình khuyến mãi thành công.", "success");
       navigate(ROUTE_URL.PROMOTION_DETAIL.replace(":id", response.promotion.id));
     } catch (error) {
-      notify(getErrorMessage(error, "Không thể create promotion"), "error");
+      const message = getErrorMessage(error, "Không thể tạo chương trình khuyến mãi.");
+      setSubmitError(message);
+      notify(message, "error");
     } finally {
       setSaving(false);
     }
@@ -93,106 +99,98 @@ const PromotionCreatePage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={false}
       bodyClassName="px-0 pb-0 pt-4"
       header={
-        <ListScreenHeaderTemplate
-          title="Create Promotion"
-          breadcrumb={
-            <CustomBreadcrumb
-              breadcrumbs={[
-                { label: "Trang chủ" },
-                { label: "Promotions", url: ROUTE_URL.PROMOTION_LIST },
-                { label: "Create" },
-              ]}
-            />
-          }
+        <PromotionPageHeader
+          title="Tạo chương trình khuyến mãi"
+          subtitle="Thiết lập chiến dịch ưu đãi theo từng bước để đảm bảo dễ kiểm soát và chính xác trước khi phát hành."
+          breadcrumbItems={[
+            {
+              title: (
+                <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>
+                  Trang chủ
+                </span>
+              ),
+            },
+            {
+              title: (
+                <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.PROMOTION_LIST)}>
+                  Khuyến mãi
+                </span>
+              ),
+            },
+            { title: "Tạo mới" },
+          ]}
         />
       }
       body={
-        <FormSectionCard title="Promotion Information">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <CustomTextField
-              title="Code (optional)"
-              value={formValues.code}
-              onChange={(event) => setFormValues((previous) => ({ ...previous, code: event.target.value }))}
+        <Form layout="vertical" onFinish={() => void handleSubmit()}>
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Alert
+              type="info"
+              showIcon
+              message="Gợi ý cấu hình nhanh"
+              description="Hãy thiết lập đầy đủ loại khuyến mãi, giá trị giảm và thời gian hiệu lực để đội kinh doanh có thể áp dụng ngay."
             />
-            <CustomTextField
-              title="Name"
-              value={formValues.name}
-              helperText={errors.name}
-              error={Boolean(errors.name)}
-              onChange={(event) => setFormValues((previous) => ({ ...previous, name: event.target.value }))}
-            />
-            <CustomSelect
-              title="Promotion Type"
-              options={typeSelectOptions}
-              value={formValues.promotionType ? [formValues.promotionType] : []}
-              onChange={(value) => setFormValues((previous) => ({ ...previous, promotionType: value[0] ?? "" }))}
-              classNameSelect="w-full text-left"
-              classNameOptions="w-full left-0"
-              placeholder="Select promotion type"
-              helperText={errors.promotionType}
-            />
-            <CustomTextField
-              title="Discount Value"
-              value={formValues.discountValue}
-              type="number"
-              helperText={errors.discountValue}
-              error={Boolean(errors.discountValue)}
-              onChange={(event) => setFormValues((previous) => ({ ...previous, discountValue: event.target.value }))}
-            />
-            <CustomTextField
-              title="Start Date (YYYY-MM-DD)"
-              value={formValues.startDate}
-              helperText={errors.startDate}
-              error={Boolean(errors.startDate)}
-              onChange={(event) => setFormValues((previous) => ({ ...previous, startDate: event.target.value }))}
-            />
-            <CustomTextField
-              title="End Date (YYYY-MM-DD)"
-              value={formValues.endDate}
-              helperText={errors.endDate}
-              error={Boolean(errors.endDate)}
-              onChange={(event) => setFormValues((previous) => ({ ...previous, endDate: event.target.value }))}
-            />
-            <CustomSelect
-              title="Status"
-              options={statusSelectOptions}
-              value={formValues.status ? [formValues.status] : []}
-              onChange={(value) => setFormValues((previous) => ({ ...previous, status: value[0] ?? "" }))}
-              classNameSelect="w-full text-left"
-              classNameOptions="w-full left-0"
-              placeholder="Select status"
-              helperText={errors.status}
-            />
-            <CustomSelect
-              title="Products (optional)"
-              options={productOptions}
-              value={formValues.productIds}
-              onChange={(values) => setFormValues((previous) => ({ ...previous, productIds: values }))}
-              classNameSelect="w-full text-left"
-              classNameOptions="w-full left-0"
-              placeholder={loadingProducts ? "Đang tải danh sách sản phẩm..." : "Chọn sản phẩm"}
-              multiple
-              search
-              disable={loadingProducts}
-            />
-          </div>
 
-          <div className="mt-4 flex flex-wrap gap-3">
-            <CustomButton label={saving ? "Saving..." : "Create Promotion"} onClick={handleSubmit} disabled={saving} />
-            <CustomButton
-              label="Back"
-              className="bg-slate-200 text-slate-700 hover:bg-slate-300"
-              onClick={() => navigate(ROUTE_URL.PROMOTION_LIST)}
-            />
-          </div>
-        </FormSectionCard>
+            {submitError ? (
+              <Alert
+                type="error"
+                showIcon
+                message="Không thể tạo chương trình khuyến mãi"
+                description={submitError}
+              />
+            ) : null}
+
+            <Row gutter={[16, 16]} align="top">
+              <Col xs={24} xl={16}>
+                <PromotionFormSections
+                  formValues={formValues}
+                  errors={errors}
+                  productOptions={productOptions}
+                  loadingProducts={loadingProducts}
+                  productLoadError={productLoadError}
+                  disabled={saving}
+                  onValuesChange={handleValuesChange}
+                />
+              </Col>
+
+              <Col xs={24} xl={8}>
+                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                  <PromotionFormSummaryCard
+                    formValues={formValues}
+                    className="xl:sticky xl:top-4"
+                  />
+                </Space>
+              </Col>
+            </Row>
+
+            <Card bordered={false} className="sticky bottom-4 z-10 shadow-md">
+              <Row justify="space-between" align="middle" gutter={[12, 12]}>
+                <Col xs={24} md={14}>
+                  <Typography.Text type="secondary">
+                    Sau khi tạo thành công, hệ thống sẽ chuyển sang trang chi tiết để bạn theo dõi hoặc chỉnh sửa thêm.
+                  </Typography.Text>
+                </Col>
+
+                <Col xs={24} md={10}>
+                  <Space style={{ width: "100%", justifyContent: "flex-end" }}>
+                    <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(ROUTE_URL.PROMOTION_LIST)} disabled={saving}>
+                      Quay lại
+                    </Button>
+                    <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={saving}>
+                      Tạo khuyến mãi
+                    </Button>
+                  </Space>
+                </Col>
+              </Row>
+            </Card>
+          </Space>
+        </Form>
       }
     />
   );
 };
 
 export default PromotionCreatePage;
-
-

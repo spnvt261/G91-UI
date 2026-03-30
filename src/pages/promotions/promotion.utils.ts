@@ -2,29 +2,56 @@ import { canPerformAction, hasPermission } from "../../const/authz.const";
 import type { UserRole } from "../../models/auth/auth.model";
 import type { PromotionListItem, PromotionStatus, PromotionType } from "../../models/promotion/promotion.model";
 import { toCurrency } from "../shared/page.utils";
+import type { BadgeProps, TagProps } from "antd";
 
 export const PROMOTION_TYPE_OPTIONS: Array<{ label: string; value: PromotionType }> = [
-  { label: "Percentage", value: "PERCENTAGE" },
-  { label: "Fixed Amount", value: "FIXED_AMOUNT" },
+  { label: "Giảm theo phần trăm", value: "PERCENTAGE" },
+  { label: "Giảm số tiền cố định", value: "FIXED_AMOUNT" },
 ];
 
 export const PROMOTION_STATUS_OPTIONS: Array<{ label: string; value: PromotionStatus }> = [
-  { label: "Active", value: "ACTIVE" },
-  { label: "Scheduled", value: "SCHEDULED" },
-  { label: "Inactive", value: "INACTIVE" },
-  { label: "Expired", value: "EXPIRED" },
+  { label: "Bản nháp", value: "DRAFT" },
+  { label: "Đang hoạt động", value: "ACTIVE" },
+  { label: "Tạm dừng", value: "INACTIVE" },
 ];
 
 const PROMOTION_TYPE_LABELS: Record<PromotionType, string> = {
-  PERCENTAGE: "Percentage",
-  FIXED_AMOUNT: "Fixed Amount",
+  PERCENTAGE: "Giảm theo phần trăm",
+  FIXED_AMOUNT: "Giảm số tiền cố định",
 };
 
 const PROMOTION_STATUS_LABELS: Record<PromotionStatus, string> = {
-  ACTIVE: "Active",
-  INACTIVE: "Inactive",
-  SCHEDULED: "Scheduled",
-  EXPIRED: "Expired",
+  DRAFT: "Bản nháp",
+  ACTIVE: "Đang hoạt động",
+  INACTIVE: "Tạm dừng",
+};
+
+interface PromotionStatusAppearance {
+  label: string;
+  tagColor: TagProps["color"];
+  badgeStatus: BadgeProps["status"];
+  dotColor: string;
+}
+
+const PROMOTION_STATUS_APPEARANCE: Record<string, PromotionStatusAppearance> = {
+  DRAFT: {
+    label: "Bản nháp",
+    tagColor: "gold",
+    badgeStatus: "warning",
+    dotColor: "#ca8a04",
+  },
+  ACTIVE: {
+    label: "Đang hoạt động",
+    tagColor: "green",
+    badgeStatus: "success",
+    dotColor: "#16a34a",
+  },
+  INACTIVE: {
+    label: "Tạm dừng",
+    tagColor: "default",
+    badgeStatus: "default",
+    dotColor: "#64748b",
+  },
 };
 
 export const getPromotionTypeLabel = (value: PromotionType): string => {
@@ -35,16 +62,28 @@ export const getPromotionStatusLabel = (value: PromotionStatus): string => {
   return PROMOTION_STATUS_LABELS[value] ?? value;
 };
 
+export const getPromotionStatusAppearance = (status: PromotionStatus): PromotionStatusAppearance => {
+  const appearance = PROMOTION_STATUS_APPEARANCE[status];
+  if (appearance) {
+    return appearance;
+  }
+
+  return {
+    label: getPromotionStatusLabel(status),
+    tagColor: "default",
+    badgeStatus: "default",
+    dotColor: "#64748b",
+  };
+};
+
 export const getPromotionStatusBadgeClassName = (status: PromotionStatus): string => {
   switch (status) {
+    case "DRAFT":
+      return "border border-amber-100 bg-amber-50 text-amber-700";
     case "ACTIVE":
       return "border border-emerald-100 bg-emerald-50 text-emerald-700";
-    case "SCHEDULED":
-      return "border border-blue-100 bg-blue-50 text-blue-700";
-    case "EXPIRED":
-      return "border border-slate-200 bg-slate-100 text-slate-600";
     case "INACTIVE":
-      return "border border-amber-100 bg-amber-50 text-amber-700";
+      return "border border-slate-200 bg-slate-100 text-slate-600";
     default:
       return "border border-slate-200 bg-slate-100 text-slate-600";
   }
@@ -73,6 +112,24 @@ export const formatPromotionDiscountValue = (promotion: Pick<PromotionListItem, 
   }
 
   return toCurrency(promotion.discountValue);
+};
+
+export const isPromotionExpiringSoon = (endDate: string | undefined, days = 7): boolean => {
+  if (!endDate) {
+    return false;
+  }
+
+  const end = new Date(endDate);
+  if (Number.isNaN(end.getTime())) {
+    return false;
+  }
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+  const diffDays = Math.ceil((endDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  return diffDays >= 0 && diffDays <= days;
 };
 
 export const canAccessPromotionModule = (role: UserRole | null | undefined): boolean => hasPermission(role, "promotion.view");

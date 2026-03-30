@@ -10,6 +10,7 @@ import type {
   PromotionListQuery,
   PromotionListResponseData,
   PromotionSaveResponseData,
+  PromotionStatus,
   PromotionType,
   PromotionUpdateRequest,
 } from "../../models/promotion/promotion.model";
@@ -119,6 +120,20 @@ const toModelPromotionType = (type: string | undefined): PromotionType => {
   return "PERCENTAGE";
 };
 
+const toModelPromotionStatus = (status: string | undefined): PromotionStatus => {
+  const normalized = (status ?? "").trim().toUpperCase();
+
+  if (normalized === "ACTIVE") {
+    return "ACTIVE";
+  }
+
+  if (normalized === "DRAFT" || normalized === "SCHEDULED" || normalized === "PENDING") {
+    return "DRAFT";
+  }
+
+  return "INACTIVE";
+};
+
 const toNumberValue = (value: number | undefined): number => {
   if (typeof value !== "number" || Number.isNaN(value)) {
     return 0;
@@ -135,7 +150,7 @@ const toModelListItem = (item: PromotionApiListItemResponse): PromotionListItem 
   discountValue: toNumberValue(item.discountValue),
   startDate: item.validFrom,
   endDate: item.validTo,
-  status: item.status,
+  status: toModelPromotionStatus(item.status),
   createdAt: item.createdAt,
   updatedAt: item.updatedAt,
   productCount: item.productCount,
@@ -155,7 +170,7 @@ const toModelDetail = (detail: PromotionApiDetailResponse): PromotionDetail => {
     discountValue: toNumberValue(detail.discountValue),
     startDate: detail.validFrom,
     endDate: detail.validTo,
-    status: detail.status,
+    status: toModelPromotionStatus(detail.status),
     createdBy: detail.createdBy,
     updatedBy: detail.updatedBy,
     createdAt: detail.createdAt,
@@ -233,7 +248,7 @@ export const promotionService = {
       },
       filters: {
         keyword: response.data.filters?.search ?? query?.keyword,
-        status: response.data.filters?.status,
+        status: response.data.filters?.status ? toModelPromotionStatus(response.data.filters.status) : undefined,
         promotionType: response.data.filters?.promotionType ? toModelPromotionType(response.data.filters.promotionType) : undefined,
         startFrom: response.data.filters?.validFrom ?? query?.startFrom,
         endTo: response.data.filters?.validTo ?? query?.endTo,
