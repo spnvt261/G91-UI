@@ -6,7 +6,11 @@ type ProjectStatusTagProps = {
 };
 
 const ProjectStatusTag = ({ status }: ProjectStatusTagProps) => {
-  return <Tag color={getProjectStatusColor(status)}>{getProjectStatusLabel(status)}</Tag>;
+  return (
+    <Tag color={getProjectStatusColor(status)} style={{ marginInlineEnd: 0 }}>
+      {getProjectStatusLabel(status)}
+    </Tag>
+  );
 };
 
 export default ProjectStatusTag;

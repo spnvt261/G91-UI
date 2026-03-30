@@ -1,4 +1,4 @@
-﻿import { Alert, Button, Col, Descriptions, Form, Input, Row, Select, Space } from "antd";
+import { Alert, Button, Col, Form, Input, Row, Select, Space } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ROUTE_URL } from "../../const/route_url.const";
@@ -6,14 +6,11 @@ import { useNotify } from "../../context/notifyContext";
 import type { ProjectModel } from "../../models/project/project.model";
 import { projectService } from "../../services/project/project.service";
 import { getErrorMessage } from "../shared/page.utils";
+import ProjectContextCard from "./components/ProjectContextCard";
 import ProjectFormLayout from "./components/ProjectFormLayout";
+import ProjectFormSection from "./components/ProjectFormSection";
 import { resolveProjectBackTarget } from "./projectNavigation";
-import { displayText } from "./projectPresentation";
-
-type ProjectWarehouseShape = ProjectModel & {
-  primaryWarehouseName?: string;
-  backupWarehouseName?: string;
-};
+import { buildWarehouseOptions, findWarehouseLabel } from "./projectLookups";
 
 type AssignWarehouseFormValues = {
   warehouseId?: string;
@@ -34,9 +31,11 @@ const ProjectAssignWarehousePage = () => {
   const [saving, setSaving] = useState(false);
 
   const backTarget = useMemo(() => resolveProjectBackTarget(location, id), [id, location]);
+  const selectedWarehouseId = Form.useWatch("warehouseId", form);
+  const selectedWarehouseLabel = findWarehouseLabel(selectedWarehouseId, warehouseOptions);
 
   useEffect(() => {
-    const load = async () => {
+    const loadPage = async () => {
       if (!id) {
         return;
       }
@@ -46,61 +45,32 @@ const ProjectAssignWarehousePage = () => {
         const detail = await projectService.getDetail(id);
         setProject(detail);
         form.setFieldsValue({
-          warehouseId: detail.primaryWarehouseId ?? detail.warehouseId ?? "",
+          warehouseId: detail.primaryWarehouseId ?? detail.warehouseId ?? undefined,
         });
 
         try {
           setWarehouseLoading(true);
-          const projects = await projectService.getList({ page: 1, pageSize: 200 });
-          const warehouseMap = new Map<string, string>();
-
-          const upsertWarehouse = (warehouseId?: string, warehouseName?: string) => {
-            if (!warehouseId) {
-              return;
-            }
-            const normalizedId = warehouseId.trim();
-            if (!normalizedId) {
-              return;
-            }
-
-            const normalizedName = warehouseName?.trim();
-            const currentName = warehouseMap.get(normalizedId);
-            if (!currentName || currentName === normalizedId) {
-              warehouseMap.set(normalizedId, normalizedName || normalizedId);
-            }
-          };
-
-          projects.forEach((item) => {
-            const projectItem = item as ProjectWarehouseShape;
-            upsertWarehouse(projectItem.primaryWarehouseId ?? projectItem.warehouseId, projectItem.primaryWarehouseName);
-            upsertWarehouse(projectItem.backupWarehouseId, projectItem.backupWarehouseName);
-          });
-
-          const detailWithName = detail as ProjectWarehouseShape;
-          upsertWarehouse(detail.primaryWarehouseId ?? detail.warehouseId, detailWithName.primaryWarehouseName);
-
-          const options = Array.from(warehouseMap.entries())
-            .map(([warehouseId, warehouseName]) => ({
-              value: warehouseId,
-              label: warehouseName === warehouseId ? warehouseId : `${warehouseName} (${warehouseId})`,
-            }))
-            .sort((a, b) => a.label.localeCompare(b.label));
-
-          setWarehouseOptions(options);
+          const projects = await projectService.getList({ page: 1, pageSize: 300 });
+          setWarehouseOptions(
+            buildWarehouseOptions(projects, [
+              { id: detail.primaryWarehouseId ?? detail.warehouseId, name: detail.primaryWarehouseId ?? detail.warehouseId },
+              { id: detail.backupWarehouseId, name: detail.backupWarehouseId },
+            ]),
+          );
         } catch (warehouseError) {
           setWarehouseOptions([]);
-          notify(getErrorMessage(warehouseError, "Không thể tải danh sách kho"), "error");
+          notify(getErrorMessage(warehouseError, "Không thể tải danh sách kho."), "error");
         } finally {
           setWarehouseLoading(false);
         }
-      } catch (err) {
-        notify(getErrorMessage(err, "Không thể tải thông tin kho của dự án"), "error");
+      } catch (error) {
+        notify(getErrorMessage(error, "Không thể tải dữ liệu dự án để gán kho."), "error");
       } finally {
         setPageLoading(false);
       }
     };
 
-    void load();
+    void loadPage();
   }, [form, id, notify]);
 
   const handleAssign = async (values: AssignWarehouseFormValues) => {
@@ -114,10 +84,10 @@ const ProjectAssignWarehousePage = () => {
         warehouseId: values.warehouseId,
         assignmentReason: values.assignmentReason?.trim() || undefined,
       });
-      notify("Gán kho thành công.", "success");
+      notify("Đã cập nhật kho phụ trách cho dự án.", "success");
       navigate(backTarget);
-    } catch (err) {
-      notify(getErrorMessage(err, "Không thể gán kho"), "error");
+    } catch (error) {
+      notify(getErrorMessage(error, "Không thể cập nhật kho cho dự án."), "error");
     } finally {
       setSaving(false);
     }
@@ -125,8 +95,8 @@ const ProjectAssignWarehousePage = () => {
 
   return (
     <ProjectFormLayout
-      title="Gán kho"
-      subtitle="Cập nhật kho cho dự án hiện tại."
+      title="Gán kho cho dự án"
+      subtitle="Xác nhận kho phụ trách trong ngữ cảnh đầy đủ để giảm rủi ro thao tác nhầm dự án."
       breadcrumbItems={[
         { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Trang chủ</span> },
         { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)}>Dự án</span> },
@@ -134,48 +104,55 @@ const ProjectAssignWarehousePage = () => {
       ]}
       loading={pageLoading}
     >
-      {!id ? <Alert type="warning" showIcon message="Không tìm thấy mã dự án trên URL." /> : null}
+      {!id ? <Alert type="warning" showIcon message="Không tìm thấy mã dự án trên đường dẫn." /> : null}
 
       {project ? (
-        <Descriptions size="small" column={{ xs: 1, md: 3 }}>
-          <Descriptions.Item label="Dự án">{displayText(project.name)}</Descriptions.Item>
-          <Descriptions.Item label="Mã dự án">{displayText(project.projectCode ?? project.code)}</Descriptions.Item>
-          <Descriptions.Item label="Kho hiện tại">{displayText(project.primaryWarehouseId ?? project.warehouseId)}</Descriptions.Item>
-        </Descriptions>
+        <ProjectContextCard
+          project={project}
+          title="Dự án đang cập nhật kho"
+          highlightWarehouseChange
+          nextWarehouseId={selectedWarehouseId}
+          nextWarehouseLabel={selectedWarehouseLabel}
+        />
       ) : null}
 
       <Form<AssignWarehouseFormValues> form={form} layout="vertical" onFinish={handleAssign}>
-        <Row gutter={[16, 0]}>
-          <Col xs={24} md={12}>
-            <Form.Item
-              label="Kho"
-              name="warehouseId"
-              rules={[{ required: true, message: "Vui lòng chọn kho." }, { max: 100, message: "Mã kho tối đa 100 ký tự." }]}
-              help={!warehouseLoading && warehouseOptions.length === 0 ? "Không có dữ liệu kho từ API." : undefined}
-            >
-              <Select
-                showSearch
-                optionFilterProp="label"
-                options={warehouseOptions}
-                loading={warehouseLoading}
-                placeholder={warehouseLoading ? "Đang tải danh sách kho..." : "Chọn kho"}
-              />
-            </Form.Item>
-          </Col>
-          <Col xs={24} md={12}>
-            <Form.Item label="Lý do" name="assignmentReason" rules={[{ max: 1000, message: "Lý do tối đa 1000 ký tự." }]}>
-              <Input placeholder="Lý do gán kho (không bắt buộc)" />
-            </Form.Item>
-          </Col>
-        </Row>
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <ProjectFormSection title="Thông tin gán kho" description="Chọn kho mới và ghi lý do để đội vận hành dễ kiểm tra về sau.">
+            <Row gutter={[16, 0]}>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  label="Kho phụ trách"
+                  name="warehouseId"
+                  rules={[{ required: true, message: "Vui lòng chọn kho phụ trách." }]}
+                  help={!warehouseLoading && warehouseOptions.length === 0 ? "Hiện chưa có dữ liệu kho để lựa chọn." : undefined}
+                >
+                  <Select
+                    showSearch
+                    optionFilterProp="label"
+                    options={warehouseOptions}
+                    loading={warehouseLoading}
+                    placeholder={warehouseLoading ? "Đang tải danh sách kho..." : "Chọn kho phụ trách"}
+                    notFoundContent="Chưa có dữ liệu kho."
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <Form.Item label="Lý do cập nhật kho" name="assignmentReason" rules={[{ max: 1000, message: "Lý do tối đa 1000 ký tự." }]}>
+                  <Input.TextArea rows={3} placeholder="Ví dụ: Điều phối lại theo năng lực tồn kho khu vực miền Nam" />
+                </Form.Item>
+              </Col>
+            </Row>
+          </ProjectFormSection>
 
-        <Space>
-          <Button type="primary" htmlType="submit" loading={saving} disabled={warehouseLoading}>
-            Xác nhận gán kho
-          </Button>
-          <Button onClick={() => navigate(backTarget)} disabled={saving}>
-            Quay lại
-          </Button>
+          <Space>
+            <Button type="primary" htmlType="submit" loading={saving} disabled={warehouseLoading}>
+              Xác nhận gán kho
+            </Button>
+            <Button onClick={() => navigate(backTarget)} disabled={saving}>
+              Quay lại
+            </Button>
+          </Space>
         </Space>
       </Form>
     </ProjectFormLayout>

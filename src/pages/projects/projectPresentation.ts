@@ -1,14 +1,14 @@
 ﻿import type { ProjectModel } from "../../models/project/project.model";
 
 const STATUS_COLOR_MAP: Record<string, string> = {
+  NEW: "blue",
   ACTIVE: "processing",
   IN_PROGRESS: "processing",
+  ON_HOLD: "warning",
   COMPLETED: "success",
   DONE: "success",
   CLOSED: "success",
-  ON_HOLD: "warning",
-  NEW: "default",
-  CANCELLED: "default",
+  CANCELLED: "error",
   ARCHIVED: "default",
 };
 
@@ -27,6 +27,25 @@ const STATUS_LABEL_MAP: Record<string, string> = {
 export const getProjectStatusColor = (status?: string): string => {
   const normalized = (status ?? "").trim().toUpperCase();
   return STATUS_COLOR_MAP[normalized] ?? "blue";
+};
+
+const IN_PROGRESS_STATUSES = new Set(["NEW", "ACTIVE", "IN_PROGRESS"]);
+const COMPLETED_STATUSES = new Set(["DONE", "COMPLETED", "CLOSED"]);
+const PAUSED_OR_CANCELLED_STATUSES = new Set(["ON_HOLD", "CANCELLED", "ARCHIVED"]);
+
+export const isInProgressStatus = (status?: string): boolean => {
+  const normalized = (status ?? "").trim().toUpperCase();
+  return IN_PROGRESS_STATUSES.has(normalized);
+};
+
+export const isCompletedStatus = (status?: string): boolean => {
+  const normalized = (status ?? "").trim().toUpperCase();
+  return COMPLETED_STATUSES.has(normalized);
+};
+
+export const isPausedOrCancelledStatus = (status?: string): boolean => {
+  const normalized = (status ?? "").trim().toUpperCase();
+  return PAUSED_OR_CANCELLED_STATUSES.has(normalized);
 };
 
 export const getProjectStatusLabel = (status?: string): string => {

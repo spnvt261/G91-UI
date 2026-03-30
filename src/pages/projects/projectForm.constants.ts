@@ -4,7 +4,8 @@ export const PROJECT_STATUS_OPTIONS = [
   { label: "Tạm dừng", value: "ON_HOLD" },
   { label: "Hoàn thành", value: "DONE" },
   { label: "Đang hoạt động", value: "ACTIVE" },
-  { label: "Hoàn thành", value: "COMPLETED" },
+  { label: "Hoàn thành (đóng sổ)", value: "COMPLETED" },
+  { label: "Đã đóng", value: "CLOSED" },
   { label: "Đã hủy", value: "CANCELLED" },
 ] as const;
 

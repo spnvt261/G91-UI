@@ -1,6 +1,8 @@
-﻿import { Button, Card, Col, Input, Modal, Row, Select, Space, Table, Typography } from "antd";
+import { MoreOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
+import { Alert, Button, Card, Col, Dropdown, Empty, Input, Row, Select, Space, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useEffect, useMemo, useState } from "react";
+import type { MenuProps } from "antd";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { canPerformAction } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
@@ -12,208 +14,333 @@ import { getErrorMessage } from "../shared/page.utils";
 import ProjectPageLayout from "./components/ProjectPageLayout";
 import ProjectProgressBar from "./components/ProjectProgressBar";
 import ProjectStatusTag from "./components/ProjectStatusTag";
-import { displayText } from "./projectPresentation";
+import ProjectSummaryCards from "./components/ProjectSummaryCards";
+import { PROJECT_STATUS_OPTIONS } from "./projectForm.constants";
+import { displayText, formatProjectDate, isCompletedStatus, isInProgressStatus, isPausedOrCancelledStatus } from "./projectPresentation";
 
-const PAGE_SIZE = 8;
+interface ProjectListQueryState {
+  page: number;
+  pageSize: number;
+  keyword?: string;
+  status?: string;
+}
 
-const STATUS_OPTIONS = [
-  { label: "Mới", value: "NEW" },
-  { label: "Đang thực hiện", value: "IN_PROGRESS" },
-  { label: "Tạm dừng", value: "ON_HOLD" },
-  { label: "Hoàn thành", value: "DONE" },
-  { label: "Đang hoạt động", value: "ACTIVE" },
-  { label: "Đã hủy", value: "CANCELLED" },
-];
+interface ProjectSummaryState {
+  totalProjects: number;
+  inProgressProjects: number;
+  completedProjects: number;
+  pausedOrCancelledProjects: number;
+}
 
 const ProjectListPage = () => {
   const navigate = useNavigate();
   const role = getStoredUserRole();
   const canCreateProject = canPerformAction(role, "project.create");
   const canDeleteProject = canPerformAction(role, "project.delete");
-
-  const [items, setItems] = useState<ProjectModel[]>([]);
-  const [page, setPage] = useState(1);
-  const [keyword, setKeyword] = useState("");
-  const [status, setStatus] = useState<string | undefined>(undefined);
-  const [loading, setLoading] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [deletingItem, setDeletingItem] = useState<ProjectModel | null>(null);
+  const canUpdateProject = canPerformAction(role, "project.update");
+  const canAssignWarehouse = canPerformAction(role, "project.assign-warehouse");
+  const canUpdateProgress = canPerformAction(role, "project.progress.update");
   const { notify } = useNotify();
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const result = await projectService.getList({
-          keyword: keyword.trim() || undefined,
-          status: status as ProjectModel["status"] | undefined,
-        });
-        setItems(result);
-      } catch (err) {
-        notify(getErrorMessage(err, "Không thể tải danh sách dự án"), "error");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const [query, setQuery] = useState<ProjectListQueryState>({ page: 1, pageSize: 10 });
+  const [searchText, setSearchText] = useState("");
+  const [items, setItems] = useState<ProjectModel[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [listError, setListError] = useState<string | null>(null);
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
 
-    void load();
-  }, [keyword, notify, status]);
+  const [summary, setSummary] = useState<ProjectSummaryState>({
+    totalProjects: 0,
+    inProgressProjects: 0,
+    completedProjects: 0,
+    pausedOrCancelledProjects: 0,
+  });
+  const [summaryLoading, setSummaryLoading] = useState(false);
+
+  const loadProjects = useCallback(async () => {
+    try {
+      setLoading(true);
+      setListError(null);
+      const result = await projectService.getList({
+        keyword: query.keyword,
+        status: query.status as ProjectModel["status"] | undefined,
+      });
+      setItems(result);
+    } catch (error) {
+      const message = getErrorMessage(error, "Không thể tải danh sách dự án.");
+      setListError(message);
+      notify(message, "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [notify, query.keyword, query.status]);
+
+  const loadSummary = useCallback(async () => {
+    try {
+      setSummaryLoading(true);
+      const allProjects = await projectService.getList({ page: 1, pageSize: 300 });
+
+      setSummary({
+        totalProjects: allProjects.length,
+        inProgressProjects: allProjects.filter((project) => isInProgressStatus(project.status)).length,
+        completedProjects: allProjects.filter((project) => isCompletedStatus(project.status)).length,
+        pausedOrCancelledProjects: allProjects.filter((project) => isPausedOrCancelledStatus(project.status)).length,
+      });
+    } catch (error) {
+      notify(getErrorMessage(error, "Không thể tải số liệu tổng quan dự án."), "warning");
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, [notify]);
+
+  useEffect(() => {
+    void loadProjects();
+  }, [loadProjects]);
+
+  useEffect(() => {
+    void loadSummary();
+  }, [loadSummary]);
+
+  const handleDeleteProject = useCallback(
+    async (project: ProjectModel) => {
+      try {
+        setDeletingProjectId(project.id);
+        await projectService.softDelete(project.id, "Lưu trữ từ danh sách dự án");
+        notify("Đã chuyển dự án sang trạng thái lưu trữ.", "success");
+        await Promise.all([loadProjects(), loadSummary()]);
+      } catch (error) {
+        notify(getErrorMessage(error, "Không thể lưu trữ dự án."), "error");
+      } finally {
+        setDeletingProjectId(null);
+      }
+    },
+    [loadProjects, loadSummary, notify],
+  );
 
   const columns = useMemo<ColumnsType<ProjectModel>>(
     () => [
       {
-        title: "Mã dự án",
-        key: "code",
-        render: (_, row) => displayText(row.projectCode ?? row.code),
-      },
-      {
-        title: "Tên dự án",
-        dataIndex: "name",
-        key: "name",
-        render: (value: string) => displayText(value),
-      },
-      {
-        title: "Khách hàng",
-        key: "customer",
-        render: (_, row) => displayText(row.customerName ?? row.customerId),
+        title: "Dự án",
+        key: "project",
+        render: (_, row) => (
+          <Space direction="vertical" size={2}>
+            <Typography.Text strong>{displayText(row.name)}</Typography.Text>
+            <Typography.Text type="secondary">
+              Mã: {displayText(row.projectCode ?? row.code)} • Khách hàng: {displayText(row.customerName ?? row.customerId)}
+            </Typography.Text>
+            <Typography.Text type="secondary">
+              Kho chính: {displayText(row.primaryWarehouseId ?? row.warehouseId)}
+            </Typography.Text>
+          </Space>
+        ),
       },
       {
         title: "Trạng thái",
         dataIndex: "status",
         key: "status",
-        width: 160,
+        width: 180,
         render: (value: string | undefined) => <ProjectStatusTag status={value} />,
       },
       {
-        title: "Tiến độ",
+        title: "Tiến độ thực hiện",
         key: "progress",
-        width: 220,
-        render: (_, row) => <ProjectProgressBar value={row.progressPercent ?? row.progress} size="small" />,
+        width: 260,
+        render: (_, row) => <ProjectProgressBar value={row.progressPercent ?? row.progress} size="small" showInfo={false} showMeta />,
+      },
+      {
+        title: "Cập nhật",
+        key: "updatedAt",
+        width: 150,
+        render: (_, row) => formatProjectDate(row.updatedAt),
       },
       {
         title: "Thao tác",
         key: "actions",
-        width: 190,
-        render: (_, row) => (
-          <Space>
-            <Button size="small" onClick={() => navigate(ROUTE_URL.PROJECT_DETAIL.replace(":id", row.id))}>
-              Xem
-            </Button>
-            {canDeleteProject ? (
-              <Button size="small" danger onClick={() => setDeletingItem(row)}>
-                Xóa
+        width: 170,
+        render: (_, row) => {
+          const menuItems: MenuProps["items"] = [];
+
+          if (canUpdateProject) {
+            menuItems.push({
+              key: "edit",
+              label: "Chỉnh sửa dự án",
+              onClick: () => navigate(ROUTE_URL.PROJECT_EDIT.replace(":id", row.id)),
+            });
+          }
+
+          if (canAssignWarehouse) {
+            menuItems.push({
+              key: "assign-warehouse",
+              label: "Gán kho",
+              onClick: () => navigate(ROUTE_URL.PROJECT_ASSIGN_WAREHOUSE.replace(":id", row.id)),
+            });
+          }
+
+          if (canUpdateProgress) {
+            menuItems.push({
+              key: "update-progress",
+              label: "Cập nhật tiến độ",
+              onClick: () => navigate(ROUTE_URL.PROJECT_PROGRESS_UPDATE.replace(":id", row.id)),
+            });
+          }
+
+          if (canDeleteProject) {
+            if (menuItems.length > 0) {
+              menuItems.push({ type: "divider" });
+            }
+            menuItems.push({
+              key: "delete",
+              label: "Lưu trữ dự án",
+              danger: true,
+              onClick: () => void handleDeleteProject(row),
+            });
+          }
+
+          return (
+            <Space>
+              <Button type="link" onClick={() => navigate(ROUTE_URL.PROJECT_DETAIL.replace(":id", row.id))}>
+                Xem chi tiết
               </Button>
-            ) : null}
-          </Space>
-        ),
+              {menuItems.length > 0 ? (
+                <Dropdown menu={{ items: menuItems }} trigger={["click"]}>
+                  <Button icon={<MoreOutlined />} loading={deletingProjectId === row.id} />
+                </Dropdown>
+              ) : null}
+            </Space>
+          );
+        },
       },
     ],
-    [canDeleteProject, navigate],
+    [
+      canAssignWarehouse,
+      canDeleteProject,
+      canUpdateProgress,
+      canUpdateProject,
+      deletingProjectId,
+      handleDeleteProject,
+      navigate,
+    ],
   );
 
-  const handleDeleteProject = async () => {
-    if (!deletingItem) {
-      return;
-    }
-
-    try {
-      setDeleting(true);
-      await projectService.softDelete(deletingItem.id, "Lưu trữ từ danh sách dự án");
-      setItems((previous) => previous.filter((item) => item.id !== deletingItem.id));
-      notify("Đã xóa dự án thành công.", "success");
-      setDeletingItem(null);
-    } catch (err) {
-      notify(getErrorMessage(err, "Không thể xóa dự án"), "error");
-    } finally {
-      setDeleting(false);
-    }
+  const resetFilters = () => {
+    setSearchText("");
+    setQuery((previous) => ({ ...previous, page: 1, keyword: undefined, status: undefined }));
   };
 
   return (
-    <>
-      <ProjectPageLayout
-        title="Quản lý dự án"
-        subtitle="Theo dõi vòng đời dự án và thao tác nhanh trên cùng một màn hình."
-        breadcrumbItems={[
-          { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Trang chủ</span> },
-          { title: "Dự án" },
-        ]}
-        actions={
-          canCreateProject ? (
-            <Button type="primary" onClick={() => navigate(ROUTE_URL.PROJECT_CREATE)}>
-              Tạo dự án
-            </Button>
-          ) : undefined
-        }
-      >
-        <Card>
-          <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
-            <Col xs={24} md={16}>
+    <ProjectPageLayout
+      title="Trung tâm dự án"
+      subtitle="Theo dõi toàn bộ dự án, nắm nhanh tiến độ và xử lý tác vụ điều phối ngay trên một màn hình."
+      breadcrumbItems={[
+        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Trang chủ</span> },
+        { title: "Dự án" },
+      ]}
+      actions={
+        canCreateProject ? (
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(ROUTE_URL.PROJECT_CREATE)}>
+            Tạo dự án
+          </Button>
+        ) : undefined
+      }
+    >
+      <ProjectSummaryCards
+        totalProjects={summary.totalProjects}
+        inProgressProjects={summary.inProgressProjects}
+        completedProjects={summary.completedProjects}
+        pausedOrCancelledProjects={summary.pausedOrCancelledProjects}
+        loading={summaryLoading}
+      />
+
+      <Card bordered={false} style={{ border: "1px solid #e6edf5" }}>
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Row gutter={[12, 12]} align="middle">
+            <Col xs={24} lg={12}>
               <Input.Search
+                placeholder="Tìm theo tên dự án, mã dự án, khách hàng"
                 allowClear
-                placeholder="Tìm theo tên dự án, mã dự án, khách hàng..."
-                value={keyword}
-                onChange={(event) => {
-                  setKeyword(event.target.value);
-                  setPage(1);
-                }}
+                enterButton="Tìm kiếm"
+                prefix={<SearchOutlined />}
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+                onSearch={(value) =>
+                  setQuery((previous) => ({
+                    ...previous,
+                    page: 1,
+                    keyword: value.trim() || undefined,
+                  }))
+                }
               />
             </Col>
-            <Col xs={24} md={8}>
+            <Col xs={24} sm={12} lg={7}>
               <Select
                 className="w-full"
                 allowClear
                 placeholder="Lọc theo trạng thái"
-                value={status}
-                options={STATUS_OPTIONS}
-                onChange={(value: string | undefined) => {
-                  setStatus(value);
-                  setPage(1);
-                }}
+                value={query.status}
+                options={PROJECT_STATUS_OPTIONS.map((option) => ({ ...option }))}
+                onChange={(value) =>
+                  setQuery((previous) => ({
+                    ...previous,
+                    page: 1,
+                    status: value,
+                  }))
+                }
               />
+            </Col>
+            <Col xs={24} sm={12} lg={5}>
+              <Button className="w-full" onClick={resetFilters}>
+                Xóa bộ lọc
+              </Button>
             </Col>
           </Row>
 
+          {listError ? (
+            <Alert
+              type="error"
+              showIcon
+              message="Không thể tải danh sách dự án."
+              description={
+                <Space direction="vertical" size={4}>
+                  <Typography.Text>{listError}</Typography.Text>
+                  <Button size="small" onClick={() => void loadProjects()}>
+                    Tải lại
+                  </Button>
+                </Space>
+              }
+            />
+          ) : null}
+
           <Table<ProjectModel>
             rowKey="id"
-            loading={loading}
             columns={columns}
             dataSource={items}
-            scroll={{ x: 900 }}
-            locale={{ emptyText: "Không có dữ liệu dự án." }}
-            pagination={{
-              current: page,
-              pageSize: PAGE_SIZE,
-              total: items.length,
-              showSizeChanger: false,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} dự án`,
-              onChange: (nextPage) => setPage(nextPage),
+            loading={{ spinning: loading, tip: "Đang tải danh sách dự án..." }}
+            locale={{
+              emptyText: (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="Chưa có dự án phù hợp với bộ lọc hiện tại."
+                />
+              ),
             }}
+            pagination={{
+              current: query.page,
+              pageSize: query.pageSize,
+              total: items.length,
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} trên ${total} dự án`,
+              onChange: (page, pageSize) =>
+                setQuery((previous) => ({
+                  ...previous,
+                  page,
+                  pageSize,
+                })),
+            }}
+            scroll={{ x: 1100 }}
           />
-        </Card>
-      </ProjectPageLayout>
-
-      <Modal
-        title="Xóa dự án"
-        open={Boolean(deletingItem)}
-        onCancel={() => (deleting ? undefined : setDeletingItem(null))}
-        closable={!deleting}
-        maskClosable={!deleting}
-        footer={[
-          <Button key="cancel" onClick={() => setDeletingItem(null)} disabled={deleting}>
-            Hủy
-          </Button>,
-          <Button key="confirm" type="primary" danger loading={deleting} onClick={handleDeleteProject}>
-            Xác nhận
-          </Button>,
-        ]}
-      >
-        <Typography.Paragraph style={{ marginBottom: 0 }}>
-          Hành động này sẽ chuyển dự án sang trạng thái lưu trữ vì backend chưa hỗ trợ API xóa cứng.
-        </Typography.Paragraph>
-        {deletingItem ? <Typography.Text strong>{deletingItem.name}</Typography.Text> : null}
-      </Modal>
-    </>
+        </Space>
+      </Card>
+    </ProjectPageLayout>
   );
 };
 

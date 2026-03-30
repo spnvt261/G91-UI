@@ -1,5 +1,7 @@
-import { Breadcrumb, type BreadcrumbProps, Flex, Space, Typography } from "antd";
+import { type BreadcrumbProps, Space } from "antd";
 import type { ReactNode } from "react";
+import NoResizeScreenTemplate from "../../../components/templates/NoResizeScreenTemplate";
+import ProjectPageHeader from "./ProjectPageHeader";
 
 type ProjectPageLayoutProps = {
   title: ReactNode;
@@ -11,27 +13,20 @@ type ProjectPageLayoutProps = {
 
 const ProjectPageLayout = ({ title, subtitle, breadcrumbItems, actions, children }: ProjectPageLayoutProps) => {
   return (
-    <div className="p-4 md:p-6">
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
-        <Breadcrumb items={breadcrumbItems} />
-        <Flex justify="space-between" align="flex-start" gap={12} wrap="wrap">
-          <Space direction="vertical" size={2}>
-            <Typography.Title level={3} style={{ margin: 0 }}>
-              {title}
-            </Typography.Title>
-            {subtitle ? <Typography.Text type="secondary">{subtitle}</Typography.Text> : null}
-          </Space>
-          {actions ? (
-            <div style={{ maxWidth: "100%" }}>
-              <Flex gap={8} wrap="wrap" justify="flex-end">
-                {actions}
-              </Flex>
-            </div>
-          ) : null}
-        </Flex>
-        {children}
-      </Space>
-    </div>
+    <NoResizeScreenTemplate
+      loading={false}
+      bodyClassName="px-0 pb-0 pt-4"
+      header={
+        <div className="">
+          <ProjectPageHeader title={title} subtitle={subtitle} breadcrumbItems={breadcrumbItems} actions={actions} />
+        </div>
+      }
+      body={
+        <Space direction="vertical" size={18} style={{ width: "100%" }}>
+          {children}
+        </Space>
+      }
+    />
   );
 };
 

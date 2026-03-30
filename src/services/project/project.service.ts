@@ -41,6 +41,7 @@ const toCreateRequest = (request: ProjectCreateRequest) => {
   const budget = request.budget ?? 1;
 
   return {
+    code: request.code,
     customerId: request.customerId,
     name: request.name,
     location: request.location ?? "TBD",
@@ -59,6 +60,8 @@ const toCreateRequest = (request: ProjectCreateRequest) => {
 };
 
 const toUpdateRequest = (request: ProjectUpdateRequest) => ({
+  code: request.code,
+  customerId: request.customerId,
   name: request.name,
   location: request.location,
   scope: request.scope,
