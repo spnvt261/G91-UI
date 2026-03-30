@@ -1,7 +1,6 @@
-﻿import { useEffect, useState } from "react";
+import { Alert, Button, Card, Descriptions, Empty, Space, Statistic, Typography } from "antd";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import BaseCard from "../../components/cards/BaseCard";
-import CustomButton from "../../components/customButton/CustomButton";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
@@ -9,69 +8,100 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type { ContractModel } from "../../models/contract/contract.model";
 import { contractService } from "../../services/contract/contract.service";
-import { getErrorMessage, toCurrency } from "../shared/page.utils";
+import { getErrorMessage } from "../shared/page.utils";
+import ApprovalDecisionModal from "../contracts/components/ApprovalDecisionModal";
+import ContractActionBar from "../contracts/components/ContractActionBar";
+import ContractInfoCard from "../contracts/components/ContractInfoCard";
+import ContractItemsTable from "../contracts/components/ContractItemsTable";
+import ContractStatusTag from "../contracts/components/ContractStatusTag";
+import { formatContractCurrency, formatContractDateTime, getContractDisplayNumber } from "../contracts/contract.ui";
+
+type ApprovalDecision = "APPROVE" | "REJECT" | "REQUEST_MODIFICATION";
 
 const ContractApprovalDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { notify } = useNotify();
 
   const [contract, setContract] = useState<ContractModel | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const [actionLoading, setActionLoading] = useState(false);
-  const { notify } = useNotify();
+  const [decisionModalOpen, setDecisionModalOpen] = useState(false);
+  const [currentDecision, setCurrentDecision] = useState<ApprovalDecision>("APPROVE");
 
-  useEffect(() => {
-    const load = async () => {
-      if (!id) {
-        return;
-      }
+  const loadContract = useCallback(async () => {
+    if (!id) {
+      return;
+    }
 
-      try {
-        setLoading(true);
-        const detail = await contractService.getDetail(id);
-        setContract(detail);
-      } catch (err) {
-        notify(getErrorMessage(err, "Không thể load contract approval detail"), "error");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void load();
+    try {
+      setLoading(true);
+      setLoadError(null);
+      const detail = await contractService.getDetail(id);
+      setContract(detail);
+    } catch (error) {
+      const message = getErrorMessage(error, "Không thể tải chi tiết hợp đồng cần phê duyệt.");
+      setLoadError(message);
+      notify(message, "error");
+    } finally {
+      setLoading(false);
+    }
   }, [id, notify]);
 
-  const handleDecision = async (decision: "APPROVE" | "REJECT" | "REQUEST_MODIFICATION") => {
+  useEffect(() => {
+    void loadContract();
+  }, [loadContract]);
+
+  const handleDecisionSubmit = async (comment: string) => {
     if (!id) {
       return;
     }
 
     try {
       setActionLoading(true);
-      if (decision === "APPROVE" || decision === "REQUEST_MODIFICATION") {
-        if (decision === "APPROVE") {
-          await contractService.approve(id, { comment: `Owner decision: ${decision}` });
-        } else {
-          await contractService.requestModification(id, { comment: "Requested modification by owner" });
-        }
+
+      if (currentDecision === "APPROVE") {
+        await contractService.approve(id, {
+          comment: comment || "Phê duyệt từ màn hình owner.",
+        });
+        notify("Phê duyệt hợp đồng thành công.", "success");
+      } else if (currentDecision === "REJECT") {
+        await contractService.reject(id, {
+          comment,
+        });
+        notify("Đã từ chối hợp đồng.", "success");
       } else {
-        await contractService.reject(id, { comment: "Rejected by owner" });
+        await contractService.requestModification(id, {
+          comment,
+        });
+        notify("Đã gửi yêu cầu chỉnh sửa hợp đồng.", "success");
       }
+
+      setDecisionModalOpen(false);
       navigate(ROUTE_URL.CONTRACT_APPROVAL_LIST);
-    } catch (err) {
-      notify(getErrorMessage(err, "Không thể submit contract decision"), "error");
+    } catch (error) {
+      notify(getErrorMessage(error, "Không thể gửi quyết định phê duyệt."), "error");
     } finally {
       setActionLoading(false);
     }
   };
 
+  const contractNumber = contract ? getContractDisplayNumber(contract) : "Chi tiết phê duyệt hợp đồng";
+
   return (
     <NoResizeScreenTemplate
-      loading={loading}
-      loadingText="Đang tải hợp đồng..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Phê duyệt hợp đồng"
+          title={
+            <Space size={10}>
+              <span>{contractNumber}</span>
+              {contract ? <ContractStatusTag status={contract.status} /> : null}
+            </Space>
+          }
+          subtitle="Màn hình hỗ trợ owner ra quyết định phê duyệt dựa trên đầy đủ thông tin hợp đồng và dữ liệu hàng hóa."
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
@@ -81,49 +111,177 @@ const ContractApprovalDetailPage = () => {
               ]}
             />
           }
+          actions={
+            <Button onClick={() => navigate(ROUTE_URL.CONTRACT_APPROVAL_LIST)}>
+              Quay lại danh sách chờ duyệt
+            </Button>
+          }
         />
       }
       body={
-        <BaseCard>
-          {contract ? (
-            <div className="space-y-4">
-              <p>
-                <span className="font-semibold">Số hợp đồng:</span> {contract.id}
-              </p>
-              <p>
-                <span className="font-semibold">Khách hàng:</span> {contract.customerId}
-              </p>
-              <p>
-                <span className="font-semibold">Trạng thái:</span> {contract.status}
-              </p>
-              <p>
-                <span className="font-semibold">Tổng tiền:</span> {toCurrency(contract.totalAmount)}
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <CustomButton label="Phê duyệt" onClick={() => handleDecision("APPROVE")} disabled={actionLoading} />
-                <CustomButton
-                  label="Reject"
-                  className="bg-red-500 hover:bg-red-600"
-                  onClick={() => handleDecision("REJECT")}
-                  disabled={actionLoading}
-                />
-                <CustomButton
-                  label="Request Modification"
-                  className="bg-amber-500 hover:bg-amber-600"
-                  onClick={() => handleDecision("REQUEST_MODIFICATION")}
-                  disabled={actionLoading}
-                />
-              </div>
-            </div>
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          {loadError ? (
+            <Alert
+              type="error"
+              showIcon
+              message="Không thể tải dữ liệu hợp đồng"
+              description={loadError}
+              action={
+                <Button size="small" onClick={() => void loadContract()}>
+                  Thử lại
+                </Button>
+              }
+            />
+          ) : null}
+
+          {!loading && !contract ? (
+            <Card bordered={false} className="shadow-sm">
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="Không tìm thấy dữ liệu hợp đồng để phê duyệt."
+              />
+            </Card>
           ) : (
-            <p className="text-sm text-slate-500">Không có dữ liệu hợp đồng.</p>
+            <>
+              <Card bordered={false} className="shadow-sm" loading={loading}>
+                <Space direction="vertical" size={14} style={{ width: "100%" }}>
+                  <Typography.Title level={5} className="!mb-0">
+                    1. Tổng quan hợp đồng
+                  </Typography.Title>
+                  <Space size={24} wrap>
+                    <Statistic
+                      title="Tổng giá trị"
+                      value={contract?.totalAmount ?? 0}
+                      formatter={(value) => formatContractCurrency(Number(value))}
+                    />
+                    <Statistic title="Số dòng hàng" value={contract?.items.length ?? 0} />
+                    <Statistic title="Khởi tạo lúc" value={formatContractDateTime(contract?.createdAt)} />
+                  </Space>
+                  <Descriptions
+                    size="small"
+                    column={{ xs: 1, sm: 1, md: 2 }}
+                    items={[
+                      {
+                        key: "customer",
+                        label: "Khách hàng",
+                        children: contract?.customerName || contract?.customerId || "-",
+                      },
+                      {
+                        key: "quotation",
+                        label: "Báo giá liên kết",
+                        children: contract?.quotationId || "-",
+                      },
+                    ]}
+                  />
+                </Space>
+              </Card>
+
+              <ContractInfoCard
+                title="2. Điều khoản chính"
+                loading={loading}
+                items={[
+                  {
+                    key: "paymentTerms",
+                    label: "Điều khoản thanh toán",
+                    span: 2,
+                    children: contract?.paymentTerms || "Chưa cập nhật.",
+                  },
+                  {
+                    key: "deliveryAddress",
+                    label: "Địa chỉ giao hàng",
+                    span: 2,
+                    children: contract?.deliveryAddress || "Chưa cập nhật.",
+                  },
+                  {
+                    key: "deliveryTerms",
+                    label: "Điều khoản giao hàng",
+                    span: 2,
+                    children: contract?.deliveryTerms || "Chưa cập nhật.",
+                  },
+                ]}
+              />
+
+              <Card bordered={false} className="shadow-sm" loading={loading}>
+                <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                  <Typography.Title level={5} className="!mb-0">
+                    3. Danh sách sản phẩm / giá trị
+                  </Typography.Title>
+                  <ContractItemsTable items={contract?.items ?? []} />
+                </Space>
+              </Card>
+
+              <Card bordered={false} className="shadow-sm" loading={loading}>
+                <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                  <Typography.Title level={5} className="!mb-0">
+                    4. Ghi chú phê duyệt
+                  </Typography.Title>
+                  <Alert
+                    type="info"
+                    showIcon
+                    message="Vui lòng để lại nhận xét rõ ràng khi từ chối hoặc yêu cầu chỉnh sửa."
+                    description="Thông tin này sẽ giúp bộ phận lập hợp đồng xử lý nhanh và đúng yêu cầu."
+                  />
+                  <Typography.Text type="secondary">
+                    Ghi chú hiện tại của hợp đồng: {contract?.note || "Chưa có ghi chú."}
+                  </Typography.Text>
+                </Space>
+              </Card>
+
+              <ContractActionBar justify="space-between">
+                <Button onClick={() => navigate(ROUTE_URL.CONTRACT_APPROVAL_LIST)}>
+                  Quay lại
+                </Button>
+                <Space wrap>
+                  <Button
+                    danger
+                    onClick={() => {
+                      setCurrentDecision("REJECT");
+                      setDecisionModalOpen(true);
+                    }}
+                    disabled={!contract || actionLoading}
+                  >
+                    Từ chối
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setCurrentDecision("REQUEST_MODIFICATION");
+                      setDecisionModalOpen(true);
+                    }}
+                    disabled={!contract || actionLoading}
+                  >
+                    Yêu cầu chỉnh sửa
+                  </Button>
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      setCurrentDecision("APPROVE");
+                      setDecisionModalOpen(true);
+                    }}
+                    disabled={!contract || actionLoading}
+                  >
+                    Phê duyệt
+                  </Button>
+                </Space>
+              </ContractActionBar>
+            </>
           )}
-        </BaseCard>
+
+          <ApprovalDecisionModal
+            open={decisionModalOpen}
+            decision={currentDecision}
+            loading={actionLoading}
+            contractNumber={contract ? getContractDisplayNumber(contract) : undefined}
+            onCancel={() => {
+              if (!actionLoading) {
+                setDecisionModalOpen(false);
+              }
+            }}
+            onSubmit={(comment) => void handleDecisionSubmit(comment)}
+          />
+        </Space>
       }
     />
   );
 };
 
 export default ContractApprovalDetailPage;
-
-

@@ -1,107 +1,120 @@
-﻿import { useEffect, useState } from "react";
+import { Alert, Button, Card, Col, DatePicker, Form, Input, InputNumber, Row, Space, Switch, Typography } from "antd";
+import type { Dayjs } from "dayjs";
+import dayjs from "dayjs";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import FormSectionCard from "../../components/forms/FormSectionCard";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomTextField from "../../components/customTextField/CustomTextField";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
-import type { ContractUpdateRequest } from "../../models/contract/contract.model";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
+import type { ContractModel, ContractUpdateRequest } from "../../models/contract/contract.model";
 import { contractService } from "../../services/contract/contract.service";
-import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage } from "../shared/page.utils";
+import ContractActionBar from "./components/ContractActionBar";
+import ContractInfoCard from "./components/ContractInfoCard";
+import ContractStatusTag from "./components/ContractStatusTag";
+import { formatContractCurrency, formatContractDate, getContractDisplayNumber } from "./contract.ui";
+
+interface ContractEditFormValues {
+  paymentTerms: string;
+  deliveryAddress: string;
+  deliveryTerms?: string;
+  expectedDeliveryDate?: Dayjs;
+  confidential: boolean;
+  quantity: number;
+  unitPrice: number;
+  note?: string;
+  changeReason: string;
+}
 
 const ContractEditPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { notify } = useNotify();
+  const [form] = Form.useForm<ContractEditFormValues>();
 
-  const [quotationId, setQuotationId] = useState("");
-  const [customerId, setCustomerId] = useState("");
-  const [productId, setProductId] = useState("");
-  const [quantity, setQuantity] = useState("1");
-  const [unitPrice, setUnitPrice] = useState("0");
-  const [paymentTerms, setPaymentTerms] = useState("");
-  const [deliveryAddress, setDeliveryAddress] = useState("");
-  const [deliveryTerms, setDeliveryTerms] = useState("");
-  const [note, setNote] = useState("");
-  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState("");
-  const [confidential, setConfidential] = useState("false");
-  const [status, setStatus] = useState("DRAFT");
-  const [changeReason, setChangeReason] = useState("Updated from UI");
+  const [contract, setContract] = useState<ContractModel | null>(null);
   const [pageLoading, setPageLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const isAccountant = getStoredUserRole() === "ACCOUNTANT";
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      if (!id) {
-        return;
-      }
+  const firstItem = contract?.items[0];
+  const hasMultipleItems = (contract?.items.length ?? 0) > 1;
 
-      try {
-        setPageLoading(true);
-        const detail = await contractService.getDetail(id);
-        setQuotationId(detail.quotationId);
-        setCustomerId(detail.customerId);
-        setProductId(detail.items[0]?.productId ?? "");
-        setQuantity(String(detail.items[0]?.quantity ?? 1));
-        setUnitPrice(String(detail.items[0]?.unitPrice ?? 0));
-        setPaymentTerms(detail.paymentTerms ?? "");
-        setDeliveryAddress(detail.deliveryAddress ?? "");
-        setDeliveryTerms(detail.deliveryTerms ?? "");
-        setNote(detail.note ?? "");
-        setExpectedDeliveryDate(detail.expectedDeliveryDate?.slice(0, 10) ?? "");
-        setConfidential(String(Boolean(detail.confidential)));
-        setStatus(detail.status);
-      } catch (err) {
-        notify(getErrorMessage(err, "Không thể load contract for editing"), "error");
-      } finally {
-        setPageLoading(false);
-      }
-    };
-
-    void load();
-  }, [id, notify]);
-
-  const handleSave = async () => {
+  const loadContract = useCallback(async () => {
     if (!id) {
       return;
     }
 
-    const normalizedQuotationId = quotationId.trim();
-    if (!normalizedQuotationId) {
-      notify("Quotation ID is required.", "error");
+    try {
+      setPageLoading(true);
+      setLoadError(null);
+      const detail = await contractService.getDetail(id);
+      setContract(detail);
+
+      form.setFieldsValue({
+        paymentTerms: detail.paymentTerms ?? "",
+        deliveryAddress: detail.deliveryAddress ?? "",
+        deliveryTerms: detail.deliveryTerms ?? "",
+        expectedDeliveryDate: detail.expectedDeliveryDate ? dayjs(detail.expectedDeliveryDate) : undefined,
+        confidential: Boolean(detail.confidential),
+        quantity: detail.items[0]?.quantity ?? 1,
+        unitPrice: detail.items[0]?.unitPrice ?? 0,
+        note: detail.note ?? "",
+        changeReason: "Cập nhật điều khoản hợp đồng từ màn hình chỉnh sửa",
+      });
+    } catch (error) {
+      const message = getErrorMessage(error, "Không thể tải dữ liệu hợp đồng để chỉnh sửa.");
+      setLoadError(message);
+      notify(message, "error");
+    } finally {
+      setPageLoading(false);
+    }
+  }, [form, id, notify]);
+
+  useEffect(() => {
+    void loadContract();
+  }, [loadContract]);
+
+  const handleSave = async (values: ContractEditFormValues) => {
+    if (!id || !contract) {
       return;
     }
 
+    if (!contract.quotationId.trim()) {
+      notify("Không thể lưu vì hợp đồng thiếu thông tin báo giá tham chiếu.", "error");
+      return;
+    }
+
+    const payload: ContractUpdateRequest = {
+      quotationId: contract.quotationId.trim(),
+      customerId: contract.customerId,
+      paymentTerms: values.paymentTerms.trim(),
+      deliveryAddress: values.deliveryAddress.trim(),
+      deliveryTerms: values.deliveryTerms?.trim() || undefined,
+      note: values.note?.trim() || undefined,
+      expectedDeliveryDate: values.expectedDeliveryDate ? values.expectedDeliveryDate.format("YYYY-MM-DD") : undefined,
+      confidential: values.confidential,
+      changeReason: values.changeReason.trim(),
+      items: firstItem
+        ? [
+          {
+            productId: firstItem.productId,
+            quantity: Number(values.quantity),
+            unitPrice: Number(values.unitPrice),
+          },
+        ]
+        : undefined,
+    };
+
     try {
       setSaving(true);
-      const payload: ContractUpdateRequest = {
-        quotationId: normalizedQuotationId,
-        customerId,
-        paymentTerms: paymentTerms.trim(),
-        deliveryAddress: deliveryAddress.trim(),
-        deliveryTerms: deliveryTerms.trim() || undefined,
-        note: note.trim() || undefined,
-        expectedDeliveryDate: expectedDeliveryDate || undefined,
-        confidential: confidential.trim().toLowerCase() === "true",
-        changeReason: changeReason.trim() || "Updated from UI",
-        items: [
-          {
-            productId,
-            quantity: Number(quantity),
-            unitPrice: Number(unitPrice),
-          },
-        ],
-      };
-
       await contractService.update(id, payload);
+      notify("Đã lưu thay đổi hợp đồng thành công.", "success");
       navigate(ROUTE_URL.CONTRACT_DETAIL.replace(":id", id));
-    } catch (err) {
-      notify(getErrorMessage(err, "Không thể update contract"), "error");
+    } catch (error) {
+      notify(getErrorMessage(error, "Không thể lưu thay đổi hợp đồng."), "error");
     } finally {
       setSaving(false);
     }
@@ -109,12 +122,11 @@ const ContractEditPage = () => {
 
   return (
     <NoResizeScreenTemplate
-      loading={pageLoading}
-      loadingText="Đang tải thông tin hợp đồng..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
           title="Chỉnh sửa hợp đồng"
+          subtitle="Chỉ các trường nghiệp vụ được hỗ trợ mới có thể chỉnh sửa. Thông tin tham chiếu bên dưới là dạng chỉ đọc."
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
@@ -127,40 +139,224 @@ const ContractEditPage = () => {
         />
       }
       body={
-        <div className="space-y-4">
-          <FormSectionCard title="Thông tin hợp đồng">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <CustomTextField title="Quotation ID" value={quotationId} onChange={(event) => setQuotationId(event.target.value)} />
-              <CustomTextField title="Customer ID" value={customerId} onChange={(event) => setCustomerId(event.target.value)} />
-              <CustomTextField title="Product ID" value={productId} onChange={(event) => setProductId(event.target.value)} />
-              <CustomTextField title="Quantity" type="number" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
-              <CustomTextField title="Unit Price" type="number" value={unitPrice} onChange={(event) => setUnitPrice(event.target.value)} />
-              <CustomTextField title="Status" value={status} onChange={(event) => setStatus(event.target.value)} disabled={isAccountant} />
-              <CustomTextField title="Expected Delivery Date" value={expectedDeliveryDate} onChange={(event) => setExpectedDeliveryDate(event.target.value)} />
-              <CustomTextField title="Confidential (true/false)" value={confidential} onChange={(event) => setConfidential(event.target.value)} />
-            </div>
-          </FormSectionCard>
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          {loadError ? (
+            <Alert
+              type="error"
+              showIcon
+              message="Không thể tải dữ liệu hợp đồng"
+              description={loadError}
+              action={
+                <Button size="small" onClick={() => void loadContract()}>
+                  Thử lại
+                </Button>
+              }
+            />
+          ) : null}
 
-          <FormSectionCard title="Điều khoản">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <CustomTextField title="Payment Terms" value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} />
-              <CustomTextField title="Delivery Address" value={deliveryAddress} onChange={(event) => setDeliveryAddress(event.target.value)} />
-              <CustomTextField title="Delivery Terms" value={deliveryTerms} onChange={(event) => setDeliveryTerms(event.target.value)} />
-              <CustomTextField title="Change Reason" value={changeReason} onChange={(event) => setChangeReason(event.target.value)} />
-            </div>
-            <div className="mt-4">
-              <CustomTextField title="Note" value={note} onChange={(event) => setNote(event.target.value)} />
-            </div>
-            <div className="mt-4 flex gap-3">
-              <CustomButton label={saving ? "Đang lưu..." : "Lưu thay đổi"} onClick={handleSave} disabled={saving} />
-              <CustomButton label="Quay lại" className="bg-slate-200 text-slate-700 hover:bg-slate-300" onClick={() => navigate(ROUTE_URL.CONTRACT_LIST)} />
-            </div>
-          </FormSectionCard>
-        </div>
+          <ContractInfoCard
+            title="1. Thông tin tham chiếu"
+            loading={pageLoading}
+            items={[
+              {
+                key: "contractNumber",
+                label: "Số hợp đồng",
+                children: contract ? getContractDisplayNumber(contract) : "-",
+              },
+              {
+                key: "status",
+                label: "Trạng thái hiện tại",
+                children: contract ? <ContractStatusTag status={contract.status} /> : "-",
+              },
+              {
+                key: "quotationId",
+                label: "Báo giá liên kết",
+                children: contract?.quotationId || "-",
+              },
+              {
+                key: "customer",
+                label: "Khách hàng",
+                children: contract?.customerName || contract?.customerId || "-",
+              },
+              {
+                key: "createdAt",
+                label: "Ngày tạo",
+                children: formatContractDate(contract?.createdAt),
+              },
+              {
+                key: "totalAmount",
+                label: "Tổng giá trị",
+                children: <Typography.Text strong>{formatContractCurrency(contract?.totalAmount ?? 0)}</Typography.Text>,
+              },
+            ]}
+          />
+
+          <Alert
+            type="info"
+            showIcon
+            message="Trạng thái hợp đồng được điều khiển bởi quy trình phê duyệt"
+            description="Màn hình này không cho phép chỉnh sửa trực tiếp trạng thái để tránh hiểu nhầm trong luồng xử lý."
+          />
+
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={(values) => void handleSave(values)}
+            initialValues={{
+              confidential: false,
+              quantity: 1,
+              unitPrice: 0,
+            }}
+          >
+            <Card bordered={false} className="shadow-sm" loading={pageLoading}>
+              <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                <Typography.Title level={5} className="!mb-0">
+                  2. Điều khoản hợp đồng
+                </Typography.Title>
+                <Row gutter={[16, 0]}>
+                  <Col xs={24} md={12}>
+                    <Form.Item
+                      label="Điều khoản thanh toán"
+                      name="paymentTerms"
+                      rules={[{ required: true, message: "Vui lòng nhập điều khoản thanh toán." }]}
+                    >
+                      <Input.TextArea rows={3} maxLength={255} showCount />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={12}>
+                    <Form.Item
+                      label="Địa chỉ giao hàng"
+                      name="deliveryAddress"
+                      rules={[{ required: true, message: "Vui lòng nhập địa chỉ giao hàng." }]}
+                    >
+                      <Input.TextArea rows={3} maxLength={500} showCount />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Form.Item label="Điều khoản giao hàng" name="deliveryTerms">
+                  <Input.TextArea rows={2} maxLength={255} showCount />
+                </Form.Item>
+              </Space>
+            </Card>
+
+            <Card bordered={false} className="shadow-sm" loading={pageLoading}>
+              <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                <Typography.Title level={5} className="!mb-0">
+                  3. Giao hàng
+                </Typography.Title>
+                <Row gutter={[16, 0]}>
+                  <Col xs={24} md={12}>
+                    <Form.Item label="Ngày giao dự kiến" name="expectedDeliveryDate">
+                      <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={12}>
+                    <Form.Item label="Đánh dấu bảo mật" name="confidential" valuePropName="checked">
+                      <Switch checkedChildren="Bảo mật" unCheckedChildren="Công khai nội bộ" />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </Space>
+            </Card>
+
+            <Card bordered={false} className="shadow-sm" loading={pageLoading}>
+              <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                <Typography.Title level={5} className="!mb-0">
+                  4. Phạm vi chỉnh sửa dòng hàng
+                </Typography.Title>
+                <Alert
+                  type={hasMultipleItems ? "warning" : "info"}
+                  showIcon
+                  message={
+                    hasMultipleItems
+                      ? "Hiện tại chỉ hỗ trợ chỉnh sửa dòng sản phẩm đầu tiên"
+                      : "Bạn có thể điều chỉnh số lượng và đơn giá cho dòng sản phẩm hiện tại"
+                  }
+                  description={
+                    hasMultipleItems
+                      ? "Các dòng còn lại được giữ nguyên để đảm bảo không thay đổi logic dữ liệu hiện hành."
+                      : "Nếu cần chỉnh sửa toàn bộ danh sách sản phẩm, vui lòng thực hiện theo luồng nghiệp vụ mở rộng."
+                  }
+                />
+
+                {firstItem ? (
+                  <Row gutter={[16, 0]}>
+                    <Col xs={24} md={8}>
+                      <Typography.Text type="secondary">Sản phẩm</Typography.Text>
+                      <Typography.Paragraph className="!mb-0">
+                        {firstItem.productName || firstItem.productCode || firstItem.productId}
+                      </Typography.Paragraph>
+                    </Col>
+                    <Col xs={24} md={8}>
+                      <Form.Item
+                        label="Số lượng"
+                        name="quantity"
+                        rules={[
+                          { required: true, message: "Vui lòng nhập số lượng." },
+                          { type: "number", min: 1, message: "Số lượng phải lớn hơn hoặc bằng 1." },
+                        ]}
+                      >
+                        <InputNumber min={1} style={{ width: "100%" }} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={8}>
+                      <Form.Item
+                        label="Đơn giá"
+                        name="unitPrice"
+                        rules={[
+                          { required: true, message: "Vui lòng nhập đơn giá." },
+                          { type: "number", min: 0, message: "Đơn giá không được âm." },
+                        ]}
+                      >
+                        <InputNumber min={0} style={{ width: "100%" }} />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                ) : (
+                  <Alert
+                    type="warning"
+                    showIcon
+                    message="Hợp đồng chưa có dòng sản phẩm"
+                    description="Hiện tại không có dữ liệu item để chỉnh sửa tại màn hình này."
+                  />
+                )}
+              </Space>
+            </Card>
+
+            <Card bordered={false} className="shadow-sm" loading={pageLoading}>
+              <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                <Typography.Title level={5} className="!mb-0">
+                  5. Ghi chú thay đổi
+                </Typography.Title>
+
+                <Form.Item label="Ghi chú nội bộ" name="note">
+                  <Input.TextArea rows={3} maxLength={1000} showCount />
+                </Form.Item>
+
+                <Form.Item
+                  label="Lý do thay đổi"
+                  name="changeReason"
+                  rules={[{ required: true, message: "Vui lòng nhập lý do thay đổi." }]}
+                >
+                  <Input.TextArea rows={2} maxLength={500} showCount />
+                </Form.Item>
+              </Space>
+            </Card>
+
+            <ContractActionBar justify="space-between">
+              <Button onClick={() => navigate(ROUTE_URL.CONTRACT_DETAIL.replace(":id", id ?? ""))}>
+                Quay lại
+              </Button>
+              <Button type="primary" htmlType="submit" loading={saving} disabled={pageLoading}>
+                Lưu thay đổi
+              </Button>
+            </ContractActionBar>
+          </Form>
+        </Space>
       }
     />
   );
 };
 
 export default ContractEditPage;
-

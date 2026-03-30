@@ -1,7 +1,6 @@
-﻿import { useEffect, useState } from "react";
+import { Alert, Button, Card, Space, Typography } from "antd";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import BaseCard from "../../components/cards/BaseCard";
-import CustomButton from "../../components/customButton/CustomButton";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
@@ -10,50 +9,58 @@ import { useNotify } from "../../context/notifyContext";
 import type { ContractTrackEvent } from "../../models/contract/contract.model";
 import { contractService } from "../../services/contract/contract.service";
 import { getErrorMessage } from "../shared/page.utils";
+import ContractStatusTag from "./components/ContractStatusTag";
+import ContractTrackingTimeline from "./components/ContractTrackingTimeline";
+import { getContractNextStepHint } from "./contract.ui";
 
 const ContractTrackingPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { notify } = useNotify();
+
   const [timeline, setTimeline] = useState<ContractTrackEvent[]>([]);
   const [currentStatus, setCurrentStatus] = useState("");
   const [loading, setLoading] = useState(false);
-  const { notify } = useNotify();
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const loadTracking = useCallback(async () => {
+    if (!id) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setLoadError(null);
+      const tracking = await contractService.track(id);
+      setTimeline(tracking.timeline);
+      setCurrentStatus(tracking.currentStatus);
+    } catch (error) {
+      const message = getErrorMessage(error, "Không thể tải dữ liệu theo dõi hợp đồng.");
+      setLoadError(message);
+      notify(message, "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [id, notify]);
 
   useEffect(() => {
-    const load = async () => {
-      if (!id) {
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const tracking = await contractService.track(id);
-        setTimeline(tracking.timeline);
-        setCurrentStatus(tracking.currentStatus);
-      } catch (err) {
-        notify(getErrorMessage(err, "Không thể load contract tracking"), "error");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void load();
-  }, [id, notify]);
+    void loadTracking();
+  }, [loadTracking]);
 
   return (
     <NoResizeScreenTemplate
-      loading={loading}
-      loadingText="Đang tải tiến trình hợp đồng..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Theo dõi hợp đồng"
+          title="Theo dõi tiến độ hợp đồng"
+          subtitle="Quan sát toàn bộ mốc xử lý và trạng thái hiện tại để chủ động phối hợp các bước tiếp theo."
           actions={
-            <CustomButton
-              label="Quay lại"
-              className="bg-slate-200 text-slate-700 hover:bg-slate-300"
-              onClick={() => navigate(ROUTE_URL.CONTRACT_LIST)}
-            />
+            <Space>
+              <Button onClick={() => navigate(ROUTE_URL.CONTRACT_DETAIL.replace(":id", id ?? ""))}>
+                Quay lại hợp đồng
+              </Button>
+              <Button onClick={() => navigate(ROUTE_URL.CONTRACT_LIST)}>Danh sách hợp đồng</Button>
+            </Space>
           }
           breadcrumb={
             <CustomBreadcrumb
@@ -67,22 +74,43 @@ const ContractTrackingPage = () => {
         />
       }
       body={
-        <BaseCard>
-          {currentStatus ? <p className="mb-4 font-semibold text-blue-900">Trạng thái hiện tại: {currentStatus}</p> : null}
-          <ol className="space-y-3">
-            {timeline.map((event, index) => (
-              <li key={`${event.status}-${event.at}-${index}`} className="rounded-lg border border-slate-200 bg-white p-3">
-                <p className="font-semibold text-slate-800">{event.status}</p>
-                <p className="text-sm text-slate-500">{event.at}</p>
-                {event.note ? <p className="mt-1 text-sm text-slate-600">{event.note}</p> : null}
-              </li>
-            ))}
-          </ol>
-        </BaseCard>
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          {loadError ? (
+            <Alert
+              type="error"
+              showIcon
+              message="Không thể tải timeline hợp đồng"
+              description={loadError}
+              action={
+                <Button size="small" onClick={() => void loadTracking()}>
+                  Thử lại
+                </Button>
+              }
+            />
+          ) : null}
+
+          <Card bordered={false} className="shadow-sm" loading={loading}>
+            <Space direction="vertical" size={8} style={{ width: "100%" }}>
+              <Typography.Title level={5} className="!mb-0">
+                Trạng thái hiện tại
+              </Typography.Title>
+              {currentStatus ? <ContractStatusTag status={currentStatus} /> : <Typography.Text type="secondary">Chưa có trạng thái cập nhật</Typography.Text>}
+              <Typography.Text type="secondary">{getContractNextStepHint(currentStatus)}</Typography.Text>
+            </Space>
+          </Card>
+
+          <Card bordered={false} className="shadow-sm" loading={loading}>
+            <Space direction="vertical" size={12} style={{ width: "100%" }}>
+              <Typography.Title level={5} className="!mb-0">
+                Lịch sử theo dõi xử lý
+              </Typography.Title>
+              <ContractTrackingTimeline events={timeline} />
+            </Space>
+          </Card>
+        </Space>
       }
     />
   );
 };
 
 export default ContractTrackingPage;
-

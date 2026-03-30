@@ -1,18 +1,20 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { Alert, Button, Card, Col, Empty, Input, Result, Row, Space, Statistic, Typography } from "antd";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import FormSectionCard from "../../components/forms/FormSectionCard";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomTextField from "../../components/customTextField/CustomTextField";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
-import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
+import type { QuotationModel } from "../../models/quotation/quotation.model";
 import { contractService } from "../../services/contract/contract.service";
 import { quotationService } from "../../services/quotation/quotation.service";
-import { getErrorMessage, toCurrency } from "../shared/page.utils";
-import { useNotify } from "../../context/notifyContext";
-import type { QuotationItemModel, QuotationModel } from "../../models/quotation/quotation.model";
+import { getErrorMessage } from "../shared/page.utils";
+import ContractActionBar from "./components/ContractActionBar";
+import ContractCreateSection from "./components/ContractCreateSection";
+import ContractItemsTable, { type ContractItemRowData } from "./components/ContractItemsTable";
+import ContractKeyValueList, { type ContractKeyValueItem } from "./components/ContractKeyValueList";
+import { formatContractCurrency, formatContractDate } from "./contract.ui";
 
 const PAYMENT_TERMS_MAX_LENGTH = 255;
 const DELIVERY_ADDRESS_MAX_LENGTH = 500;
@@ -20,165 +22,298 @@ const DELIVERY_ADDRESS_MAX_LENGTH = 500;
 const ContractCreatePage = () => {
   const navigate = useNavigate();
   const { quotationId } = useParams();
+  const { notify } = useNotify();
 
   const [quotation, setQuotation] = useState<QuotationModel | null>(null);
-  const [quotationNumber, setQuotationNumber] = useState("");
-  const [customerLabel, setCustomerLabel] = useState("");
-  const [totalAmount, setTotalAmount] = useState(0);
-  const [canCreateFromQuotation, setCanCreateFromQuotation] = useState(false);
-  const [paymentTerms, setPaymentTerms] = useState("70% on delivery, 30% within 30 days");
+  const [paymentTerms, setPaymentTerms] = useState("Thanh toán 70% khi giao hàng, 30% còn lại trong vòng 30 ngày.");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [canCreateFromQuotation, setCanCreateFromQuotation] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { notify } = useNotify();
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const quotationDetailPath = quotationId
     ? ROUTE_URL.QUOTATION_DETAIL.replace(":id", quotationId)
     : ROUTE_URL.QUOTATION_LIST;
 
-  useEffect(() => {
-    const loadQuotation = async () => {
-      if (!quotationId) {
-        return;
-      }
-
-      try {
-        setPageLoading(true);
-        const detail = await quotationService.getDetail(quotationId);
-        setQuotation(detail);
-        setQuotationNumber(detail.quotationNumber || detail.id);
-        setCustomerLabel(detail.customerName || detail.customerId || "");
-        setTotalAmount(detail.totalAmount);
-        setCanCreateFromQuotation(Boolean(detail.actions?.accountantCanCreateContract));
-      } catch {
-        setQuotation(null);
-      } finally {
-        setPageLoading(false);
-      }
-    };
-
-    void loadQuotation();
-  }, [quotationId]);
-
-  const canCreate = useMemo(() => {
-    if (!quotationId || !canCreateFromQuotation) {
-      return false;
-    }
-
-    const payment = paymentTerms.trim();
-    const delivery = deliveryAddress.trim();
-    if (!payment || !delivery) {
-      return false;
-    }
-
-    return payment.length <= PAYMENT_TERMS_MAX_LENGTH && delivery.length <= DELIVERY_ADDRESS_MAX_LENGTH;
-  }, [canCreateFromQuotation, deliveryAddress, paymentTerms, quotationId]);
-
-  const itemColumns = useMemo<DataTableColumn<QuotationItemModel>[]>(
-    () => [
-      { key: "productCode", header: "Product Code" },
-      { key: "productName", header: "Product Name" },
-      { key: "quantity", header: "Quantity" },
-      { key: "unitPrice", header: "Unit Price", render: (row) => toCurrency(row.unitPrice) },
-      { key: "totalPrice", header: "Amount", render: (row) => toCurrency(row.totalPrice ?? row.amount) },
-    ],
-    [],
-  );
-
-  const getCreateBlockedReason = () => {
+  const loadQuotation = useCallback(async () => {
     if (!quotationId) {
-      return "Quotation id is required.";
-    }
-    if (!canCreateFromQuotation) {
-      return "This quotation is not eligible for contract creation (already converted or invalid status).";
-    }
-
-    const payment = paymentTerms.trim();
-    const delivery = deliveryAddress.trim();
-
-    if (!payment) {
-      return "Payment terms is required.";
-    }
-    if (!delivery) {
-      return "Delivery address is required.";
-    }
-    if (payment.length > PAYMENT_TERMS_MAX_LENGTH) {
-      return `Payment terms must be at most ${PAYMENT_TERMS_MAX_LENGTH} characters.`;
-    }
-    if (delivery.length > DELIVERY_ADDRESS_MAX_LENGTH) {
-      return `Delivery address must be at most ${DELIVERY_ADDRESS_MAX_LENGTH} characters.`;
-    }
-
-    return null;
-  };
-
-  const handleCreate = async () => {
-    const blockedReason = getCreateBlockedReason();
-    if (blockedReason) {
-      notify(blockedReason, "error");
-      return;
-    }
-
-    if (!quotation?.customerId) {
-      notify("Không thể create contract: missing customerId from quotation detail.", "error");
+      setQuotation(null);
       return;
     }
 
     try {
-      setLoading(true);
-      const items = (quotation?.items ?? []).reduce<Array<{ productId: string; quantity: number; unitPrice: number }>>((acc, item) => {
-        const fallbackUnitPrice = item.unitPrice ?? (item.quantity ? (item.totalPrice ?? item.amount ?? 0) / item.quantity : undefined);
+      setPageLoading(true);
+      setLoadError(null);
+      const detail = await quotationService.getDetail(quotationId);
+      setQuotation(detail);
+      setCanCreateFromQuotation(Boolean(detail.actions?.accountantCanCreateContract));
+    } catch (error) {
+      const message = getErrorMessage(error, "Không thể tải thông tin báo giá để tạo hợp đồng.");
+      setLoadError(message);
+      setQuotation(null);
+      notify(message, "error");
+    } finally {
+      setPageLoading(false);
+    }
+  }, [notify, quotationId]);
 
-        if (!item.productId || item.quantity <= 0 || typeof fallbackUnitPrice !== "number") {
-          return acc;
-        }
+  useEffect(() => {
+    void loadQuotation();
+  }, [loadQuotation]);
 
-        acc.push({
+  const quotationItems = useMemo<ContractItemRowData[]>(
+    () =>
+      (quotation?.items ?? []).map((item) => {
+        const unitPrice = item.unitPrice ?? (item.quantity > 0 ? (item.totalPrice ?? item.amount ?? 0) / item.quantity : 0);
+        return {
           productId: item.productId,
+          productCode: item.productCode,
+          productName: item.productName,
           quantity: item.quantity,
-          unitPrice: fallbackUnitPrice,
-        });
+          unitPrice,
+          amount: item.totalPrice ?? item.amount,
+        };
+      }),
+    [quotation?.items],
+  );
 
+  const createBlockedReason = useMemo(() => {
+    if (!quotationId) {
+      return "Thiếu mã báo giá. Vui lòng quay lại danh sách báo giá và chọn lại.";
+    }
+
+    if (!canCreateFromQuotation) {
+      return "Báo giá này hiện chưa đủ điều kiện để tạo hợp đồng theo chính sách phê duyệt.";
+    }
+
+    const normalizedPaymentTerms = paymentTerms.trim();
+    const normalizedDeliveryAddress = deliveryAddress.trim();
+
+    if (!normalizedPaymentTerms) {
+      return "Vui lòng nhập điều khoản thanh toán.";
+    }
+
+    if (!normalizedDeliveryAddress) {
+      return "Vui lòng nhập địa chỉ giao hàng.";
+    }
+
+    if (normalizedPaymentTerms.length > PAYMENT_TERMS_MAX_LENGTH) {
+      return `Điều khoản thanh toán tối đa ${PAYMENT_TERMS_MAX_LENGTH} ký tự.`;
+    }
+
+    if (normalizedDeliveryAddress.length > DELIVERY_ADDRESS_MAX_LENGTH) {
+      return `Địa chỉ giao hàng tối đa ${DELIVERY_ADDRESS_MAX_LENGTH} ký tự.`;
+    }
+
+    return null;
+  }, [canCreateFromQuotation, deliveryAddress, paymentTerms, quotationId]);
+
+  const canCreate = !createBlockedReason;
+
+  const sourceInfoItems = useMemo<ContractKeyValueItem[]>(
+    () => [
+      {
+        key: "quotationNumber",
+        label: "Số báo giá",
+        value: quotation?.quotationNumber || quotation?.id || "-",
+      },
+      {
+        key: "quotationStatus",
+        label: "Trạng thái báo giá",
+        value: quotation?.status || "Chưa cập nhật",
+      },
+      {
+        key: "customer",
+        label: "Khách hàng",
+        value: quotation?.customerName || quotation?.customerId || "-",
+      },
+      {
+        key: "createdAt",
+        label: "Ngày tạo",
+        value: formatContractDate(quotation?.createdAt),
+      },
+      {
+        key: "validUntil",
+        label: "Hiệu lực đến",
+        value: formatContractDate(quotation?.validUntil, "Chưa cập nhật"),
+      },
+      {
+        key: "deliveryReq",
+        label: "Yêu cầu giao hàng",
+        value: quotation?.deliveryRequirements || "Chưa có yêu cầu bổ sung",
+      },
+    ],
+    [quotation],
+  );
+
+  const createSummaryItems = useMemo<ContractKeyValueItem[]>(
+    () => [
+      {
+        key: "contractFrom",
+        label: "Nguồn dữ liệu",
+        value: `Từ báo giá ${quotation?.quotationNumber || quotation?.id || "-"}`,
+      },
+      {
+        key: "lineCount",
+        label: "Số dòng hàng hợp lệ",
+        value: quotationItems.length,
+      },
+      {
+        key: "contractTotal",
+        label: "Tổng giá trị",
+        value: <Typography.Text strong>{formatContractCurrency(quotation?.totalAmount ?? 0)}</Typography.Text>,
+      },
+      {
+        key: "eligibility",
+        label: "Điều kiện phát hành",
+        value: canCreate ? "Đủ điều kiện tạo hợp đồng" : createBlockedReason,
+      },
+    ],
+    [canCreate, createBlockedReason, quotation, quotationItems.length],
+  );
+
+  const sidebarSummaryItems = useMemo<ContractKeyValueItem[]>(
+    () => [
+      {
+        key: "quotation",
+        label: "Mã báo giá",
+        value: quotation?.quotationNumber || quotation?.id || "-",
+      },
+      {
+        key: "customer",
+        label: "Khách hàng",
+        value: quotation?.customerName || quotation?.customerId || "-",
+      },
+      {
+        key: "lines",
+        label: "Số dòng hàng",
+        value: quotationItems.length,
+      },
+    ],
+    [quotation, quotationItems.length],
+  );
+
+  const handleCreate = async () => {
+    if (createBlockedReason) {
+      notify(createBlockedReason, "error");
+      return;
+    }
+
+    if (!quotationId || !quotation?.customerId) {
+      notify("Không thể tạo hợp đồng vì thiếu thông tin khách hàng từ báo giá.", "error");
+      return;
+    }
+
+    const items = (quotation.items ?? []).reduce<Array<{ productId: string; quantity: number; unitPrice: number }>>((acc, item) => {
+      const fallbackUnitPrice = item.unitPrice ?? (item.quantity ? (item.totalPrice ?? item.amount ?? 0) / item.quantity : undefined);
+
+      if (!item.productId || item.quantity <= 0 || typeof fallbackUnitPrice !== "number") {
         return acc;
-      }, []);
+      }
 
+      acc.push({
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: fallbackUnitPrice,
+      });
+
+      return acc;
+    }, []);
+
+    try {
+      setLoading(true);
       const created = await contractService.create({
         customerId: quotation.customerId,
-        quotationId: quotationId as string,
+        quotationId,
         paymentTerms: paymentTerms.trim(),
         deliveryAddress: deliveryAddress.trim(),
         items,
       });
 
-      notify("Contract created successfully.", "success");
+      notify("Tạo hợp đồng thành công.", "success");
       navigate(ROUTE_URL.CONTRACT_DETAIL.replace(":id", created.id));
-    } catch (err) {
-      notify(getErrorMessage(err, "Không thể create contract"), "error");
+    } catch (error) {
+      notify(getErrorMessage(error, "Không thể tạo hợp đồng."), "error");
     } finally {
       setLoading(false);
     }
   };
 
+  const summaryCard = (
+    <Card
+      bordered={false}
+      className="shadow-sm"
+      style={{ position: "sticky", top: 16 }}
+      styles={{ body: { padding: 16 } }}
+    >
+      <Space direction="vertical" size={12} style={{ width: "100%" }}>
+        <Typography.Title level={5} className="!mb-0">
+          Tóm tắt nhanh
+        </Typography.Title>
+        <Typography.Text type="secondary">
+          Xem nhanh dữ liệu cốt lõi trước khi phát hành hợp đồng.
+        </Typography.Text>
+
+        <ContractKeyValueList items={sidebarSummaryItems} />
+
+        <Statistic
+          title="Tổng tiền báo giá"
+          value={quotation?.totalAmount ?? 0}
+          formatter={(value) => formatContractCurrency(Number(value))}
+        />
+
+        <Alert
+          type={canCreate ? "success" : "warning"}
+          showIcon
+          message={canCreate ? "Đủ điều kiện tạo hợp đồng" : "Chưa thể tạo hợp đồng"}
+          description={canCreate ? "Bạn có thể kiểm tra lần cuối và bấm tạo hợp đồng." : createBlockedReason ?? undefined}
+        />
+      </Space>
+    </Card>
+  );
+
+  if (!quotationId) {
+    return (
+      <NoResizeScreenTemplate
+        header={
+          <ListScreenHeaderTemplate
+            title="Tạo hợp đồng từ báo giá"
+            subtitle="Không tìm thấy mã báo giá trong đường dẫn hiện tại."
+            breadcrumb={
+              <CustomBreadcrumb
+                breadcrumbs={[
+                  { label: "Trang chủ" },
+                  { label: "Hợp đồng", url: ROUTE_URL.CONTRACT_LIST },
+                  { label: "Tạo hợp đồng" },
+                ]}
+              />
+            }
+          />
+        }
+        body={
+          <Result
+            status="warning"
+            title="Thiếu thông tin báo giá"
+            subTitle="Vui lòng quay lại danh sách báo giá và chọn một báo giá hợp lệ để tạo hợp đồng."
+            extra={
+              <Button type="primary" onClick={() => navigate(ROUTE_URL.QUOTATION_LIST)}>
+                Đi tới danh sách báo giá
+              </Button>
+            }
+          />
+        }
+      />
+    );
+  }
+
   return (
     <NoResizeScreenTemplate
-      loading={pageLoading}
-      loadingText="Đang tải thông tin báo giá..."
+      bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Create Contract From Quotation"
-          actions={
-            <div className="flex flex-wrap gap-2">
-              <CustomButton
-                label="Back To Quotation"
-                className="bg-slate-200 text-slate-700 hover:bg-slate-300"
-                onClick={() => navigate(quotationDetailPath)}
-              />
-              <CustomButton
-                label={loading ? "Creating..." : "Create Contract"}
-                onClick={handleCreate}
-                disabled={loading || !canCreate}
-              />
-            </div>
-          }
+          title="Tạo hợp đồng từ báo giá"
+          subtitle="Xác nhận thông tin nguồn, điều khoản thanh toán và địa chỉ giao hàng trước khi phát hành hợp đồng."
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
@@ -191,41 +326,123 @@ const ContractCreatePage = () => {
         />
       }
       body={
-        <div className="space-y-4">
-          <FormSectionCard title="Quotation Info">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <CustomTextField title="Quotation ID" value={quotationId ?? ""} disabled />
-              <CustomTextField title="Quotation Number" value={quotationNumber} disabled />
-              <CustomTextField title="Customer" value={customerLabel} disabled />
-              <CustomTextField title="Total Amount" value={toCurrency(totalAmount)} disabled />
-              <CustomTextField title="Quotation Status" value={quotation?.status ?? ""} disabled />
-              <CustomTextField title="Valid Until" value={quotation?.validUntil ?? ""} disabled />
-            </div>
-          </FormSectionCard>
+        loadError && !quotation && !pageLoading ? (
+          <Result
+            status="error"
+            title="Không thể tải báo giá"
+            subTitle={loadError}
+            extra={
+              <Space>
+                <Button onClick={() => navigate(quotationDetailPath)}>Quay lại báo giá</Button>
+                <Button type="primary" onClick={() => void loadQuotation()}>
+                  Thử lại
+                </Button>
+              </Space>
+            }
+          />
+        ) : (
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Row gutter={[16, 16]} align="top">
+              <Col xs={24} lg={16}>
+                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                  <ContractCreateSection
+                    title="Thông tin báo giá nguồn"
+                    subtitle="Dữ liệu tham chiếu từ báo giá đã chọn."
+                    loading={pageLoading}
+                    content={<ContractKeyValueList items={sourceInfoItems} />}
+                  />
 
-          <FormSectionCard title="Quotation Items">
-            <DataTable columns={itemColumns} data={quotation?.items ?? []} />
-          </FormSectionCard>
+                  <ContractCreateSection
+                    title="Danh sách sản phẩm từ báo giá"
+                    subtitle="Các dòng hàng sẽ được kế thừa để tạo hợp đồng."
+                    loading={pageLoading}
+                    content={
+                      <ContractItemsTable
+                        items={quotationItems}
+                        emptyDescription="Báo giá chưa có dòng sản phẩm để chuyển thành hợp đồng."
+                      />
+                    }
+                  />
 
-          <FormSectionCard title="Contract Terms">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <CustomTextField title="Payment Terms" value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} />
-              <CustomTextField title="Delivery Address" value={deliveryAddress} onChange={(event) => setDeliveryAddress(event.target.value)} />
-            </div>
-            <p className="mt-2 text-xs text-slate-500">
-              Payment terms max {PAYMENT_TERMS_MAX_LENGTH} chars. Delivery address max {DELIVERY_ADDRESS_MAX_LENGTH} chars.
-            </p>
+                  <ContractCreateSection
+                    title="Điều khoản thanh toán"
+                    subtitle="Thiết lập chính sách thanh toán áp dụng cho hợp đồng."
+                    loading={pageLoading}
+                    content={
+                      <Input.TextArea
+                        rows={3}
+                        maxLength={PAYMENT_TERMS_MAX_LENGTH}
+                        showCount
+                        value={paymentTerms}
+                        onChange={(event) => setPaymentTerms(event.target.value)}
+                        placeholder="Ví dụ: Thanh toán 70% khi giao hàng, 30% còn lại trong vòng 30 ngày."
+                      />
+                    }
+                  />
 
-            {!canCreateFromQuotation ? (
-              <p className="mt-3 text-sm text-amber-600">This quotation does not meet backend policy for contract conversion.</p>
-            ) : null}
-          </FormSectionCard>
-        </div>
+                  <ContractCreateSection
+                    title="Địa chỉ và điều khoản giao hàng"
+                    subtitle="Xác nhận rõ địa điểm giao hàng trước khi tạo hợp đồng."
+                    loading={pageLoading}
+                    content={
+                      <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                        <Input.TextArea
+                          rows={3}
+                          maxLength={DELIVERY_ADDRESS_MAX_LENGTH}
+                          showCount
+                          value={deliveryAddress}
+                          onChange={(event) => setDeliveryAddress(event.target.value)}
+                          placeholder="Nhập địa chỉ giao hàng đầy đủ theo hợp đồng."
+                        />
+
+                        {!canCreateFromQuotation ? (
+                          <Alert
+                            type="warning"
+                            showIcon
+                            message="Báo giá chưa đủ điều kiện tạo hợp đồng"
+                            description="Vui lòng kiểm tra trạng thái báo giá hoặc liên hệ bộ phận phụ trách để xử lý trước khi tạo hợp đồng."
+                          />
+                        ) : null}
+                      </Space>
+                    }
+                  />
+
+                  <ContractCreateSection
+                    title="Tóm tắt hợp đồng sẽ tạo"
+                    subtitle="Kiểm tra nhanh các thông tin quan trọng trước khi xác nhận."
+                    loading={pageLoading}
+                    content={<ContractKeyValueList items={createSummaryItems} />}
+                  />
+                </Space>
+              </Col>
+
+              <Col xs={24} lg={8}>
+                {pageLoading ? (
+                  <Card bordered={false} className="shadow-sm" loading />
+                ) : quotation ? (
+                  summaryCard
+                ) : (
+                  <Card bordered={false} className="shadow-sm">
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description="Không có dữ liệu báo giá để hiển thị."
+                    />
+                  </Card>
+                )}
+              </Col>
+            </Row>
+
+            <ContractActionBar justify="space-between">
+              <Button onClick={() => navigate(quotationDetailPath)}>Quay lại báo giá</Button>
+              <Button type="primary" loading={loading} disabled={!canCreate || pageLoading} onClick={() => void handleCreate()}>
+                Tạo hợp đồng
+              </Button>
+            </ContractActionBar>
+          </Space>
+        )
       }
     />
   );
 };
 
 export default ContractCreatePage;
-
-
