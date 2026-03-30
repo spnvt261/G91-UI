@@ -135,20 +135,21 @@ const AppAuthenticatedLayout = () => {
 function App() {
   const token = getStoredAccessToken();
   const userRole = getStoredUserRole();
+  const authenticatedLandingRoute = token && userRole ? getDefaultRouteByRole(userRole) : null;
 
   return (
     <div className="min-h-screen w-full">
       <Routes>
-        <Route path="/" element={<Navigate to={token && userRole ? getDefaultRouteByRole(userRole) : ROUTE_URL.LOGIN} replace />} />
+        <Route path="/" element={<Navigate to={authenticatedLandingRoute ?? ROUTE_URL.LOGIN} replace />} />
 
-        <Route path={ROUTE_URL.LOGIN} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <LoginPage />} />
-        <Route path={ROUTE_URL.REGISTER} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <RegisterPage />} />
+        <Route path={ROUTE_URL.LOGIN} element={authenticatedLandingRoute ? <Navigate to={authenticatedLandingRoute} replace /> : <LoginPage />} />
+        <Route path={ROUTE_URL.REGISTER} element={authenticatedLandingRoute ? <Navigate to={authenticatedLandingRoute} replace /> : <RegisterPage />} />
         <Route
           path={ROUTE_URL.VERIFY_REGISTRATION}
-          element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <VerifyRegistrationPage />}
+          element={authenticatedLandingRoute ? <Navigate to={authenticatedLandingRoute} replace /> : <VerifyRegistrationPage />}
         />
-        <Route path={ROUTE_URL.FORGOT_PASSWORD} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <ForgotPasswordPage />} />
-        <Route path={ROUTE_URL.RESET_PASSWORD} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <ResetPasswordPage />} />
+        <Route path={ROUTE_URL.FORGOT_PASSWORD} element={authenticatedLandingRoute ? <Navigate to={authenticatedLandingRoute} replace /> : <ForgotPasswordPage />} />
+        <Route path={ROUTE_URL.RESET_PASSWORD} element={authenticatedLandingRoute ? <Navigate to={authenticatedLandingRoute} replace /> : <ResetPasswordPage />} />
 
         <Route element={<AppAuthenticatedLayout />}>
           <Route path={ROUTE_URL.DASHBOARD} element={<DashboardPage />} />
