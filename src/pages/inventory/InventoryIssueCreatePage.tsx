@@ -105,7 +105,7 @@ const InventoryIssueCreatePage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loadingProducts}
-      loadingText="Äang táº£i danh sÃ¡ch sáº£n pháº©m..."
+      loadingText="Đang tải danh sách sản phẩm..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -113,7 +113,7 @@ const InventoryIssueCreatePage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chá»§" },
+                { label: "Trang chủ" },
                 { label: "Inventory", url: ROUTE_URL.INVENTORY_STATUS },
                 { label: "Issue" },
               ]}

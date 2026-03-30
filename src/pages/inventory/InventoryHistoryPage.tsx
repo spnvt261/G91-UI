@@ -85,7 +85,7 @@ const InventoryHistoryPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Äang táº£i lá»‹ch sá»­ kho..."
+      loadingText="Đang tải lịch sử kho..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -94,7 +94,7 @@ const InventoryHistoryPage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chá»§" },
+                { label: "Trang chủ" },
                 { label: "Inventory", url: ROUTE_URL.INVENTORY_STATUS },
                 { label: "History" },
               ]}

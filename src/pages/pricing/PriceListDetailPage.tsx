@@ -152,7 +152,7 @@ const PriceListDetailPage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chá»§" },
+                { label: "Trang chủ" },
                 { label: "Price List", url: ROUTE_URL.PRICE_LIST_LIST },
                 { label: "Detail" },
               ]}

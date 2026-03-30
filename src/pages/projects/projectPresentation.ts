@@ -86,6 +86,19 @@ export const displayText = (value?: string | number | null): string => {
   return text ? text : "-";
 };
 
+export const resolveWarehouseDisplay = (warehouseName?: string | null, warehouseId?: string | null): string => {
+  const normalizedName = warehouseName?.trim();
+  if (normalizedName) {
+    return normalizedName;
+  }
+
+  if (warehouseId?.trim()) {
+    return "Kho chưa có tên";
+  }
+
+  return "-";
+};
+
 export const formatProjectDate = (value?: string): string => {
   const text = displayText(value);
   if (text === "-") {

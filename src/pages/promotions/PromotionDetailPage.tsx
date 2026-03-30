@@ -216,7 +216,7 @@ const PromotionDetailPage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chá»§" },
+                { label: "Trang chủ" },
                 { label: "Promotions", url: ROUTE_URL.PROMOTION_LIST },
                 { label: "Detail" },
               ]}

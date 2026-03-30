@@ -53,8 +53,11 @@ const ProjectAssignWarehousePage = () => {
           const projects = await projectService.getList({ page: 1, pageSize: 300 });
           setWarehouseOptions(
             buildWarehouseOptions(projects, [
-              { id: detail.primaryWarehouseId ?? detail.warehouseId, name: detail.primaryWarehouseId ?? detail.warehouseId },
-              { id: detail.backupWarehouseId, name: detail.backupWarehouseId },
+              {
+                id: detail.primaryWarehouseId ?? detail.warehouseId,
+                name: detail.primaryWarehouseName ?? detail.warehouseName ?? detail.primaryWarehouseId ?? detail.warehouseId,
+              },
+              { id: detail.backupWarehouseId, name: detail.backupWarehouseName ?? detail.backupWarehouseId },
             ]),
           );
         } catch (warehouseError) {

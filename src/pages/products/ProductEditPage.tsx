@@ -87,7 +87,7 @@ const ProductEditPage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chá»§" },
+                { label: "Trang chủ" },
                 { label: "Products", url: ROUTE_URL.PRODUCT_LIST },
                 { label: "Update" },
               ]}

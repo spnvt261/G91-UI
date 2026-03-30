@@ -50,23 +50,23 @@ const ProductDetailPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Äang táº£i chi tiáº¿t sáº£n pháº©m..."
+      loadingText="Đang tải chi tiết sản phẩm..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title={product?.productName || "Chi tiáº¿t sáº£n pháº©m"}
+          title={product?.productName || "Chi tiết sản phẩm"}
           actions={
             <div className="flex flex-wrap gap-2">
               {canUpdate && id ? <CustomButton label="Edit" onClick={() => navigate(ROUTE_URL.PRODUCT_EDIT.replace(":id", id))} /> : null}
               {showRequestQuotation ? (
                 <CustomButton
-                  label="YÃªu cáº§u bÃ¡o giÃ¡"
+                  label="Yêu cầu báo giá"
                   className="bg-amber-300 text-slate-800 hover:bg-amber-400"
                   onClick={() => navigate(ROUTE_URL.QUOTATION_CREATE)}
                 />
               ) : null}
               <CustomButton
-                label="Quay láº¡i"
+                label="Quay lại"
                 className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
                 onClick={() => navigate(ROUTE_URL.PRODUCT_LIST)}
               />
@@ -75,9 +75,9 @@ const ProductDetailPage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chá»§" },
-                { label: "Sáº£n pháº©m", url: ROUTE_URL.PRODUCT_LIST },
-                { label: product?.productName || "Chi tiáº¿t" },
+                { label: "Trang chủ" },
+                { label: "Sản phẩm", url: ROUTE_URL.PRODUCT_LIST },
+                { label: product?.productName || "Chi tiết" },
               ]}
             />
           }
@@ -114,36 +114,36 @@ const ProductDetailPage = () => {
                 </div>
 
                 <div className="rounded-lg border border-slate-200 p-4">
-                  <h2 className="mb-4 text-3xl font-semibold text-blue-950">ThÃ´ng tin sáº£n pháº©m</h2>
+                  <h2 className="mb-4 text-3xl font-semibold text-blue-950">Thông tin sản phẩm</h2>
                   <div className="space-y-3 text-base">
                     <div className="grid grid-cols-2 border-b border-slate-100 pb-2">
-                      <p className="text-slate-500">MÃ£ sáº£n pháº©m:</p>
+                      <p className="text-slate-500">Mã sản phẩm:</p>
                       <p className="font-semibold text-slate-700">{product.productCode || "-"}</p>
                     </div>
                     <div className="grid grid-cols-2 border-b border-slate-100 pb-2">
-                      <p className="text-slate-500">Loáº¡i:</p>
+                      <p className="text-slate-500">Loại:</p>
                       <p className="font-semibold text-slate-700">{product.type || "-"}</p>
                     </div>
                     <div className="grid grid-cols-2 border-b border-slate-100 pb-2">
-                      <p className="text-slate-500">KÃ­ch thÆ°á»›c:</p>
+                      <p className="text-slate-500">Kích thước:</p>
                       <p className="font-semibold text-slate-700">{product.size || "-"}</p>
                     </div>
                     <div className="grid grid-cols-2 border-b border-slate-100 pb-2">
-                      <p className="text-slate-500">Bá» dÃ y:</p>
+                      <p className="text-slate-500">Bề dày:</p>
                       <p className="font-semibold text-slate-700">{product.thickness || "-"}</p>
                     </div>
                     <div className="grid grid-cols-2 border-b border-slate-100 pb-2">
-                      <p className="text-slate-500">ÄÆ¡n vá»‹:</p>
+                      <p className="text-slate-500">Đơn vị:</p>
                       <p className="font-semibold text-slate-700">{product.unit || "-"}</p>
                     </div>
                     <div className="grid grid-cols-2 border-b border-slate-100 pb-2">
-                      <p className="text-slate-500">Khá»‘i lÆ°á»£ng tham kháº£o:</p>
+                      <p className="text-slate-500">Khối lượng tham khảo:</p>
                       <p className="font-semibold text-slate-700">
                         {product.referenceWeight != null ? `${product.referenceWeight} ${product.unit || ""}`.trim() : "-"}
                       </p>
                     </div>
                     <div className="grid grid-cols-2 items-center border-b border-slate-100 pb-2">
-                      <p className="text-slate-500">Tráº¡ng thÃ¡i:</p>
+                      <p className="text-slate-500">Trạng thái:</p>
                       <p>
                         <span
                           className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${

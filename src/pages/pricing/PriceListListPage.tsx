@@ -135,7 +135,7 @@ const PriceListListPage = () => {
         <ListScreenHeaderTemplate
           title="Price List Management"
           actions={canCreate ? <CustomButton label="Create Price List" onClick={() => navigate(ROUTE_URL.PRICE_LIST_CREATE)} /> : undefined}
-          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chá»§" }, { label: "Price List" }]} />}
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Price List" }]} />}
         />
       }
       body={

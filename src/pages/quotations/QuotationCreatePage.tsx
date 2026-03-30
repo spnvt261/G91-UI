@@ -308,9 +308,9 @@ const QuotationCreatePage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chá»§" },
-                { label: "BÃ¡o giÃ¡", url: ROUTE_URL.QUOTATION_LIST },
-                { label: "Táº¡o má»›i" },
+                { label: "Trang chủ" },
+                { label: "Báo giá", url: ROUTE_URL.QUOTATION_LIST },
+                { label: "Tạo mới" },
               ]}
             />
           }

@@ -182,9 +182,9 @@ const ContractCreatePage = () => {
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Trang chá»§" },
-                { label: "Há»£p Ä‘á»“ng", url: ROUTE_URL.CONTRACT_LIST },
-                { label: "Táº¡o há»£p Ä‘á»“ng" },
+                { label: "Trang chủ" },
+                { label: "Hợp đồng", url: ROUTE_URL.CONTRACT_LIST },
+                { label: "Tạo hợp đồng" },
               ]}
             />
           }

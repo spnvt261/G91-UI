@@ -10,8 +10,11 @@ export interface ProjectModel {
   customerId: string;
   customerName?: string;
   warehouseId?: string;
+  warehouseName?: string;
   primaryWarehouseId?: string;
+  primaryWarehouseName?: string;
   backupWarehouseId?: string;
+  backupWarehouseName?: string;
   progress?: number;
   progressPercent?: number;
   progressStatus?: string;

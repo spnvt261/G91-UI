@@ -62,7 +62,7 @@ const InventoryStatusPage = () => {
   return (
     <NoResizeScreenTemplate
       loading={loading}
-      loadingText="Äang táº£i tá»“n kho..."
+      loadingText="Đang tải tồn kho..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
@@ -79,7 +79,7 @@ const InventoryStatusPage = () => {
               />
             </div>
           }
-          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chá»§" }, { label: "Inventory" }]} />}
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Inventory" }]} />}
         />
       }
       body={

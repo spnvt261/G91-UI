@@ -1,4 +1,4 @@
-import {
+﻿import {
   Alert,
   Badge,
   Button,
@@ -30,7 +30,7 @@ import ProjectPageLayout from "./components/ProjectPageLayout";
 import ProjectProgressBar from "./components/ProjectProgressBar";
 import ProjectStatusTag from "./components/ProjectStatusTag";
 import { buildProjectActionNavigation } from "./projectNavigation";
-import { displayText, formatProjectDate, getProjectStatusLabel, resolveProjectProgress } from "./projectPresentation";
+import { displayText, formatProjectDate, getProjectStatusLabel, resolveProjectProgress, resolveWarehouseDisplay } from "./projectPresentation";
 
 type ProjectDetailShape = ProjectModel & {
   customerSignoffCompleted?: boolean;
@@ -58,6 +58,11 @@ const ProjectDetailPage = () => {
 
   const progressPercent = resolveProjectProgress(project);
   const milestoneDone = Boolean(project?.customerSignoffCompleted);
+  const primaryWarehouseLabel = resolveWarehouseDisplay(
+    project?.primaryWarehouseName ?? project?.warehouseName,
+    project?.primaryWarehouseId ?? project?.warehouseId,
+  );
+  const backupWarehouseLabel = resolveWarehouseDisplay(project?.backupWarehouseName, project?.backupWarehouseId);
 
   const loadProjectDetail = useCallback(async () => {
     if (!id) {
@@ -325,12 +330,12 @@ const ProjectDetailPage = () => {
       ) : project ? (
         <Space direction="vertical" size={16} style={{ width: "100%" }}>
           <Row gutter={[16, 16]}>
-            <Col xs={24} md={12} xl={6}>
+            <Col xs={24} md={12} lg={12}>
               <Card>
                 <Statistic title="Tiến độ tổng thể" value={progressPercent} suffix="%" />
               </Card>
             </Col>
-            <Col xs={24} md={12} xl={6}>
+            <Col xs={24} md={12} lg={12}>
               <Card>
                 <Space direction="vertical" size={6}>
                   <Typography.Text type="secondary">Trạng thái dự án</Typography.Text>
@@ -339,20 +344,26 @@ const ProjectDetailPage = () => {
                 </Space>
               </Card>
             </Col>
-            <Col xs={24} md={12} xl={6}>
+            <Col xs={24} md={12} lg={12}>
               <Card>
                 <Space direction="vertical" size={6}>
                   <Typography.Text type="secondary">Khách hàng</Typography.Text>
-                  <Typography.Text strong>{displayText(project.customerName ?? project.customerId)}</Typography.Text>
-                  <Typography.Text type="secondary">Quản lý dự án: {displayText(project.assignedProjectManager)}</Typography.Text>
+                  <Typography.Text strong style={{ wordBreak: "break-word" }}>
+                    {displayText(project.customerName ?? project.customerId)}
+                  </Typography.Text>
+                  <Typography.Text type="secondary" style={{ wordBreak: "break-word" }}>
+                    Quản lý dự án: {displayText(project.assignedProjectManager)}
+                  </Typography.Text>
                 </Space>
               </Card>
             </Col>
-            <Col xs={24} md={12} xl={6}>
+            <Col xs={24} md={12} lg={12}>
               <Card>
                 <Space direction="vertical" size={6}>
                   <Typography.Text type="secondary">Kho triển khai</Typography.Text>
-                  <Typography.Text strong>{displayText(project.primaryWarehouseId ?? project.warehouseId)}</Typography.Text>
+                  <Typography.Text strong style={{ wordBreak: "break-word" }}>
+                    {primaryWarehouseLabel}
+                  </Typography.Text>
                   <Badge
                     status={milestoneDone ? "success" : "processing"}
                     text={milestoneDone ? "Đã nghiệm thu mốc chính" : "Chưa nghiệm thu mốc chính"}
@@ -371,7 +382,7 @@ const ProjectDetailPage = () => {
                     <Descriptions.Item label="Mã dự án">{displayText(project.projectCode ?? project.code)}</Descriptions.Item>
                     <Descriptions.Item label="Trạng thái tiến độ">{displayText(project.progressStatus ?? project.status)}</Descriptions.Item>
                     <Descriptions.Item label="Khách hàng">{displayText(project.customerName ?? project.customerId)}</Descriptions.Item>
-                    <Descriptions.Item label="Kho chính">{displayText(project.primaryWarehouseId ?? project.warehouseId)}</Descriptions.Item>
+                    <Descriptions.Item label="Kho chính">{primaryWarehouseLabel}</Descriptions.Item>
                     <Descriptions.Item label="Địa điểm triển khai">{displayText(project.location)}</Descriptions.Item>
                     <Descriptions.Item label="Phạm vi công việc">{displayText(project.scope)}</Descriptions.Item>
                     <Descriptions.Item label="Ngày bắt đầu">{formatProjectDate(project.startDate ?? project.startedAt)}</Descriptions.Item>
@@ -419,8 +430,8 @@ const ProjectDetailPage = () => {
             <Col xs={24} lg={8}>
               <Card title="Kho và triển khai" bordered={false} style={{ border: "1px solid #e6edf5" }}>
                 <Descriptions column={1} size="small">
-                  <Descriptions.Item label="Kho chính">{displayText(project.primaryWarehouseId ?? project.warehouseId)}</Descriptions.Item>
-                  <Descriptions.Item label="Kho dự phòng">{displayText(project.backupWarehouseId)}</Descriptions.Item>
+                  <Descriptions.Item label="Kho chính">{primaryWarehouseLabel}</Descriptions.Item>
+                  <Descriptions.Item label="Kho dự phòng">{backupWarehouseLabel}</Descriptions.Item>
                   <Descriptions.Item label="Địa điểm">{displayText(project.location)}</Descriptions.Item>
                 </Descriptions>
               </Card>
@@ -446,3 +457,4 @@ const ProjectDetailPage = () => {
 };
 
 export default ProjectDetailPage;
+

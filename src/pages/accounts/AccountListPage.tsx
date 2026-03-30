@@ -430,7 +430,7 @@ const AccountListPage = () => {
         <ListScreenHeaderTemplate
           title="User Management"
           actions={<CustomButton label="Create Account" onClick={openCreateModal} />}
-          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chá»§" }, { label: "User Management" }]} />}
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "User Management" }]} />}
         />
       }
       body={

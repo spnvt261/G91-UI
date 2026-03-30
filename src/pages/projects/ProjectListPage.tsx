@@ -1,4 +1,4 @@
-import { MoreOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
+﻿import { MoreOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { Alert, Button, Card, Col, Dropdown, Empty, Input, Row, Select, Space, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { MenuProps } from "antd";
@@ -16,7 +16,7 @@ import ProjectProgressBar from "./components/ProjectProgressBar";
 import ProjectStatusTag from "./components/ProjectStatusTag";
 import ProjectSummaryCards from "./components/ProjectSummaryCards";
 import { PROJECT_STATUS_OPTIONS } from "./projectForm.constants";
-import { displayText, formatProjectDate, isCompletedStatus, isInProgressStatus, isPausedOrCancelledStatus } from "./projectPresentation";
+import { displayText, formatProjectDate, isCompletedStatus, isInProgressStatus, isPausedOrCancelledStatus, resolveWarehouseDisplay } from "./projectPresentation";
 
 interface ProjectListQueryState {
   page: number;
@@ -130,7 +130,7 @@ const ProjectListPage = () => {
               Mã: {displayText(row.projectCode ?? row.code)} • Khách hàng: {displayText(row.customerName ?? row.customerId)}
             </Typography.Text>
             <Typography.Text type="secondary">
-              Kho chính: {displayText(row.primaryWarehouseId ?? row.warehouseId)}
+              Kho chính: {resolveWarehouseDisplay(row.primaryWarehouseName ?? row.warehouseName, row.primaryWarehouseId ?? row.warehouseId)}
             </Typography.Text>
           </Space>
         ),
@@ -355,3 +355,4 @@ const ProjectListPage = () => {
 };
 
 export default ProjectListPage;
+

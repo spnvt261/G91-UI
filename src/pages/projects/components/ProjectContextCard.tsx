@@ -1,6 +1,6 @@
-import { Alert, Card, Col, Descriptions, Row, Space, Typography } from "antd";
+﻿import { Alert, Card, Col, Descriptions, Row, Space, Typography } from "antd";
 import type { ProjectModel } from "../../../models/project/project.model";
-import { displayText, formatProjectDate, resolveProjectProgress } from "../projectPresentation";
+import { displayText, formatProjectDate, resolveProjectProgress, resolveWarehouseDisplay } from "../projectPresentation";
 import ProjectProgressBar from "./ProjectProgressBar";
 import ProjectStatusTag from "./ProjectStatusTag";
 
@@ -20,7 +20,7 @@ const ProjectContextCard = ({
   nextWarehouseLabel,
 }: ProjectContextCardProps) => {
   const currentWarehouseId = project.primaryWarehouseId ?? project.warehouseId;
-  const currentWarehouse = displayText(currentWarehouseId);
+  const currentWarehouse = resolveWarehouseDisplay(project.primaryWarehouseName ?? project.warehouseName, currentWarehouseId);
   const currentProgress = resolveProjectProgress(project);
   const shouldShowWarehouseWarning = highlightWarehouseChange && nextWarehouseId && nextWarehouseId !== currentWarehouseId;
 
@@ -32,7 +32,7 @@ const ProjectContextCard = ({
             type="warning"
             showIcon
             message="Bạn đang thay đổi kho phụ trách"
-            description={`Kho hiện tại: ${currentWarehouse} • Kho mới: ${nextWarehouseLabel ?? displayText(nextWarehouseId)}`}
+            description={`Kho hiện tại: ${currentWarehouse} • Kho mới: ${nextWarehouseLabel ?? "Kho chưa có tên"}`}
           />
         ) : null}
 
@@ -66,3 +66,5 @@ const ProjectContextCard = ({
 };
 
 export default ProjectContextCard;
+
+

@@ -193,7 +193,7 @@ const PromotionListPage = () => {
           actions={
             allowCreate ? <CustomButton label="Create Promotion" onClick={() => navigate(ROUTE_URL.PROMOTION_CREATE)} /> : undefined
           }
-          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chá»§" }, { label: "Promotions" }]} />}
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Promotions" }]} />}
         />
       }
       body={

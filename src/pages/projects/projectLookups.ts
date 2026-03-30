@@ -17,9 +17,9 @@ const compareByLabel = (left: ProjectSelectOption, right: ProjectSelectOption) =
 const toReadableWarehouseLabel = (warehouseId: string, warehouseName?: string) => {
   const normalizedName = warehouseName?.trim();
   if (!normalizedName || normalizedName === warehouseId) {
-    return warehouseId;
+    return "Kho chưa có tên";
   }
-  return `${normalizedName} (${warehouseId})`;
+  return normalizedName;
 };
 
 export const buildCustomerOptions = (customers: CustomerModel[]): ProjectSelectOption[] => {
