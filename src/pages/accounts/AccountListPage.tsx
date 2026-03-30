@@ -43,6 +43,11 @@ const WAREHOUSE_ROLE_OPTION: RoleOption = {
   roleName: "WAREHOUSE",
 };
 
+const CUSTOMER_ROLE_OPTION: RoleOption = {
+  label: "CUSTOMER",
+  roleName: "CUSTOMER",
+};
+
 const OWNER_ROLE_OPTION: RoleOption = {
   label: "OWNER",
   roleName: "OWNER",
@@ -51,10 +56,11 @@ const OWNER_ROLE_OPTION: RoleOption = {
 const ROLE_OPTION_BY_NAME: Record<AccountRoleId, RoleOption> = {
   ACCOUNTANT: ACCOUNTANT_ROLE_OPTION,
   WAREHOUSE: WAREHOUSE_ROLE_OPTION,
+  CUSTOMER: CUSTOMER_ROLE_OPTION,
   OWNER: OWNER_ROLE_OPTION,
 };
 
-const INTERNAL_ROLE_OPTIONS: RoleOption[] = [ACCOUNTANT_ROLE_OPTION, WAREHOUSE_ROLE_OPTION];
+const INTERNAL_ROLE_OPTIONS: RoleOption[] = [ACCOUNTANT_ROLE_OPTION, WAREHOUSE_ROLE_OPTION, CUSTOMER_ROLE_OPTION];
 const FILTER_ROLE_OPTIONS: RoleOption[] = [OWNER_ROLE_OPTION, ...INTERNAL_ROLE_OPTIONS];
 
 const toSelectOptions = (options: RoleOption[]) =>
@@ -87,8 +93,10 @@ const createEmptyFormValues = (): AccountFormValues => ({
   status: "ACTIVE",
 });
 
-const isInternalRole = (role: AccountRoleId): role is InternalAccountRoleId => role === "ACCOUNTANT" || role === "WAREHOUSE";
-const isAccountRoleId = (role: string): role is AccountRoleId => role === "ACCOUNTANT" || role === "WAREHOUSE" || role === "OWNER";
+const isInternalRole = (role: AccountRoleId): role is InternalAccountRoleId =>
+  role === "ACCOUNTANT" || role === "WAREHOUSE" || role === "CUSTOMER";
+const isAccountRoleId = (role: string): role is AccountRoleId =>
+  role === "ACCOUNTANT" || role === "WAREHOUSE" || role === "CUSTOMER" || role === "OWNER";
 
 const AccountListPage = () => {
   const { notify } = useNotify();
@@ -307,7 +315,7 @@ const AccountListPage = () => {
     try {
       if (formMode === "create") {
         if (!isInternalRole(roleName)) {
-          notify("Role must be ACCOUNTANT or WAREHOUSE.", "error");
+          notify("Role must be ACCOUNTANT, WAREHOUSE, or CUSTOMER.", "error");
           return;
         }
 

@@ -154,7 +154,7 @@ const LoginPage = () => {
               name="password"
               rules={[
                 { required: true, message: "Vui lòng nhập mật khẩu." },
-                { min: 6, message: "Mật khẩu cần có ít nhất 6 ký tự." },
+                { min: 3, message: "Mật khẩu cần có ít nhất 3 ký tự." },
               ]}
             >
               <Input.Password size="large" placeholder="Nhập mật khẩu của bạn" />
