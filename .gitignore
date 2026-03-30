@@ -27,7 +27,7 @@ dist-ssr
 # Optional AI GENERATE directory
 tests
 test*
-reports
+/reports/
 playwright-report
 AIdocs
 scripts
