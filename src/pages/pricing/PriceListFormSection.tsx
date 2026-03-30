@@ -1,21 +1,19 @@
-﻿import { useMemo, useState } from "react";
+import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
+import { Alert, Button, Card, Col, DatePicker, Divider, Form, Input, InputNumber, Row, Select, Space, Statistic, Tag, Typography } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
-import { ConfigProvider, DatePicker } from "antd";
-import FormSectionCard from "../../components/forms/FormSectionCard";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomSelect, { type Option } from "../../components/customSelect/CustomSelect";
-import CustomTextField from "../../components/customTextField/CustomTextField";
-import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
+import { useMemo, useState } from "react";
 import type { PriceListStatus } from "../../models/pricing/price-list.model";
-import { toCurrency } from "../shared/page.utils";
+import PriceListItemsTable, { type PriceListItemRowView } from "./components/PriceListItemsTable";
+import { formatDateVi, type PriceListProductOption } from "./priceList.ui";
 import { createEmptyPriceListItem, type PriceListFormErrors, type PriceListFormItemValues, type PriceListFormValues } from "./priceListForm.utils";
 
 interface PriceListFormSectionProps {
   title?: string;
+  subtitle?: string;
   values: PriceListFormValues;
   errors: PriceListFormErrors;
   readOnly?: boolean;
-  productOptions?: Option[];
+  productOptions?: PriceListProductOption[];
   loadingProducts?: boolean;
   productLoadError?: string | null;
   onRetryLoadProducts?: () => void;
@@ -29,19 +27,17 @@ type ItemDraftErrors = {
 };
 
 const STATUS_OPTIONS: Array<{ label: string; value: PriceListStatus }> = [
-  { label: "ACTIVE", value: "ACTIVE" },
-  { label: "INACTIVE", value: "INACTIVE" },
+  { label: "Đang áp dụng", value: "ACTIVE" },
+  { label: "Tạm ngừng", value: "INACTIVE" },
 ];
 
-const PROJECT_PRIMARY_COLOR = "rgb(var(--primary-color))";
+const parseAmount = (value: string): number | undefined => {
+  if (!value.trim()) {
+    return undefined;
+  }
 
-const updateItem = (
-  currentItems: PriceListFormItemValues[],
-  targetRowId: string,
-  field: keyof Omit<PriceListFormItemValues, "rowId">,
-  value: string,
-): PriceListFormItemValues[] => {
-  return currentItems.map((item) => (item.rowId === targetRowId ? { ...item, [field]: value } : item));
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
 };
 
 const toDateValue = (value: string): Dayjs | null => {
@@ -53,34 +49,22 @@ const toDateValue = (value: string): Dayjs | null => {
   return parsed.isValid() ? parsed : null;
 };
 
-const toNumber = (value: string): number | undefined => {
-  if (!value.trim()) {
-    return undefined;
-  }
-
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
-};
-
-const getOptionLabel = (option: Option | undefined, fallback: string) => {
-  if (!option) {
-    return fallback;
-  }
-  if (option.searchText) {
-    return option.searchText;
-  }
-  if (typeof option.label === "string") {
-    return option.label;
-  }
-  return fallback;
+const updateItem = (
+  currentItems: PriceListFormItemValues[],
+  targetRowId: string,
+  field: keyof Omit<PriceListFormItemValues, "rowId">,
+  value: string,
+): PriceListFormItemValues[] => {
+  return currentItems.map((item) => (item.rowId === targetRowId ? { ...item, [field]: value } : item));
 };
 
 const PriceListFormSection = ({
-  title = "Price List Information",
+  title = "Biểu mẫu bảng giá",
+  subtitle = "Điền thông tin chung, phạm vi áp dụng và danh sách sản phẩm trước khi lưu.",
   values,
   errors,
   readOnly = false,
-  productOptions,
+  productOptions = [],
   loadingProducts = false,
   productLoadError,
   onRetryLoadProducts,
@@ -88,25 +72,37 @@ const PriceListFormSection = ({
   onRemoveItem,
 }: PriceListFormSectionProps) => {
   const [draftProductId, setDraftProductId] = useState("");
-  const [draftUnitPrice, setDraftUnitPrice] = useState("");
+  const [draftUnitPrice, setDraftUnitPrice] = useState<number | null>(null);
   const [draftErrors, setDraftErrors] = useState<ItemDraftErrors>({});
 
-  const hasProductSelector = Array.isArray(productOptions);
   const validFromDate = toDateValue(values.validFrom);
   const validToDate = toDateValue(values.validTo);
-
-  const optionById = useMemo(() => {
-    return new Map((productOptions ?? []).map((option) => [option.value, option]));
-  }, [productOptions]);
-
+  const optionMap = useMemo(() => new Map(productOptions.map((option) => [option.value, option])), [productOptions]);
   const selectedProductIds = new Set(values.items.map((item) => item.productId.trim()).filter(Boolean));
-  const noAvailableProducts = hasProductSelector && !loadingProducts && !productLoadError && (productOptions?.length ?? 0) === 0;
-  const noRemainingProducts = hasProductSelector && (productOptions?.length ?? 0) > 0 && selectedProductIds.size >= (productOptions?.length ?? 0);
-  const addFromDraftDisabled = readOnly || loadingProducts || noAvailableProducts || noRemainingProducts;
+  const availableProductOptions = productOptions.filter((option) => option.value === draftProductId || !selectedProductIds.has(option.value));
+  const noAvailableProducts = !loadingProducts && !productLoadError && productOptions.length === 0;
+  const noRemainingProducts = productOptions.length > 0 && selectedProductIds.size >= productOptions.length;
+  const blockAddItem = readOnly || loadingProducts || noAvailableProducts || noRemainingProducts;
 
-  const availableProductOptions = hasProductSelector
-    ? (productOptions ?? []).filter((option) => option.value === draftProductId || !selectedProductIds.has(option.value))
-    : [];
+  const itemRows = useMemo<PriceListItemRowView[]>(() => {
+    return values.items.map((item) => {
+      const option = optionMap.get(item.productId);
+      return {
+        key: item.rowId,
+        productId: item.productId,
+        productCode: option?.productCode,
+        productName: option?.productName,
+        unitPriceVnd: parseAmount(item.unitPrice),
+      };
+    });
+  }, [optionMap, values.items]);
+
+  const totalProducts = values.items.length;
+  const totalEstimatedValue = values.items.reduce((sum, item) => {
+    const amount = parseAmount(item.unitPrice);
+    return amount && amount > 0 ? sum + amount : sum;
+  }, 0);
+  const effectivePeriodText = values.validFrom && values.validTo ? `${formatDateVi(values.validFrom)} - ${formatDateVi(values.validTo)}` : "Chưa thiết lập";
 
   const clearDraftError = (field: keyof ItemDraftErrors) => {
     setDraftErrors((previous) => {
@@ -120,52 +116,22 @@ const PriceListFormSection = ({
     });
   };
 
-  const resolveProductName = (productId: string) => getOptionLabel(optionById.get(productId), productId || "-");
-
-  const itemColumns = useMemo<DataTableColumn<PriceListFormItemValues>[]>(
-    () => [
-      {
-        key: "productName",
-        header: "Product Name",
-        render: (row) => <span className="font-medium text-slate-800">{resolveProductName(row.productId)}</span>,
-      },
-      {
-        key: "unitPrice",
-        header: "Unit Price",
-        render: (row) => {
-          const amount = toNumber(row.unitPrice);
-          return amount == null ? "-" : toCurrency(amount);
-        },
-      },
-    ],
-    [optionById],
-  );
-
-  const itemValidationRows = values.items
-    .map((item, index) => ({
-      index: index + 1,
-      productError: errors.itemProductMap?.[item.rowId],
-      unitPriceError: errors.itemUnitPriceMap?.[item.rowId],
-    }))
-    .filter((row) => row.productError || row.unitPriceError);
-
   const handleAddItem = () => {
-    if (addFromDraftDisabled) {
+    if (blockAddItem) {
       return;
     }
 
     const nextErrors: ItemDraftErrors = {};
-    const parsedUnitPrice = toNumber(draftUnitPrice);
     const productId = draftProductId.trim();
 
     if (!productId) {
-      nextErrors.productId = "Product is required.";
-    } else if (values.items.some((item) => item.productId === productId)) {
-      nextErrors.productId = "Product has already been added.";
+      nextErrors.productId = "Vui lòng chọn sản phẩm.";
+    } else if (values.items.some((item) => item.productId.trim() === productId)) {
+      nextErrors.productId = "Sản phẩm đã có trong bảng giá.";
     }
 
-    if (parsedUnitPrice == null || parsedUnitPrice <= 0) {
-      nextErrors.unitPrice = "Unit price must be greater than 0.";
+    if (!draftUnitPrice || draftUnitPrice <= 0) {
+      nextErrors.unitPrice = "Đơn giá phải lớn hơn 0.";
     }
 
     if (Object.keys(nextErrors).length > 0) {
@@ -181,265 +147,292 @@ const PriceListFormSection = ({
         {
           ...newItem,
           productId,
-          unitPrice: String(parsedUnitPrice),
+          unitPrice: String(draftUnitPrice),
         },
       ],
     }));
+
     setDraftProductId("");
-    setDraftUnitPrice("");
+    setDraftUnitPrice(null);
     setDraftErrors({});
   };
 
-  return (
-    <FormSectionCard title={title}>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <CustomTextField
-          title="Name"
-          value={values.name}
-          helperText={errors.name}
-          error={Boolean(errors.name)}
-          disabled={readOnly}
-          onChange={(event) => onChange((previous) => ({ ...previous, name: event.target.value }))}
-        />
-        <CustomTextField
-          title="Customer Group"
-          value={values.customerGroup}
-          disabled={readOnly}
-          onChange={(event) => onChange((previous) => ({ ...previous, customerGroup: event.target.value }))}
-        />
-        <div className="flex flex-col">
-          <span className="font-normal text-[#000000D9] text-[1rem]">Valid From</span>
-          <ConfigProvider
-            theme={{
-              token: {
-                colorPrimary: PROJECT_PRIMARY_COLOR,
-                controlOutline: "rgba(var(--primary-color),0.25)",
-                borderRadius: 16,
-              },
-            }}
-          >
-            <DatePicker
-              value={validFromDate}
-              format="YYYY-MM-DD"
-              placeholder="Select valid from date"
-              disabled={readOnly}
-              className={`w-full !rounded-[var(--primary-rounded)] !px-3 !py-[7px] ${
-                errors.validFrom ? "!border-red-500 hover:!border-red-500" : "hover:!border-[rgba(var(--primary-color),1)]"
-              }`}
-              disabledDate={(current) => (validToDate ? current.endOf("day").isAfter(validToDate.endOf("day")) : false)}
-              onChange={(dateValue) =>
-                onChange((previous) => ({
-                  ...previous,
-                  validFrom: dateValue ? dateValue.format("YYYY-MM-DD") : "",
-                }))
-              }
-            />
-          </ConfigProvider>
-          {errors.validFrom ? <span className="text-sm text-red-500">{errors.validFrom}</span> : null}
-        </div>
-        <div className="flex flex-col">
-          <span className="font-normal text-[#000000D9] text-[1rem]">Valid To</span>
-          <ConfigProvider
-            theme={{
-              token: {
-                colorPrimary: PROJECT_PRIMARY_COLOR,
-                controlOutline: "rgba(var(--primary-color),0.25)",
-                borderRadius: 16,
-              },
-            }}
-          >
-            <DatePicker
-              value={validToDate}
-              format="YYYY-MM-DD"
-              placeholder="Select valid to date"
-              disabled={readOnly}
-              className={`w-full !rounded-[var(--primary-rounded)] !px-3 !py-[7px] ${
-                errors.validTo ? "!border-red-500 hover:!border-red-500" : "hover:!border-[rgba(var(--primary-color),1)]"
-              }`}
-              disabledDate={(current) => (validFromDate ? current.startOf("day").isBefore(validFromDate.startOf("day")) : false)}
-              onChange={(dateValue) =>
-                onChange((previous) => ({
-                  ...previous,
-                  validTo: dateValue ? dateValue.format("YYYY-MM-DD") : "",
-                }))
-              }
-            />
-          </ConfigProvider>
-          {errors.validTo ? <span className="text-sm text-red-500">{errors.validTo}</span> : null}
-        </div>
-        <CustomSelect
-          title="Status"
-          options={STATUS_OPTIONS}
-          value={values.status ? [values.status] : []}
-          disable={readOnly}
-          onChange={(selected) => onChange((previous) => ({ ...previous, status: (selected[0] as PriceListStatus) ?? "ACTIVE" }))}
-          classNameSelect="w-full text-left"
-          classNameOptions="w-full left-0"
-        />
-      </div>
+  const itemValidationRows = values.items
+    .map((item, index) => ({
+      index: index + 1,
+      productError: errors.itemProductMap?.[item.rowId],
+      unitPriceError: errors.itemUnitPriceMap?.[item.rowId],
+    }))
+    .filter((row) => row.productError || row.unitPriceError);
 
-      <div className="mt-5 rounded-lg border border-slate-200 p-4">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <div className="space-y-1">
-            <h4 className="text-sm font-semibold text-slate-800">Items</h4>
-            {hasProductSelector ? (
-              <p className="text-xs text-slate-500">
-                Added: {selectedProductIds.size}/{productOptions?.length ?? 0}
-              </p>
-            ) : null}
-          </div>
-          {!readOnly && !hasProductSelector ? (
-            <CustomButton
-              label="+ Add Item"
-              className="px-3 py-1 text-sm"
-              onClick={() =>
-                onChange((previous) => ({
-                  ...previous,
-                  items: [...previous.items, createEmptyPriceListItem()],
-                }))
+  return (
+    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      <Card>
+        <Space direction="vertical" size={4}>
+          <Typography.Title level={4} style={{ marginBottom: 0 }}>
+            {title}
+          </Typography.Title>
+          <Typography.Text type="secondary">{subtitle}</Typography.Text>
+        </Space>
+      </Card>
+
+      <Card title="1. Thông tin chung">
+        <Form layout="vertical">
+          <Row gutter={[16, 0]}>
+            <Col xs={24} lg={12}>
+              <Form.Item
+                label="Tên bảng giá"
+                required
+                validateStatus={errors.name ? "error" : undefined}
+                help={errors.name}
+              >
+                <Input
+                  placeholder="Ví dụ: Bảng giá dự án quý II/2026"
+                  value={values.name}
+                  disabled={readOnly}
+                  onChange={(event) => onChange((previous) => ({ ...previous, name: event.target.value }))}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} lg={12}>
+              <Form.Item label="Nhóm khách hàng áp dụng">
+                <Input
+                  placeholder="Ví dụ: Đại lý cấp 1, khách doanh nghiệp"
+                  value={values.customerGroup}
+                  disabled={readOnly}
+                  onChange={(event) => onChange((previous) => ({ ...previous, customerGroup: event.target.value }))}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </Card>
+
+      <Card title="2. Nhóm áp dụng và thời gian hiệu lực">
+        <Form layout="vertical">
+          <Row gutter={[16, 0]}>
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="Hiệu lực từ"
+                required
+                validateStatus={errors.validFrom ? "error" : undefined}
+                help={errors.validFrom}
+              >
+                <DatePicker
+                  className="w-full"
+                  format="DD/MM/YYYY"
+                  placeholder="Chọn ngày bắt đầu"
+                  value={validFromDate}
+                  disabled={readOnly}
+                  onChange={(dateValue) =>
+                    onChange((previous) => ({
+                      ...previous,
+                      validFrom: dateValue ? dateValue.format("YYYY-MM-DD") : "",
+                    }))
+                  }
+                  disabledDate={(current) => (validToDate ? current.endOf("day").isAfter(validToDate.endOf("day")) : false)}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="Hiệu lực đến"
+                required
+                validateStatus={errors.validTo ? "error" : undefined}
+                help={errors.validTo}
+              >
+                <DatePicker
+                  className="w-full"
+                  format="DD/MM/YYYY"
+                  placeholder="Chọn ngày kết thúc"
+                  value={validToDate}
+                  disabled={readOnly}
+                  onChange={(dateValue) =>
+                    onChange((previous) => ({
+                      ...previous,
+                      validTo: dateValue ? dateValue.format("YYYY-MM-DD") : "",
+                    }))
+                  }
+                  disabledDate={(current) => (validFromDate ? current.startOf("day").isBefore(validFromDate.startOf("day")) : false)}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </Card>
+
+      <Card
+        title="3. Danh sách sản phẩm và đơn giá"
+        extra={
+          <Space size={8}>
+            <Tag color="blue">{`Đã thêm ${totalProducts} sản phẩm`}</Tag>
+          </Space>
+        }
+      >
+        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+          {productLoadError ? (
+            <Alert
+              type="error"
+              showIcon
+              message="Không thể tải danh sách sản phẩm"
+              description={
+                <Space direction="vertical" size={8}>
+                  <Typography.Text>{productLoadError}</Typography.Text>
+                  {onRetryLoadProducts ? (
+                    <Button icon={<ReloadOutlined />} onClick={onRetryLoadProducts} loading={loadingProducts}>
+                      Thử tải lại
+                    </Button>
+                  ) : null}
+                </Space>
               }
             />
           ) : null}
-        </div>
 
-        {productLoadError ? (
-          <div className="mb-3 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            <p>{productLoadError}</p>
-            {onRetryLoadProducts ? (
-              <div className="mt-2">
-                <CustomButton
-                  label={loadingProducts ? "Retrying..." : "Retry"}
-                  className="bg-red-500 px-2 py-1 text-sm hover:bg-red-600"
-                  onClick={onRetryLoadProducts}
-                  disabled={loadingProducts}
-                />
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-
-        {hasProductSelector ? (
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 items-end gap-3 rounded border border-slate-200 p-3 md:grid-cols-[1fr_220px_auto]">
-              <CustomSelect
-                title="Product"
-                options={availableProductOptions}
-                value={draftProductId ? [draftProductId] : []}
-                helperText={draftErrors.productId}
-                placeholder={loadingProducts ? "Đang tải danh sách sản phẩm..." : noRemainingProducts ? "Tất cả sản phẩm đã được thêm" : "Chọn sản phẩm"}
-                disable={addFromDraftDisabled}
-                search
-                onChange={(selected) => {
-                  setDraftProductId(selected[0] ?? "");
-                  clearDraftError("productId");
-                }}
-                classNameSelect="w-full text-left"
-                classNameOptions="w-full left-0"
-              />
-              <CustomTextField
-                title="Unit Price"
-                value={draftUnitPrice}
-                type="number"
-                placeholder="Ex: 125000"
-                helperText={draftErrors.unitPrice}
-                error={Boolean(draftErrors.unitPrice)}
-                disabled={addFromDraftDisabled}
-                onChange={(event) => {
-                  setDraftUnitPrice(event.target.value);
-                  clearDraftError("unitPrice");
-                }}
-              />
-              <div className="flex">
-                <CustomButton
-                  label="Add"
-                  className="h-[42px] px-4"
+          {!readOnly ? (
+            <Row gutter={[12, 12]} align="bottom">
+              <Col xs={24} xl={12}>
+                <Form.Item
+                  label="Chọn sản phẩm"
+                  required
+                  validateStatus={draftErrors.productId ? "error" : undefined}
+                  help={draftErrors.productId}
+                >
+                  <Select<string>
+                    showSearch
+                    optionFilterProp="label"
+                    loading={loadingProducts}
+                    value={draftProductId || undefined}
+                    options={availableProductOptions}
+                    placeholder={
+                      loadingProducts
+                        ? "Đang tải sản phẩm..."
+                        : noRemainingProducts
+                          ? "Tất cả sản phẩm đã được thêm"
+                          : "Chọn sản phẩm để thêm vào bảng giá"
+                    }
+                    disabled={blockAddItem}
+                    onChange={(value) => {
+                      setDraftProductId(value);
+                      clearDraftError("productId");
+                    }}
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={14} xl={7}>
+                <Form.Item
+                  label="Đơn giá (VND)"
+                  required
+                  validateStatus={draftErrors.unitPrice ? "error" : undefined}
+                  help={draftErrors.unitPrice}
+                >
+                  <InputNumber<number>
+                    className="w-full"
+                    min={1}
+                    precision={0}
+                    placeholder="Ví dụ: 125000"
+                    value={draftUnitPrice ?? undefined}
+                    disabled={blockAddItem}
+                    onChange={(value) => {
+                      setDraftUnitPrice(typeof value === "number" ? value : null);
+                      clearDraftError("unitPrice");
+                    }}
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={10} xl={5}>
+                <Button
+                  type="primary"
+                  className="w-full"
+                  icon={<PlusOutlined />}
                   onClick={handleAddItem}
-                  disabled={addFromDraftDisabled}
-                />
-              </div>
-            </div>
+                  disabled={blockAddItem}
+                >
+                  Thêm sản phẩm
+                </Button>
+              </Col>
+            </Row>
+          ) : null}
 
-            {noAvailableProducts ? <p className="text-sm text-slate-500">No active products available.</p> : null}
-
-            <DataTable
-              columns={itemColumns}
-              data={values.items}
-              actions={
-                readOnly
-                  ? undefined
-                  : (row) => (
-                      <CustomButton
-                        label="Remove"
-                        className="bg-red-500 px-2 py-1 text-sm hover:bg-red-600"
-                        onClick={() => onRemoveItem(row.rowId)}
-                      />
-                    )
-              }
-              emptyText="No product added yet."
+          {noAvailableProducts ? (
+            <Alert
+              type="info"
+              showIcon
+              message="Không có sản phẩm đang hoạt động"
+              description="Hiện chưa có sản phẩm khả dụng để thêm vào bảng giá."
             />
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {values.items.map((item, index) => (
-              <div key={item.rowId} className="grid grid-cols-1 gap-3 rounded border border-slate-200 p-3 md:grid-cols-[1fr_200px_auto]">
-                <p className="md:col-span-3 text-xs font-medium uppercase tracking-wide text-slate-500">Item #{index + 1}</p>
-                <CustomTextField
-                  title="Product ID"
-                  value={item.productId}
-                  helperText={errors.itemProductMap?.[item.rowId]}
-                  error={Boolean(errors.itemProductMap?.[item.rowId])}
-                  disabled={readOnly}
-                  onChange={(event) =>
-                    onChange((previous) => ({
-                      ...previous,
-                      items: updateItem(previous.items, item.rowId, "productId", event.target.value),
-                    }))
-                  }
-                />
-                <CustomTextField
-                  title="Unit Price"
-                  value={item.unitPrice}
-                  type="number"
-                  helperText={errors.itemUnitPriceMap?.[item.rowId]}
-                  error={Boolean(errors.itemUnitPriceMap?.[item.rowId])}
-                  disabled={readOnly}
-                  onChange={(event) =>
-                    onChange((previous) => ({
-                      ...previous,
-                      items: updateItem(previous.items, item.rowId, "unitPrice", event.target.value),
-                    }))
-                  }
-                />
-                {!readOnly ? (
-                  <div className="flex items-end">
-                    <CustomButton
-                      label="Remove"
-                      className="bg-red-500 px-2 py-1 text-sm hover:bg-red-600"
-                      onClick={() => onRemoveItem(item.rowId)}
-                      disabled={values.items.length <= 1}
-                    />
-                  </div>
-                ) : null}
-              </div>
-            ))}
-            {values.items.length === 0 ? <p className="text-sm text-slate-500">No item available.</p> : null}
-          </div>
-        )}
+          ) : null}
 
-        {itemValidationRows.length > 0 ? (
-          <div className="mt-2 rounded border border-red-200 bg-red-50 p-2 text-sm text-red-700">
-            {itemValidationRows.map((row) => (
-              <p key={`item-error-${row.index}`}>
-                Item #{row.index}: {[row.productError, row.unitPriceError].filter(Boolean).join(" ")}
-              </p>
-            ))}
-          </div>
-        ) : null}
-        {errors.items ? <p className="mt-2 text-sm text-red-500">{errors.items}</p> : null}
-      </div>
-    </FormSectionCard>
+          <PriceListItemsTable
+            items={itemRows}
+            editableUnitPrice={!readOnly}
+            unitPriceErrors={errors.itemUnitPriceMap}
+            onUnitPriceChange={
+              readOnly
+                ? undefined
+                : (rowId, value) => {
+                    onChange((previous) => ({
+                      ...previous,
+                      items: updateItem(previous.items, rowId, "unitPrice", value ? String(value) : ""),
+                    }));
+                  }
+            }
+            onRemoveItem={readOnly ? undefined : onRemoveItem}
+            emptyDescription="Chưa có sản phẩm nào trong bảng giá."
+          />
+
+          {itemValidationRows.length > 0 ? (
+            <Alert
+              type="error"
+              showIcon
+              message="Danh sách sản phẩm còn dữ liệu chưa hợp lệ"
+              description={
+                <Space direction="vertical" size={2}>
+                  {itemValidationRows.map((row) => (
+                    <Typography.Text key={`item-validation-${row.index}`}>
+                      Sản phẩm #{row.index}: {[row.productError, row.unitPriceError].filter(Boolean).join(" ")}
+                    </Typography.Text>
+                  ))}
+                </Space>
+              }
+            />
+          ) : null}
+
+          {errors.items ? <Alert type="error" showIcon message={errors.items} /> : null}
+        </Space>
+      </Card>
+
+      <Card title="4. Trạng thái áp dụng">
+        <Form layout="vertical">
+          <Form.Item label="Trạng thái bảng giá">
+            <Select<PriceListStatus>
+              value={values.status}
+              disabled={readOnly}
+              options={STATUS_OPTIONS}
+              onChange={(status) => onChange((previous) => ({ ...previous, status }))}
+            />
+          </Form.Item>
+        </Form>
+      </Card>
+
+      <Card title="Tóm tắt trước khi lưu">
+        <Row gutter={[16, 16]}>
+          <Col xs={24} md={8}>
+            <Statistic title="Số sản phẩm đã thêm" value={totalProducts} />
+          </Col>
+          <Col xs={24} md={8}>
+            <Statistic title="Tổng đơn giá tham chiếu" value={totalEstimatedValue} suffix="VND" />
+          </Col>
+          <Col xs={24} md={8}>
+            <Statistic title="Khoảng hiệu lực" value={effectivePeriodText} />
+          </Col>
+        </Row>
+        <Divider />
+        <Typography.Text type="secondary">
+          Mẹo: kiểm tra kỹ nhóm khách hàng, thời gian hiệu lực và đơn giá trước khi lưu để tránh phải chỉnh sửa lại nhiều lần.
+        </Typography.Text>
+      </Card>
+    </Space>
   );
 };
 
 export default PriceListFormSection;
-

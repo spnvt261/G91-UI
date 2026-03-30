@@ -61,22 +61,22 @@ export const validatePriceListForm = (values: PriceListFormValues): PriceListFor
   const errors: PriceListFormErrors = {};
 
   if (!values.name.trim()) {
-    errors.name = "Name is required.";
+    errors.name = "Vui lòng nhập tên bảng giá.";
   }
 
   if (!values.validFrom) {
-    errors.validFrom = "Valid from is required.";
+    errors.validFrom = "Vui lòng chọn ngày bắt đầu hiệu lực.";
   }
   if (!values.validTo) {
-    errors.validTo = "Valid to is required.";
+    errors.validTo = "Vui lòng chọn ngày kết thúc hiệu lực.";
   }
   if (values.validFrom && values.validTo && values.validFrom > values.validTo) {
-    errors.validTo = "Valid to must be greater than or equal to valid from.";
+    errors.validTo = "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.";
   }
 
   const activeItems = values.items.filter((item) => item.productId.trim() || item.unitPrice.trim());
   if (activeItems.length === 0) {
-    errors.items = "At least one item is required.";
+    errors.items = "Vui lòng thêm ít nhất một sản phẩm.";
     return errors;
   }
 
@@ -89,18 +89,18 @@ export const validatePriceListForm = (values: PriceListFormValues): PriceListFor
     const unitPrice = toNumber(item.unitPrice);
 
     if (!productId) {
-      itemProductMap[item.rowId] = "Product is required.";
+      itemProductMap[item.rowId] = "Vui lòng chọn sản phẩm.";
       continue;
     }
 
     if (productIdSet.has(productId)) {
-      itemProductMap[item.rowId] = "Duplicate product is not allowed.";
+      itemProductMap[item.rowId] = "Sản phẩm đã tồn tại trong bảng giá.";
     } else {
       productIdSet.add(productId);
     }
 
     if (unitPrice == null || unitPrice <= 0) {
-      itemUnitPriceMap[item.rowId] = "Unit price must be greater than 0.";
+      itemUnitPriceMap[item.rowId] = "Đơn giá phải lớn hơn 0.";
     }
   }
 
