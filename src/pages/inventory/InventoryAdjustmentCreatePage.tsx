@@ -1,10 +1,6 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import FormSectionCard from "../../components/forms/FormSectionCard";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomSelect, { type Option } from "../../components/customSelect/CustomSelect";
-import CustomTextField from "../../components/customTextField/CustomTextField";
-import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
+import { Alert, Breadcrumb, Form, Input, InputNumber, Space } from "antd";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
@@ -12,44 +8,36 @@ import { useNotify } from "../../context/notifyContext";
 import { inventoryService } from "../../services/inventory/inventory.service";
 import { productService } from "../../services/product/product.service";
 import { getErrorMessage } from "../shared/page.utils";
+import InventoryTransactionForm from "./components/InventoryTransactionForm";
+import { getInventoryProductLabel, toInventoryProductOptions, type InventoryProductOption } from "./inventoryForm.utils";
+
+interface InventoryAdjustmentFormValues {
+  productId: string;
+  adjustmentQuantity: number;
+  reason: string;
+  note?: string;
+}
 
 const InventoryAdjustmentCreatePage = () => {
   const navigate = useNavigate();
   const { notify } = useNotify();
-  const [productId, setProductId] = useState("");
-  const [adjustmentQuantity, setAdjustmentQuantity] = useState("");
-  const [reason, setReason] = useState("");
-  const [note, setNote] = useState("");
+  const [form] = Form.useForm<InventoryAdjustmentFormValues>();
+
   const [saving, setSaving] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
-  const [productOptions, setProductOptions] = useState<Option[]>([]);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const clearFieldError = (field: string) => {
-    setErrors((previous) => {
-      if (!previous[field]) {
-        return previous;
-      }
-
-      const next = { ...previous };
-      delete next[field];
-      return next;
-    });
-  };
+  const [productLoadError, setProductLoadError] = useState<string | null>(null);
+  const [productOptions, setProductOptions] = useState<InventoryProductOption[]>([]);
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
         setLoadingProducts(true);
-        const response = await productService.getList({ page: 1, pageSize: 1000 });
-        setProductOptions(
-          response.items.map((item) => ({
-            label: `${item.productCode} - ${item.productName}`,
-            value: item.id,
-          })),
-        );
-      } catch {
+        setProductLoadError(null);
+        const response = await productService.getList({ page: 1, pageSize: 1000, sortBy: "productCode", sortDir: "asc" });
+        setProductOptions(toInventoryProductOptions(response.items));
+      } catch (error) {
         setProductOptions([]);
+        setProductLoadError(getErrorMessage(error, "Không thể tải danh sách sản phẩm."));
       } finally {
         setLoadingProducts(false);
       }
@@ -58,41 +46,31 @@ const InventoryAdjustmentCreatePage = () => {
     void loadProducts();
   }, []);
 
-  const validateForm = () => {
-    const validationErrors: Record<string, string> = {};
-    const parsedQuantity = Number(adjustmentQuantity);
+  const watchProductId = Form.useWatch("productId", form);
+  const watchAdjustmentQty = Form.useWatch("adjustmentQuantity", form);
+  const watchReason = Form.useWatch("reason", form);
 
-    if (!productId) {
-      validationErrors.productId = "Product is required.";
-    }
-    if (!Number.isFinite(parsedQuantity) || parsedQuantity === 0) {
-      validationErrors.adjustmentQuantity = "Adjustment quantity must not be 0.";
+  const adjustmentDirection = useMemo(() => {
+    if (watchAdjustmentQty == null || watchAdjustmentQty === 0) {
+      return "Chưa xác định";
     }
 
-    return validationErrors;
-  };
+    return watchAdjustmentQty > 0 ? "Tăng tồn kho" : "Giảm tồn kho";
+  }, [watchAdjustmentQty]);
 
-  const handleSave = async () => {
-    const validationErrors = validateForm();
-    setErrors(validationErrors);
-
-    if (Object.keys(validationErrors).length > 0) {
-      notify(Object.values(validationErrors)[0] ?? "Please check input values.", "error");
-      return;
-    }
-
+  const handleSubmit = async (values: InventoryAdjustmentFormValues) => {
     try {
       setSaving(true);
       await inventoryService.createAdjustment({
-        productId,
-        adjustmentQuantity: Number(adjustmentQuantity),
-        reason: reason.trim() || undefined,
-        note: note.trim() || undefined,
+        productId: values.productId,
+        adjustmentQuantity: Number(values.adjustmentQuantity),
+        reason: values.reason.trim(),
+        note: values.note?.trim() || undefined,
       });
-      notify("Inventory adjustment created successfully.", "success");
+      notify("Đã tạo phiếu điều chỉnh kho thành công.", "success");
       navigate(ROUTE_URL.INVENTORY_STATUS);
     } catch (error) {
-      notify(getErrorMessage(error, "Không thể create inventory adjustment"), "error");
+      notify(getErrorMessage(error, "Không thể tạo phiếu điều chỉnh kho."), "error");
     } finally {
       setSaving(false);
     }
@@ -100,71 +78,92 @@ const InventoryAdjustmentCreatePage = () => {
 
   return (
     <NoResizeScreenTemplate
-      loading={loadingProducts}
-      loadingText="Đang tải danh sách sản phẩm..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Create Inventory Adjustment"
+          title="Tạo phiếu điều chỉnh tồn kho"
+          subtitle="Kiểm soát thay đổi tồn kho có chủ đích với lý do rõ ràng và dấu vết nghiệp vụ đầy đủ."
           breadcrumb={
-            <CustomBreadcrumb
-              breadcrumbs={[
-                { label: "Trang chủ" },
-                { label: "Inventory", url: ROUTE_URL.INVENTORY_STATUS },
-                { label: "Adjustment" },
+            <Breadcrumb
+              items={[
+                { title: "Trang chủ" },
+                { title: <span onClick={() => navigate(ROUTE_URL.INVENTORY_STATUS)}>Kho vận</span> },
+                { title: "Điều chỉnh tồn kho" },
               ]}
             />
           }
         />
       }
       body={
-        <FormSectionCard title="Adjustment Information">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <CustomSelect
-              title="Product"
-              options={productOptions}
-              value={productId ? [productId] : []}
-              onChange={(selected) => {
-                setProductId(selected[0] ?? "");
-                clearFieldError("productId");
-              }}
-              classNameSelect="w-full text-left"
-              classNameOptions="w-full left-0"
-              placeholder="Chọn sản phẩm"
-              search
-              disable={loadingProducts}
-              helperText={errors.productId}
+        <InventoryTransactionForm<InventoryAdjustmentFormValues>
+          form={form}
+          productOptions={productOptions}
+          loadingProducts={loadingProducts}
+          productLoadError={productLoadError}
+          saving={saving}
+          submitLabel="Tạo phiếu điều chỉnh"
+          onSubmit={(values) => void handleSubmit(values)}
+          onBack={() => navigate(ROUTE_URL.INVENTORY_STATUS)}
+          sectionTwoTitle="Điều chỉnh số lượng"
+          sectionThreeTitle="Lý do điều chỉnh"
+          sectionFourTitle="Ghi chú"
+          sectionTwo={
+            <Space direction="vertical" size={12} style={{ width: "100%" }}>
+              <Form.Item
+                name="adjustmentQuantity"
+                label="Số lượng điều chỉnh"
+                extra="Nhập số dương để tăng tồn kho, số âm để giảm tồn kho."
+                rules={[
+                  { required: true, message: "Vui lòng nhập số lượng điều chỉnh." },
+                  {
+                    validator: (_, value: number | undefined) =>
+                      value == null || value === 0
+                        ? Promise.reject(new Error("Số lượng điều chỉnh phải khác 0."))
+                        : Promise.resolve(),
+                  },
+                ]}
+              >
+                <InputNumber className="w-full" precision={0} placeholder="Ví dụ: 10 hoặc -5" />
+              </Form.Item>
+            </Space>
+          }
+          sectionThree={
+            <Form.Item
+              name="reason"
+              label="Lý do điều chỉnh"
+              rules={[
+                { required: true, message: "Vui lòng nhập lý do điều chỉnh." },
+                { min: 5, message: "Lý do điều chỉnh cần tối thiểu 5 ký tự." },
+              ]}
+            >
+              <Input placeholder="Ví dụ: Kiểm kê lệch, bù hao hụt, cập nhật sai số trước đó..." />
+            </Form.Item>
+          }
+          sectionFour={
+            <Form.Item name="note" label="Ghi chú bổ sung">
+              <Input.TextArea rows={4} maxLength={500} showCount placeholder="Thông tin đối soát, mã biên bản kiểm kê hoặc lưu ý nội bộ." />
+            </Form.Item>
+          }
+          helperAlert={
+            <Alert
+              type="info"
+              showIcon
+              style={{ marginBottom: 12 }}
+              message="Nguyên tắc điều chỉnh tồn kho"
+              description="Số dương: tăng tồn kho. Số âm: giảm tồn kho. Vui lòng nhập đúng theo kết quả kiểm kê hoặc quyết định điều chỉnh đã duyệt."
             />
-            <CustomTextField
-              title="Adjustment Quantity"
-              type="number"
-              value={adjustmentQuantity}
-              helperText={errors.adjustmentQuantity}
-              error={Boolean(errors.adjustmentQuantity)}
-              onChange={(event) => {
-                setAdjustmentQuantity(event.target.value);
-                clearFieldError("adjustmentQuantity");
-              }}
-            />
-            <CustomTextField title="Reason" value={reason} onChange={(event) => setReason(event.target.value)} />
-            <CustomTextField title="Note" value={note} onChange={(event) => setNote(event.target.value)} />
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-3">
-            <CustomButton label={saving ? "Saving..." : "Create Adjustment"} onClick={handleSave} disabled={saving} />
-            <CustomButton
-              label="Back"
-              className="bg-slate-200 text-slate-700 hover:bg-slate-300"
-              onClick={() => navigate(ROUTE_URL.INVENTORY_STATUS)}
-              disabled={saving}
-            />
-          </div>
-        </FormSectionCard>
+          }
+          summaryTitle="Tóm tắt điều chỉnh"
+          summaryItems={[
+            { key: "product", label: "Sản phẩm", value: getInventoryProductLabel(productOptions, watchProductId) },
+            { key: "quantity", label: "Số lượng điều chỉnh", value: watchAdjustmentQty != null ? `${watchAdjustmentQty}` : "Chưa nhập" },
+            { key: "direction", label: "Chiều điều chỉnh", value: adjustmentDirection },
+            { key: "reason", label: "Lý do", value: watchReason || "Chưa cập nhật" },
+          ]}
+        />
       }
     />
   );
 };
 
 export default InventoryAdjustmentCreatePage;
-
-

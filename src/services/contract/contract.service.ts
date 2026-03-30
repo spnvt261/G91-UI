@@ -27,7 +27,8 @@ export interface ContractDocumentModel {
 const toContractModelFromListItem = (item: ContractListResponseData["items"][number]): ContractModel => ({
   id: item.id,
   contractNumber: item.contractNumber,
-  quotationId: "",
+  quotationId: item.quotationId ?? "",
+  quotationNumber: item.quotationNumber,
   customerId: item.customerId,
   customerName: item.customerName,
   items: [],
@@ -43,6 +44,7 @@ const toContractModelFromDetail = (payload: ContractDetailResponseData): Contrac
   id: payload.contract.id,
   contractNumber: payload.contract.contractNumber,
   quotationId: payload.contract.quotationId ?? payload.quotation?.id ?? "",
+  quotationNumber: payload.quotation?.quotationNumber,
   customerId: payload.contract.customerId ?? payload.customer?.id ?? "",
   customerName: payload.contract.customerName ?? payload.customer?.companyName,
   items: (payload.items ?? []).map((item) => ({

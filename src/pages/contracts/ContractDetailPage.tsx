@@ -1,6 +1,6 @@
 import { PrinterOutlined, ReloadOutlined } from "@ant-design/icons";
-import { Alert, Button, Card, Col, Descriptions, Empty, Input, Modal, Row, Select, Space, Statistic, Typography } from "antd";
-import { useCallback, useEffect, useState } from "react";
+import { Alert, Button, Card, Col, Empty, Input, Modal, Row, Select, Space, Statistic, Tag, Typography } from "antd";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
@@ -14,8 +14,9 @@ import { contractService } from "../../services/contract/contract.service";
 import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage } from "../shared/page.utils";
 import ContractActionBar from "./components/ContractActionBar";
-import ContractInfoCard from "./components/ContractInfoCard";
+import ContractCreateSection from "./components/ContractCreateSection";
 import ContractItemsTable from "./components/ContractItemsTable";
+import ContractKeyValueList, { type ContractKeyValueItem } from "./components/ContractKeyValueList";
 import ContractStatusTag from "./components/ContractStatusTag";
 import {
   formatContractCurrency,
@@ -162,6 +163,95 @@ const ContractDetailPage = () => {
   };
 
   const contractNumber = contract ? getContractDisplayNumber(contract) : "Chi tiết hợp đồng";
+
+  const overviewItems = useMemo<ContractKeyValueItem[]>(
+    () => [
+      {
+        key: "contractNumber",
+        label: "Số hợp đồng",
+        value: contract ? getContractDisplayNumber(contract) : "-",
+      },
+      {
+        key: "status",
+        label: "Trạng thái",
+        value: contract ? <ContractStatusTag status={contract.status} /> : "-",
+      },
+      {
+        key: "expectedDate",
+        label: "Ngày giao dự kiến",
+        value: formatContractDate(contract?.expectedDeliveryDate, "Chưa cập nhật"),
+      },
+      {
+        key: "confidential",
+        label: "Bảo mật",
+        value: contract?.confidential ? "Có" : "Không",
+      },
+    ],
+    [contract],
+  );
+
+  const relationItems = useMemo<ContractKeyValueItem[]>(
+    () => [
+      {
+        key: "customer",
+        label: "Khách hàng",
+        value: contract?.customerName || contract?.customerId || "-",
+      },
+      {
+        key: "quotation",
+        label: "Báo giá liên kết",
+        value: contract?.quotationId ? (
+          <Button
+            type="link"
+            style={{ padding: 0, height: "auto" }}
+            onClick={() => navigate(ROUTE_URL.QUOTATION_DETAIL.replace(":id", contract.quotationId))}
+          >
+            {contract.quotationNumber || "Báo giá liên kết"}
+          </Button>
+        ) : (
+          <Tag style={{ marginInlineEnd: 0 }}>Không có</Tag>
+        ),
+      },
+      {
+        key: "createdAt",
+        label: "Khởi tạo lúc",
+        value: formatContractDateTime(contract?.createdAt),
+      },
+    ],
+    [contract, navigate],
+  );
+
+  const paymentItems = useMemo<ContractKeyValueItem[]>(
+    () => [
+      {
+        key: "paymentTerms",
+        label: "Điều khoản thanh toán",
+        value: contract?.paymentTerms || "Chưa cập nhật điều khoản thanh toán.",
+      },
+    ],
+    [contract?.paymentTerms],
+  );
+
+  const shippingItems = useMemo<ContractKeyValueItem[]>(
+    () => [
+      {
+        key: "deliveryAddress",
+        label: "Địa chỉ giao hàng",
+        value: contract?.deliveryAddress || "Chưa cập nhật địa chỉ giao hàng.",
+      },
+      {
+        key: "deliveryTerms",
+        label: "Điều khoản giao hàng",
+        value: contract?.deliveryTerms || "Chưa cập nhật điều khoản giao hàng.",
+      },
+      {
+        key: "note",
+        label: "Ghi chú",
+        value: contract?.note || "Không có ghi chú bổ sung.",
+      },
+    ],
+    [contract?.deliveryAddress, contract?.deliveryTerms, contract?.note],
+  );
 
   return (
     <NoResizeScreenTemplate
@@ -314,139 +404,73 @@ const ContractDetailPage = () => {
             </Card>
           ) : (
             <>
-              <Card bordered={false} className="shadow-sm" loading={loading}>
-                <Space direction="vertical" size={14} style={{ width: "100%" }}>
-                  <Typography.Title level={5} className="!mb-0">
-                    1. Tổng quan hợp đồng
-                  </Typography.Title>
+              <ContractCreateSection
+                title="Tổng quan hợp đồng"
+                subtitle="Thông tin tóm tắt để nắm nhanh tình trạng và phạm vi hợp đồng."
+                loading={loading}
+                content={(
+                  <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                    <Row gutter={[16, 16]}>
+                      <Col xs={24} sm={8}>
+                        <Statistic
+                          title="Tổng giá trị hợp đồng"
+                          value={contract?.totalAmount ?? 0}
+                          formatter={(value) => formatContractCurrency(Number(value))}
+                        />
+                      </Col>
+                      <Col xs={24} sm={8}>
+                        <Statistic title="Số dòng sản phẩm" value={contract?.items.length ?? 0} />
+                      </Col>
+                      <Col xs={24} sm={8}>
+                        <Statistic title="Ngày tạo" value={formatContractDate(contract?.createdAt)} />
+                      </Col>
+                    </Row>
+                    <ContractKeyValueList items={overviewItems} />
+                  </Space>
+                )}
+              />
 
-                  <Row gutter={[16, 16]}>
-                    <Col xs={24} sm={8}>
-                      <Statistic
-                        title="Tổng giá trị hợp đồng"
-                        value={contract?.totalAmount ?? 0}
-                        formatter={(value) => formatContractCurrency(Number(value))}
-                      />
-                    </Col>
-                    <Col xs={24} sm={8}>
-                      <Statistic title="Số dòng sản phẩm" value={contract?.items.length ?? 0} />
-                    </Col>
-                    <Col xs={24} sm={8}>
-                      <Statistic title="Ngày tạo" value={formatContractDate(contract?.createdAt)} />
-                    </Col>
-                  </Row>
+              <ContractCreateSection
+                title="Thông tin khách hàng và báo giá liên quan"
+                subtitle="Dữ liệu tham chiếu để đối chiếu nguồn gốc hợp đồng."
+                loading={loading}
+                content={<ContractKeyValueList items={relationItems} />}
+              />
 
-                  <Descriptions
-                    size="small"
-                    column={{ xs: 1, sm: 1, md: 2 }}
-                    items={[
-                      {
-                        key: "contractNumber",
-                        label: "Số hợp đồng",
-                        children: contract ? getContractDisplayNumber(contract) : "-",
-                      },
-                      {
-                        key: "status",
-                        label: "Trạng thái",
-                        children: contract ? <ContractStatusTag status={contract.status} /> : "-",
-                      },
-                      {
-                        key: "expectedDate",
-                        label: "Ngày giao dự kiến",
-                        children: formatContractDate(contract?.expectedDeliveryDate, "Chưa cập nhật"),
-                      },
-                      {
-                        key: "confidential",
-                        label: "Bảo mật",
-                        children: contract?.confidential ? "Có" : "Không",
-                      },
-                    ]}
+              <ContractCreateSection
+                title="Điều khoản thanh toán"
+                subtitle="Điều khoản tài chính được áp dụng cho hợp đồng này."
+                loading={loading}
+                content={<ContractKeyValueList items={paymentItems} />}
+              />
+
+              <ContractCreateSection
+                title="Giao hàng và ghi chú"
+                subtitle="Thông tin thực thi và ghi chú vận hành."
+                loading={loading}
+                content={<ContractKeyValueList items={shippingItems} />}
+              />
+
+              <ContractCreateSection
+                title="Danh sách sản phẩm"
+                subtitle="Chi tiết từng dòng hàng và tổng giá trị thương mại."
+                loading={loading}
+                content={<ContractItemsTable items={contract?.items ?? []} />}
+              />
+
+              <ContractCreateSection
+                title="Bước xử lý tiếp theo"
+                subtitle="Khuyến nghị thao tác dựa trên trạng thái hiện tại."
+                loading={loading}
+                content={(
+                  <Alert
+                    type="info"
+                    showIcon
+                    message="Đề xuất hành động"
+                    description={getContractNextStepHint(contract?.status)}
                   />
-                </Space>
-              </Card>
-
-              <ContractInfoCard
-                title="2. Thông tin khách hàng / báo giá liên quan"
-                loading={loading}
-                items={[
-                  {
-                    key: "customer",
-                    label: "Khách hàng",
-                    children: contract?.customerName || contract?.customerId || "-",
-                  },
-                  {
-                    key: "customerId",
-                    label: "Mã khách hàng",
-                    children: contract?.customerId || "-",
-                  },
-                  {
-                    key: "quotation",
-                    label: "Báo giá liên kết",
-                    children: contract?.quotationId || "-",
-                  },
-                  {
-                    key: "createdAt",
-                    label: "Khởi tạo lúc",
-                    children: formatContractDateTime(contract?.createdAt),
-                  },
-                ]}
+                )}
               />
-
-              <ContractInfoCard
-                title="3. Điều khoản thanh toán"
-                loading={loading}
-                items={[
-                  {
-                    key: "paymentTerms",
-                    label: "Điều khoản",
-                    span: 2,
-                    children: contract?.paymentTerms || "Chưa cập nhật điều khoản thanh toán.",
-                  },
-                ]}
-              />
-
-              <ContractInfoCard
-                title="4. Giao hàng / ghi chú"
-                loading={loading}
-                items={[
-                  {
-                    key: "deliveryAddress",
-                    label: "Địa chỉ giao hàng",
-                    span: 2,
-                    children: contract?.deliveryAddress || "Chưa cập nhật địa chỉ giao hàng.",
-                  },
-                  {
-                    key: "deliveryTerms",
-                    label: "Điều khoản giao hàng",
-                    span: 2,
-                    children: contract?.deliveryTerms || "Chưa cập nhật điều khoản giao hàng.",
-                  },
-                  {
-                    key: "note",
-                    label: "Ghi chú",
-                    span: 2,
-                    children: contract?.note || "Không có ghi chú bổ sung.",
-                  },
-                ]}
-              />
-
-              <Card bordered={false} className="shadow-sm" loading={loading}>
-                <Space direction="vertical" size={12} style={{ width: "100%" }}>
-                  <Typography.Title level={5} className="!mb-0">
-                    5. Danh sách sản phẩm
-                  </Typography.Title>
-                  <ContractItemsTable items={contract?.items ?? []} />
-                </Space>
-              </Card>
-
-              <Card bordered={false} className="shadow-sm" loading={loading}>
-                <Alert
-                  type="info"
-                  showIcon
-                  message="Bước tiếp theo được đề xuất"
-                  description={getContractNextStepHint(contract?.status)}
-                />
-              </Card>
             </>
           )}
 

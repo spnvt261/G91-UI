@@ -1,110 +1,333 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowRightOutlined,
+  HistoryOutlined,
+  InboxOutlined,
+  PlusCircleOutlined,
+  ReloadOutlined,
+  SwapOutlined,
+  WarningOutlined,
+} from "@ant-design/icons";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import BaseCard from "../../components/cards/BaseCard";
-import CustomButton from "../../components/customButton/CustomButton";
-import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
-import DataTable, { type DataTableColumn } from "../../components/table/DataTable";
-import FilterSearchModalBar from "../../components/table/FilterSearchModalBar";
-import Pagination from "../../components/table/Pagination";
+import {
+  Alert,
+  Breadcrumb,
+  Button,
+  Card,
+  Col,
+  Empty,
+  Input,
+  Row,
+  Select,
+  Space,
+  Table,
+  Typography,
+} from "antd";
+import type { ColumnsType } from "antd/es/table";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { canPerformAction, hasPermission } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type { InventoryStatusItem } from "../../models/inventory/inventory.model";
 import { inventoryService } from "../../services/inventory/inventory.service";
+import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage } from "../shared/page.utils";
+import InventoryStatusTag from "./components/InventoryStatusTag";
+import InventorySummaryCards, { type InventorySummaryCardItem } from "./components/InventorySummaryCards";
+import { formatInventoryDateTime, getInventoryStockLevel, type InventoryStockLevel } from "./inventory.ui";
 
-const PAGE_SIZE = 10;
+const FETCH_SIZE = 1000;
+
+const STOCK_FILTER_OPTIONS: Array<{ label: string; value: InventoryStockLevel }> = [
+  { label: "Sắp hết hàng", value: "LOW_STOCK" },
+  { label: "Hết hàng", value: "OUT_OF_STOCK" },
+  { label: "Tồn kho an toàn", value: "SAFE_STOCK" },
+  { label: "Tồn kho cao", value: "HIGH_STOCK" },
+];
 
 const InventoryStatusPage = () => {
   const navigate = useNavigate();
+  const role = getStoredUserRole();
   const { notify } = useNotify();
+
+  const canCreateReceipt = canPerformAction(role, "inventory.receipt.create");
+  const canCreateIssue = canPerformAction(role, "inventory.issue.create");
+  const canCreateAdjustment = canPerformAction(role, "inventory.adjustment.create");
+  const canViewHistory = hasPermission(role, "inventory.history.view");
+
   const [items, setItems] = useState<InventoryStatusItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const [searchText, setSearchText] = useState("");
+  const [keyword, setKeyword] = useState("");
+  const [stockFilter, setStockFilter] = useState<InventoryStockLevel | undefined>();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const loadInventory = useCallback(async () => {
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+      const response = await inventoryService.getStatus({
+        page: 1,
+        size: FETCH_SIZE,
+        search: keyword || undefined,
+      });
+      setItems(response.items);
+    } catch (error) {
+      const message = getErrorMessage(error, "Không thể tải dữ liệu tồn kho.");
+      setErrorMessage(message);
+      notify(message, "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [keyword, notify]);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const response = await inventoryService.getStatus({
-          page,
-          size: PAGE_SIZE,
-          search: search || undefined,
-        });
-        setItems(response.items);
-        setTotal(response.totalElements);
-      } catch (error) {
-        notify(getErrorMessage(error, "Không thể load inventory status"), "error");
-      } finally {
-        setLoading(false);
+    void loadInventory();
+  }, [loadInventory]);
+
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      if (!stockFilter) {
+        return true;
       }
-    };
+      return getInventoryStockLevel(item.onHandQuantity) === stockFilter;
+    });
+  }, [items, stockFilter]);
 
-    void load();
-  }, [notify, page, search]);
+  const pagedItems = useMemo(() => filteredItems.slice((page - 1) * pageSize, page * pageSize), [filteredItems, page, pageSize]);
 
-  const columns = useMemo<DataTableColumn<InventoryStatusItem>[]>(
+  const summaryItems = useMemo<InventorySummaryCardItem[]>(
     () => [
-      { key: "productCode", header: "Product Code", className: "font-semibold text-blue-900" },
-      { key: "productName", header: "Product Name", render: (row) => row.productName ?? "-" },
-      { key: "unit", header: "Unit", render: (row) => row.unit ?? "-" },
-      { key: "onHandQuantity", header: "On Hand", render: (row) => String(row.onHandQuantity) },
-      { key: "availableQuantity", header: "Available", render: (row) => String(row.availableQuantity ?? row.onHandQuantity) },
-      { key: "reservedQuantity", header: "Reserved", render: (row) => String(row.reservedQuantity ?? 0) },
-      { key: "updatedAt", header: "Updated At", render: (row) => row.updatedAt ?? "-" },
+      {
+        key: "total",
+        title: "Tổng SKU theo dõi",
+        value: filteredItems.length,
+        icon: <InboxOutlined />,
+      },
+      {
+        key: "low",
+        title: "Sắp hết hàng",
+        value: filteredItems.filter((item) => getInventoryStockLevel(item.onHandQuantity) === "LOW_STOCK").length,
+        icon: <WarningOutlined />,
+        valueColor: "#d97706",
+      },
+      {
+        key: "out",
+        title: "Hết hàng",
+        value: filteredItems.filter((item) => getInventoryStockLevel(item.onHandQuantity) === "OUT_OF_STOCK").length,
+        icon: <WarningOutlined />,
+        valueColor: "#dc2626",
+      },
+      {
+        key: "safe",
+        title: "An toàn / tồn cao",
+        value: filteredItems.filter((item) => ["SAFE_STOCK", "HIGH_STOCK"].includes(getInventoryStockLevel(item.onHandQuantity))).length,
+        icon: <SwapOutlined />,
+        valueColor: "#16a34a",
+      },
+    ],
+    [filteredItems],
+  );
+
+  const columns = useMemo<ColumnsType<InventoryStatusItem>>(
+    () => [
+      {
+        title: "Mã sản phẩm",
+        dataIndex: "productCode",
+        key: "productCode",
+        render: (value: string | undefined, row) => (
+          <Space direction="vertical" size={0}>
+            <Typography.Text strong>{value || row.productId || "Chưa cập nhật"}</Typography.Text>
+            <Typography.Text type="secondary">{row.productId || "-"}</Typography.Text>
+          </Space>
+        ),
+      },
+      {
+        title: "Tên sản phẩm",
+        dataIndex: "productName",
+        key: "productName",
+        render: (value: string | undefined) => value || "Chưa cập nhật",
+      },
+      {
+        title: "Tồn hiện tại",
+        dataIndex: "onHandQuantity",
+        key: "onHandQuantity",
+        align: "right",
+        render: (value: number) => <Typography.Text strong>{value}</Typography.Text>,
+      },
+      {
+        title: "Đơn vị",
+        dataIndex: "unit",
+        key: "unit",
+        render: (value: string | undefined) => value || "-",
+      },
+      {
+        title: "Trạng thái tồn kho",
+        key: "stockStatus",
+        render: (_, row) => <InventoryStatusTag onHandQuantity={row.onHandQuantity} />,
+      },
+      {
+        title: "Cập nhật gần nhất",
+        dataIndex: "updatedAt",
+        key: "updatedAt",
+        render: (value?: string) => formatInventoryDateTime(value),
+      },
     ],
     [],
   );
 
   return (
     <NoResizeScreenTemplate
-      loading={loading}
-      loadingText="Đang tải tồn kho..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Inventory Status"
+          title="Tổng quan tồn kho"
+          subtitle="Theo dõi nhanh tình trạng tồn kho hiện tại để xử lý nhập, xuất và điều chỉnh kịp thời."
+          breadcrumb={<Breadcrumb items={[{ title: "Trang chủ" }, { title: "Kho vận" }]} />}
           actions={
-            <div className="flex flex-wrap gap-2">
-              <CustomButton label="Create Receipt" onClick={() => navigate(ROUTE_URL.INVENTORY_RECEIPT_CREATE)} />
-              <CustomButton label="Create Issue" onClick={() => navigate(ROUTE_URL.INVENTORY_ISSUE_CREATE)} />
-              <CustomButton label="Adjust Inventory" onClick={() => navigate(ROUTE_URL.INVENTORY_ADJUSTMENT_CREATE)} />
-              <CustomButton
-                label="Inventory History"
-                className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                onClick={() => navigate(ROUTE_URL.INVENTORY_HISTORY)}
-              />
-            </div>
+            <Space wrap>
+              <Button icon={<ReloadOutlined />} onClick={() => void loadInventory()} loading={loading}>
+                Làm mới
+              </Button>
+              {canViewHistory ? (
+                <Button icon={<HistoryOutlined />} onClick={() => navigate(ROUTE_URL.INVENTORY_HISTORY)}>
+                  Lịch sử kho
+                </Button>
+              ) : null}
+            </Space>
           }
-          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Inventory" }]} />}
         />
       }
       body={
-        <BaseCard>
-          <FilterSearchModalBar
-            searchValue={search}
-            onSearchChange={(value) => {
-              setSearch(value);
-              setPage(1);
-            }}
-            onSearchReset={() => {
-              setSearch("");
-              setPage(1);
-            }}
-            searchPlaceholder="Search inventory"
-            filters={[]}
-            onApplyFilters={() => undefined}
-          />
-          <DataTable columns={columns} data={items} emptyText="No inventory status found." />
-          <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={setPage} />
-        </BaseCard>
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <InventorySummaryCards items={summaryItems} loading={loading} />
+
+          <Card title="Thao tác nhanh">
+            <Row gutter={[12, 12]}>
+              <Col xs={24} sm={12} lg={6}>
+                <Button
+                  type="primary"
+                  ghost
+                  block
+                  icon={<PlusCircleOutlined />}
+                  disabled={!canCreateReceipt}
+                  onClick={() => navigate(ROUTE_URL.INVENTORY_RECEIPT_CREATE)}
+                >
+                  Nhập kho
+                </Button>
+              </Col>
+              <Col xs={24} sm={12} lg={6}>
+                <Button
+                  type="primary"
+                  ghost
+                  block
+                  icon={<ArrowRightOutlined />}
+                  disabled={!canCreateIssue}
+                  onClick={() => navigate(ROUTE_URL.INVENTORY_ISSUE_CREATE)}
+                >
+                  Xuất kho
+                </Button>
+              </Col>
+              <Col xs={24} sm={12} lg={6}>
+                <Button
+                  block
+                  icon={<SwapOutlined />}
+                  disabled={!canCreateAdjustment}
+                  onClick={() => navigate(ROUTE_URL.INVENTORY_ADJUSTMENT_CREATE)}
+                >
+                  Điều chỉnh
+                </Button>
+              </Col>
+              <Col xs={24} sm={12} lg={6}>
+                <Button block icon={<HistoryOutlined />} disabled={!canViewHistory} onClick={() => navigate(ROUTE_URL.INVENTORY_HISTORY)}>
+                  Xem lịch sử
+                </Button>
+              </Col>
+            </Row>
+          </Card>
+
+          <Card title="Danh sách tồn kho">
+            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+              <Row gutter={[12, 12]}>
+                <Col xs={24} lg={12}>
+                  <Input.Search
+                    allowClear
+                    value={searchText}
+                    placeholder="Tìm theo mã hoặc tên sản phẩm"
+                    enterButton="Tìm"
+                    onChange={(event) => setSearchText(event.target.value)}
+                    onSearch={(value) => {
+                      setKeyword(value.trim());
+                      setPage(1);
+                    }}
+                  />
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                  <Select
+                    className="w-full"
+                    allowClear
+                    value={stockFilter}
+                    placeholder="Lọc trạng thái tồn kho"
+                    options={STOCK_FILTER_OPTIONS}
+                    onChange={(value: InventoryStockLevel | undefined) => {
+                      setStockFilter(value);
+                      setPage(1);
+                    }}
+                  />
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                  <Button
+                    block
+                    onClick={() => {
+                      setSearchText("");
+                      setKeyword("");
+                      setStockFilter(undefined);
+                      setPage(1);
+                    }}
+                  >
+                    Đặt lại bộ lọc
+                  </Button>
+                </Col>
+              </Row>
+
+              {errorMessage ? <Alert type="error" showIcon message="Không thể tải dữ liệu tồn kho." description={errorMessage} /> : null}
+
+              <Table<InventoryStatusItem>
+                rowKey={(record) => `${record.productId}-${record.productCode ?? ""}`}
+                columns={columns}
+                dataSource={pagedItems}
+                loading={{ spinning: loading, tip: "Đang tải tồn kho..." }}
+                locale={{
+                  emptyText: (
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description="Không tìm thấy dữ liệu tồn kho phù hợp với bộ lọc hiện tại."
+                    />
+                  ),
+                }}
+                pagination={{
+                  current: page,
+                  pageSize,
+                  total: filteredItems.length,
+                  showSizeChanger: true,
+                  showTotal: (total, range) => `${range[0]}-${range[1]} trên ${total} SKU`,
+                }}
+                onChange={(pagination) => {
+                  setPage(pagination.current ?? 1);
+                  setPageSize(pagination.pageSize ?? 10);
+                }}
+                scroll={{ x: 980 }}
+              />
+            </Space>
+          </Card>
+        </Space>
       }
     />
   );
 };
 
 export default InventoryStatusPage;
-

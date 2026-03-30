@@ -120,11 +120,10 @@ const ContractListPage = () => {
       },
       {
         title: "Báo giá",
-        dataIndex: "quotationId",
         key: "quotationId",
         width: 180,
-        render: (value?: string) => (
-          <Typography.Text code>{value || "Chưa liên kết"}</Typography.Text>
+        render: (_, row) => (
+          <Typography.Text code>{row.quotationNumber || row.quotationId || "Chưa liên kết"}</Typography.Text>
         ),
       },
       {

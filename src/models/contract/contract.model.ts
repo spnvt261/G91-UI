@@ -25,6 +25,7 @@ export interface ContractModel {
   id: string;
   contractNumber?: string;
   quotationId: string;
+  quotationNumber?: string;
   customerId: string;
   customerName?: string;
   items: ContractItemModel[];
@@ -121,6 +122,8 @@ export interface ContractListResponseData {
   items: Array<{
     id: string;
     contractNumber?: string;
+    quotationId?: string;
+    quotationNumber?: string;
     customerId: string;
     customerName?: string;
     status: ContractStatus;
