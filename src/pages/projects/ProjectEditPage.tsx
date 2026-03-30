@@ -68,8 +68,8 @@ const ProjectEditPage = () => {
         try {
           setLookupLoading(true);
           const [customerListResponse, projects] = await Promise.all([
-            customerService.getList({ page: 1, pageSize: 200, status: "ACTIVE" }),
-            projectService.getList({ page: 1, pageSize: 300 }),
+            customerService.getList({ page: 1, pageSize: 100, status: "ACTIVE" }),
+            projectService.getList({ page: 1, pageSize: 100 }),
           ]);
 
           setCustomerOptions(buildCustomerOptions(customerListResponse.items));
