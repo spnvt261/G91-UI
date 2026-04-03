@@ -1,6 +1,6 @@
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import { Button, Empty, Modal, Skeleton, Space, Typography } from "antd";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ProductImage from "./ProductImage";
 
 interface ProductGalleryProps {
@@ -8,6 +8,8 @@ interface ProductGalleryProps {
   mainImage?: string;
   imageUrls?: string[];
 }
+
+const MIN_MAIN_LOADING_MS = 220;
 
 const ProductGallery = ({ productName, mainImage, imageUrls }: ProductGalleryProps) => {
   const images = useMemo(() => {
@@ -19,6 +21,8 @@ const ProductGallery = ({ productName, mainImage, imageUrls }: ProductGalleryPro
   const [mainLoaded, setMainLoaded] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0);
+  const mainLoadStartedAtRef = useRef(0);
+  const mainLoadTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!images.length) {
@@ -32,8 +36,23 @@ const ProductGallery = ({ productName, mainImage, imageUrls }: ProductGalleryPro
   }, [activeImage, images]);
 
   useEffect(() => {
+    if (mainLoadTimerRef.current != null) {
+      window.clearTimeout(mainLoadTimerRef.current);
+      mainLoadTimerRef.current = null;
+    }
+
+    mainLoadStartedAtRef.current = Date.now();
     setMainLoaded(false);
   }, [activeImage]);
+
+  useEffect(
+    () => () => {
+      if (mainLoadTimerRef.current != null) {
+        window.clearTimeout(mainLoadTimerRef.current);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!images.length) {
@@ -49,6 +68,26 @@ const ProductGallery = ({ productName, mainImage, imageUrls }: ProductGalleryPro
   const activeIndex = Math.max(0, images.indexOf(activeImage));
   const canGoPrev = previewIndex > 0;
   const canGoNext = previewIndex < images.length - 1;
+
+  const handleMainImageSettled = () => {
+    if (mainLoadTimerRef.current != null) {
+      window.clearTimeout(mainLoadTimerRef.current);
+      mainLoadTimerRef.current = null;
+    }
+
+    const elapsed = Date.now() - mainLoadStartedAtRef.current;
+    const remaining = Math.max(0, MIN_MAIN_LOADING_MS - elapsed);
+
+    if (remaining === 0) {
+      setMainLoaded(true);
+      return;
+    }
+
+    mainLoadTimerRef.current = window.setTimeout(() => {
+      setMainLoaded(true);
+      mainLoadTimerRef.current = null;
+    }, remaining);
+  };
 
   if (images.length === 0) {
     return (
@@ -81,11 +120,12 @@ const ProductGallery = ({ productName, mainImage, imageUrls }: ProductGalleryPro
         ) : null}
 
         <ProductImage
+          key={activeImage}
           src={activeImage}
           alt={productName}
           preview={false}
-          onLoad={() => setMainLoaded(true)}
-          onError={() => setMainLoaded(true)}
+          onLoad={handleMainImageSettled}
+          onError={handleMainImageSettled}
           onClick={() => {
             setPreviewIndex(activeIndex);
             setPreviewOpen(true);
