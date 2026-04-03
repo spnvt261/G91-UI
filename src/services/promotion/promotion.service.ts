@@ -14,6 +14,7 @@ import type {
   PromotionType,
   PromotionUpdateRequest,
 } from "../../models/promotion/promotion.model";
+import { extractList, extractPagination } from "../service.utils";
 
 interface PromotionApiCreateResponse {
   id: string;
@@ -63,8 +64,13 @@ interface PromotionApiListItemResponse {
 }
 
 interface PromotionApiListResponseData {
-  items: PromotionApiListItemResponse[];
+  items?: PromotionApiListItemResponse[];
+  content?: PromotionApiListItemResponse[];
   pagination?: PaginationMeta;
+  page?: number;
+  size?: number;
+  totalElements?: number;
+  totalPages?: number;
   filters?: {
     search?: string;
     status?: string;
@@ -194,8 +200,8 @@ const toApiListQuery = (query?: PromotionListQuery): PromotionApiListQuery => ({
   search: query?.keyword,
   status: query?.status,
   promotionType: query?.promotionType ? toApiPromotionType(query.promotionType) : undefined,
-  validFrom: query?.startFrom ?? query?.endFrom,
-  validTo: query?.endTo ?? query?.startTo,
+  validFrom: query?.startFrom,
+  validTo: query?.endTo,
   customerGroup: query?.customerGroup,
   productId: query?.productId,
 });
@@ -237,23 +243,25 @@ const toFallbackModelAfterCreate = (id: string, code: string | undefined, payloa
 export const promotionService = {
   async getList(query?: PromotionListQuery): Promise<PromotionListResponseData> {
     const response = await api.get<PromotionApiListResponseData>(API.PROMOTIONS.LIST, { params: toApiListQuery(query) });
+    const payload = response.data;
+    const items = extractList<PromotionApiListItemResponse>(payload).map(toModelListItem);
+    const pagination = extractPagination(payload, {
+      page: query?.page ?? 1,
+      pageSize: query?.pageSize ?? 10,
+      totalItems: items.length,
+    });
 
     return {
-      items: (response.data.items ?? []).map(toModelListItem),
-      pagination: response.data.pagination ?? {
-        page: query?.page ?? 1,
-        pageSize: query?.pageSize ?? 0,
-        totalItems: 0,
-        totalPages: 0,
-      },
+      items,
+      pagination,
       filters: {
-        keyword: response.data.filters?.search ?? query?.keyword,
-        status: response.data.filters?.status ? toModelPromotionStatus(response.data.filters.status) : undefined,
-        promotionType: response.data.filters?.promotionType ? toModelPromotionType(response.data.filters.promotionType) : undefined,
-        startFrom: response.data.filters?.validFrom ?? query?.startFrom,
-        endTo: response.data.filters?.validTo ?? query?.endTo,
-        customerGroup: response.data.filters?.customerGroup,
-        productId: response.data.filters?.productId,
+        keyword: payload.filters?.search ?? query?.keyword,
+        status: payload.filters?.status ? toModelPromotionStatus(payload.filters.status) : undefined,
+        promotionType: payload.filters?.promotionType ? toModelPromotionType(payload.filters.promotionType) : undefined,
+        startFrom: payload.filters?.validFrom ?? query?.startFrom,
+        endTo: payload.filters?.validTo ?? query?.endTo,
+        customerGroup: payload.filters?.customerGroup,
+        productId: payload.filters?.productId,
       },
     };
   },

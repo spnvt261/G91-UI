@@ -1,4 +1,4 @@
-import api from "../../apiConfig/axiosConfig";
+﻿import api from "../../apiConfig/axiosConfig";
 import { API, withId } from "../../api/URL_const";
 import type {
   PriceListItemModel,
@@ -8,7 +8,7 @@ import type {
   PriceListStatus,
   PriceListWriteRequest,
 } from "../../models/pricing/price-list.model";
-import { extractList } from "../service.utils";
+import { extractList, extractPagination } from "../service.utils";
 
 interface PriceListApiItem {
   id?: string;
@@ -19,6 +19,8 @@ interface PriceListApiItem {
   unitPrice?: number;
   unit_price_vnd?: number;
   unitPriceVND?: number;
+  pricingRuleType?: string;
+  note?: string;
 }
 
 interface PriceListApiModel {
@@ -32,15 +34,10 @@ interface PriceListApiModel {
   status?: string;
   itemCount?: number;
   items?: PriceListApiItem[];
+  createdBy?: string;
+  updatedBy?: string;
   createdAt?: string;
   updatedAt?: string;
-}
-
-interface PriceListApiPagedResponse {
-  content?: PriceListApiModel[];
-  page?: number;
-  size?: number;
-  totalElements?: number;
 }
 
 const toPriceListStatus = (value: string | undefined): PriceListStatus => {
@@ -53,6 +50,8 @@ const toItemModel = (item: PriceListApiItem): PriceListItemModel => ({
   productCode: item.productCode,
   productName: item.productName,
   unitPriceVnd: Number(item.unitPriceVnd ?? item.unitPrice ?? item.unit_price_vnd ?? item.unitPriceVND ?? 0),
+  pricingRuleType: item.pricingRuleType,
+  note: item.note,
 });
 
 const toModel = (item: PriceListApiModel): PriceListModel => {
@@ -67,6 +66,8 @@ const toModel = (item: PriceListApiModel): PriceListModel => {
     status: toPriceListStatus(item.status),
     itemCount: Number(item.itemCount ?? items.length),
     items,
+    createdBy: item.createdBy,
+    updatedBy: item.updatedBy,
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
   };
@@ -81,6 +82,8 @@ const toWritePayload = (payload: PriceListWriteRequest) => ({
   items: payload.items.map((item) => ({
     productId: item.productId,
     unitPriceVnd: item.unitPriceVnd,
+    pricingRuleType: item.pricingRuleType,
+    note: item.note,
   })),
 });
 
@@ -92,17 +95,19 @@ export const priceListService = {
 
   async getList(query?: PriceListListQuery): Promise<PriceListListResponseData> {
     const response = await api.get<unknown>(API.PRICE_LISTS.LIST, { params: query });
-    const payload = response.data as PriceListApiPagedResponse | PriceListApiModel[] | undefined;
+    const payload = response.data;
     const items = extractList<PriceListApiModel>(payload).map(toModel);
+    const pagination = extractPagination(payload, {
+      page: query?.page ?? 1,
+      pageSize: query?.size ?? 10,
+      totalItems: items.length,
+    });
 
     return {
       items,
-      page: payload && typeof payload === "object" && "page" in payload ? Number(payload.page ?? query?.page ?? 1) : Number(query?.page ?? 1),
-      size: payload && typeof payload === "object" && "size" in payload ? Number(payload.size ?? query?.size ?? 10) : Number(query?.size ?? 10),
-      totalElements:
-        payload && typeof payload === "object" && "totalElements" in payload
-          ? Number(payload.totalElements ?? items.length)
-          : items.length,
+      page: pagination.page,
+      size: pagination.pageSize,
+      totalElements: pagination.totalItems,
     };
   },
 

@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from "axios";
 import type { ApiResponse, ApiValidationErrorItem } from "../models/common/api.model";
+import { extractApiErrorMessage, extractFieldErrors, isApiResponse, isSuccessResponse, unwrapApiResponse } from "../services/service.utils";
 
 const MIN_REQUEST_DURATION_MS = 1000;
 
@@ -12,12 +13,14 @@ type RequestMetaConfig = InternalAxiosRequestConfig & {
 export class ApiClientError extends Error {
   code?: string;
   errors?: ApiValidationErrorItem[];
+  fieldErrors?: Record<string, string[]>;
 
-  constructor(message: string, options?: { code?: string; errors?: ApiValidationErrorItem[] }) {
+  constructor(message: string, options?: { code?: string; errors?: ApiValidationErrorItem[]; fieldErrors?: Record<string, string[]> }) {
     super(message);
     this.name = "ApiClientError";
     this.code = options?.code;
     this.errors = options?.errors;
+    this.fieldErrors = options?.fieldErrors;
   }
 }
 
@@ -43,21 +46,6 @@ const ensureMinimumRequestDuration = async (config?: RequestMetaConfig) => {
   if (remaining > 0) {
     await wait(remaining);
   }
-};
-
-const extractValidationMessage = (errors?: ApiValidationErrorItem[]) => {
-  if (!errors?.length) {
-    return "";
-  }
-
-  return errors
-    .map((item) => {
-      if (!item.field) {
-        return item.message;
-      }
-      return `${item.field}: ${item.message}`;
-    })
-    .join("; ");
 };
 
 api.interceptors.request.use(
@@ -93,32 +81,31 @@ api.interceptors.response.use(
 
     const payload = response.data as ApiResponse<unknown> | unknown;
 
-    if (!payload || typeof payload !== "object" || !("code" in payload)) {
+    if (!isApiResponse(payload)) {
       return response;
     }
 
-    const apiResponse = payload as ApiResponse<unknown>;
-    if (apiResponse.code === "SUCCESS") {
-      response.data = apiResponse.data;
+    if (isSuccessResponse(payload)) {
+      response.data = unwrapApiResponse(payload);
       return response;
     }
 
-    const validationMessage = extractValidationMessage(apiResponse.errors);
-    throw new ApiClientError(validationMessage || apiResponse.message || "Request failed", {
-      code: apiResponse.code,
-      errors: apiResponse.errors,
+    throw new ApiClientError(extractApiErrorMessage(payload, "Request failed"), {
+      code: payload.code,
+      errors: payload.errors,
+      fieldErrors: extractFieldErrors(payload.errors),
     });
   },
   async (error: AxiosError) => {
     await ensureMinimumRequestDuration(error.config as RequestMetaConfig | undefined);
 
     const payload = error.response?.data as ApiResponse<unknown> | undefined;
-    if (payload?.code) {
-      const validationMessage = extractValidationMessage(payload.errors);
+    if (isApiResponse(payload)) {
       return Promise.reject(
-        new ApiClientError(validationMessage || payload.message || error.message || "Request failed", {
+        new ApiClientError(extractApiErrorMessage(payload, error.message || "Request failed"), {
           code: payload.code,
           errors: payload.errors,
+          fieldErrors: extractFieldErrors(payload.errors),
         }),
       );
     }

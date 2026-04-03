@@ -1,4 +1,4 @@
-import { Card, Descriptions, Space, Typography } from "antd";
+﻿import { Card, Descriptions, Space, Typography } from "antd";
 import type { PromotionStatus } from "../../../models/promotion/promotion.model";
 import type { PromotionFormValues } from "../promotionForm.utils";
 import { formatPromotionDate, formatPromotionDiscountValue, getPromotionTypeLabel } from "../promotion.utils";
@@ -10,7 +10,7 @@ interface PromotionFormSummaryCardProps {
   className?: string;
 }
 
-const PromotionFormSummaryCard = ({ formValues, title = "Tóm tắt chương trình", className }: PromotionFormSummaryCardProps) => {
+const PromotionFormSummaryCard = ({ formValues, title = "Tom tat chuong trinh", className }: PromotionFormSummaryCardProps) => {
   const normalizedStatus: PromotionStatus =
     formValues.status === "ACTIVE" || formValues.status === "INACTIVE" || formValues.status === "DRAFT"
       ? formValues.status
@@ -18,7 +18,7 @@ const PromotionFormSummaryCard = ({ formValues, title = "Tóm tắt chương tr�
   const promotionTypeLabel =
     formValues.promotionType === "PERCENTAGE" || formValues.promotionType === "FIXED_AMOUNT"
       ? getPromotionTypeLabel(formValues.promotionType)
-      : "Chưa chọn";
+      : "Chua chon";
   const hasDiscountValue = Number.isFinite(Number(formValues.discountValue)) && Number(formValues.discountValue) > 0;
 
   return (
@@ -28,35 +28,37 @@ const PromotionFormSummaryCard = ({ formValues, title = "Tóm tắt chương tr�
           <Typography.Title level={5} className="!mb-0">
             {title}
           </Typography.Title>
-          <Typography.Text type="secondary">Kiểm tra nhanh cấu hình trước khi lưu chương trình.</Typography.Text>
+          <Typography.Text type="secondary">Kiem tra nhanh cau hinh truoc khi luu chuong trinh.</Typography.Text>
         </Space>
 
         <Descriptions column={1} size="small" colon={false} labelStyle={{ width: 150 }}>
-          <Descriptions.Item label="Tên chương trình">
-            {formValues.name.trim() || <Typography.Text type="secondary">Chưa nhập</Typography.Text>}
+          <Descriptions.Item label="Ten chuong trinh">
+            {formValues.name.trim() || <Typography.Text type="secondary">Chua nhap</Typography.Text>}
           </Descriptions.Item>
-          <Descriptions.Item label="Loại giảm giá">{promotionTypeLabel}</Descriptions.Item>
-          <Descriptions.Item label="Giá trị giảm">
+          <Descriptions.Item label="Loai giam gia">{promotionTypeLabel}</Descriptions.Item>
+          <Descriptions.Item label="Gia tri giam">
             {hasDiscountValue ? (
               formatPromotionDiscountValue({
                 promotionType: formValues.promotionType === "FIXED_AMOUNT" ? "FIXED_AMOUNT" : "PERCENTAGE",
                 discountValue: Number(formValues.discountValue),
               })
             ) : (
-              <Typography.Text type="secondary">Chưa nhập</Typography.Text>
+              <Typography.Text type="secondary">Chua nhap</Typography.Text>
             )}
           </Descriptions.Item>
-          <Descriptions.Item label="Hiệu lực">
+          <Descriptions.Item label="Hieu luc">
             {formValues.startDate || formValues.endDate ? (
               <span>
                 {formatPromotionDate(formValues.startDate)} - {formatPromotionDate(formValues.endDate)}
               </span>
             ) : (
-              <Typography.Text type="secondary">Chưa chọn thời gian</Typography.Text>
+              <Typography.Text type="secondary">Chua chon thoi gian</Typography.Text>
             )}
           </Descriptions.Item>
-          <Descriptions.Item label="Sản phẩm áp dụng">{formValues.productIds.length} sản phẩm</Descriptions.Item>
-          <Descriptions.Item label="Trạng thái">
+          <Descriptions.Item label="Priority">{formValues.priority ?? "Chua dat"}</Descriptions.Item>
+          <Descriptions.Item label="San pham ap dung">{formValues.productIds.length} san pham</Descriptions.Item>
+          <Descriptions.Item label="Nhom khach hang">{formValues.customerGroups.length > 0 ? formValues.customerGroups.join(", ") : "Tat ca"}</Descriptions.Item>
+          <Descriptions.Item label="Trang thai">
             <PromotionStatusTag status={normalizedStatus} withDot />
           </Descriptions.Item>
         </Descriptions>

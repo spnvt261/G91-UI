@@ -1,4 +1,4 @@
-import api from "../../apiConfig/axiosConfig";
+﻿import api from "../../apiConfig/axiosConfig";
 import { API } from "../../api/URL_const";
 import type {
   InventoryAdjustmentRequest,
@@ -36,6 +36,7 @@ interface InventoryStatusApiItem {
   productId?: string;
   productCode?: string;
   productName?: string;
+  type?: string;
   unit?: string;
   currentQuantity?: number;
   onHandQuantity?: number;
@@ -46,15 +47,25 @@ interface InventoryStatusApiItem {
 
 interface InventoryHistoryApiItem {
   id?: string;
+  transactionId?: string;
+  transactionCode?: string;
   transactionType?: string;
   productId?: string;
   productCode?: string;
   productName?: string;
   quantity?: number;
+  quantityBefore?: number;
+  quantityAfter?: number;
   balanceAfter?: number;
+  transactionDate?: string;
+  createdAt?: string;
+  operatorId?: string;
+  operatorEmail?: string;
+  supplierName?: string;
+  relatedOrderId?: string;
+  relatedProjectId?: string;
   reason?: string;
   note?: string;
-  createdAt?: string;
 }
 
 const toTransactionType = (value: string | undefined): InventoryTransactionType => {
@@ -65,29 +76,49 @@ const toTransactionType = (value: string | undefined): InventoryTransactionType 
   return "RECEIPT";
 };
 
-const toStatusItem = (row: InventoryStatusApiItem): InventoryStatusItem => ({
-  productId: row.productId ?? "",
-  productCode: row.productCode,
-  productName: row.productName,
-  unit: row.unit,
-  onHandQuantity: Number(row.onHandQuantity ?? row.currentQuantity ?? 0),
-  availableQuantity:
-    row.availableQuantity == null ? (row.currentQuantity == null ? undefined : Number(row.currentQuantity)) : Number(row.availableQuantity),
-  reservedQuantity: row.reservedQuantity == null ? undefined : Number(row.reservedQuantity),
-  updatedAt: row.updatedAt,
-});
+const toNumber = (value: unknown, fallback = 0): number => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const toStatusItem = (row: InventoryStatusApiItem): InventoryStatusItem => {
+  const currentQuantity = toNumber(row.currentQuantity ?? row.onHandQuantity, 0);
+
+  return {
+    productId: row.productId ?? "",
+    productCode: row.productCode,
+    productName: row.productName,
+    type: row.type,
+    unit: row.unit,
+    currentQuantity,
+    onHandQuantity: currentQuantity,
+    availableQuantity: row.availableQuantity == null ? undefined : toNumber(row.availableQuantity),
+    reservedQuantity: row.reservedQuantity == null ? undefined : toNumber(row.reservedQuantity),
+    updatedAt: row.updatedAt,
+  };
+};
 
 const toHistoryItem = (row: InventoryHistoryApiItem): InventoryHistoryItem => ({
-  id: row.id ?? "",
+  id: row.id ?? row.transactionId ?? "",
+  transactionId: row.transactionId ?? row.id ?? "",
+  transactionCode: row.transactionCode,
   transactionType: toTransactionType(row.transactionType),
   productId: row.productId ?? "",
   productCode: row.productCode,
   productName: row.productName,
-  quantity: Number(row.quantity ?? 0),
-  balanceAfter: row.balanceAfter == null ? undefined : Number(row.balanceAfter),
+  quantity: toNumber(row.quantity, 0),
+  quantityBefore: row.quantityBefore == null ? undefined : toNumber(row.quantityBefore),
+  quantityAfter: row.quantityAfter == null ? undefined : toNumber(row.quantityAfter),
+  balanceAfter: row.balanceAfter == null ? undefined : toNumber(row.balanceAfter),
+  transactionDate: row.transactionDate,
+  createdAt: row.createdAt,
+  operatorId: row.operatorId,
+  operatorEmail: row.operatorEmail,
+  supplierName: row.supplierName,
+  relatedOrderId: row.relatedOrderId,
+  relatedProjectId: row.relatedProjectId,
   reason: row.reason,
   note: row.note,
-  createdAt: row.createdAt,
 });
 
 const toPagedResult = <TInput, TOutput>(
@@ -128,13 +159,11 @@ export const inventoryService = {
 
   async getStatus(query?: InventoryStatusListQuery): Promise<InventoryStatusListResponse> {
     const response = await api.get<unknown>(API.INVENTORY.STATUS, { params: query });
-    const paged = toPagedResult<InventoryStatusApiItem, InventoryStatusItem>(response.data, { page: query?.page, size: query?.size }, toStatusItem);
-    return paged;
+    return toPagedResult<InventoryStatusApiItem, InventoryStatusItem>(response.data, { page: query?.page, size: query?.size }, toStatusItem);
   },
 
   async getHistory(query?: InventoryHistoryQuery): Promise<InventoryHistoryResponse> {
     const response = await api.get<unknown>(API.INVENTORY.HISTORY, { params: query });
-    const paged = toPagedResult<InventoryHistoryApiItem, InventoryHistoryItem>(response.data, { page: query?.page, size: query?.size }, toHistoryItem);
-    return paged;
+    return toPagedResult<InventoryHistoryApiItem, InventoryHistoryItem>(response.data, { page: query?.page, size: query?.size }, toHistoryItem);
   },
 };

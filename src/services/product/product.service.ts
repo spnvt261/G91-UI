@@ -8,6 +8,7 @@ import type {
   ProductStatus,
   ProductStatusResponse,
   ProductStatusUpdateRequest,
+  ProductUploadImagesResponse,
   ProductUpdateRequest,
 } from "../../models/product/product.model";
 import { extractList } from "../service.utils";
@@ -22,12 +23,15 @@ interface ProductApiModel {
   unit: string;
   weightConversion?: number | null;
   referenceWeight?: number | null;
+  description?: string;
   status?: string;
   imageUrls?: string[];
   images?: string[];
   mainImage?: string;
   image?: string;
   createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string;
 }
 
 interface ProductApiListResponse {
@@ -102,11 +106,14 @@ const toModel = (payload: ProductApiModel): ProductModel => {
     unit: payload.unit,
     weightConversion: payload.weightConversion,
     referenceWeight: payload.referenceWeight,
+    description: payload.description,
     status: toStatus(payload.status),
     imageUrls,
     mainImage,
     images: imageUrls,
     createdAt: payload.createdAt,
+    updatedAt: payload.updatedAt,
+    deletedAt: payload.deletedAt,
   };
 };
 
@@ -119,6 +126,7 @@ const toWritePayload = (payload: ProductCreateRequest | ProductUpdateRequest) =>
   unit: payload.unit.trim(),
   weightConversion: payload.weightConversion,
   referenceWeight: payload.referenceWeight,
+  description: payload.description?.trim() || undefined,
   status: payload.status,
   imageUrls: toUniqueImageUrls(payload.imageUrls),
 });
@@ -204,6 +212,26 @@ export const productService = {
   async update(id: string, payload: ProductUpdateRequest): Promise<ProductModel> {
     const response = await api.put<ProductApiModel>(withId(API.PRODUCTS.UPDATE, id), toWritePayload(payload));
     return toModel(response.data);
+  },
+
+  async uploadImages(files: File[]): Promise<string[]> {
+    if (!files.length) {
+      return [];
+    }
+
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    const response = await api.post<ProductUploadImagesResponse | string[]>(API.PRODUCTS.UPLOAD_IMAGES, formData);
+    const payload = response.data;
+
+    if (Array.isArray(payload)) {
+      return payload.map((value) => String(value)).filter(Boolean);
+    }
+
+    return (payload.imageUrls ?? []).map((value) => String(value)).filter(Boolean);
   },
 
   async updateStatus(id: string, payload: ProductStatusUpdateRequest): Promise<ProductStatusResponse> {

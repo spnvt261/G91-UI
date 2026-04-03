@@ -1,5 +1,5 @@
-import type { CustomerModel } from "../../models/customer/customer.model";
-import type { ProjectModel } from "../../models/project/project.model";
+﻿import type { CustomerModel } from "../../models/customer/customer.model";
+import type { ProjectModel, WarehouseModel } from "../../models/project/project.model";
 
 export type ProjectSelectOption = {
   label: string;
@@ -17,7 +17,7 @@ const compareByLabel = (left: ProjectSelectOption, right: ProjectSelectOption) =
 const toReadableWarehouseLabel = (warehouseId: string, warehouseName?: string) => {
   const normalizedName = warehouseName?.trim();
   if (!normalizedName || normalizedName === warehouseId) {
-    return "Kho chưa có tên";
+    return "Kho chua co ten";
   }
   return normalizedName;
 };
@@ -44,7 +44,7 @@ type WarehouseCandidate = {
 };
 
 export const buildWarehouseOptions = (
-  projects: ProjectModel[],
+  projects: ProjectModel[] = [],
   additionalWarehouses: WarehouseCandidate[] = [],
 ): ProjectSelectOption[] => {
   const warehouseMap = new Map<string, string>();
@@ -76,6 +76,15 @@ export const buildWarehouseOptions = (
     .map(([id, name]) => ({
       value: id,
       label: toReadableWarehouseLabel(id, name),
+    }))
+    .sort(compareByLabel);
+};
+
+export const buildWarehouseOptionsFromApi = (warehouses: WarehouseModel[]): ProjectSelectOption[] => {
+  return warehouses
+    .map((warehouse) => ({
+      value: warehouse.id,
+      label: toReadableWarehouseLabel(warehouse.id, warehouse.name),
     }))
     .sort(compareByLabel);
 };

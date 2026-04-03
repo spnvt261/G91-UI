@@ -5,6 +5,7 @@ import type { ColumnsType } from "antd/es/table";
 import type { MenuProps } from "antd";
 import { useNavigate } from "react-router-dom";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { ApiClientError } from "../../apiConfig/axiosConfig";
 import { canPerformAction } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
@@ -167,6 +168,15 @@ const CustomerListPage = () => {
     } catch (err) {
       if (typeof err === "object" && err !== null && "errorFields" in err) {
         return;
+      }
+
+      if (err instanceof ApiClientError && err.fieldErrors?.reason?.length) {
+        disableForm.setFields([
+          {
+            name: "reason",
+            errors: err.fieldErrors.reason,
+          },
+        ]);
       }
 
       notify(getErrorMessage(err, "Không thể vô hiệu hóa khách hàng."), "error");

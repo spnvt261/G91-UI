@@ -39,7 +39,7 @@ const ContractApprovalDetailPage = () => {
     try {
       setLoading(true);
       setLoadError(null);
-      const detail = await contractService.getDetail(id);
+      const detail = await contractService.getApprovalReview(id);
       setContract(detail);
     } catch (error) {
       const message = getErrorMessage(error, "Không thể tải chi tiết hợp đồng cần phê duyệt.");

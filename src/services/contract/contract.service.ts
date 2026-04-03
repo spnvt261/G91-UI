@@ -1,11 +1,15 @@
-import api from "../../apiConfig/axiosConfig";
+﻿import api from "../../apiConfig/axiosConfig";
 import { API, withId, withPathParams } from "../../api/URL_const";
 import type {
-  ContractApprovalResponseData,
+  ContractApprovalDecisionRequest,
   ContractApprovalRequest,
+  ContractApprovalResponseData,
   ContractCancelRequest,
   ContractCreateRequest,
   ContractDetailResponseData,
+  ContractDocumentEmailRequest,
+  ContractDocumentExportRequest,
+  ContractDocumentGenerateRequest,
   ContractFromQuotationResponseData,
   ContractListQuery,
   ContractListResponseData,
@@ -35,8 +39,11 @@ const toContractModelFromListItem = (item: ContractListResponseData["items"][num
   totalAmount: item.totalAmount,
   status: item.status,
   approvalStatus: item.approvalStatus,
+  approvalTier: item.approvalTier,
+  requiresApproval: item.requiresApproval,
   confidential: item.confidential,
   expectedDeliveryDate: item.expectedDeliveryDate,
+  submittedAt: item.submittedAt,
   createdAt: item.createdAt,
 });
 
@@ -63,7 +70,16 @@ const toContractModelFromDetail = (payload: ContractDetailResponseData): Contrac
   confidential: payload.contract.confidential,
   status: payload.contract.status,
   approvalStatus: payload.contract.approvalStatus,
+  approvalTier: payload.contract.approvalTier,
+  requiresApproval: payload.contract.requiresApproval,
+  depositPercentage: payload.contract.depositPercentage,
+  depositAmount: payload.contract.depositAmount,
+  creditLimitSnapshot: payload.contract.creditLimitSnapshot,
+  currentDebtSnapshot: payload.contract.currentDebtSnapshot,
   createdAt: payload.contract.createdAt,
+  submittedAt: payload.contract.submittedAt,
+  approvedAt: payload.contract.approvedAt,
+  cancelledAt: payload.contract.cancelledAt,
   expectedDeliveryDate: payload.contract.expectedDeliveryDate,
 });
 
@@ -90,16 +106,25 @@ const toUpdateRequest = (request: Omit<ContractModel, "id">): ContractUpdateRequ
   changeReason: "Updated from UI",
 });
 
+const toDocumentModel = (item: Record<string, unknown>): ContractDocumentModel => ({
+  id: String(item.id ?? item.documentId ?? ""),
+  name: String(item.name ?? item.fileName ?? item.documentName ?? item.id ?? item.documentId ?? "Contract document"),
+  status: typeof item.status === "string" ? item.status : undefined,
+  generatedAt: typeof item.generatedAt === "string" ? item.generatedAt : undefined,
+});
+
 export const contractService = {
   async createFromQuotation(
     quotationId: string,
     request: CreateContractFromQuotationRequest,
   ): Promise<ContractFromQuotationResponseData> {
-    const response = await api.post<ContractFromQuotationResponseData>(withId(API.CONTRACTS.FROM_QUOTATION, quotationId), request);
+    const response = await api.post<ContractFromQuotationResponseData>(
+      withPathParams(API.CONTRACTS.FROM_QUOTATION, { quotationId }),
+      request,
+    );
     return response.data;
   },
 
-  // Backward-compatible wrapper used by existing pages.
   async create(request: Omit<ContractModel, "id"> | ContractCreateRequest): Promise<ContractModel> {
     const payload = "status" in request ? toCreateRequest(request) : request;
     const response = await api.post<ContractDetailResponseData>(API.CONTRACTS.CREATE, payload);
@@ -117,17 +142,27 @@ export const contractService = {
     return extractList<ContractListResponseData["items"][number]>(response.data).map(toContractModelFromListItem);
   },
 
+  async getPendingApprovals(params?: Omit<ContractListQuery, "status">): Promise<ContractModel[]> {
+    const response = await api.get<unknown>(API.CONTRACTS.APPROVALS_PENDING, { params });
+    return extractList<ContractListResponseData["items"][number]>(response.data).map(toContractModelFromListItem);
+  },
+
   async getDetail(id: string): Promise<ContractModel> {
     const response = await api.get<ContractDetailResponseData>(withId(API.CONTRACTS.DETAIL, id));
     return toContractModelFromDetail(response.data);
   },
 
-  async approve(id: string, request: ContractApprovalRequest): Promise<ContractApprovalResponseData> {
+  async getApprovalReview(id: string): Promise<ContractModel> {
+    const response = await api.get<ContractDetailResponseData>(withId(API.CONTRACTS.APPROVAL_REVIEW, id));
+    return toContractModelFromDetail(response.data);
+  },
+
+  async approve(id: string, request: ContractApprovalRequest | ContractApprovalDecisionRequest): Promise<ContractApprovalResponseData> {
     const response = await api.post<ContractApprovalResponseData>(withId(API.CONTRACTS.APPROVE, id), request);
     return response.data;
   },
 
-  async requestModification(id: string, request: ContractApprovalRequest): Promise<ContractApprovalResponseData> {
+  async requestModification(id: string, request: ContractApprovalRequest | ContractApprovalDecisionRequest): Promise<ContractApprovalResponseData> {
     const response = await api.post<ContractApprovalResponseData>(withId(API.CONTRACTS.REQUEST_MODIFICATION, id), request);
     return response.data;
   },
@@ -137,7 +172,7 @@ export const contractService = {
     return response.data;
   },
 
-  async reject(id: string, request: ContractApprovalRequest): Promise<ContractApprovalResponseData> {
+  async reject(id: string, request: ContractApprovalRequest | ContractApprovalDecisionRequest): Promise<ContractApprovalResponseData> {
     const response = await api.post<ContractApprovalResponseData>(withId(API.CONTRACTS.REJECT, id), request);
     return response.data;
   },
@@ -149,29 +184,23 @@ export const contractService = {
 
   async getDocuments(id: string): Promise<ContractDocumentModel[]> {
     const response = await api.get<unknown>(withId(API.CONTRACTS.DOCUMENTS, id));
-    return extractList<Record<string, unknown>>(response.data).map((item) => ({
-      id: String(item.id ?? item.documentId ?? ""),
-      name: String(item.name ?? item.fileName ?? item.documentName ?? item.id ?? item.documentId ?? "Contract document"),
-      status: typeof item.status === "string" ? item.status : undefined,
-      generatedAt: typeof item.generatedAt === "string" ? item.generatedAt : undefined,
-    }));
+    return extractList<Record<string, unknown>>(response.data).map(toDocumentModel);
   },
 
-  async generateDocuments(id: string): Promise<ContractDocumentModel[]> {
-    const response = await api.post<unknown>(withId(API.CONTRACTS.DOCUMENTS_GENERATE, id), {});
-    return extractList<Record<string, unknown>>(response.data).map((item) => ({
-      id: String(item.id ?? item.documentId ?? ""),
-      name: String(item.name ?? item.fileName ?? item.documentName ?? item.id ?? item.documentId ?? "Contract document"),
-      status: typeof item.status === "string" ? item.status : undefined,
-      generatedAt: typeof item.generatedAt === "string" ? item.generatedAt : undefined,
-    }));
+  async generateDocuments(id: string, request: ContractDocumentGenerateRequest = {}): Promise<ContractDocumentModel[]> {
+    const response = await api.post<unknown>(withId(API.CONTRACTS.DOCUMENTS_GENERATE, id), request);
+    return extractList<Record<string, unknown>>(response.data).map(toDocumentModel);
   },
 
-  async exportDocument(id: string, documentId: string): Promise<Blob> {
-    const response = await api.get<Blob>(withPathParams(API.CONTRACTS.DOCUMENT_EXPORT, { id, documentId }), {
+  async exportDocument(id: string, documentId: string, request: ContractDocumentExportRequest = {}): Promise<Blob> {
+    const response = await api.post<Blob>(withPathParams(API.CONTRACTS.DOCUMENT_EXPORT, { id, documentId }), request, {
       responseType: "blob",
     });
     return response.data;
+  },
+
+  async emailDocument(id: string, documentId: string, request: ContractDocumentEmailRequest): Promise<void> {
+    await api.post<void>(withPathParams(API.CONTRACTS.DOCUMENT_EMAIL, { id, documentId }), request);
   },
 
   async track(id: string): Promise<ContractTrackingResponse> {

@@ -1,5 +1,5 @@
 ﻿import { ArrowLeftOutlined, SaveOutlined } from "@ant-design/icons";
-import { Alert, Breadcrumb, Button, Card, Space } from "antd";
+import { Breadcrumb, Button, Card, Space } from "antd";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
@@ -9,7 +9,7 @@ import { useNotify } from "../../context/notifyContext";
 import { productService } from "../../services/product/product.service";
 import { getErrorMessage } from "../shared/page.utils";
 import ProductFormSections from "./components/ProductFormSections";
-import { createInitialProductFormValues, type ProductFormValues, toProductWritePayload, validateProductForm } from "./productForm.utils";
+import { createInitialProductFormValues, parseImageUrls, type ProductFormValues, toProductWritePayload, validateProductForm } from "./productForm.utils";
 
 const ProductCreatePage = () => {
   const navigate = useNavigate();
@@ -18,6 +18,7 @@ const ProductCreatePage = () => {
   const [values, setValues] = useState(createInitialProductFormValues());
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   const handleFieldChange = <TField extends keyof ProductFormValues>(field: TField, value: ProductFormValues[TField]) => {
     setValues((previous) => ({
@@ -50,6 +51,28 @@ const ProductCreatePage = () => {
     }
   };
 
+  const handleUploadImageFiles = async (files: File[]) => {
+    try {
+      setUploadingImages(true);
+      const imageUrls = await productService.uploadImages(files);
+      if (!imageUrls.length) {
+        notify("Không nhận được URL ảnh từ hệ thống upload.", "warning");
+        return;
+      }
+
+      const merged = [...new Set([...parseImageUrls(values.imageUrlsText), ...imageUrls])];
+      setValues((previous) => ({
+        ...previous,
+        imageUrlsText: merged.join("\n"),
+      }));
+      notify(`Đã tải lên ${imageUrls.length} ảnh.`, "success");
+    } catch (error) {
+      notify(getErrorMessage(error, "Không thể tải ảnh lên."), "error");
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
   return (
     <NoResizeScreenTemplate
       loading={false}
@@ -57,7 +80,7 @@ const ProductCreatePage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Tạo sản phẩm mới"
-          subtitle="Điền thông tin theo từng nhóm nghiệp vụ để sản phẩm hiển thị đẹp và đầy đủ trong catalog."
+          subtitle="Điền thông tin theo từng nhóm nghiệp vụ để sản phẩm hiển thị đầy đủ trong catalog."
           breadcrumb={
             <Breadcrumb
               items={[
@@ -71,14 +94,14 @@ const ProductCreatePage = () => {
       }
       body={
         <Space direction="vertical" size={16} style={{ width: "100%" }}>
-          <Alert
-            type="info"
-            showIcon
-            message="Gợi ý nhập liệu"
-            description="Bạn có thể nhập nhiều URL ảnh trong một ô để tạo gallery sản phẩm ngay sau khi lưu."
+          <ProductFormSections
+            values={values}
+            errors={errors}
+            onFieldChange={handleFieldChange}
+            disabled={saving}
+            uploadingImages={uploadingImages}
+            onUploadImageFiles={handleUploadImageFiles}
           />
-
-          <ProductFormSections values={values} errors={errors} onFieldChange={handleFieldChange} disabled={saving} />
 
           <Card
             bordered

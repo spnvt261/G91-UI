@@ -18,7 +18,9 @@ import type {
   QuotationSubmitActionRequest,
   QuotationSubmitResponseData,
 } from "../../models/quotation/quotation.model";
-import { extractList } from "../service.utils";
+import { extractList, extractPagination } from "../service.utils";
+
+const asRecord = (value: unknown): Record<string, unknown> => (typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {});
 
 const toQuotationItems = (items: QuotationDetailResponseData["items"]): QuotationModel["items"] =>
   items.map((item) => ({
@@ -106,33 +108,59 @@ export const quotationService = {
 
   async getCustomerList(params?: CustomerQuotationListQuery): Promise<CustomerQuotationListResponseData> {
     const response = await api.get<unknown>(API.CUSTOMER.QUOTATIONS, { params });
-    const data = response.data as Partial<CustomerQuotationListResponseData> | undefined;
+    const data = response.data;
+    const pagination = extractPagination(data, {
+      page: params?.page ?? 1,
+      pageSize: params?.pageSize ?? 10,
+      totalItems: 0,
+    });
+    const filters = asRecord(asRecord(data).filters);
 
     return {
       items: extractList<CustomerQuotationListResponseData["items"][number]>(data),
-      pagination: data?.pagination ?? {
-        page: params?.page ?? 1,
-        pageSize: params?.pageSize ?? 0,
-        totalItems: 0,
-        totalPages: 0,
+      pagination: {
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        totalItems: pagination.totalItems,
+        totalPages: pagination.totalPages,
       },
-      filters: data?.filters,
+      filters: Object.keys(filters).length
+        ? {
+            status: typeof filters.status === "string" ? filters.status : undefined,
+            fromDate: typeof filters.fromDate === "string" ? filters.fromDate : undefined,
+            toDate: typeof filters.toDate === "string" ? filters.toDate : undefined,
+          }
+        : undefined,
     };
   },
 
   async getManagementList(params?: QuotationManagementListQuery): Promise<QuotationManagementListResponseData> {
     const response = await api.get<unknown>(API.QUOTATIONS.LIST, { params });
-    const data = response.data as Partial<QuotationManagementListResponseData> | undefined;
+    const data = response.data;
+    const pagination = extractPagination(data, {
+      page: params?.page ?? 1,
+      pageSize: params?.pageSize ?? 20,
+      totalItems: 0,
+    });
+    const filters = asRecord(asRecord(data).filters);
 
     return {
       items: extractList<QuotationManagementListResponseData["items"][number]>(data),
-      pagination: data?.pagination ?? {
-        page: params?.page ?? 1,
-        pageSize: params?.pageSize ?? 0,
-        totalItems: 0,
-        totalPages: 0,
+      pagination: {
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        totalItems: pagination.totalItems,
+        totalPages: pagination.totalPages,
       },
-      filters: data?.filters,
+      filters: Object.keys(filters).length
+        ? {
+            quotationNumber: typeof filters.quotationNumber === "string" ? filters.quotationNumber : undefined,
+            customerId: typeof filters.customerId === "string" ? filters.customerId : undefined,
+            status: typeof filters.status === "string" ? filters.status : undefined,
+            fromDate: typeof filters.fromDate === "string" ? filters.fromDate : undefined,
+            toDate: typeof filters.toDate === "string" ? filters.toDate : undefined,
+          }
+        : undefined,
     };
   },
 
@@ -202,4 +230,3 @@ export const quotationService = {
     return response.data;
   },
 };
-

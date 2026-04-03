@@ -12,11 +12,14 @@ export interface ProductModel {
   unit: string;
   weightConversion?: number | null;
   referenceWeight?: number | null;
+  description?: string;
   status: ProductStatus;
   imageUrls?: string[];
   mainImage?: string;
   images?: string[];
   createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string;
 }
 
 export interface ProductListQuery {
@@ -49,6 +52,7 @@ export interface ProductCreateRequest {
   unit: string;
   weightConversion?: number | null;
   referenceWeight?: number | null;
+  description?: string;
   status?: ProductStatus;
   imageUrls?: string[];
 }
@@ -62,6 +66,7 @@ export interface ProductUpdateRequest {
   unit: string;
   weightConversion?: number | null;
   referenceWeight?: number | null;
+  description?: string;
   status?: ProductStatus;
   imageUrls?: string[];
 }
@@ -78,4 +83,9 @@ export interface ProductStatusResponse {
   productName: string;
   status: ProductStatus;
   createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ProductUploadImagesResponse {
+  imageUrls: string[];
 }

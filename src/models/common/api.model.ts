@@ -6,7 +6,7 @@ export interface ApiResponse<T> {
 }
 
 export interface ApiValidationErrorItem {
-  field: string;
+  field?: string;
   message: string;
 }
 
@@ -23,4 +23,3 @@ export interface PageableListResponse<T> {
   size: number;
   totalElements: number;
 }
-

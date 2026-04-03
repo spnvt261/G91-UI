@@ -1,4 +1,4 @@
-import { HistoryOutlined, ReloadOutlined, SwapOutlined } from "@ant-design/icons";
+﻿import { HistoryOutlined, ReloadOutlined, SwapOutlined } from "@ant-design/icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Alert, Breadcrumb, Button, Card, Empty, Space, Table, Tag, Typography } from "antd";
@@ -54,7 +54,7 @@ const InventoryHistoryPage = () => {
       setItems(response.items);
       setTotal(response.totalElements);
     } catch (error) {
-      const message = getErrorMessage(error, "Không thể tải lịch sử kho.");
+      const message = getErrorMessage(error, "Khong the tai lich su kho.");
       setErrorMessage(message);
       notify(message, "error");
     } finally {
@@ -69,6 +69,7 @@ const InventoryHistoryPage = () => {
         search: query.search,
         fromDate: query.fromDate,
         toDate: query.toDate,
+        productId: query.productId,
         page: 1,
         size: 1,
       };
@@ -87,11 +88,11 @@ const InventoryHistoryPage = () => {
         adjustment: adjustmentResult.totalElements,
       });
     } catch (error) {
-      notify(getErrorMessage(error, "Không thể tải thống kê lịch sử kho."), "warning");
+      notify(getErrorMessage(error, "Khong the tai thong ke lich su kho."), "warning");
     } finally {
       setSummaryLoading(false);
     }
-  }, [notify, query.fromDate, query.search, query.toDate]);
+  }, [notify, query.fromDate, query.productId, query.search, query.toDate]);
 
   useEffect(() => {
     void loadHistory();
@@ -103,10 +104,10 @@ const InventoryHistoryPage = () => {
 
   const summaryItems = useMemo<InventorySummaryCardItem[]>(
     () => [
-      { key: "total", title: "Tổng giao dịch", value: summary.total, icon: <HistoryOutlined /> },
-      { key: "receipt", title: "Nhập kho", value: summary.receipt, icon: <SwapOutlined />, valueColor: "#16a34a" },
-      { key: "issue", title: "Xuất kho", value: summary.issue, icon: <SwapOutlined />, valueColor: "#dc2626" },
-      { key: "adjustment", title: "Điều chỉnh", value: summary.adjustment, icon: <SwapOutlined />, valueColor: "#1677ff" },
+      { key: "total", title: "Tong giao dich", value: summary.total, icon: <HistoryOutlined /> },
+      { key: "receipt", title: "Nhap kho", value: summary.receipt, icon: <SwapOutlined />, valueColor: "#16a34a" },
+      { key: "issue", title: "Xuat kho", value: summary.issue, icon: <SwapOutlined />, valueColor: "#dc2626" },
+      { key: "adjustment", title: "Dieu chinh", value: summary.adjustment, icon: <SwapOutlined />, valueColor: "#1677ff" },
     ],
     [summary.adjustment, summary.issue, summary.receipt, summary.total],
   );
@@ -124,13 +125,12 @@ const InventoryHistoryPage = () => {
   const columns = useMemo<ColumnsType<InventoryHistoryItem>>(
     () => [
       {
-        title: "Thời gian",
-        dataIndex: "createdAt",
-        key: "createdAt",
-        render: (value?: string) => formatInventoryDateTime(value),
+        title: "Thoi gian",
+        key: "transactionDate",
+        render: (_, row) => formatInventoryDateTime(row.transactionDate ?? row.createdAt),
       },
       {
-        title: "Loại giao dịch",
+        title: "Loai giao dich",
         dataIndex: "transactionType",
         key: "transactionType",
         render: (value: InventoryTransactionType) => {
@@ -139,17 +139,22 @@ const InventoryHistoryPage = () => {
         },
       },
       {
-        title: "Sản phẩm",
+        title: "Ma giao dich",
+        key: "transactionCode",
+        render: (_, row) => row.transactionCode || row.transactionId || row.id,
+      },
+      {
+        title: "San pham",
         key: "product",
         render: (_, row) => (
           <Space direction="vertical" size={0}>
-            <Typography.Text strong>{row.productName || "Chưa cập nhật tên sản phẩm"}</Typography.Text>
+            <Typography.Text strong>{row.productName || "Chua cap nhat ten san pham"}</Typography.Text>
             <Typography.Text type="secondary">{row.productCode || row.productId}</Typography.Text>
           </Space>
         ),
       },
       {
-        title: "Số lượng thay đổi",
+        title: "So luong thay doi",
         key: "quantity",
         align: "right",
         render: (_, row) => {
@@ -157,23 +162,40 @@ const InventoryHistoryPage = () => {
           const color = quantity >= 0 ? "#16a34a" : "#dc2626";
           const display = `${quantity > 0 ? "+" : ""}${quantity}`;
 
-          return <Typography.Text style={{ color, fontWeight: 600 }}>{display}</Typography.Text>;
+          return (
+            <Space direction="vertical" size={0} style={{ width: "100%" }}>
+              <Typography.Text style={{ color, fontWeight: 600 }}>{display}</Typography.Text>
+              <Typography.Text type="secondary">
+                {`Truoc: ${row.quantityBefore ?? "-"} | Sau: ${row.quantityAfter ?? row.balanceAfter ?? "-"}`}
+              </Typography.Text>
+            </Space>
+          );
         },
       },
       {
-        title: "Lý do / ghi chú",
-        key: "reasonNote",
+        title: "Nguoi thao tac",
+        key: "operator",
+        render: (_, row) => row.operatorEmail || row.operatorId || "-",
+      },
+      {
+        title: "Lien ket",
+        key: "references",
         render: (_, row) => (
           <Space direction="vertical" size={0}>
-            <Typography.Text>{row.reason || "Không có lý do chi tiết"}</Typography.Text>
-            <Typography.Text type="secondary">{row.note || "Không có ghi chú"}</Typography.Text>
+            <Typography.Text type="secondary">{row.relatedOrderId ? `Order: ${row.relatedOrderId}` : "Order: -"}</Typography.Text>
+            <Typography.Text type="secondary">{row.relatedProjectId ? `Project: ${row.relatedProjectId}` : "Project: -"}</Typography.Text>
           </Space>
         ),
       },
       {
-        title: "Người thao tác",
-        key: "operator",
-        render: () => "-",
+        title: "Ly do / ghi chu",
+        key: "reasonNote",
+        render: (_, row) => (
+          <Space direction="vertical" size={0}>
+            <Typography.Text>{row.reason || "Khong co ly do chi tiet"}</Typography.Text>
+            <Typography.Text type="secondary">{row.note || row.supplierName || "Khong co ghi chu"}</Typography.Text>
+          </Space>
+        ),
       },
     ],
     [],
@@ -184,23 +206,23 @@ const InventoryHistoryPage = () => {
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Lịch sử biến động kho"
-          subtitle="Tra cứu toàn bộ giao dịch nhập, xuất, điều chỉnh để đối soát tồn kho minh bạch và nhanh chóng."
+          title="Lich su bien dong kho"
+          subtitle="Tra cuu toan bo giao dich nhap, xuat, dieu chinh de doi soat ton kho minh bach va nhanh chong."
           breadcrumb={
             <Breadcrumb
               items={[
-                { title: "Trang chủ" },
-                { title: <span onClick={() => navigate(ROUTE_URL.INVENTORY_STATUS)}>Kho vận</span> },
-                { title: "Lịch sử kho" },
+                { title: "Trang chu" },
+                { title: <span onClick={() => navigate(ROUTE_URL.INVENTORY_STATUS)}>Kho van</span> },
+                { title: "Lich su kho" },
               ]}
             />
           }
           actions={
             <Space wrap>
               <Button icon={<ReloadOutlined />} onClick={() => void loadHistory()} loading={loading}>
-                Làm mới
+                Lam moi
               </Button>
-              <Button onClick={() => navigate(ROUTE_URL.INVENTORY_STATUS)}>Quay lại tồn kho</Button>
+              <Button onClick={() => navigate(ROUTE_URL.INVENTORY_STATUS)}>Quay lai ton kho</Button>
             </Space>
           }
         />
@@ -209,7 +231,7 @@ const InventoryHistoryPage = () => {
         <Space direction="vertical" size={16} style={{ width: "100%" }}>
           <InventorySummaryCards items={summaryItems} loading={summaryLoading} />
 
-          <Card title="Bộ lọc lịch sử">
+          <Card title="Bo loc lich su">
             <Space direction="vertical" size={16} style={{ width: "100%" }}>
               <InventoryHistoryFilterBar
                 searchValue={query.search ?? ""}
@@ -232,7 +254,7 @@ const InventoryHistoryPage = () => {
                 }
                 onDateRangeChange={(fromDate, toDate) => {
                   if (fromDate && toDate && dayjs(fromDate).isAfter(dayjs(toDate))) {
-                    setFilterError("Khoảng ngày không hợp lệ: 'Từ ngày' cần nhỏ hơn hoặc bằng 'Đến ngày'.");
+                    setFilterError("Khoang ngay khong hop le: Tu ngay can nho hon hoac bang Den ngay.");
                     return;
                   }
 
@@ -257,20 +279,20 @@ const InventoryHistoryPage = () => {
             </Space>
           </Card>
 
-          <Card title="Danh sách giao dịch kho">
+          <Card title="Danh sach giao dich kho">
             <Space direction="vertical" size={16} style={{ width: "100%" }}>
-              {errorMessage ? <Alert type="error" showIcon message="Không thể tải lịch sử kho." description={errorMessage} /> : null}
+              {errorMessage ? <Alert type="error" showIcon message="Khong the tai lich su kho." description={errorMessage} /> : null}
 
               <Table<InventoryHistoryItem>
-                rowKey="id"
+                rowKey={(row) => row.transactionId || row.id}
                 columns={columns}
                 dataSource={items}
-                loading={{ spinning: loading, tip: "Đang tải lịch sử giao dịch..." }}
+                loading={{ spinning: loading, tip: "Dang tai lich su giao dich..." }}
                 locale={{
                   emptyText: (
                     <Empty
                       image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description="Chưa có giao dịch kho phù hợp với bộ lọc hiện tại."
+                      description="Chua co giao dich kho phu hop voi bo loc hien tai."
                     />
                   ),
                 }}
@@ -279,7 +301,7 @@ const InventoryHistoryPage = () => {
                   pageSize: query.size ?? DEFAULT_PAGE_SIZE,
                   total,
                   showSizeChanger: true,
-                  showTotal: (all, range) => `${range[0]}-${range[1]} trên ${all} giao dịch`,
+                  showTotal: (all, range) => `${range[0]}-${range[1]} tren ${all} giao dich`,
                 }}
                 onChange={(pagination) =>
                   setQuery((previous) => ({
@@ -288,7 +310,7 @@ const InventoryHistoryPage = () => {
                     size: pagination.pageSize ?? previous.size,
                   }))
                 }
-                scroll={{ x: 1080 }}
+                scroll={{ x: 1280 }}
               />
             </Space>
           </Card>

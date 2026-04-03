@@ -103,8 +103,8 @@ const OWNER_ROLE_OPTION: RoleOption = {
   roleName: "OWNER",
 };
 
-const INTERNAL_ROLE_OPTIONS: RoleOption[] = [ACCOUNTANT_ROLE_OPTION, WAREHOUSE_ROLE_OPTION, CUSTOMER_ROLE_OPTION];
-const FILTER_ROLE_OPTIONS: RoleOption[] = [OWNER_ROLE_OPTION, ...INTERNAL_ROLE_OPTIONS];
+const INTERNAL_ROLE_OPTIONS: RoleOption[] = [ACCOUNTANT_ROLE_OPTION, WAREHOUSE_ROLE_OPTION];
+const FILTER_ROLE_OPTIONS: RoleOption[] = [OWNER_ROLE_OPTION, ACCOUNTANT_ROLE_OPTION, WAREHOUSE_ROLE_OPTION, CUSTOMER_ROLE_OPTION];
 
 const STATUS_OPTIONS: Array<{ label: string; value: UserStatus }> = [
   { label: "Đang hoạt động", value: "ACTIVE" },
@@ -114,7 +114,7 @@ const STATUS_OPTIONS: Array<{ label: string; value: UserStatus }> = [
 ];
 
 const isInternalRole = (role: AccountRoleId): role is InternalAccountRoleId =>
-  role === "ACCOUNTANT" || role === "WAREHOUSE" || role === "CUSTOMER";
+  role === "ACCOUNTANT" || role === "WAREHOUSE";
 
 const isAccountRoleId = (role: string): role is AccountRoleId =>
   role === "ACCOUNTANT" || role === "WAREHOUSE" || role === "CUSTOMER" || role === "OWNER";
@@ -169,7 +169,7 @@ const AccountListPage = () => {
   const selectedRole = Form.useWatch("role", form);
 
   const formRoleOptions = useMemo(() => {
-    if (formMode === "edit" && selectedRole === "OWNER") {
+    if (formMode === "edit" && (selectedRole === "OWNER" || selectedRole === "CUSTOMER")) {
       return FILTER_ROLE_OPTIONS;
     }
 

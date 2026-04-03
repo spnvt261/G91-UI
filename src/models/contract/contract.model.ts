@@ -1,4 +1,4 @@
-import type { PaginationMeta } from "../common/api.model";
+﻿import type { PaginationMeta } from "../common/api.model";
 
 export type ContractStatus =
   | "DRAFT"
@@ -37,7 +37,16 @@ export interface ContractModel {
   confidential?: boolean;
   status: ContractStatus;
   approvalStatus?: string;
+  approvalTier?: string;
+  requiresApproval?: boolean;
+  depositPercentage?: number;
+  depositAmount?: number;
+  creditLimitSnapshot?: number;
+  currentDebtSnapshot?: number;
   createdAt?: string;
+  submittedAt?: string;
+  approvedAt?: string;
+  cancelledAt?: string;
   expectedDeliveryDate?: string;
 }
 
@@ -87,6 +96,11 @@ export interface ContractApprovalRequest {
   comment?: string;
 }
 
+export interface ContractApprovalDecisionRequest {
+  comment?: string;
+  reason?: string;
+}
+
 export interface ContractTrackEvent {
   status: string;
   at: string;
@@ -118,6 +132,18 @@ export interface ContractCreateRequest {
   }>;
 }
 
+export interface ContractPreviewRequest {
+  customerId?: string;
+  quotationId?: string;
+  paymentTerms?: string;
+  deliveryAddress?: string;
+  deliveryTerms?: string;
+  note?: string;
+  expectedDeliveryDate?: string;
+  confidential?: boolean;
+  items?: ContractCreateRequest["items"];
+}
+
 export interface ContractListResponseData {
   items: Array<{
     id: string;
@@ -128,7 +154,9 @@ export interface ContractListResponseData {
     customerName?: string;
     status: ContractStatus;
     approvalStatus?: string;
+    approvalTier?: string;
     confidential?: boolean;
+    requiresApproval?: boolean;
     totalAmount: number;
     expectedDeliveryDate?: string;
     submittedAt?: string;
@@ -158,6 +186,8 @@ export interface ContractDetailResponseData {
     quotationId: string;
     status: ContractStatus;
     approvalStatus?: string;
+    approvalTier?: string;
+    requiresApproval?: boolean;
     paymentTerms?: string;
     deliveryAddress?: string;
     deliveryTerms?: string;
@@ -165,7 +195,14 @@ export interface ContractDetailResponseData {
     confidential?: boolean;
     expectedDeliveryDate?: string;
     totalAmount: number;
+    depositPercentage?: number;
+    depositAmount?: number;
+    creditLimitSnapshot?: number;
+    currentDebtSnapshot?: number;
     createdAt?: string;
+    submittedAt?: string;
+    approvedAt?: string;
+    cancelledAt?: string;
   };
   items: Array<{
     productId: string;
@@ -219,4 +256,20 @@ export interface ContractApprovalResponseData {
   decidedBy?: string;
   decidedAt?: string;
   comment?: string;
+}
+
+export interface ContractDocumentGenerateRequest {
+  templateType?: string;
+  regenerate?: boolean;
+}
+
+export interface ContractDocumentExportRequest {
+  format?: string;
+}
+
+export interface ContractDocumentEmailRequest {
+  recipients: string[];
+  cc?: string[];
+  subject?: string;
+  message?: string;
 }

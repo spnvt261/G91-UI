@@ -40,10 +40,7 @@ const ContractApprovalListPage = () => {
     try {
       setLoading(true);
       setListError(null);
-      const items = await contractService.getList({
-        keyword: keyword || undefined,
-        status: "PENDING",
-      });
+      const items = await contractService.getPendingApprovals({ keyword: keyword || undefined });
       setAllItems(items);
     } catch (error) {
       const message = getErrorMessage(error, "Không thể tải danh sách hợp đồng chờ duyệt.");

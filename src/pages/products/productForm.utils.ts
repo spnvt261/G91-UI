@@ -9,6 +9,7 @@ export interface ProductFormValues {
   unit: string;
   weightConversion: string;
   referenceWeight: string;
+  description: string;
   status: "ACTIVE" | "INACTIVE";
   imageUrlsText: string;
 }
@@ -24,14 +25,68 @@ export const createInitialProductFormValues = (product?: ProductModel): ProductF
   unit: product?.unit ?? "",
   weightConversion: product?.weightConversion == null ? "" : String(product.weightConversion),
   referenceWeight: product?.referenceWeight == null ? "" : String(product.referenceWeight),
+  description: product?.description ?? "",
   status: product?.status ?? "ACTIVE",
   imageUrlsText: (product?.imageUrls ?? product?.images ?? []).join("\n"),
 });
 
-const isValidUrl = (value: string): boolean => {
+const resolveApiOrigin = (): string => {
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+
   try {
-    const url = new URL(value);
+    const url = new URL(apiBaseUrl, window.location.origin);
+    return url.origin;
+  } catch {
+    return window.location.origin;
+  }
+};
+
+const API_ORIGIN = resolveApiOrigin();
+
+const isValidImageReference = (value: string): boolean => {
+  const normalized = value.trim();
+  if (!normalized) {
+    return false;
+  }
+
+  if (normalized.startsWith("/")) {
+    return true;
+  }
+
+  try {
+    const url = new URL(normalized);
     return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
+export const toDisplayImageUrl = (value: string): string => {
+  const normalized = value.trim();
+  if (!normalized) {
+    return "";
+  }
+
+  if (normalized.startsWith("/")) {
+    return `${API_ORIGIN}${normalized}`;
+  }
+
+  return normalized;
+};
+
+export const shouldUseAuthenticatedImageRequest = (value: string): boolean => {
+  const normalized = value.trim();
+  if (!normalized) {
+    return false;
+  }
+
+  if (normalized.startsWith("/")) {
+    return true;
+  }
+
+  try {
+    const resolved = new URL(toDisplayImageUrl(normalized));
+    return resolved.origin === API_ORIGIN && resolved.pathname.startsWith("/uploads/");
   } catch {
     return false;
   }
@@ -71,6 +126,9 @@ export const validateProductForm = (values: ProductFormValues): ProductFormError
   if (!values.unit.trim()) {
     errors.unit = "Vui lòng nhập đơn vị.";
   }
+  if (values.description.trim().length > 1000) {
+    errors.description = "Mô tả tối đa 1000 ký tự.";
+  }
 
   if (values.weightConversion.trim() && toOptionalNumber(values.weightConversion) == null) {
     errors.weightConversion = "Hệ số quy đổi phải là số hợp lệ.";
@@ -81,8 +139,8 @@ export const validateProductForm = (values: ProductFormValues): ProductFormError
   }
 
   const imageUrls = parseImageUrls(values.imageUrlsText);
-  if (imageUrls.some((item) => !isValidUrl(item))) {
-    errors.imageUrlsText = "Mỗi URL ảnh phải bắt đầu bằng http hoặc https hợp lệ.";
+  if (imageUrls.some((item) => !isValidImageReference(item))) {
+    errors.imageUrlsText = "Mỗi URL ảnh phải là đường dẫn /uploads/... hoặc URL http/https hợp lệ.";
   }
 
   return errors;
@@ -97,6 +155,7 @@ export const toProductWritePayload = (values: ProductFormValues): ProductCreateR
   unit: values.unit.trim(),
   weightConversion: toOptionalNumber(values.weightConversion),
   referenceWeight: toOptionalNumber(values.referenceWeight),
+  description: values.description.trim() || undefined,
   status: values.status,
   imageUrls: parseImageUrls(values.imageUrlsText),
 });

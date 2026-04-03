@@ -131,6 +131,7 @@ const PRODUCT_VIEW_ROLES: UserRole[] = ["GUEST", "CUSTOMER", "WAREHOUSE"];
 const OWNER_ONLY: UserRole[] = ["OWNER"];
 const ACCOUNTANT_OWNER: UserRole[] = ["ACCOUNTANT", "OWNER"];
 const CUSTOMER_ACCOUNTANT: UserRole[] = ["CUSTOMER", "ACCOUNTANT"];
+const CUSTOMER_ACCOUNTANT_OWNER: UserRole[] = ["CUSTOMER", "ACCOUNTANT", "OWNER"];
 const WAREHOUSE_ONLY: UserRole[] = ["WAREHOUSE"];
 const ACCOUNTANT_ONLY: UserRole[] = ["ACCOUNTANT"];
 
@@ -163,13 +164,13 @@ const PERMISSION_ROLE_MAP: Record<PermissionKey, UserRole[]> = {
   "inventory.status.view": WAREHOUSE_ONLY,
   "inventory.history.view": WAREHOUSE_ONLY,
   "quotation.create": ["CUSTOMER"],
-  "quotation.list.view": CUSTOMER_ACCOUNTANT,
+  "quotation.list.view": CUSTOMER_ACCOUNTANT_OWNER,
   "contract.create": ACCOUNTANT_ONLY,
-  "contract.view": CUSTOMER_ACCOUNTANT,
+  "contract.view": CUSTOMER_ACCOUNTANT_OWNER,
   "contract.update": ACCOUNTANT_ONLY,
   "contract.cancel": ACCOUNTANT_ONLY,
   "contract.submit": ACCOUNTANT_ONLY,
-  "contract.track": CUSTOMER_ACCOUNTANT,
+  "contract.track": CUSTOMER_ACCOUNTANT_OWNER,
   "contract.print": ACCOUNTANT_ONLY,
   "contract.approve": OWNER_ONLY,
   "customer.create": ACCOUNTANT_ONLY,
@@ -436,4 +437,3 @@ export const canAccessPathByRole = (role: UserRole, pathname: string): boolean =
 };
 
 export const canAccessRoute = canAccessPathByRole;
-

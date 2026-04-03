@@ -27,10 +27,14 @@ const ProductInfoCard = ({ product }: ProductInfoCardProps) => {
         <Descriptions.Item label="Khối lượng tham chiếu">
           {product.referenceWeight != null ? `${product.referenceWeight} ${product.unit || ""}`.trim() : "Chưa cập nhật"}
         </Descriptions.Item>
+        <Descriptions.Item label="Mô tả">{product.description || "Chưa cập nhật"}</Descriptions.Item>
+        <Descriptions.Item label="Số lượng ảnh">{product.imageUrls?.length ?? product.images?.length ?? 0}</Descriptions.Item>
         <Descriptions.Item label="Trạng thái">
           <ProductStatusTag status={product.status} />
         </Descriptions.Item>
         <Descriptions.Item label="Ngày tạo">{formatProductDateTime(product.createdAt)}</Descriptions.Item>
+        <Descriptions.Item label="Cập nhật lần cuối">{formatProductDateTime(product.updatedAt)}</Descriptions.Item>
+        <Descriptions.Item label="Đã xóa lúc">{formatProductDateTime(product.deletedAt)}</Descriptions.Item>
       </Descriptions>
     </Space>
   );

@@ -35,7 +35,7 @@ const QuotationListPage = () => {
   const role = getStoredUserRole();
   const canCreateQuotation = canPerformAction(role, "quotation.create");
   const canCreateContract = canPerformAction(role, "contract.create");
-  const isCustomerRole = canCreateQuotation;
+  const isCustomerRole = role === "CUSTOMER";
   const { notify } = useNotify();
 
   const [items, setItems] = useState<QuotationModel[]>([]);

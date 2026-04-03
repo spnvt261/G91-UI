@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Alert, Button, Col, Form, Input, InputNumber, Row, Select, Skeleton, Space, Typography } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { ApiClientError } from "../../apiConfig/axiosConfig";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import { customerService } from "../../services/customer/customer.service";
@@ -47,7 +48,8 @@ const CustomerEditPage = () => {
       try {
         setPageLoading(true);
         setErrorMessage(null);
-        const detail = await customerService.getDetail(id);
+        const detailResponse = await customerService.getDetail(id);
+        const detail = detailResponse.customer;
 
         try {
           setPriceGroupLoading(true);
@@ -108,6 +110,18 @@ const CustomerEditPage = () => {
       notify("Lưu thay đổi khách hàng thành công.", "success");
       navigate(ROUTE_URL.CUSTOMER_DETAIL.replace(":id", id));
     } catch (err) {
+      if (err instanceof ApiClientError && err.fieldErrors) {
+        const fieldErrors = Object.entries(err.fieldErrors)
+          .filter(([field, messages]) => field !== "_global" && messages.length > 0)
+          .map(([field, messages]) => ({
+            name: field as keyof CustomerEditFormValues,
+            errors: messages,
+          }));
+
+        if (fieldErrors.length > 0) {
+          form.setFields(fieldErrors);
+        }
+      }
       notify(getErrorMessage(err, "Không thể cập nhật khách hàng."), "error");
     } finally {
       setSaving(false);

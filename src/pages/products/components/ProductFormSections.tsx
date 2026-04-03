@@ -1,17 +1,30 @@
-import { Col, Form, Image, Input, InputNumber, Row, Select, Space, Typography } from "antd";
+import { Col, Form, Input, InputNumber, Row, Select, Space, Typography, Upload, Button } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
+import type { RcFile } from "antd/es/upload";
+import { useMemo } from "react";
 import type { ProductFormErrors, ProductFormValues } from "../productForm.utils";
 import { parseImageUrls } from "../productForm.utils";
 import PageSectionCard from "../../shared/components/PageSectionCard";
+import ProductImage from "./ProductImage";
 
 interface ProductFormSectionsProps {
   values: ProductFormValues;
   errors: ProductFormErrors;
   disabled?: boolean;
+  uploadingImages?: boolean;
+  onUploadImageFiles?: (files: File[]) => Promise<void> | void;
   onFieldChange: <TField extends keyof ProductFormValues>(field: TField, value: ProductFormValues[TField]) => void;
 }
 
-const ProductFormSections = ({ values, errors, disabled = false, onFieldChange }: ProductFormSectionsProps) => {
-  const imageUrls = parseImageUrls(values.imageUrlsText);
+const ProductFormSections = ({
+  values,
+  errors,
+  disabled = false,
+  uploadingImages = false,
+  onUploadImageFiles,
+  onFieldChange,
+}: ProductFormSectionsProps) => {
+  const imageUrls = useMemo(() => parseImageUrls(values.imageUrlsText), [values.imageUrlsText]);
 
   return (
     <Space direction="vertical" size={16} style={{ width: "100%" }}>
@@ -43,6 +56,19 @@ const ProductFormSections = ({ values, errors, disabled = false, onFieldChange }
                 value={values.type}
                 onChange={(event) => onFieldChange("type", event.target.value)}
                 placeholder="Ví dụ: Thép tấm"
+                disabled={disabled}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24}>
+            <Form.Item label="Mô tả" validateStatus={errors.description ? "error" : undefined} help={errors.description}>
+              <Input.TextArea
+                rows={3}
+                maxLength={1000}
+                showCount
+                value={values.description}
+                onChange={(event) => onFieldChange("description", event.target.value)}
+                placeholder="Mô tả nghiệp vụ sản phẩm"
                 disabled={disabled}
               />
             </Form.Item>
@@ -129,17 +155,45 @@ const ProductFormSections = ({ values, errors, disabled = false, onFieldChange }
               />
             </Form.Item>
           </Col>
+          <Col xs={24} md={14}>
+            <Form.Item label="Tải ảnh lên (upload-images)">
+              <Upload
+                multiple
+                accept="image/*"
+                showUploadList={false}
+                disabled={disabled || !onUploadImageFiles}
+                beforeUpload={() => false}
+                onChange={(info) => {
+                  if (uploadingImages) {
+                    return;
+                  }
+
+                  const files = info.fileList
+                    .map((fileItem) => fileItem.originFileObj)
+                    .filter((file): file is RcFile => Boolean(file));
+
+                  if (files.length > 0 && onUploadImageFiles) {
+                    void onUploadImageFiles(files);
+                  }
+                }}
+              >
+                <Button icon={<UploadOutlined />} loading={uploadingImages} disabled={disabled || !onUploadImageFiles}>
+                  {uploadingImages ? "Đang tải ảnh..." : "Chọn ảnh và tải lên"}
+                </Button>
+              </Upload>
+            </Form.Item>
+          </Col>
           <Col xs={24}>
             <Form.Item
               label="Danh sách liên kết ảnh"
-              help={errors.imageUrlsText ?? "Nhập mỗi liên kết trên một dòng hoặc phân tách bằng dấu phẩy. Chỉ chấp nhận URL bắt đầu bằng http/https."}
+              help={errors.imageUrlsText ?? "Nhập mỗi liên kết trên một dòng hoặc phân tách bằng dấu phẩy. Chấp nhận /uploads/... hoặc URL bắt đầu bằng http/https."}
               validateStatus={errors.imageUrlsText ? "error" : undefined}
             >
               <Input.TextArea
                 rows={4}
                 value={values.imageUrlsText}
                 onChange={(event) => onFieldChange("imageUrlsText", event.target.value)}
-                placeholder={"https://example.com/anh-1.jpg\nhttps://example.com/anh-2.jpg"}
+                placeholder={"/uploads/products/anh-1.jpg\nhttps://example.com/anh-2.jpg"}
                 disabled={disabled}
               />
             </Form.Item>
@@ -150,7 +204,14 @@ const ProductFormSections = ({ values, errors, disabled = false, onFieldChange }
               {imageUrls.length > 0 ? (
                 <Space wrap size={8}>
                   {imageUrls.slice(0, 8).map((imageUrl) => (
-                    <Image key={imageUrl} src={imageUrl} alt="Ảnh sản phẩm" width={108} height={80} style={{ objectFit: "cover", borderRadius: 8 }} />
+                    <ProductImage
+                      key={imageUrl}
+                      src={imageUrl}
+                      alt="Ảnh sản phẩm"
+                      width={108}
+                      height={80}
+                      style={{ objectFit: "cover", borderRadius: 8 }}
+                    />
                   ))}
                 </Space>
               ) : (

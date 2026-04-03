@@ -1,4 +1,4 @@
-import { Alert, Button, Col, Form, Input, InputNumber, Row, Select, Space } from "antd";
+﻿import { Alert, Button, Col, Form, Input, InputNumber, Row, Select, Space } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTE_URL } from "../../const/route_url.const";
@@ -10,7 +10,7 @@ import ProjectFormLayout from "./components/ProjectFormLayout";
 import ProjectFormSection from "./components/ProjectFormSection";
 import ProjectProgressBar from "./components/ProjectProgressBar";
 import { PROJECT_STATUS_OPTIONS, clampProgress } from "./projectForm.constants";
-import { buildCustomerOptions, buildWarehouseOptions } from "./projectLookups";
+import { buildCustomerOptions, buildWarehouseOptionsFromApi } from "./projectLookups";
 
 type ProjectCreateFormValues = {
   code?: string;
@@ -39,17 +39,17 @@ const ProjectCreatePage = () => {
     const loadLookupOptions = async () => {
       try {
         setLookupLoading(true);
-        const [customerListResponse, projects] = await Promise.all([
+        const [customerListResponse, warehouses] = await Promise.all([
           customerService.getList({ page: 1, pageSize: 100, status: "ACTIVE" }),
-          projectService.getList({ page: 1, pageSize: 100 }),
+          projectService.getWarehouses(),
         ]);
 
         setCustomerOptions(buildCustomerOptions(customerListResponse.items));
-        setWarehouseOptions(buildWarehouseOptions(projects));
+        setWarehouseOptions(buildWarehouseOptionsFromApi(warehouses));
       } catch (error) {
         setCustomerOptions([]);
         setWarehouseOptions([]);
-        notify(getErrorMessage(error, "Không thể tải dữ liệu khách hàng và kho."), "error");
+        notify(getErrorMessage(error, "KhÃ´ng thá»ƒ táº£i dá»¯ liá»‡u khÃ¡ch hÃ ng vÃ  kho."), "error");
       } finally {
         setLookupLoading(false);
       }
@@ -73,10 +73,10 @@ const ProjectCreatePage = () => {
         assignedProjectManager: values.assignedProjectManager?.trim() || undefined,
         linkedOrderReference: values.linkedOrderReference?.trim() || undefined,
       });
-      notify("Tạo dự án thành công.", "success");
+      notify("Táº¡o dá»± Ã¡n thÃ nh cÃ´ng.", "success");
       navigate(ROUTE_URL.PROJECT_DETAIL.replace(":id", created.id));
     } catch (error) {
-      notify(getErrorMessage(error, "Không thể tạo dự án."), "error");
+      notify(getErrorMessage(error, "KhÃ´ng thá»ƒ táº¡o dá»± Ã¡n."), "error");
     } finally {
       setSaving(false);
     }
@@ -84,12 +84,12 @@ const ProjectCreatePage = () => {
 
   return (
     <ProjectFormLayout
-      title="Tạo dự án mới"
-      subtitle="Thiết lập dự án theo đúng ngữ cảnh nghiệp vụ để đội vận hành có thể theo dõi ngay sau khi lưu."
+      title="Táº¡o dá»± Ã¡n má»›i"
+      subtitle="Thiáº¿t láº­p dá»± Ã¡n theo Ä‘Ãºng ngá»¯ cáº£nh nghiá»‡p vá»¥ Ä‘á»ƒ Ä‘á»™i váº­n hÃ nh cÃ³ thá»ƒ theo dÃµi ngay sau khi lÆ°u."
       breadcrumbItems={[
-        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Trang chủ</span> },
-        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)}>Dự án</span> },
-        { title: "Tạo mới" },
+        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Trang chá»§</span> },
+        { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.PROJECT_LIST)}>Dá»± Ã¡n</span> },
+        { title: "Táº¡o má»›i" },
       ]}
     >
       <Form<ProjectCreateFormValues>
@@ -102,98 +102,98 @@ const ProjectCreatePage = () => {
         onFinish={handleCreate}
       >
         <Space direction="vertical" size={16} style={{ width: "100%" }}>
-          <ProjectFormSection title="Thông tin cơ bản" description="Nhập các thông tin nền của dự án để dễ nhận diện và điều phối.">
+          <ProjectFormSection title="ThÃ´ng tin cÆ¡ báº£n" description="Nháº­p cÃ¡c thÃ´ng tin ná»n cá»§a dá»± Ã¡n Ä‘á»ƒ dá»… nháº­n diá»‡n vÃ  Ä‘iá»u phá»‘i.">
             <Row gutter={[16, 0]}>
               <Col xs={24} md={12}>
                 <Form.Item
-                  label="Tên dự án"
+                  label="TÃªn dá»± Ã¡n"
                   name="name"
                   rules={[
-                    { required: true, message: "Vui lòng nhập tên dự án." },
-                    { max: 255, message: "Tên dự án tối đa 255 ký tự." },
+                    { required: true, message: "Vui lÃ²ng nháº­p tÃªn dá»± Ã¡n." },
+                    { max: 255, message: "TÃªn dá»± Ã¡n tá»‘i Ä‘a 255 kÃ½ tá»±." },
                   ]}
                 >
-                  <Input placeholder="Ví dụ: Dự án lắp đặt showroom Quận 7" />
+                  <Input placeholder="VÃ­ dá»¥: Dá»± Ã¡n láº¯p Ä‘áº·t showroom Quáº­n 7" />
                 </Form.Item>
               </Col>
               <Col xs={24} md={12}>
-                <Form.Item label="Mã dự án" name="code" rules={[{ max: 100, message: "Mã dự án tối đa 100 ký tự." }]}>
-                  <Input placeholder="Ví dụ: PRJ-SHOWROOM-Q7" />
+                <Form.Item label="MÃ£ dá»± Ã¡n" name="code" rules={[{ max: 100, message: "MÃ£ dá»± Ã¡n tá»‘i Ä‘a 100 kÃ½ tá»±." }]}>
+                  <Input placeholder="VÃ­ dá»¥: PRJ-SHOWROOM-Q7" />
                 </Form.Item>
               </Col>
               <Col xs={24} md={12}>
-                <Form.Item label="Quản lý dự án" name="assignedProjectManager" rules={[{ max: 255, message: "Tên quản lý tối đa 255 ký tự." }]}>
-                  <Input placeholder="Nhập tên người phụ trách chính" />
+                <Form.Item label="Quáº£n lÃ½ dá»± Ã¡n" name="assignedProjectManager" rules={[{ max: 255, message: "TÃªn quáº£n lÃ½ tá»‘i Ä‘a 255 kÃ½ tá»±." }]}>
+                  <Input placeholder="Nháº­p tÃªn ngÆ°á»i phá»¥ trÃ¡ch chÃ­nh" />
                 </Form.Item>
               </Col>
               <Col xs={24} md={12}>
-                <Form.Item label="Mã đơn hàng liên kết" name="linkedOrderReference" rules={[{ max: 255, message: "Mã tham chiếu tối đa 255 ký tự." }]}>
-                  <Input placeholder="Nhập mã đơn hàng nếu có" />
+                <Form.Item label="MÃ£ Ä‘Æ¡n hÃ ng liÃªn káº¿t" name="linkedOrderReference" rules={[{ max: 255, message: "MÃ£ tham chiáº¿u tá»‘i Ä‘a 255 kÃ½ tá»±." }]}>
+                  <Input placeholder="Nháº­p mÃ£ Ä‘Æ¡n hÃ ng náº¿u cÃ³" />
                 </Form.Item>
               </Col>
               <Col xs={24} md={12}>
-                <Form.Item label="Địa điểm triển khai" name="location" rules={[{ max: 255, message: "Địa điểm tối đa 255 ký tự." }]}>
-                  <Input placeholder="Ví dụ: Quận 7, TP. Hồ Chí Minh" />
+                <Form.Item label="Äá»‹a Ä‘iá»ƒm triá»ƒn khai" name="location" rules={[{ max: 255, message: "Äá»‹a Ä‘iá»ƒm tá»‘i Ä‘a 255 kÃ½ tá»±." }]}>
+                  <Input placeholder="VÃ­ dá»¥: Quáº­n 7, TP. Há»“ ChÃ­ Minh" />
                 </Form.Item>
               </Col>
               <Col xs={24} md={12}>
-                <Form.Item label="Phạm vi công việc" name="scope" rules={[{ max: 1000, message: "Phạm vi tối đa 1000 ký tự." }]}>
-                  <Input.TextArea rows={3} placeholder="Mô tả phạm vi chính của dự án" />
+                <Form.Item label="Pháº¡m vi cÃ´ng viá»‡c" name="scope" rules={[{ max: 1000, message: "Pháº¡m vi tá»‘i Ä‘a 1000 kÃ½ tá»±." }]}>
+                  <Input.TextArea rows={3} placeholder="MÃ´ táº£ pháº¡m vi chÃ­nh cá»§a dá»± Ã¡n" />
                 </Form.Item>
               </Col>
             </Row>
           </ProjectFormSection>
 
-          <ProjectFormSection title="Khách hàng và kho" description="Thiết lập đúng khách hàng và kho phụ trách ngay từ đầu để hạn chế sai lệch vận hành.">
+          <ProjectFormSection title="KhÃ¡ch hÃ ng vÃ  kho" description="Thiáº¿t láº­p Ä‘Ãºng khÃ¡ch hÃ ng vÃ  kho phá»¥ trÃ¡ch ngay tá»« Ä‘áº§u Ä‘á»ƒ háº¡n cháº¿ sai lá»‡ch váº­n hÃ nh.">
             <Row gutter={[16, 0]}>
               <Col xs={24} md={12}>
-                <Form.Item label="Khách hàng" name="customerId" rules={[{ required: true, message: "Vui lòng chọn khách hàng." }]}>
+                <Form.Item label="KhÃ¡ch hÃ ng" name="customerId" rules={[{ required: true, message: "Vui lÃ²ng chá»n khÃ¡ch hÃ ng." }]}>
                   <Select
                     showSearch
                     optionFilterProp="label"
                     options={customerOptions}
                     loading={lookupLoading}
-                    placeholder={lookupLoading ? "Đang tải khách hàng..." : "Chọn khách hàng"}
-                    notFoundContent="Chưa có dữ liệu khách hàng."
+                    placeholder={lookupLoading ? "Äang táº£i khÃ¡ch hÃ ng..." : "Chá»n khÃ¡ch hÃ ng"}
+                    notFoundContent="ChÆ°a cÃ³ dá»¯ liá»‡u khÃ¡ch hÃ ng."
                   />
                 </Form.Item>
               </Col>
               <Col xs={24} md={12}>
                 <Form.Item
-                  label="Kho chính"
+                  label="Kho chÃ­nh"
                   name="warehouseId"
-                  help={!lookupLoading && warehouseOptions.length === 0 ? "Hiện chưa có dữ liệu kho để chọn." : undefined}
+                  help={!lookupLoading && warehouseOptions.length === 0 ? "Hiá»‡n chÆ°a cÃ³ dá»¯ liá»‡u kho Ä‘á»ƒ chá»n." : undefined}
                 >
                   <Select
                     showSearch
                     optionFilterProp="label"
                     options={warehouseOptions}
                     loading={lookupLoading}
-                    placeholder={lookupLoading ? "Đang tải kho..." : "Chọn kho phụ trách"}
-                    notFoundContent="Chưa có dữ liệu kho."
+                    placeholder={lookupLoading ? "Äang táº£i kho..." : "Chá»n kho phá»¥ trÃ¡ch"}
+                    notFoundContent="ChÆ°a cÃ³ dá»¯ liá»‡u kho."
                   />
                 </Form.Item>
               </Col>
             </Row>
           </ProjectFormSection>
 
-          <ProjectFormSection title="Trạng thái và tiến độ" description="Thiết lập trạng thái mở đầu và mức tiến độ ban đầu để màn hình chi tiết hiển thị trực quan.">
+          <ProjectFormSection title="Tráº¡ng thÃ¡i vÃ  tiáº¿n Ä‘á»™" description="Thiáº¿t láº­p tráº¡ng thÃ¡i má»Ÿ Ä‘áº§u vÃ  má»©c tiáº¿n Ä‘á»™ ban Ä‘áº§u Ä‘á»ƒ mÃ n hÃ¬nh chi tiáº¿t hiá»ƒn thá»‹ trá»±c quan.">
             <Row gutter={[16, 0]}>
               <Col xs={24} md={12}>
-                <Form.Item label="Trạng thái dự án" name="status">
+                <Form.Item label="Tráº¡ng thÃ¡i dá»± Ã¡n" name="status">
                   <Select options={PROJECT_STATUS_OPTIONS.map((item) => ({ ...item }))} />
                 </Form.Item>
               </Col>
               <Col xs={24} md={12}>
                 <Form.Item
-                  label="Tiến độ hiện tại (%)"
+                  label="Tiáº¿n Ä‘á»™ hiá»‡n táº¡i (%)"
                   name="progress"
                   rules={[
                     {
                       validator: (_, value) => {
                         const normalized = clampProgress(value);
                         if (value == null || normalized !== value) {
-                          return Promise.reject(new Error("Tiến độ phải nằm trong khoảng 0 đến 100."));
+                          return Promise.reject(new Error("Tiáº¿n Ä‘á»™ pháº£i náº±m trong khoáº£ng 0 Ä‘áº¿n 100."));
                         }
                         return Promise.resolve();
                       },
@@ -213,16 +213,16 @@ const ProjectCreatePage = () => {
           <Alert
             type="info"
             showIcon
-            message="Lưu ý khi tạo dự án"
-            description="Bạn có thể cập nhật kho, tiến độ và các mốc nghiệm thu ngay trên trang chi tiết dự án sau khi tạo."
+            message="LÆ°u Ã½ khi táº¡o dá»± Ã¡n"
+            description="Báº¡n cÃ³ thá»ƒ cáº­p nháº­t kho, tiáº¿n Ä‘á»™ vÃ  cÃ¡c má»‘c nghiá»‡m thu ngay trÃªn trang chi tiáº¿t dá»± Ã¡n sau khi táº¡o."
           />
 
           <Space>
             <Button type="primary" htmlType="submit" loading={saving} disabled={lookupLoading}>
-              Lưu dự án
+              LÆ°u dá»± Ã¡n
             </Button>
             <Button onClick={() => navigate(ROUTE_URL.PROJECT_LIST)} disabled={saving}>
-              Quay lại
+              Quay láº¡i
             </Button>
           </Space>
         </Space>
@@ -232,3 +232,4 @@ const ProjectCreatePage = () => {
 };
 
 export default ProjectCreatePage;
+

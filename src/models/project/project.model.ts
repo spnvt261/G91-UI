@@ -1,6 +1,43 @@
-import type { PaginationMeta } from "../common/api.model";
+﻿import type { PaginationMeta } from "../common/api.model";
 
-export type ProjectStatus = "NEW" | "IN_PROGRESS" | "ON_HOLD" | "DONE" | string;
+export type ProjectStatus = "NEW" | "IN_PROGRESS" | "ON_HOLD" | "DONE" | "ARCHIVED" | "CANCELLED" | string;
+
+export interface WarehouseModel {
+  id: string;
+  code?: string;
+  name: string;
+  address?: string;
+  status?: string;
+}
+
+export interface ProjectMilestoneModel {
+  id: string;
+  name?: string;
+  milestoneType?: string;
+  completionPercent?: number;
+  amount?: number;
+  dueDate?: string;
+  status?: string;
+  confirmedAt?: string;
+}
+
+export interface ProjectProgressUpdateModel {
+  id: string;
+  projectId?: string;
+  progressPercent: number;
+  progressStatus?: string;
+  phase?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ProjectPaymentStatusModel {
+  paidAmount?: number;
+  outstandingAmount?: number;
+  overdueAmount?: number;
+  status?: string;
+}
 
 export interface ProjectModel {
   id: string;
@@ -31,6 +68,17 @@ export interface ProjectModel {
   linkedOrderReference?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface ProjectDetailModel {
+  project: ProjectModel;
+  timeline?: Array<{ title?: string; at?: string; status?: string; note?: string }>;
+  financialSummary?: ProjectFinancialSummaryModel;
+  milestones?: ProjectMilestoneModel[];
+  documents?: Array<{ id: string; name?: string; type?: string; createdAt?: string }>;
+  paymentStatus?: ProjectPaymentStatusModel;
+  progressUpdates?: ProjectProgressUpdateModel[];
+  warehouses?: WarehouseModel[];
 }
 
 export interface ProjectListQuery {
@@ -80,7 +128,6 @@ export interface ProjectCreateRequest {
   linkedOrderReference?: string;
   status?: string;
   paymentMilestones?: ProjectMilestoneRequest[];
-  // Legacy aliases currently used by UI screens.
   code?: string;
   warehouseId?: string;
   progress?: number;
@@ -109,7 +156,6 @@ export interface ProjectUpdateRequest {
   customerSignoffCompleted?: boolean;
   paymentMilestones?: ProjectMilestoneRequest[];
   changeReason?: string;
-  // Legacy aliases currently used by UI screens.
   code?: string;
   customerId?: string;
   warehouseId?: string;
@@ -120,8 +166,16 @@ export interface AssignWarehouseRequest {
   primaryWarehouseId?: string;
   backupWarehouseId?: string;
   assignmentReason?: string;
-  // Legacy alias currently used by UI screens.
   warehouseId?: string;
+}
+
+export interface ProjectArchiveRequest {
+  reason?: string;
+}
+
+export interface ProjectCloseRequest {
+  reason?: string;
+  note?: string;
 }
 
 export interface UpdateProjectProgressRequest {
@@ -136,7 +190,6 @@ export interface UpdateProjectProgressRequest {
     fileUrl: string;
     contentType?: string;
   }>;
-  // Legacy aliases currently used by UI screens.
   progress?: number;
   note?: string;
 }
@@ -149,6 +202,13 @@ export interface ProjectListResponseData {
 
 export interface ProjectDetailResponseData {
   project: ProjectModel;
+  timeline?: ProjectDetailModel["timeline"];
+  financialSummary?: ProjectFinancialSummaryModel;
+  milestones?: ProjectMilestoneModel[];
+  documents?: ProjectDetailModel["documents"];
+  paymentStatus?: ProjectPaymentStatusModel;
+  progressUpdates?: ProjectProgressUpdateModel[];
+  warehouses?: WarehouseModel[];
 }
 
 export interface ProjectFinancialBreakdownItem {

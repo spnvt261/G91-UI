@@ -1,6 +1,7 @@
 import axios from "axios";
 import { ApiClientError } from "../../apiConfig/axiosConfig";
 import type { ApiResponse } from "../../models/common/api.model";
+import { extractApiErrorMessage, extractFieldErrors, isApiResponse } from "../../services/service.utils";
 
 export const getErrorMessage = (error: unknown, fallback = "Something went wrong") => {
   if (error instanceof ApiClientError && error.message) {
@@ -9,8 +10,8 @@ export const getErrorMessage = (error: unknown, fallback = "Something went wrong
 
   if (axios.isAxiosError(error)) {
     const payload = error.response?.data as ApiResponse<unknown> | undefined;
-    if (payload?.message) {
-      return payload.message;
+    if (isApiResponse(payload)) {
+      return extractApiErrorMessage(payload, fallback);
     }
 
     if (error.message) {
@@ -23,6 +24,25 @@ export const getErrorMessage = (error: unknown, fallback = "Something went wrong
   }
 
   return fallback;
+};
+
+export const getFieldErrorMap = (error: unknown): Record<string, string[]> => {
+  if (error instanceof ApiClientError) {
+    if (error.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
+      return error.fieldErrors;
+    }
+
+    return extractFieldErrors(error.errors);
+  }
+
+  if (axios.isAxiosError(error)) {
+    const payload = error.response?.data as ApiResponse<unknown> | undefined;
+    if (isApiResponse(payload)) {
+      return extractFieldErrors(payload.errors);
+    }
+  }
+
+  return {};
 };
 
 export const toCurrency = (value: number | undefined | null) => {

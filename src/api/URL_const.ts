@@ -28,6 +28,7 @@ export const API = {
 
   PRODUCTS: {
     LIST: "/api/products",
+    UPLOAD_IMAGES: "/api/products/upload-images",
     CREATE: "/api/products",
     DETAIL: "/api/products/{id}",
     UPDATE: "/api/products/{id}",
@@ -87,7 +88,7 @@ export const API = {
   CONTRACTS: {
     FORM_INIT: "/api/contracts/form-init",
     PREVIEW: "/api/contracts/preview",
-    FROM_QUOTATION: "/api/contracts/from-quotation/{id}",
+    FROM_QUOTATION: "/api/contracts/from-quotation/{quotationId}",
 
     // Legacy contract routes kept for compatibility with existing screens.
     CREATE: "/api/contracts",
@@ -113,10 +114,19 @@ export const API = {
     LIST: "/api/projects",
     DETAIL: "/api/projects/{id}",
     UPDATE: "/api/projects/{id}",
+    ARCHIVE: "/api/projects/{id}/archive",
+    RESTORE: "/api/projects/{id}/restore",
     ASSIGN_WAREHOUSE: "/api/projects/{id}/warehouses",
+    MILESTONES: "/api/projects/{id}/milestones",
+    CONFIRM_MILESTONE: "/api/projects/{id}/milestones/{milestoneId}/confirm",
     ADD_PROGRESS: "/api/projects/{id}/progress",
     UPDATE_PROGRESS: "/api/projects/{id}/progress/{progressUpdateId}",
     FINANCIAL_SUMMARY: "/api/projects/{id}/financial-summary",
+    CLOSE: "/api/projects/{id}/close",
+  },
+
+  WAREHOUSES: {
+    LIST: "/api/warehouses",
   },
 
   PAYMENT: {

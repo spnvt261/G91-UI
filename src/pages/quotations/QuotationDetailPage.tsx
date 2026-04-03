@@ -1,6 +1,6 @@
 import { ArrowLeftOutlined, FileAddOutlined, ReloadOutlined, SendOutlined } from "@ant-design/icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Button, Card, Col, Descriptions, Divider, Empty, Flex, Layout, Row, Skeleton, Space, Statistic, Tooltip, Typography } from "antd";
+import { Alert, Button, Card, Col, Descriptions, Divider, Empty, Flex, Layout, Row, Skeleton, Space, Statistic, Tag, Tooltip, Typography } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
@@ -234,8 +234,14 @@ const QuotationDetailPage = () => {
                         <Descriptions column={1} size="small" colon={false}>
                           <Descriptions.Item label="Khách hàng">{detail.customer?.companyName || detail.customer?.id || "Chưa cập nhật"}</Descriptions.Item>
                           <Descriptions.Item label="Mã khách hàng">{detail.customer?.id || "Chưa cập nhật"}</Descriptions.Item>
+                          <Descriptions.Item label="Mã số thuế">{detail.customer?.taxCode || "Chưa cập nhật"}</Descriptions.Item>
+                          <Descriptions.Item label="Người liên hệ">{detail.customer?.contactPerson || "Chưa cập nhật"}</Descriptions.Item>
+                          <Descriptions.Item label="Email">{detail.customer?.email || "Chưa cập nhật"}</Descriptions.Item>
+                          <Descriptions.Item label="Số điện thoại">{detail.customer?.phone || "Chưa cập nhật"}</Descriptions.Item>
                           <Descriptions.Item label="Dự án">{detail.project?.name || "Chưa gắn dự án"}</Descriptions.Item>
                           <Descriptions.Item label="Mã dự án">{detail.project?.projectCode || detail.project?.id || "Chưa cập nhật"}</Descriptions.Item>
+                          <Descriptions.Item label="Địa điểm dự án">{detail.project?.location || "Chưa cập nhật"}</Descriptions.Item>
+                          <Descriptions.Item label="Trạng thái dự án">{detail.project?.status || "Chưa cập nhật"}</Descriptions.Item>
                         </Descriptions>
                       </Space>
                     </Card>
@@ -252,6 +258,14 @@ const QuotationDetailPage = () => {
                           <Descriptions.Item label="Giảm giá">{formatQuotationCurrency(discountAmount)}</Descriptions.Item>
                           <Descriptions.Item label="Tổng cuối">
                             <Typography.Text strong>{formatQuotationCurrency(totalAmount)}</Typography.Text>
+                          </Descriptions.Item>
+                          <Descriptions.Item label="Action flags">
+                            <Space size={8} wrap>
+                              <Tag color={detail.actions?.customerCanEdit ? "blue" : "default"}>customerCanEdit: {detail.actions?.customerCanEdit ? "true" : "false"}</Tag>
+                              <Tag color={detail.actions?.accountantCanCreateContract ? "green" : "default"}>
+                                accountantCanCreateContract: {detail.actions?.accountantCanCreateContract ? "true" : "false"}
+                              </Tag>
+                            </Space>
                           </Descriptions.Item>
                         </Descriptions>
                       </Space>

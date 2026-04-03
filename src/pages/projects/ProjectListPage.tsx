@@ -46,6 +46,7 @@ const ProjectListPage = () => {
   const [query, setQuery] = useState<ProjectListQueryState>({ page: 1, pageSize: 10 });
   const [searchText, setSearchText] = useState("");
   const [items, setItems] = useState<ProjectModel[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
@@ -62,11 +63,14 @@ const ProjectListPage = () => {
     try {
       setLoading(true);
       setListError(null);
-      const result = await projectService.getList({
+      const result = await projectService.getListPaged({
+        page: query.page,
+        pageSize: query.pageSize,
         keyword: query.keyword,
         status: query.status as ProjectModel["status"] | undefined,
       });
-      setItems(result);
+      setItems(result.items);
+      setTotalItems(result.pagination.totalItems);
     } catch (error) {
       const message = getErrorMessage(error, "Không thể tải danh sách dự án.");
       setListError(message);
@@ -74,7 +78,7 @@ const ProjectListPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [notify, query.keyword, query.status]);
+  }, [notify, query.keyword, query.page, query.pageSize, query.status]);
 
   const loadSummary = useCallback(async () => {
     try {
@@ -336,7 +340,7 @@ const ProjectListPage = () => {
             pagination={{
               current: query.page,
               pageSize: query.pageSize,
-              total: items.length,
+              total: totalItems,
               showSizeChanger: true,
               showTotal: (total, range) => `${range[0]}-${range[1]} trên ${total} dự án`,
               onChange: (page, pageSize) =>
@@ -355,4 +359,3 @@ const ProjectListPage = () => {
 };
 
 export default ProjectListPage;
-

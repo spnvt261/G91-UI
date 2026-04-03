@@ -6,6 +6,8 @@ export interface PriceListItemModel {
   productCode?: string;
   productName?: string;
   unitPriceVnd: number;
+  pricingRuleType?: string;
+  note?: string;
 }
 
 export interface PriceListModel {
@@ -17,6 +19,8 @@ export interface PriceListModel {
   status: PriceListStatus;
   itemCount: number;
   items: PriceListItemModel[];
+  createdBy?: string;
+  updatedBy?: string;
   createdAt?: string;
   updatedAt?: string;
 }

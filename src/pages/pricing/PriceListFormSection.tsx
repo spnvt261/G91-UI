@@ -93,6 +93,8 @@ const PriceListFormSection = ({
         productCode: option?.productCode,
         productName: option?.productName,
         unitPriceVnd: parseAmount(item.unitPrice),
+        pricingRuleType: undefined,
+        note: undefined,
       };
     });
   }, [optionMap, values.items]);

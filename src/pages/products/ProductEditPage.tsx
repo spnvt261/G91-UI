@@ -1,5 +1,5 @@
 ﻿import { CloseOutlined, SaveOutlined } from "@ant-design/icons";
-import { Alert, Breadcrumb, Button, Card, Space } from "antd";
+import { Breadcrumb, Button, Card, Space } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
@@ -10,7 +10,7 @@ import { productService } from "../../services/product/product.service";
 import InlinePageStatus from "../shared/components/InlinePageStatus";
 import { getErrorMessage } from "../shared/page.utils";
 import ProductFormSections from "./components/ProductFormSections";
-import { createInitialProductFormValues, type ProductFormValues, toProductWritePayload, validateProductForm } from "./productForm.utils";
+import { createInitialProductFormValues, parseImageUrls, type ProductFormValues, toProductWritePayload, validateProductForm } from "./productForm.utils";
 
 const ProductEditPage = () => {
   const { id } = useParams();
@@ -22,6 +22,7 @@ const ProductEditPage = () => {
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   const handleFieldChange = <TField extends keyof ProductFormValues>(field: TField, value: ProductFormValues[TField]) => {
     setValues((previous) => ({
@@ -82,6 +83,28 @@ const ProductEditPage = () => {
     }
   };
 
+  const handleUploadImageFiles = async (files: File[]) => {
+    try {
+      setUploadingImages(true);
+      const imageUrls = await productService.uploadImages(files);
+      if (!imageUrls.length) {
+        notify("Không nhận được URL ảnh từ hệ thống upload.", "warning");
+        return;
+      }
+
+      const merged = [...new Set([...parseImageUrls(values.imageUrlsText), ...imageUrls])];
+      setValues((previous) => ({
+        ...previous,
+        imageUrlsText: merged.join("\n"),
+      }));
+      notify(`Đã tải lên ${imageUrls.length} ảnh.`, "success");
+    } catch (error) {
+      notify(getErrorMessage(error, "Không thể tải ảnh lên."), "error");
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
   return (
     <NoResizeScreenTemplate
       loading={false}
@@ -89,7 +112,7 @@ const ProductEditPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Chỉnh sửa sản phẩm"
-          subtitle="Cập nhật thông tin sản phẩm và giữ trải nghiệm catalog nhất quán cho người dùng cuối."
+          subtitle="Cập nhật thông tin sản phẩm và giữ trải nghiệm catalog nhất quán."
           breadcrumb={
             <Breadcrumb
               items={[
@@ -117,14 +140,14 @@ const ProductEditPage = () => {
 
           {!loading && !loadError ? (
             <>
-              <Alert
-                type="info"
-                showIcon
-                message="Mẹo sử dụng"
-                description="Sau khi lưu, hệ thống sẽ điều hướng về trang chi tiết để bạn kiểm tra lại toàn bộ nội dung đã cập nhật."
+              <ProductFormSections
+                values={values}
+                errors={errors}
+                onFieldChange={handleFieldChange}
+                disabled={saving}
+                uploadingImages={uploadingImages}
+                onUploadImageFiles={handleUploadImageFiles}
               />
-
-              <ProductFormSections values={values} errors={errors} onFieldChange={handleFieldChange} disabled={saving} />
 
               <Card
                 bordered

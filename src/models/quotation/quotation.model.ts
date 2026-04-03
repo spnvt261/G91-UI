@@ -237,11 +237,19 @@ export interface QuotationDetailResponseData {
   customer?: {
     id: string;
     companyName?: string;
+    taxCode?: string;
+    address?: string;
+    contactPerson?: string;
+    phone?: string;
+    email?: string;
+    customerType?: string;
   };
   project?: {
     id: string;
     name?: string;
     projectCode?: string;
+    location?: string;
+    status?: string;
   };
   items: QuotationItemModel[];
   pricing?: {

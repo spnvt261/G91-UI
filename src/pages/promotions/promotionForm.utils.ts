@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   PromotionCreateRequest,
   PromotionDetail,
   PromotionStatus,
@@ -18,6 +18,9 @@ export interface PromotionFormValues {
   endDate: string;
   status: string;
   productIds: string[];
+  customerGroups: string[];
+  priority: number | null;
+  description: string;
 }
 
 export type PromotionFormErrors = Partial<Record<keyof PromotionFormValues, string>>;
@@ -31,6 +34,9 @@ export const createInitialPromotionFormValues = (detail?: PromotionDetail): Prom
   endDate: detail?.endDate ?? "",
   status: detail?.status ?? "",
   productIds: detail?.productIds ?? [],
+  customerGroups: detail?.customerGroups ?? [],
+  priority: detail?.priority ?? null,
+  description: detail?.description ?? "",
 });
 
 const isPromotionType = (value: string): value is PromotionType => {
@@ -50,45 +56,53 @@ export const validatePromotionForm = (values: PromotionFormValues): PromotionFor
   const errors: PromotionFormErrors = {};
 
   if (!values.name.trim()) {
-    errors.name = "Vui lòng nhập tên chương trình khuyến mãi.";
+    errors.name = "Vui long nhap ten chuong trinh khuyen mai.";
   }
 
   if (!isPromotionType(values.promotionType)) {
-    errors.promotionType = "Vui lòng chọn loại khuyến mãi.";
+    errors.promotionType = "Vui long chon loai khuyen mai.";
   }
 
   const discountValue = Number(values.discountValue);
   if (!Number.isFinite(discountValue) || discountValue <= 0) {
-    errors.discountValue = "Giá trị giảm phải lớn hơn 0.";
+    errors.discountValue = "Gia tri giam phai lon hon 0.";
   }
   if (values.promotionType === "PERCENTAGE" && Number.isFinite(discountValue) && discountValue > 100) {
-    errors.discountValue = "Giảm theo phần trăm không được vượt quá 100%.";
+    errors.discountValue = "Giam theo phan tram khong duoc vuot qua 100%.";
   }
 
   if (!values.startDate) {
-    errors.startDate = "Vui lòng chọn ngày bắt đầu.";
+    errors.startDate = "Vui long chon ngay bat dau.";
   }
 
   if (!values.endDate) {
-    errors.endDate = "Vui lòng chọn ngày kết thúc.";
+    errors.endDate = "Vui long chon ngay ket thuc.";
   }
 
   const startDateValue = values.startDate ? parseDateValue(values.startDate) : undefined;
   const endDateValue = values.endDate ? parseDateValue(values.endDate) : undefined;
   if (values.startDate && startDateValue == null) {
-    errors.startDate = "Ngày bắt đầu không hợp lệ.";
+    errors.startDate = "Ngay bat dau khong hop le.";
   }
 
   if (values.endDate && endDateValue == null) {
-    errors.endDate = "Ngày kết thúc không hợp lệ.";
+    errors.endDate = "Ngay ket thuc khong hop le.";
   }
 
   if (startDateValue != null && endDateValue != null && endDateValue < startDateValue) {
-    errors.endDate = "Ngày kết thúc không được sớm hơn ngày bắt đầu.";
+    errors.endDate = "Ngay ket thuc khong duoc som hon ngay bat dau.";
   }
 
   if (!isPromotionStatus(values.status)) {
-    errors.status = "Vui lòng chọn trạng thái.";
+    errors.status = "Vui long chon trang thai.";
+  }
+
+  if (values.priority != null && values.priority < 0) {
+    errors.priority = "Priority phai lon hon hoac bang 0.";
+  }
+
+  if (values.description.trim().length > 1000) {
+    errors.description = "Mo ta toi da 1000 ky tu.";
   }
 
   return errors;
@@ -107,5 +121,8 @@ export const toPromotionWritePayload = (values: PromotionFormValues): PromotionC
     endDate: values.endDate,
     status,
     productIds: values.productIds,
+    customerGroups: values.customerGroups,
+    priority: values.priority ?? undefined,
+    description: values.description.trim() || undefined,
   };
 };

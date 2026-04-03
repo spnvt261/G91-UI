@@ -1,18 +1,22 @@
-import api from "../../apiConfig/axiosConfig";
+﻿import api from "../../apiConfig/axiosConfig";
 import { API, withId, withPathParams } from "../../api/URL_const";
 import type {
   AssignWarehouseRequest,
+  ProjectArchiveRequest,
+  ProjectCloseRequest,
   ProjectCreateRequest,
   ProjectDetailResponseData,
   ProjectFinancialSummaryModel,
   ProjectListQuery,
   ProjectListResponseData,
+  ProjectMilestoneModel,
   ProjectModel,
   ProjectProgressResponse,
   ProjectUpdateRequest,
   UpdateProjectProgressRequest,
+  WarehouseModel,
 } from "../../models/project/project.model";
-import { extractList } from "../service.utils";
+import { extractList, extractPagination } from "../service.utils";
 
 const toProjectModel = (payload: ProjectModel): ProjectModel => ({
   ...payload,
@@ -95,25 +99,72 @@ const toUpdateRequest = (request: ProjectUpdateRequest) => ({
   changeReason: request.changeReason ?? "Updated from UI",
 });
 
+const toListParams = (params?: ProjectListQuery) => ({
+  page: params?.page,
+  pageSize: params?.pageSize ?? params?.size,
+  keyword: params?.keyword,
+  projectCode: params?.projectCode,
+  projectName: params?.projectName,
+  customerId: params?.customerId,
+  status: params?.status,
+  progressStatus: params?.progressStatus,
+  warehouseId: params?.warehouseId,
+  assignedManager: params?.assignedManager,
+  archived: params?.archived,
+  createdFrom: params?.createdFrom,
+  createdTo: params?.createdTo,
+  startFrom: params?.startFrom,
+  startTo: params?.startTo,
+  endFrom: params?.endFrom,
+  endTo: params?.endTo,
+  sortBy: params?.sortBy,
+  sortDir: params?.sortDir,
+});
+
 export const projectService = {
   async create(request: ProjectCreateRequest): Promise<ProjectModel> {
     const response = await api.post<ProjectModel>(API.PROJECT.CREATE, toCreateRequest(request));
     return toProjectModel(response.data);
   },
 
-  async getList(params?: ProjectListQuery): Promise<ProjectModel[]> {
-    const normalizedParams = {
-      ...params,
-      pageSize: params?.pageSize ?? params?.size,
-      projectName: params?.projectName ?? params?.keyword,
+  async getListPaged(params?: ProjectListQuery): Promise<ProjectListResponseData> {
+    const response = await api.get<unknown>(API.PROJECT.LIST, { params: toListParams(params) });
+    const payload = response.data;
+    const items = extractList<ProjectModel>(payload).map(toProjectModel);
+    const pagination = extractPagination(payload, {
+      page: params?.page ?? 1,
+      pageSize: params?.pageSize ?? params?.size ?? 10,
+      totalItems: items.length,
+    });
+
+    return {
+      items,
+      pagination,
     };
-    const response = await api.get<unknown>(API.PROJECT.LIST, { params: normalizedParams });
-    return extractList<ProjectListResponseData["items"][number]>(response.data).map(toProjectModel);
+  },
+
+  async getList(params?: ProjectListQuery): Promise<ProjectModel[]> {
+    const response = await projectService.getListPaged(params);
+    return response.items;
   },
 
   async getDetail(id: string): Promise<ProjectModel> {
+    const response = await api.get<ProjectDetailResponseData | ProjectModel>(withId(API.PROJECT.DETAIL, id));
+    const payload = response.data as ProjectDetailResponseData | ProjectModel;
+
+    if ("project" in payload) {
+      return toProjectModel(payload.project);
+    }
+
+    return toProjectModel(payload);
+  },
+
+  async getDetailCenter(id: string): Promise<ProjectDetailResponseData> {
     const response = await api.get<ProjectDetailResponseData>(withId(API.PROJECT.DETAIL, id));
-    return toProjectModel(response.data.project);
+    return {
+      ...response.data,
+      project: toProjectModel(response.data.project),
+    };
   },
 
   async getFinancialSummary(id: string): Promise<ProjectFinancialSummaryModel> {
@@ -124,6 +175,14 @@ export const projectService = {
   async update(id: string, request: ProjectUpdateRequest): Promise<ProjectModel> {
     const response = await api.put<ProjectModel>(withId(API.PROJECT.UPDATE, id), toUpdateRequest(request));
     return toProjectModel(response.data);
+  },
+
+  async getWarehouses(): Promise<WarehouseModel[]> {
+    const response = await api.get<unknown>(API.WAREHOUSES.LIST);
+    return extractList<WarehouseModel>(response.data).map((warehouse) => ({
+      ...warehouse,
+      name: warehouse.name ?? warehouse.code ?? warehouse.id,
+    }));
   },
 
   async assignWarehouse(id: string, request: AssignWarehouseRequest): Promise<void> {
@@ -156,24 +215,50 @@ export const projectService = {
     return response.data;
   },
 
-  async close(id: string, note?: string): Promise<ProjectModel> {
-    return projectService.update(id, {
-      status: "DONE",
-      changeReason: note ?? "Project closed from UI",
+  async getMilestones(id: string): Promise<ProjectMilestoneModel[]> {
+    const response = await api.get<unknown>(withId(API.PROJECT.MILESTONES, id));
+    return extractList<ProjectMilestoneModel>(response.data);
+  },
+
+  async confirmMilestone(id: string, note?: string, milestoneId?: string): Promise<void> {
+    let targetMilestoneId = milestoneId;
+
+    if (!targetMilestoneId) {
+      const milestones = await projectService.getMilestones(id);
+      targetMilestoneId = milestones.find((item) => !item.confirmedAt && item.status !== "CONFIRMED")?.id ?? milestones[0]?.id;
+    }
+
+    if (!targetMilestoneId) {
+      throw new Error("Khong tim thay milestone de xac nhan.");
+    }
+
+    await api.post<void>(withPathParams(API.PROJECT.CONFIRM_MILESTONE, { id, milestoneId: targetMilestoneId }), {
+      note: note || undefined,
     });
   },
 
-  async confirmMilestone(id: string, note?: string): Promise<ProjectModel> {
-    return projectService.update(id, {
-      customerSignoffCompleted: true,
-      changeReason: note ?? "Milestone confirmed by customer",
+  async archive(id: string, request: ProjectArchiveRequest = {}): Promise<void> {
+    await api.patch<void>(withId(API.PROJECT.ARCHIVE, id), request);
+  },
+
+  async restore(id: string, note?: string): Promise<void> {
+    await api.post<void>(withId(API.PROJECT.RESTORE, id), {
+      note: note || undefined,
     });
   },
 
-  async softDelete(id: string, note?: string): Promise<ProjectModel> {
-    return projectService.update(id, {
-      status: "CANCELLED",
-      changeReason: note ?? "Project archived from UI",
+  async close(id: string, note?: string): Promise<void> {
+    const payload: ProjectCloseRequest = {
+      reason: note || "Closed from UI",
+      note: note || undefined,
+    };
+
+    await api.post<void>(withId(API.PROJECT.CLOSE, id), payload);
+  },
+
+  async softDelete(id: string, note?: string): Promise<void> {
+    await projectService.archive(id, {
+      reason: note || "Archived from UI",
     });
   },
 };

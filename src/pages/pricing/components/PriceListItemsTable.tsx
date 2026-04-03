@@ -1,4 +1,4 @@
-import { DeleteOutlined } from "@ant-design/icons";
+﻿import { DeleteOutlined } from "@ant-design/icons";
 import { Button, Empty, InputNumber, Space, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useMemo } from "react";
@@ -10,6 +10,8 @@ export interface PriceListItemRowView {
   productCode?: string;
   productName?: string;
   unitPriceVnd?: number;
+  pricingRuleType?: string;
+  note?: string;
 }
 
 interface PriceListItemsTableProps {
@@ -27,7 +29,7 @@ interface PriceListItemsTableProps {
 const PriceListItemsTable = ({
   items,
   loading = false,
-  emptyDescription = "Chưa có sản phẩm trong bảng giá.",
+  emptyDescription = "Chua co san pham trong bang gia.",
   showIndex = true,
   editableUnitPrice = false,
   unitPriceErrors,
@@ -49,23 +51,23 @@ const PriceListItemsTable = ({
           ]
         : []),
       {
-        title: "Sản phẩm",
+        title: "San pham",
         key: "product",
         render: (_, row) => {
-          const fallbackName = row.productId || "Chưa xác định";
+          const fallbackName = row.productId || "Chua xac dinh";
           const title = row.productName?.trim() || fallbackName;
           const code = row.productCode?.trim();
 
           return (
             <Space direction="vertical" size={2}>
               <Typography.Text strong>{title}</Typography.Text>
-              <Typography.Text type="secondary">{code ? `Mã sản phẩm: ${code}` : `ID: ${row.productId || "Chưa xác định"}`}</Typography.Text>
+              <Typography.Text type="secondary">{code ? `Ma san pham: ${code}` : `ID: ${row.productId || "Chua xac dinh"}`}</Typography.Text>
             </Space>
           );
         },
       },
       {
-        title: "Đơn giá",
+        title: "Don gia",
         dataIndex: "unitPriceVnd",
         key: "unitPriceVnd",
         width: 220,
@@ -78,7 +80,7 @@ const PriceListItemsTable = ({
                   min={1}
                   precision={0}
                   addonAfter="VND"
-                  placeholder="Nhập đơn giá"
+                  placeholder="Nhap don gia"
                   value={value && Number.isFinite(value) && value > 0 ? value : undefined}
                   onChange={(nextValue) => onUnitPriceChange(row.key, typeof nextValue === "number" ? nextValue : undefined)}
                 />
@@ -92,15 +94,28 @@ const PriceListItemsTable = ({
           }
 
           if (value == null || !Number.isFinite(value) || value <= 0) {
-            return <Typography.Text type="secondary">Chưa thiết lập</Typography.Text>;
+            return <Typography.Text type="secondary">Chua thiet lap</Typography.Text>;
           }
           return <Typography.Text strong>{toCurrency(value)}</Typography.Text>;
         },
       },
+      {
+        title: "Rule",
+        dataIndex: "pricingRuleType",
+        key: "pricingRuleType",
+        width: 140,
+        render: (value?: string) => value || "-",
+      },
+      {
+        title: "Ghi chu",
+        dataIndex: "note",
+        key: "note",
+        render: (value?: string) => value || "-",
+      },
       ...(onRemoveItem
         ? [
             {
-              title: "Thao tác",
+              title: "Thao tac",
               key: "actions",
               width: 140,
               render: (_: unknown, row: PriceListItemRowView) => (
@@ -110,7 +125,7 @@ const PriceListItemsTable = ({
                   onClick={() => onRemoveItem(row.key)}
                   disabled={removeButtonDisabled?.(row)}
                 >
-                  Xoá
+                  Xoa
                 </Button>
               ),
             },
@@ -131,7 +146,7 @@ const PriceListItemsTable = ({
       locale={{
         emptyText: <Empty description={emptyDescription} image={Empty.PRESENTED_IMAGE_SIMPLE} />,
       }}
-      scroll={{ x: 900 }}
+      scroll={{ x: 1000 }}
     />
   );
 };

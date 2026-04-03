@@ -1,7 +1,7 @@
 import type { UserStatus } from "../auth/auth.model";
 
-export type InternalAccountRoleId = "ACCOUNTANT" | "WAREHOUSE" | "CUSTOMER";
-export type AccountRoleId = InternalAccountRoleId | "OWNER";
+export type InternalAccountRoleId = "ACCOUNTANT" | "WAREHOUSE";
+export type AccountRoleId = InternalAccountRoleId | "OWNER" | "CUSTOMER";
 
 export interface AccountCreateRequest {
   fullName: string;

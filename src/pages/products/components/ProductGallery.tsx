@@ -1,5 +1,6 @@
 import { Empty, Image, Space, Typography } from "antd";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import ProductImage from "./ProductImage";
 
 interface ProductGalleryProps {
   productName: string;
@@ -15,6 +16,17 @@ const ProductGallery = ({ productName, mainImage, imageUrls }: ProductGalleryPro
 
   const [activeImage, setActiveImage] = useState<string>(images[0] ?? "");
 
+  useEffect(() => {
+    if (!images.length) {
+      setActiveImage("");
+      return;
+    }
+
+    if (!activeImage || !images.includes(activeImage)) {
+      setActiveImage(images[0]);
+    }
+  }, [activeImage, images]);
+
   if (images.length === 0) {
     return (
       <Space direction="vertical" size={12} align="center" style={{ width: "100%", padding: "24px 0" }}>
@@ -25,7 +37,7 @@ const ProductGallery = ({ productName, mainImage, imageUrls }: ProductGalleryPro
 
   return (
     <Space direction="vertical" size={12} style={{ width: "100%" }}>
-      <Image src={activeImage} alt={productName} preview style={{ width: "100%", maxHeight: 460, objectFit: "cover", borderRadius: 12 }} />
+      <ProductImage src={activeImage} alt={productName} preview style={{ width: "100%", maxHeight: 460, objectFit: "cover", borderRadius: 12 }} />
 
       <Image.PreviewGroup>
         <Space wrap size={8}>
@@ -44,7 +56,7 @@ const ProductGallery = ({ productName, mainImage, imageUrls }: ProductGalleryPro
                   cursor: "pointer",
                 }}
               >
-                <Image src={image} alt={`${productName} - ảnh`} width={88} height={64} preview style={{ objectFit: "cover", borderRadius: 8 }} />
+                <ProductImage src={image} alt={`${productName} - ảnh`} width={88} height={64} preview style={{ objectFit: "cover", borderRadius: 8 }} />
               </button>
             );
           })}

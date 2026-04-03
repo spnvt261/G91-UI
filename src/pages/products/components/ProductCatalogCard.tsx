@@ -1,7 +1,8 @@
 import { EditOutlined, EllipsisOutlined, EyeOutlined, FileTextOutlined, DeleteOutlined } from "@ant-design/icons";
-import { Button, Card, Dropdown, Empty, Image, Space, Typography } from "antd";
+import { Button, Card, Dropdown, Empty, Space, Typography } from "antd";
 import type { MenuProps } from "antd";
 import type { ProductModel } from "../../../models/product/product.model";
+import ProductImage from "./ProductImage";
 import ProductStatusTag from "./ProductStatusTag";
 
 interface ProductCatalogCardProps {
@@ -59,7 +60,7 @@ const ProductCatalogCard = ({
       bordered
       cover={
         product.mainImage ? (
-          <Image
+          <ProductImage
             src={product.mainImage}
             alt={product.productName}
             preview

@@ -1,4 +1,4 @@
-export type InventoryTransactionType = "RECEIPT" | "ISSUE" | "ADJUSTMENT";
+﻿export type InventoryTransactionType = "RECEIPT" | "ISSUE" | "ADJUSTMENT";
 
 export interface InventoryStatusListQuery {
   page?: number;
@@ -11,7 +11,9 @@ export interface InventoryStatusItem {
   productId: string;
   productCode?: string;
   productName?: string;
+  type?: string;
   unit?: string;
+  currentQuantity: number;
   onHandQuantity: number;
   availableQuantity?: number;
   reservedQuantity?: number;
@@ -62,15 +64,25 @@ export interface InventoryHistoryQuery {
 
 export interface InventoryHistoryItem {
   id: string;
+  transactionId: string;
+  transactionCode?: string;
   transactionType: InventoryTransactionType;
   productId: string;
   productCode?: string;
   productName?: string;
   quantity: number;
+  quantityBefore?: number;
+  quantityAfter?: number;
   balanceAfter?: number;
+  transactionDate?: string;
+  createdAt?: string;
+  operatorId?: string;
+  operatorEmail?: string;
+  supplierName?: string;
+  relatedOrderId?: string;
+  relatedProjectId?: string;
   reason?: string;
   note?: string;
-  createdAt?: string;
 }
 
 export interface InventoryHistoryResponse {

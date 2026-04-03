@@ -153,6 +153,8 @@ const PriceListDetailPage = () => {
       productCode: item.productCode,
       productName: item.productName,
       unitPriceVnd: item.unitPriceVnd,
+      pricingRuleType: item.pricingRuleType,
+      note: item.note,
     }));
   }, [detail]);
 
