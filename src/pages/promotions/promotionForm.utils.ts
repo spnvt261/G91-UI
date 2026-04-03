@@ -56,53 +56,53 @@ export const validatePromotionForm = (values: PromotionFormValues): PromotionFor
   const errors: PromotionFormErrors = {};
 
   if (!values.name.trim()) {
-    errors.name = "Vui long nhap ten chuong trinh khuyen mai.";
+    errors.name = "Vui lòng nhập tên chương trình khuyến mãi.";
   }
 
   if (!isPromotionType(values.promotionType)) {
-    errors.promotionType = "Vui long chon loai khuyen mai.";
+    errors.promotionType = "Vui lòng chọn loại khuyến mãi.";
   }
 
   const discountValue = Number(values.discountValue);
   if (!Number.isFinite(discountValue) || discountValue <= 0) {
-    errors.discountValue = "Gia tri giam phai lon hon 0.";
+    errors.discountValue = "Giá trị giảm phải lớn hơn 0.";
   }
   if (values.promotionType === "PERCENTAGE" && Number.isFinite(discountValue) && discountValue > 100) {
-    errors.discountValue = "Giam theo phan tram khong duoc vuot qua 100%.";
+    errors.discountValue = "Giảm theo phần trăm không được vượt quá 100%.";
   }
 
   if (!values.startDate) {
-    errors.startDate = "Vui long chon ngay bat dau.";
+    errors.startDate = "Vui lòng chọn ngày bắt đầu.";
   }
 
   if (!values.endDate) {
-    errors.endDate = "Vui long chon ngay ket thuc.";
+    errors.endDate = "Vui lòng chọn ngày kết thúc.";
   }
 
   const startDateValue = values.startDate ? parseDateValue(values.startDate) : undefined;
   const endDateValue = values.endDate ? parseDateValue(values.endDate) : undefined;
   if (values.startDate && startDateValue == null) {
-    errors.startDate = "Ngay bat dau khong hop le.";
+    errors.startDate = "Ngày bắt đầu không hợp lệ.";
   }
 
   if (values.endDate && endDateValue == null) {
-    errors.endDate = "Ngay ket thuc khong hop le.";
+    errors.endDate = "Ngày kết thúc không hợp lệ.";
   }
 
   if (startDateValue != null && endDateValue != null && endDateValue < startDateValue) {
-    errors.endDate = "Ngay ket thuc khong duoc som hon ngay bat dau.";
+    errors.endDate = "Ngày kết thúc không được sớm hơn ngày bắt đầu.";
   }
 
   if (!isPromotionStatus(values.status)) {
-    errors.status = "Vui long chon trang thai.";
+    errors.status = "Vui lòng chọn trạng thái.";
   }
 
   if (values.priority != null && values.priority < 0) {
-    errors.priority = "Priority phai lon hon hoac bang 0.";
+    errors.priority = "Priority phải lớn hơn hoặc bằng 0.";
   }
 
   if (values.description.trim().length > 1000) {
-    errors.description = "Mo ta toi da 1000 ky tu.";
+    errors.description = "Mô tả tối đa 1000 ký tự.";
   }
 
   return errors;

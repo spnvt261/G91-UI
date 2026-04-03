@@ -17,7 +17,7 @@ const compareByLabel = (left: ProjectSelectOption, right: ProjectSelectOption) =
 const toReadableWarehouseLabel = (warehouseId: string, warehouseName?: string) => {
   const normalizedName = warehouseName?.trim();
   if (!normalizedName || normalizedName === warehouseId) {
-    return "Kho chua co ten";
+    return "Kho chưa có tên";
   }
   return normalizedName;
 };

@@ -29,7 +29,7 @@ interface PriceListItemsTableProps {
 const PriceListItemsTable = ({
   items,
   loading = false,
-  emptyDescription = "Chua co san pham trong bang gia.",
+  emptyDescription = "Chưa có sản phẩm trong bảng giá.",
   showIndex = true,
   editableUnitPrice = false,
   unitPriceErrors,
@@ -51,23 +51,23 @@ const PriceListItemsTable = ({
           ]
         : []),
       {
-        title: "San pham",
+        title: "Sản phẩm",
         key: "product",
         render: (_, row) => {
-          const fallbackName = row.productId || "Chua xac dinh";
+          const fallbackName = row.productId || "Chưa xác định";
           const title = row.productName?.trim() || fallbackName;
           const code = row.productCode?.trim();
 
           return (
             <Space direction="vertical" size={2}>
               <Typography.Text strong>{title}</Typography.Text>
-              <Typography.Text type="secondary">{code ? `Ma san pham: ${code}` : `ID: ${row.productId || "Chua xac dinh"}`}</Typography.Text>
+              <Typography.Text type="secondary">{code ? `Mã sản phẩm: ${code}` : `ID: ${row.productId || "Chưa xác định"}`}</Typography.Text>
             </Space>
           );
         },
       },
       {
-        title: "Don gia",
+        title: "Đơn giá",
         dataIndex: "unitPriceVnd",
         key: "unitPriceVnd",
         width: 220,
@@ -80,7 +80,7 @@ const PriceListItemsTable = ({
                   min={1}
                   precision={0}
                   addonAfter="VND"
-                  placeholder="Nhap don gia"
+                  placeholder="Nhập đơn giá"
                   value={value && Number.isFinite(value) && value > 0 ? value : undefined}
                   onChange={(nextValue) => onUnitPriceChange(row.key, typeof nextValue === "number" ? nextValue : undefined)}
                 />
@@ -94,7 +94,7 @@ const PriceListItemsTable = ({
           }
 
           if (value == null || !Number.isFinite(value) || value <= 0) {
-            return <Typography.Text type="secondary">Chua thiet lap</Typography.Text>;
+            return <Typography.Text type="secondary">Chưa thiết lập</Typography.Text>;
           }
           return <Typography.Text strong>{toCurrency(value)}</Typography.Text>;
         },
@@ -107,7 +107,7 @@ const PriceListItemsTable = ({
         render: (value?: string) => value || "-",
       },
       {
-        title: "Ghi chu",
+        title: "Ghi chú",
         dataIndex: "note",
         key: "note",
         render: (value?: string) => value || "-",
@@ -115,7 +115,7 @@ const PriceListItemsTable = ({
       ...(onRemoveItem
         ? [
             {
-              title: "Thao tac",
+              title: "Thao tác",
               key: "actions",
               width: 140,
               render: (_: unknown, row: PriceListItemRowView) => (
@@ -125,7 +125,7 @@ const PriceListItemsTable = ({
                   onClick={() => onRemoveItem(row.key)}
                   disabled={removeButtonDisabled?.(row)}
                 >
-                  Xoa
+                  Xóa
                 </Button>
               ),
             },

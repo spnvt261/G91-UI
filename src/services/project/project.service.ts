@@ -229,7 +229,7 @@ export const projectService = {
     }
 
     if (!targetMilestoneId) {
-      throw new Error("Khong tim thay milestone de xac nhan.");
+      throw new Error("Không tìm thấy milestone để xác nhận.");
     }
 
     await api.post<void>(withPathParams(API.PROJECT.CONFIRM_MILESTONE, { id, milestoneId: targetMilestoneId }), {
