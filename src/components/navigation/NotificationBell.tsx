@@ -19,13 +19,13 @@ const NotificationBell = () => {
     <Dropdown
       trigger={["click"]}
       placement="bottomRight"
-      dropdownRender={() => (
+      popupRender={() => (
         <Card
-          bordered={false}
+          variant="borderless"
           className="app-notification-dropdown"
           styles={{ body: { padding: 14 } }}
         >
-          <Space direction="vertical" size={10} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={10} style={{ width: "100%" }}>
             <Space align="center" size={8}>
               <InfoCircleOutlined style={{ color: "#1677ff" }} />
               <Typography.Text strong>Thông báo</Typography.Text>
@@ -38,7 +38,7 @@ const NotificationBell = () => {
             <Divider style={{ margin: "2px 0" }} />
 
             {hasData ? (
-              <Space direction="vertical" size={10} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={10} style={{ width: "100%" }}>
                 {placeholderNotifications.map((item) => (
                   <div key={item.id} className="app-notification-dropdown__item">
                     <Typography.Text>{item.title}</Typography.Text>

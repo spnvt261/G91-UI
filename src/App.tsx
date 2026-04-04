@@ -139,22 +139,27 @@ const AppAuthenticatedLayout = () => {
 };
 
 function App() {
-  const token = getStoredAccessToken();
-  const userRole = getStoredUserRole();
+  const accessToken = useSelector((state: RootState) => state.auth.accessToken);
+  const roleFromState = useSelector((state: RootState) => state.auth.user?.role ?? null);
+
+  const token = accessToken ?? getStoredAccessToken();
+  const userRole = roleFromState ?? getStoredUserRole();
+  const hasSession = Boolean(token && userRole);
+  const defaultRoute = !token || !userRole ? ROUTE_URL.LOGIN : getDefaultRouteByRole(userRole);
 
   return (
     <div className="min-h-screen w-full">
       <Routes>
-        <Route path="/" element={<Navigate to={token && userRole ? getDefaultRouteByRole(userRole) : ROUTE_URL.LOGIN} replace />} />
+        <Route path="/" element={<Navigate to={defaultRoute} replace />} />
 
-        <Route path={ROUTE_URL.LOGIN} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <LoginPage />} />
-        <Route path={ROUTE_URL.REGISTER} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <RegisterPage />} />
+        <Route path={ROUTE_URL.LOGIN} element={hasSession ? <Navigate to={defaultRoute} replace /> : <LoginPage />} />
+        <Route path={ROUTE_URL.REGISTER} element={hasSession ? <Navigate to={defaultRoute} replace /> : <RegisterPage />} />
         <Route
           path={ROUTE_URL.VERIFY_REGISTRATION}
-          element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <VerifyRegistrationPage />}
+          element={hasSession ? <Navigate to={defaultRoute} replace /> : <VerifyRegistrationPage />}
         />
-        <Route path={ROUTE_URL.FORGOT_PASSWORD} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <ForgotPasswordPage />} />
-        <Route path={ROUTE_URL.RESET_PASSWORD} element={token ? <Navigate to={getDefaultRouteByRole(userRole ?? "OWNER")} replace /> : <ResetPasswordPage />} />
+        <Route path={ROUTE_URL.FORGOT_PASSWORD} element={hasSession ? <Navigate to={defaultRoute} replace /> : <ForgotPasswordPage />} />
+        <Route path={ROUTE_URL.RESET_PASSWORD} element={hasSession ? <Navigate to={defaultRoute} replace /> : <ResetPasswordPage />} />
 
         <Route element={<AppAuthenticatedLayout />}>
           <Route path={ROUTE_URL.DASHBOARD} element={<DashboardPage />} />

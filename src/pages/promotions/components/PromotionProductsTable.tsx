@@ -45,7 +45,7 @@ const PromotionProductsTable = ({ products, loading = false }: PromotionProducts
 
   return (
     <Card
-      bordered={false}
+      variant="borderless"
       className="shadow-sm"
       title={
         <Space size={8}>
@@ -60,7 +60,7 @@ const PromotionProductsTable = ({ products, loading = false }: PromotionProducts
         size="middle"
         columns={columns}
         dataSource={rows}
-        loading={{ spinning: loading, tip: "Đang tải danh sách sản phẩm..." }}
+        loading={{ spinning: loading, description: "Đang tải danh sách sản phẩm..." }}
         pagination={false}
         locale={{
           emptyText: (

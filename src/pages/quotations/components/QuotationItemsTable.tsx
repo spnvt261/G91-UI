@@ -69,7 +69,7 @@ const QuotationItemsTable = ({
               )}
             </div>
 
-            <Space direction="vertical" size={2}>
+            <Space orientation="vertical" size={2}>
               <Typography.Text strong>{row.productName || "Chưa có tên sản phẩm"}</Typography.Text>
               <Typography.Text type="secondary">{row.productCode || "-"}</Typography.Text>
               {row.productMeta ? <Typography.Text type="secondary">{row.productMeta}</Typography.Text> : null}
@@ -145,7 +145,7 @@ const QuotationItemsTable = ({
       rowKey="key"
       columns={columns}
       dataSource={items}
-      loading={{ spinning: loading, tip: "Đang tải danh sách sản phẩm..." }}
+      loading={{ spinning: loading, description: "Đang tải danh sách sản phẩm..." }}
       pagination={false}
       scroll={{ x: 940 }}
       locale={{

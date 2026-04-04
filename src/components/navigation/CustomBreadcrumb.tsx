@@ -29,26 +29,41 @@ const CustomBreadcrumb = ({ breadcrumbs, className }: CustomBreadcrumbProps) => 
   };
 
   return (
-    <Breadcrumb className={className}>
-      {breadcrumbs.map((item, index) => {
+    <Breadcrumb
+      className={className}
+      items={breadcrumbs.map((item, index) => {
         const isLast = index === breadcrumbs.length - 1;
         const isClickable = !isLast && (Boolean(item.url) || Boolean(item.onClick));
 
-        return (
-          <Breadcrumb.Item
-            key={`${index}-${String(item.label)}`}
-            className={isClickable ? "cursor-pointer" : "pointer-events-none"}
-            onClick={() => {
-              if (isClickable) {
-                handleClick(item);
-              }
-            }}
-          >
-            {item.label}
-          </Breadcrumb.Item>
-        );
+        return {
+          key: `${index}-${String(item.label)}`,
+          title: (
+            <span
+              className={isClickable ? "cursor-pointer" : "pointer-events-none"}
+              onClick={() => {
+                if (isClickable) {
+                  handleClick(item);
+                }
+              }}
+              onKeyDown={(event) => {
+                if (!isClickable) {
+                  return;
+                }
+
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleClick(item);
+                }
+              }}
+              role={isClickable ? "button" : undefined}
+              tabIndex={isClickable ? 0 : undefined}
+            >
+              {item.label}
+            </span>
+          ),
+        };
       })}
-    </Breadcrumb>
+    />
   );
 };
 

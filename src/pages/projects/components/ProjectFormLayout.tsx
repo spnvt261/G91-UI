@@ -14,12 +14,12 @@ type ProjectFormLayoutProps = {
 const ProjectFormLayout = ({ title, subtitle, breadcrumbItems, loading = false, children }: ProjectFormLayoutProps) => {
   return (
     <ProjectPageLayout title={title} subtitle={subtitle} breadcrumbItems={breadcrumbItems}>
-      <Spin spinning={loading} tip="Đang tải dữ liệu...">
-        <Card bordered={false} style={{ border: "1px solid #e6edf5" }}>
+      <Spin spinning={loading} description="Đang tải dữ liệu...">
+        <Card variant="borderless" style={{ border: "1px solid #e6edf5" }}>
           {loading ? (
             <Skeleton active paragraph={{ rows: 6 }} />
           ) : (
-            <Space direction="vertical" size={20} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={20} style={{ width: "100%" }}>
               {children}
             </Space>
           )}

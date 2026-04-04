@@ -26,7 +26,7 @@ const QuotationFilters = ({
   onReset,
 }: QuotationFiltersProps) => {
   return (
-    <Space direction="vertical" size={14} style={{ width: "100%" }}>
+    <Space orientation="vertical" size={14} style={{ width: "100%" }}>
       <Typography.Text type="secondary">Tìm nhanh theo mã báo giá, khách hàng hoặc mốc thời gian quan trọng.</Typography.Text>
 
       <Form layout="vertical">

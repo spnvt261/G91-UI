@@ -61,7 +61,7 @@ const renderNodeLabel = (node: SidebarNode, collapsed: boolean) => {
   }
 
   return (
-    <Space direction="vertical" size={1} style={{ width: "100%", lineHeight: 1.2 }}>
+    <Space orientation="vertical" size={1} style={{ width: "100%", lineHeight: 1.2 }}>
       <Space size={6} align="center" wrap>
         <Typography.Text className="app-sidebar__item-label">{node.label}</Typography.Text>
         {node.badgeText ? (

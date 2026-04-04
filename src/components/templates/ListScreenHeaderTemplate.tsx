@@ -21,15 +21,15 @@ const ListScreenHeaderTemplate = ({
 }: ListScreenHeaderTemplateProps) => {
   return (
     <Card
-      bordered={false}
+      variant="borderless"
       className={`app-page-header border border-slate-200 ${className ?? ""}`.trim()}
       styles={{ body: { padding: 20 } }}
     >
-      <Space direction="vertical" size={14} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={14} style={{ width: "100%" }}>
         <div>{breadcrumb ?? <AppBreadcrumb />}</div>
 
         <Flex align="flex-start" justify="space-between" wrap="wrap" gap={14}>
-          <Space direction="vertical" size={4} style={{ maxWidth: 820 }}>
+          <Space orientation="vertical" size={4} style={{ maxWidth: 820 }}>
             <Typography.Title level={3} className="!mb-0 !text-slate-900">
               {title}
             </Typography.Title>

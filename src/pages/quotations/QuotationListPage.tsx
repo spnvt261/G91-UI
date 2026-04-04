@@ -188,7 +188,7 @@ const QuotationListPage = () => {
         title: "Mã báo giá",
         key: "quotationNumber",
         render: (_, row) => (
-          <Space direction="vertical" size={1}>
+          <Space orientation="vertical" size={1}>
             <Typography.Text strong>{row.quotationNumber || row.id}</Typography.Text>
             <Typography.Text type="secondary">Hiệu lực đến: {formatQuotationDate(row.validUntil, "Chưa xác định")}</Typography.Text>
           </Space>
@@ -201,7 +201,7 @@ const QuotationListPage = () => {
         title: "Khách hàng",
         key: "customer",
         render: (_, row) => (
-          <Space direction="vertical" size={1}>
+          <Space orientation="vertical" size={1}>
             <Typography.Text>{row.customerName || "Chưa cập nhật tên khách hàng"}</Typography.Text>
             <Typography.Text type="secondary">{row.customerId || "-"}</Typography.Text>
           </Space>
@@ -309,7 +309,7 @@ const QuotationListPage = () => {
       }
       body={
         <Layout style={{ background: "transparent" }}>
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <QuotationSummaryCards
               total={summary.total}
               draft={summary.draft}
@@ -323,7 +323,7 @@ const QuotationListPage = () => {
               <Alert
                 type="warning"
                 showIcon
-                message="Không thể tải thống kê báo giá."
+                title="Không thể tải thống kê báo giá."
                 description={summaryError}
                 action={
                   <Button size="small" onClick={() => void loadSummary()}>
@@ -333,8 +333,8 @@ const QuotationListPage = () => {
               />
             ) : null}
 
-            <Card bordered={false} className="border border-slate-200">
-              <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Card variant="borderless" className="border border-slate-200">
+              <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                 <QuotationFilters
                   keyword={searchText}
                   status={status}
@@ -366,7 +366,7 @@ const QuotationListPage = () => {
                   <Alert
                     type="error"
                     showIcon
-                    message="Không thể tải danh sách báo giá."
+                    title="Không thể tải danh sách báo giá."
                     description={listError}
                     action={
                       <Button size="small" icon={<ReloadOutlined />} onClick={() => void loadList()}>
@@ -381,7 +381,7 @@ const QuotationListPage = () => {
                   className="quotation-list-table"
                   columns={columns}
                   dataSource={items}
-                  loading={{ spinning: loading, tip: "Đang tải danh sách báo giá..." }}
+                  loading={{ spinning: loading, description: "Đang tải danh sách báo giá..." }}
                   rowClassName={() => "cursor-pointer"}
                   onRow={(record) => ({
                     onClick: (event) => {
@@ -410,7 +410,7 @@ const QuotationListPage = () => {
                     current: page,
                     pageSize,
                     total,
-                    position: ["bottomRight"],
+                    placement: ["bottomEnd"],
                     showSizeChanger: true,
                     pageSizeOptions: [8, 16, 24, 32],
                     showTotal: (value, range) => `${range[0]}-${range[1]} trên ${value} báo giá`,

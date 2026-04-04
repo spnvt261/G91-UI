@@ -48,7 +48,7 @@ const QuotationSummaryCards = ({
     <Row gutter={[16, 16]}>
       {metrics.map((metric) => (
         <Col xs={24} sm={12} xl={6} key={metric.key}>
-          <Card bordered={false} className="border border-slate-200">
+          <Card variant="borderless" className="border border-slate-200">
             {loading ? (
               <Skeleton active paragraph={{ rows: 1 }} title={false} />
             ) : (

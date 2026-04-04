@@ -27,9 +27,9 @@ const QuotationPreviewPanel = ({
   const subTotal = summary?.subTotal ?? estimatedSubTotal;
 
   return (
-    <Card bordered={false} className="border border-slate-200">
-      <Space direction="vertical" size={14} style={{ width: "100%" }}>
-        <Space direction="vertical" size={0}>
+    <Card variant="borderless" className="border border-slate-200">
+      <Space orientation="vertical" size={14} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={0}>
           <Typography.Title level={5} className="!mb-0">
             Xem trước báo giá
           </Typography.Title>
@@ -39,20 +39,20 @@ const QuotationPreviewPanel = ({
         <Badge status={statusType} text={statusText} />
 
         {!preview ? (
-          <Alert type="info" showIcon message="Bạn chưa xem trước báo giá. Hãy bấm “Xem trước” để kiểm tra trước khi gửi." />
+          <Alert type="info" showIcon title="Bạn chưa xem trước báo giá. Hãy bấm “Xem trước” để kiểm tra trước khi gửi." />
         ) : null}
 
         {previewStale ? (
           <Alert
             type="warning"
             showIcon
-            message="Dữ liệu đã thay đổi sau lần xem trước gần nhất."
+            title="Dữ liệu đã thay đổi sau lần xem trước gần nhất."
             description="Vui lòng xem trước lại để đảm bảo tổng tiền và hạn hiệu lực luôn chính xác."
           />
         ) : null}
 
         {previewMessages.length > 0 ? (
-          <Alert type="warning" showIcon message="Cần xử lý trước khi gửi báo giá." description={previewMessages.join(" ")} />
+          <Alert type="warning" showIcon title="Cần xử lý trước khi gửi báo giá." description={previewMessages.join(" ")} />
         ) : null}
 
         <Descriptions column={1} size="small" colon={false}>

@@ -492,12 +492,12 @@ const QuotationCreatePage = () => {
       body={
         <Layout style={{ background: "transparent" }}>
           {pageLoading ? (
-            <Card bordered={false} className="border border-slate-200">
+            <Card variant="borderless" className="border border-slate-200">
               <Skeleton active paragraph={{ rows: 8 }} />
             </Card>
           ) : (
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
-              <Card bordered={false} className="border border-slate-200">
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
+              <Card variant="borderless" className="border border-slate-200">
                 <Steps
                   size="small"
                   current={processStep}
@@ -510,7 +510,7 @@ const QuotationCreatePage = () => {
                 />
               </Card>
 
-              {initError ? <Alert type="warning" showIcon message="Dữ liệu khởi tạo chưa đầy đủ." description={initError} /> : null}
+              {initError ? <Alert type="warning" showIcon title="Dữ liệu khởi tạo chưa đầy đủ." description={initError} /> : null}
 
               <Form<QuotationCreateFormValues>
                 form={form}
@@ -521,9 +521,9 @@ const QuotationCreatePage = () => {
               >
                 <Row gutter={[16, 16]} align="top">
                   <Col xs={24} xl={16}>
-                    <Space direction="vertical" size={16} style={{ width: "100%" }}>
-                      <Card bordered={false} className="border border-slate-200">
-                        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+                    <Space orientation="vertical" size={16} style={{ width: "100%" }}>
+                      <Card variant="borderless" className="border border-slate-200">
+                        <Space orientation="vertical" size={14} style={{ width: "100%" }}>
                           <Typography.Title level={5} className="!mb-0">
                             1. Thông tin khách hàng / dự án
                           </Typography.Title>
@@ -559,8 +559,8 @@ const QuotationCreatePage = () => {
                         </Space>
                       </Card>
 
-                      <Card bordered={false} className="border border-slate-200">
-                        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+                      <Card variant="borderless" className="border border-slate-200">
+                        <Space orientation="vertical" size={14} style={{ width: "100%" }}>
                           <Typography.Title level={5} className="!mb-0">
                             2. Sản phẩm báo giá
                           </Typography.Title>
@@ -620,7 +620,7 @@ const QuotationCreatePage = () => {
                                                 <PictureOutlined style={{ color: "#8c8c8c" }} />
                                               )}
                                             </div>
-                                            <Space direction="vertical" size={0} style={{ minWidth: 0 }}>
+                                            <Space orientation="vertical" size={0} style={{ minWidth: 0 }}>
                                               <Typography.Text ellipsis style={{ maxWidth: 280 }}>
                                                 {productLabel}
                                               </Typography.Text>
@@ -696,7 +696,7 @@ const QuotationCreatePage = () => {
                             <Alert
                               type="info"
                               showIcon
-                              message="Bạn chưa thêm sản phẩm nào."
+                              title="Bạn chưa thêm sản phẩm nào."
                               description="Hãy chọn ít nhất một sản phẩm để tạo và xem trước báo giá."
                             />
                           ) : null}
@@ -719,8 +719,8 @@ const QuotationCreatePage = () => {
                         </Space>
                       </Card>
 
-                      <Card bordered={false} className="border border-slate-200">
-                        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+                      <Card variant="borderless" className="border border-slate-200">
+                        <Space orientation="vertical" size={14} style={{ width: "100%" }}>
                           <Typography.Title level={5} className="!mb-0">
                             3. Thông tin giao hàng và ghi chú
                           </Typography.Title>
@@ -749,8 +749,8 @@ const QuotationCreatePage = () => {
                         </Space>
                       </Card>
 
-                      <Card bordered={false} className="border border-slate-200">
-                        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+                      <Card variant="borderless" className="border border-slate-200">
+                        <Space orientation="vertical" size={14} style={{ width: "100%" }}>
                           <Typography.Title level={5} className="!mb-0">
                             4. Khuyến mãi / mã ưu đãi
                           </Typography.Title>
@@ -773,8 +773,8 @@ const QuotationCreatePage = () => {
                         </Space>
                       </Card>
 
-                      <Card bordered={false} className="border border-slate-200">
-                        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+                      <Card variant="borderless" className="border border-slate-200">
+                        <Space orientation="vertical" size={14} style={{ width: "100%" }}>
                           <Typography.Title level={5} className="!mb-0">
                             5. Xem trước báo giá
                           </Typography.Title>
@@ -783,7 +783,7 @@ const QuotationCreatePage = () => {
                             <Alert
                               type="info"
                               showIcon
-                              message="Bạn chưa xem trước báo giá."
+                              title="Bạn chưa xem trước báo giá."
                               description="Hãy bấm “Xem trước” để kiểm tra tổng tiền, ưu đãi và hạn hiệu lực trước khi gửi."
                             />
                           ) : null}
@@ -792,7 +792,7 @@ const QuotationCreatePage = () => {
                             <Alert
                               type="warning"
                               showIcon
-                              message="Bản xem trước đã cũ do dữ liệu vừa thay đổi."
+                              title="Bản xem trước đã cũ do dữ liệu vừa thay đổi."
                               description="Vui lòng xem trước lại để đảm bảo thông tin gửi đi là mới nhất."
                             />
                           ) : null}
@@ -801,12 +801,12 @@ const QuotationCreatePage = () => {
                             <Alert
                               type="warning"
                               showIcon
-                              message="Bản xem trước đang có cảnh báo."
+                              title="Bản xem trước đang có cảnh báo."
                               description={previewValidationMessages.join(" ") || "Vui lòng kiểm tra lại thông tin trước khi gửi báo giá."}
                             />
                           ) : null}
 
-                          {inlineAlert ? <Alert type={inlineAlert.type} showIcon message={inlineAlert.message} description={inlineAlert.description} /> : null}
+                          {inlineAlert ? <Alert type={inlineAlert.type} showIcon title={inlineAlert.message} description={inlineAlert.description} /> : null}
 
                           <Divider style={{ margin: 0 }} />
 

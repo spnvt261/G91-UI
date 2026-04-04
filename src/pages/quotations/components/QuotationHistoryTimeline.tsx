@@ -34,8 +34,8 @@ const QuotationHistoryTimeline = ({ events }: QuotationHistoryTimelineProps) => 
       items={events.map((event) => ({
         key: event.id,
         color: getEventColor(event.action),
-        children: (
-          <Space direction="vertical" size={0}>
+        content: (
+          <Space orientation="vertical" size={0}>
             <Typography.Text strong>{event.action}</Typography.Text>
             <Typography.Text type="secondary">{formatQuotationDateTime(event.createdAt)}</Typography.Text>
             {event.actorName || event.actorRole ? (
