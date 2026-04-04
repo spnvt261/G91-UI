@@ -10,7 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, Button, Card, Col, Empty, Row, Skeleton, Space, Statistic, Tag, Typography } from "antd";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
-import { canPerformAction } from "../../const/authz.const";
+import { canPerformAction, hasPermission } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type { PriceListModel } from "../../models/pricing/price-list.model";
@@ -58,6 +58,7 @@ const PriceListDetailPage = () => {
   const { id } = useParams();
   const role = getStoredUserRole();
   const canUpdate = canPerformAction(role, "price-list.update");
+  const canViewProductCatalog = hasPermission(role, "product.view.list");
   const { notify } = useNotify();
   const [searchParams, setSearchParams] = useSearchParams();
   const [loadingDetail, setLoadingDetail] = useState(false);
@@ -93,6 +94,9 @@ const PriceListDetailPage = () => {
             label: `${item.productCode} - ${item.productName}`,
             productCode: item.productCode,
             productName: item.productName,
+            mainImage: item.mainImage,
+            imageUrls: item.imageUrls,
+            images: item.images,
           },
         ]),
       );
@@ -125,7 +129,7 @@ const PriceListDetailPage = () => {
       const response = await priceListService.getDetail(id);
       setDetail(response);
       setValues(createInitialPriceListFormValues(response));
-      if (canUpdate) {
+      if (canViewProductCatalog) {
         void loadProducts(response);
       }
     } catch (error) {
@@ -136,7 +140,9 @@ const PriceListDetailPage = () => {
     } finally {
       setLoadingDetail(false);
     }
-  }, [canUpdate, id, loadProducts, notify]);
+  }, [canViewProductCatalog, id, loadProducts, notify]);
+
+  const productOptionsById = useMemo(() => new Map(productOptions.map((item) => [item.value, item])), [productOptions]);
 
   useEffect(() => {
     void loadDetail();
@@ -152,11 +158,15 @@ const PriceListDetailPage = () => {
       productId: item.productId,
       productCode: item.productCode,
       productName: item.productName,
+      productImage:
+        productOptionsById.get(item.productId)?.mainImage ||
+        productOptionsById.get(item.productId)?.imageUrls?.[0] ||
+        productOptionsById.get(item.productId)?.images?.[0],
       unitPriceVnd: item.unitPriceVnd,
       pricingRuleType: item.pricingRuleType,
       note: item.note,
     }));
-  }, [detail]);
+  }, [detail, productOptionsById]);
 
   const productPriceInsights = useMemo(() => {
     const prices = detailItemRows.map((item) => item.unitPriceVnd).filter((value): value is number => Number.isFinite(value) && Number(value) > 0);
@@ -227,7 +237,7 @@ const PriceListDetailPage = () => {
       const reloaded = await priceListService.getDetail(id);
       setDetail(reloaded);
       setValues(createInitialPriceListFormValues(reloaded));
-      if (canUpdate) {
+      if (canViewProductCatalog) {
         void loadProducts(reloaded);
       }
       notify("Đã cập nhật bảng giá thành công.", "success");

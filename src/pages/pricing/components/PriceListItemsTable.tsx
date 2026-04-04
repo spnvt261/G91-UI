@@ -1,7 +1,8 @@
-﻿import { DeleteOutlined } from "@ant-design/icons";
+import { DeleteOutlined, PictureOutlined } from "@ant-design/icons";
 import { Button, Empty, InputNumber, Space, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useMemo } from "react";
+import ProductImage from "../../products/components/ProductImage";
 import { toCurrency } from "../../shared/page.utils";
 
 export interface PriceListItemRowView {
@@ -9,6 +10,7 @@ export interface PriceListItemRowView {
   productId: string;
   productCode?: string;
   productName?: string;
+  productImage?: string;
   unitPriceVnd?: number;
   pricingRuleType?: string;
   note?: string;
@@ -59,9 +61,38 @@ const PriceListItemsTable = ({
           const code = row.productCode?.trim();
 
           return (
-            <Space direction="vertical" size={2}>
-              <Typography.Text strong>{title}</Typography.Text>
-              <Typography.Text type="secondary">{code ? `Mã sản phẩm: ${code}` : `ID: ${row.productId || "Chưa xác định"}`}</Typography.Text>
+            <Space size={10} align="start">
+              <div
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 8,
+                  border: "1px solid #d9d9d9",
+                  overflow: "hidden",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "#f5f5f5",
+                  flexShrink: 0,
+                }}
+              >
+                {row.productImage ? (
+                  <ProductImage
+                    src={row.productImage}
+                    alt={title}
+                    preview={false}
+                    width={42}
+                    height={42}
+                    style={{ objectFit: "cover" }}
+                  />
+                ) : (
+                  <PictureOutlined style={{ color: "#8c8c8c" }} />
+                )}
+              </div>
+              <Space direction="vertical" size={2}>
+                <Typography.Text strong>{title}</Typography.Text>
+                <Typography.Text type="secondary">{code ? `Mã sản phẩm: ${code}` : `ID: ${row.productId || "Chưa xác định"}`}</Typography.Text>
+              </Space>
             </Space>
           );
         },

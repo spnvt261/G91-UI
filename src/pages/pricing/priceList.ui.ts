@@ -6,6 +6,9 @@ export interface PriceListProductOption {
   value: string;
   productCode?: string;
   productName?: string;
+  mainImage?: string;
+  imageUrls?: string[];
+  images?: string[];
 }
 
 export type PriceListValidityState = "upcoming" | "active" | "expiring" | "expired" | "invalid";
