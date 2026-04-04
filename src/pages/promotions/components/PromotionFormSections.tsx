@@ -1,8 +1,8 @@
 import { DeleteOutlined, EyeOutlined, PictureOutlined } from "@ant-design/icons";
-import { Alert, Button, Card, Col, DatePicker, Flex, Form, Input, InputNumber, Row, Select, Space, Table, Tag, Typography } from "antd";
+import { Alert, Button, Card, Col, DatePicker, Flex, Form, Input, InputNumber, Row, Select, Space, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ROUTE_URL } from "../../../const/route_url.const";
 import ProductImage from "../../products/components/ProductImage";
@@ -71,6 +71,7 @@ const PromotionFormSections = ({
   const discountValueInput = Number.isFinite(discountNumber) && formValues.discountValue.trim() ? discountNumber : null;
   const isPercentage = formValues.promotionType === "PERCENTAGE";
   const selectedProductIds = formValues.productIds ?? [];
+  const [pendingProductId, setPendingProductId] = useState<string | undefined>(undefined);
   const isEditMode = useMemo(() => new URLSearchParams(location.search).get("mode") === "edit", [location.search]);
 
   const navigateToProductDetail = (productId: string) => {
@@ -87,6 +88,22 @@ const PromotionFormSections = ({
   };
 
   const productOptionMap = useMemo(() => new Map(productOptions.map((item) => [item.value, item])), [productOptions]);
+
+  const handleAddProduct = () => {
+    if (!pendingProductId) {
+      return;
+    }
+
+    if (selectedProductIds.includes(pendingProductId)) {
+      setPendingProductId(undefined);
+      return;
+    }
+
+    onValuesChange({
+      productIds: [...selectedProductIds, pendingProductId],
+    });
+    setPendingProductId(undefined);
+  };
 
   const selectedProductRows = useMemo<PromotionSelectedProductRow[]>(
     () =>
@@ -407,101 +424,94 @@ const PromotionFormSections = ({
           />
         ) : null}
 
-        <Form.Item label="Sản phẩm áp dụng">
-          <Select
-            mode="multiple"
-            showSearch
-            allowClear
-            optionFilterProp="label"
-            value={formValues.productIds}
-            disabled={disabled}
-            loading={loadingProducts}
-            placeholder={loadingProducts ? "Đang tải danh sách sản phẩm..." : "Chọn một hoặc nhiều sản phẩm"}
-            notFoundContent={loadingProducts ? "Đang tải dữ liệu..." : "Không tìm thấy sản phẩm phù hợp"}
-            onChange={(values) => onValuesChange({ productIds: values })}
-          >
-            {productOptions.map((product) => {
-              const imageUrl = getProductImage(product);
-              const isSelected = selectedProductIds.includes(product.value);
-              const productMeta = [product.type, product.size, product.thickness].filter(Boolean).join(" • ");
+        <Form.Item label="Tìm sản phẩm để thêm">
+          <Row gutter={[8, 8]} align="middle">
+            <Col xs={24} md={16}>
+              <Select
+                showSearch
+                allowClear
+                optionFilterProp="label"
+                value={pendingProductId}
+                disabled={disabled}
+                loading={loadingProducts}
+                placeholder={loadingProducts ? "Đang tải danh sách sản phẩm..." : "Tìm kiếm sản phẩm theo mã hoặc tên"}
+                notFoundContent={loadingProducts ? "Đang tải dữ liệu..." : "Không tìm thấy sản phẩm phù hợp"}
+                onChange={(value) => setPendingProductId(typeof value === "string" ? value : undefined)}
+              >
+                {productOptions.map((product) => {
+                  const imageUrl = getProductImage(product);
+                  const productMeta = [product.type, product.size, product.thickness].filter(Boolean).join(" • ");
 
-              return (
-                <Select.Option key={product.value} value={product.value} label={product.label}>
-                  <Flex
-                    align="center"
-                    justify="space-between"
-                    gap={12}
-                    style={{
-                      width: "100%",
-                      padding: "4px 8px",
-                      borderRadius: 8,
-                      background: isSelected ? "#e6f4ff" : "transparent",
-                      border: isSelected ? "1px solid #d6e4ff" : "1px solid transparent",
-                    }}
-                  >
-                    <Flex align="center" gap={10} style={{ minWidth: 0 }}>
-                      <div
-                        style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: 8,
-                          border: "1px solid #d9d9d9",
-                          overflow: "hidden",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexShrink: 0,
-                          background: "#f5f5f5",
-                        }}
-                      >
-                        {imageUrl ? (
-                          <ProductImage
-                            src={imageUrl}
-                            alt={product.productName || product.label}
-                            preview={false}
-                            width={36}
-                            height={36}
-                            style={{ objectFit: "cover" }}
-                          />
-                        ) : (
-                          <PictureOutlined style={{ color: "#8c8c8c" }} />
-                        )}
-                      </div>
+                  return (
+                    <Select.Option key={product.value} value={product.value} label={product.label}>
+                      <Flex align="center" justify="space-between" gap={12} style={{ width: "100%", padding: "4px 8px", borderRadius: 8 }}>
+                        <Flex align="center" gap={10} style={{ minWidth: 0 }}>
+                          <div
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: 8,
+                              border: "1px solid #d9d9d9",
+                              overflow: "hidden",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                              background: "#f5f5f5",
+                            }}
+                          >
+                            {imageUrl ? (
+                              <ProductImage
+                                src={imageUrl}
+                                alt={product.productName || product.label}
+                                preview={false}
+                                width={36}
+                                height={36}
+                                style={{ objectFit: "cover" }}
+                              />
+                            ) : (
+                              <PictureOutlined style={{ color: "#8c8c8c" }} />
+                            )}
+                          </div>
 
-                      <Space direction="vertical" size={0} style={{ minWidth: 0 }}>
-                        <Typography.Text ellipsis style={{ maxWidth: 280 }}>
-                          {product.label}
-                        </Typography.Text>
-                        <Typography.Text type="secondary" ellipsis style={{ maxWidth: 280 }}>
-                          {productMeta || "Chưa có thông tin kỹ thuật"}
-                        </Typography.Text>
-                      </Space>
-                    </Flex>
+                          <Space direction="vertical" size={0} style={{ minWidth: 0 }}>
+                            <Typography.Text ellipsis style={{ maxWidth: 280 }}>
+                              {product.label}
+                            </Typography.Text>
+                            <Typography.Text type="secondary" ellipsis style={{ maxWidth: 280 }}>
+                              {productMeta || "Chưa có thông tin kỹ thuật"}
+                            </Typography.Text>
+                          </Space>
+                        </Flex>
 
-                    <Space size={4}>
-                      {isSelected ? <Tag color="blue">Đã chọn</Tag> : null}
-                      <Button
-                        type="link"
-                        size="small"
-                        icon={<EyeOutlined />}
-                        onMouseDown={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                        }}
-                        onClick={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          navigateToProductDetail(product.value);
-                        }}
-                      >
-                        Xem chi tiết
-                      </Button>
-                    </Space>
-                  </Flex>
-                </Select.Option>
-              );
-            })}
-          </Select>
+                        <Button
+                          type="link"
+                          size="small"
+                          icon={<EyeOutlined />}
+                          onMouseDown={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                          }}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            navigateToProductDetail(product.value);
+                          }}
+                        >
+                          Xem chi tiết
+                        </Button>
+                      </Flex>
+                    </Select.Option>
+                  );
+                })}
+              </Select>
+            </Col>
+            <Col xs={24} md={8}>
+              <Button type="default" block disabled={!pendingProductId || disabled} onClick={handleAddProduct}>
+                Thêm vào danh sách
+              </Button>
+            </Col>
+          </Row>
         </Form.Item>
 
         {selectedProductRows.length === 0 ? (

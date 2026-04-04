@@ -129,7 +129,7 @@ export type AppAction =
   | "report.export";
 
 const AUTHENTICATED_ROLES: UserRole[] = ["CUSTOMER", "WAREHOUSE", "ACCOUNTANT", "OWNER"];
-const PRODUCT_VIEW_ROLES: UserRole[] = ["GUEST", "CUSTOMER", "WAREHOUSE"];
+const PRODUCT_VIEW_ROLES: UserRole[] = ["GUEST", "CUSTOMER", "WAREHOUSE", "OWNER"];
 const OWNER_ONLY: UserRole[] = ["OWNER"];
 const ACCOUNTANT_OWNER: UserRole[] = ["ACCOUNTANT", "OWNER"];
 const CUSTOMER_ACCOUNTANT: UserRole[] = ["CUSTOMER", "ACCOUNTANT"];

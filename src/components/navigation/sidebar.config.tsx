@@ -277,6 +277,7 @@ const ROLE_SIDEBAR_LAYOUTS: Record<UserRole, SidebarLayoutEntry[]> = {
   OWNER: [
     { type: "leaf", id: "dashboard" },
     { type: "leaf", id: "users" },
+    { type: "leaf", id: "products" },
     { type: "leaf", id: "price-lists" },
     { type: "leaf", id: "promotions" },
     { type: "leaf", id: "invoices" },
