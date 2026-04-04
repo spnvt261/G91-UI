@@ -1,5 +1,11 @@
-﻿import { Alert, Card, Col, DatePicker, Form, Input, InputNumber, Row, Select, Space, Typography } from "antd";
+import { DeleteOutlined, EyeOutlined, PictureOutlined } from "@ant-design/icons";
+import { Alert, Button, Card, Col, DatePicker, Flex, Form, Input, InputNumber, Row, Select, Space, Table, Tag, Typography } from "antd";
+import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
+import { useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ROUTE_URL } from "../../../const/route_url.const";
+import ProductImage from "../../products/components/ProductImage";
 import { toCurrency } from "../../shared/page.utils";
 import type { PromotionFormErrors, PromotionFormValues } from "../promotionForm.utils";
 import { PROMOTION_STATUS_OPTIONS, PROMOTION_TYPE_OPTIONS } from "../promotion.utils";
@@ -7,6 +13,15 @@ import { PROMOTION_STATUS_OPTIONS, PROMOTION_TYPE_OPTIONS } from "../promotion.u
 export interface PromotionProductOption {
   label: string;
   value: string;
+  productCode?: string;
+  productName?: string;
+  type?: string;
+  size?: string;
+  thickness?: string;
+  unit?: string;
+  mainImage?: string;
+  imageUrls?: string[];
+  images?: string[];
 }
 
 interface PromotionFormSectionsProps {
@@ -19,6 +34,16 @@ interface PromotionFormSectionsProps {
   onValuesChange: (patch: Partial<PromotionFormValues>) => void;
 }
 
+interface PromotionSelectedProductRow {
+  key: string;
+  productId: string;
+  productCode: string;
+  productName: string;
+  productMeta?: string;
+  unit?: string;
+  imageUrl?: string;
+}
+
 const toPickerValue = (value: string) => {
   if (!value) {
     return null;
@@ -27,6 +52,9 @@ const toPickerValue = (value: string) => {
   const parsed = dayjs(value);
   return parsed.isValid() ? parsed : null;
 };
+
+const getProductImage = (item: PromotionProductOption): string | undefined =>
+  item.mainImage || item.imageUrls?.[0] || item.images?.[0];
 
 const PromotionFormSections = ({
   formValues,
@@ -37,9 +65,129 @@ const PromotionFormSections = ({
   disabled = false,
   onValuesChange,
 }: PromotionFormSectionsProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const discountNumber = Number(formValues.discountValue);
   const discountValueInput = Number.isFinite(discountNumber) && formValues.discountValue.trim() ? discountNumber : null;
   const isPercentage = formValues.promotionType === "PERCENTAGE";
+  const selectedProductIds = formValues.productIds ?? [];
+  const isEditMode = useMemo(() => new URLSearchParams(location.search).get("mode") === "edit", [location.search]);
+
+  const navigateToProductDetail = (productId: string) => {
+    navigate(ROUTE_URL.PRODUCT_DETAIL.replace(":id", productId), {
+      state: {
+        returnTo: `${location.pathname}${location.search}`,
+        returnLabel: "Quay lại khuyến mãi",
+        restoreDraft: {
+          formValues,
+          editMode: isEditMode,
+        },
+      },
+    });
+  };
+
+  const productOptionMap = useMemo(() => new Map(productOptions.map((item) => [item.value, item])), [productOptions]);
+
+  const selectedProductRows = useMemo<PromotionSelectedProductRow[]>(
+    () =>
+      selectedProductIds.map((productId, index) => {
+        const selected = productOptionMap.get(productId);
+        return {
+          key: productId,
+          productId,
+          productCode: selected?.productCode || selected?.label?.split(" - ")?.[0] || productId,
+          productName: selected?.productName || selected?.label?.split(" - ")?.slice(1).join(" - ") || `Sản phẩm #${index + 1}`,
+          productMeta: [selected?.type, selected?.size, selected?.thickness].filter(Boolean).join(" • "),
+          unit: selected?.unit || "-",
+          imageUrl: selected ? getProductImage(selected) : undefined,
+        };
+      }),
+    [productOptionMap, selectedProductIds],
+  );
+
+  const selectedProductColumns = useMemo<ColumnsType<PromotionSelectedProductRow>>(
+    () => [
+      {
+        title: "Sản phẩm",
+        key: "product",
+        render: (_, row) => (
+          <Space size={10} align="start">
+            <div
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: 8,
+                border: "1px solid #d9d9d9",
+                overflow: "hidden",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                background: "#f5f5f5",
+              }}
+            >
+              {row.imageUrl ? (
+                <ProductImage
+                  src={row.imageUrl}
+                  alt={row.productName}
+                  preview={false}
+                  width={42}
+                  height={42}
+                  style={{ objectFit: "cover" }}
+                />
+              ) : (
+                <PictureOutlined style={{ color: "#8c8c8c" }} />
+              )}
+            </div>
+
+            <Space direction="vertical" size={2}>
+              <Typography.Text strong>{row.productName}</Typography.Text>
+              <Typography.Text type="secondary">{row.productCode}</Typography.Text>
+              {row.productMeta ? <Typography.Text type="secondary">{row.productMeta}</Typography.Text> : null}
+              <Button
+                type="link"
+                size="small"
+                icon={<EyeOutlined />}
+                style={{ paddingInline: 0 }}
+                onClick={() => {
+                  navigateToProductDetail(row.productId);
+                }}
+              >
+                Xem chi tiết
+              </Button>
+            </Space>
+          </Space>
+        ),
+      },
+      {
+        title: "Đơn vị",
+        dataIndex: "unit",
+        key: "unit",
+        width: 120,
+      },
+      {
+        title: "Thao tác",
+        key: "actions",
+        width: 120,
+        align: "center",
+        render: (_, row) => (
+          <Button
+            danger
+            icon={<DeleteOutlined />}
+            disabled={disabled}
+            onClick={() => {
+              onValuesChange({
+                productIds: selectedProductIds.filter((item) => item !== row.productId),
+              });
+            }}
+          >
+            Bỏ chọn
+          </Button>
+        ),
+      },
+    ],
+    [disabled, navigateToProductDetail, onValuesChange, selectedProductIds],
+  );
 
   return (
     <Space orientation="vertical" size={16} style={{ width: "100%" }}>
@@ -265,15 +413,114 @@ const PromotionFormSections = ({
             showSearch
             allowClear
             optionFilterProp="label"
-            options={productOptions}
             value={formValues.productIds}
             disabled={disabled}
             loading={loadingProducts}
             placeholder={loadingProducts ? "Đang tải danh sách sản phẩm..." : "Chọn một hoặc nhiều sản phẩm"}
             notFoundContent={loadingProducts ? "Đang tải dữ liệu..." : "Không tìm thấy sản phẩm phù hợp"}
             onChange={(values) => onValuesChange({ productIds: values })}
-          />
+          >
+            {productOptions.map((product) => {
+              const imageUrl = getProductImage(product);
+              const isSelected = selectedProductIds.includes(product.value);
+              const productMeta = [product.type, product.size, product.thickness].filter(Boolean).join(" • ");
+
+              return (
+                <Select.Option key={product.value} value={product.value} label={product.label}>
+                  <Flex
+                    align="center"
+                    justify="space-between"
+                    gap={12}
+                    style={{
+                      width: "100%",
+                      padding: "4px 8px",
+                      borderRadius: 8,
+                      background: isSelected ? "#e6f4ff" : "transparent",
+                      border: isSelected ? "1px solid #d6e4ff" : "1px solid transparent",
+                    }}
+                  >
+                    <Flex align="center" gap={10} style={{ minWidth: 0 }}>
+                      <div
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 8,
+                          border: "1px solid #d9d9d9",
+                          overflow: "hidden",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          background: "#f5f5f5",
+                        }}
+                      >
+                        {imageUrl ? (
+                          <ProductImage
+                            src={imageUrl}
+                            alt={product.productName || product.label}
+                            preview={false}
+                            width={36}
+                            height={36}
+                            style={{ objectFit: "cover" }}
+                          />
+                        ) : (
+                          <PictureOutlined style={{ color: "#8c8c8c" }} />
+                        )}
+                      </div>
+
+                      <Space direction="vertical" size={0} style={{ minWidth: 0 }}>
+                        <Typography.Text ellipsis style={{ maxWidth: 280 }}>
+                          {product.label}
+                        </Typography.Text>
+                        <Typography.Text type="secondary" ellipsis style={{ maxWidth: 280 }}>
+                          {productMeta || "Chưa có thông tin kỹ thuật"}
+                        </Typography.Text>
+                      </Space>
+                    </Flex>
+
+                    <Space size={4}>
+                      {isSelected ? <Tag color="blue">Đã chọn</Tag> : null}
+                      <Button
+                        type="link"
+                        size="small"
+                        icon={<EyeOutlined />}
+                        onMouseDown={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                        }}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          navigateToProductDetail(product.value);
+                        }}
+                      >
+                        Xem chi tiết
+                      </Button>
+                    </Space>
+                  </Flex>
+                </Select.Option>
+              );
+            })}
+          </Select>
         </Form.Item>
+
+        {selectedProductRows.length === 0 ? (
+          <Alert
+            type="info"
+            showIcon
+            message="Chưa có sản phẩm nào được chọn"
+            description="Hãy chọn ít nhất một sản phẩm để xác định phạm vi áp dụng."
+          />
+        ) : (
+          <Table<PromotionSelectedProductRow>
+            rowKey="key"
+            columns={selectedProductColumns}
+            dataSource={selectedProductRows}
+            pagination={false}
+            scroll={{ x: 880 }}
+            size="middle"
+          />
+        )}
       </Card>
     </Space>
   );

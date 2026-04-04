@@ -1,7 +1,7 @@
 import { ArrowLeftOutlined, SaveOutlined } from "@ant-design/icons";
 import { Alert, Button, Card, Col, Form, Row, Space, Typography } from "antd";
-import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
@@ -21,7 +21,9 @@ import {
 
 const PromotionCreatePage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { notify } = useNotify();
+  const restoredDraftRef = useRef(false);
 
   const [formValues, setFormValues] = useState<PromotionFormValues>(createInitialPromotionFormValues());
   const [errors, setErrors] = useState<PromotionFormErrors>({});
@@ -30,6 +32,28 @@ const PromotionCreatePage = () => {
   const [productLoadError, setProductLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (restoredDraftRef.current) {
+      return;
+    }
+
+    restoredDraftRef.current = true;
+    const navigationState = (location.state ?? null) as
+      | {
+          restoreDraft?: {
+            formValues?: Partial<PromotionFormValues>;
+          };
+        }
+      | null;
+
+    if (navigationState?.restoreDraft?.formValues) {
+      setFormValues((previous) => ({
+        ...previous,
+        ...navigationState.restoreDraft?.formValues,
+      }));
+    }
+  }, [location.state]);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -46,6 +70,15 @@ const PromotionCreatePage = () => {
           response.items.map((item) => ({
             label: `${item.productCode} - ${item.productName}`,
             value: item.id,
+            productCode: item.productCode,
+            productName: item.productName,
+            type: item.type,
+            size: item.size,
+            thickness: item.thickness,
+            unit: item.unit,
+            mainImage: item.mainImage,
+            imageUrls: item.imageUrls,
+            images: item.images,
           })),
         );
       } catch (error) {

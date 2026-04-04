@@ -1,7 +1,9 @@
-import { AppstoreOutlined, PictureOutlined } from "@ant-design/icons";
-import { Badge, Card, Empty, Space, Table, Typography } from "antd";
+import { AppstoreOutlined, EyeOutlined, PictureOutlined } from "@ant-design/icons";
+import { Badge, Button, Card, Empty, Space, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ROUTE_URL } from "../../../const/route_url.const";
 import type { PromotionProductItem } from "../../../models/promotion/promotion.model";
 import ProductImage from "../../products/components/ProductImage";
 
@@ -12,6 +14,7 @@ interface PromotionProductsTableProps {
 
 interface PromotionProductRow {
   key: string;
+  productId: string;
   productCode: string;
   productName: string;
   productImage?: string;
@@ -23,10 +26,14 @@ const resolveProductImage = (product: PromotionProductItem): string | undefined 
   product.mainImage || product.imageUrls?.[0] || product.images?.[0];
 
 const PromotionProductsTable = ({ products, loading = false }: PromotionProductsTableProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const rows = useMemo<PromotionProductRow[]>(
     () =>
       products.map((item) => ({
         key: item.productId,
+        productId: item.productId,
         productCode: item.productCode || "-",
         productName: item.productName || "Chưa có tên sản phẩm",
         productImage: resolveProductImage(item),
@@ -71,10 +78,26 @@ const PromotionProductsTable = ({ products, loading = false }: PromotionProducts
               )}
             </div>
 
-            <Space orientation="vertical" size={2}>
+            <Space direction="vertical" size={2}>
               <Typography.Text strong>{row.productName || "Chưa có tên sản phẩm"}</Typography.Text>
               <Typography.Text type="secondary">{row.productCode || "-"}</Typography.Text>
               {row.productMeta ? <Typography.Text type="secondary">{row.productMeta}</Typography.Text> : null}
+              <Button
+                type="link"
+                size="small"
+                icon={<EyeOutlined />}
+                style={{ paddingInline: 0 }}
+                onClick={() => {
+                  navigate(ROUTE_URL.PRODUCT_DETAIL.replace(":id", row.productId), {
+                    state: {
+                      returnTo: `${location.pathname}${location.search}`,
+                      returnLabel: "Quay lại khuyến mãi",
+                    },
+                  });
+                }}
+              >
+                Xem chi tiết
+              </Button>
             </Space>
           </Space>
         ),
@@ -86,7 +109,7 @@ const PromotionProductsTable = ({ products, loading = false }: PromotionProducts
         width: 140,
       },
     ],
-    [],
+    [location.pathname, location.search, navigate],
   );
 
   return (

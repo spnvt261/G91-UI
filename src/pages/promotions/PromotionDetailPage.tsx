@@ -17,7 +17,7 @@ import {
   Typography,
 } from "antd";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
@@ -71,12 +71,14 @@ const getDurationLabel = (startDate?: string, endDate?: string): string => {
 
 const PromotionDetailPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const { notify } = useNotify();
   const role = getStoredUserRole();
   const canModify = canEditPromotion(role);
   const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const restoredDraftRef = useRef(false);
 
   const [promotion, setPromotion] = useState<PromotionDetail | null>(null);
   const [formValues, setFormValues] = useState<PromotionFormValues>(createInitialPromotionFormValues());
@@ -103,6 +105,42 @@ const PromotionDetailPage = () => {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (restoredDraftRef.current || !promotion) {
+      return;
+    }
+
+    restoredDraftRef.current = true;
+    const navigationState = (location.state ?? null) as
+      | {
+          restoreDraft?: {
+            formValues?: Partial<PromotionFormValues>;
+            editMode?: boolean;
+          };
+        }
+      | null;
+
+    const restoreDraft = navigationState?.restoreDraft;
+    if (!restoreDraft) {
+      return;
+    }
+
+    if (restoreDraft.formValues) {
+      setFormValues((previous) => ({
+        ...previous,
+        ...restoreDraft.formValues,
+      }));
+    }
+
+    if (restoreDraft.editMode && canModify) {
+      setSearchParams((previous) => {
+        const next = new URLSearchParams(previous);
+        next.set("mode", "edit");
+        return next;
+      });
+    }
+  }, [canModify, location.state, promotion, setSearchParams]);
 
   useEffect(() => {
     const loadDetail = async () => {
@@ -146,6 +184,15 @@ const PromotionDetailPage = () => {
           response.items.map((item) => ({
             label: `${item.productCode} - ${item.productName}`,
             value: item.id,
+            productCode: item.productCode,
+            productName: item.productName,
+            type: item.type,
+            size: item.size,
+            thickness: item.thickness,
+            unit: item.unit,
+            mainImage: item.mainImage,
+            imageUrls: item.imageUrls,
+            images: item.images,
           })),
         );
       } catch (error) {
@@ -167,7 +214,12 @@ const PromotionDetailPage = () => {
 
     fallbackProductIds.forEach((productId, index) => {
       if (!optionMap.has(productId)) {
-        optionMap.set(productId, { label: `Sản phẩm đã ngừng hiển thị #${index + 1}`, value: productId });
+        optionMap.set(productId, {
+          label: `Sản phẩm đã ngừng hiển thị #${index + 1}`,
+          value: productId,
+          productCode: productId,
+          productName: `Sản phẩm #${index + 1}`,
+        });
       }
     });
 
