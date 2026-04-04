@@ -25,6 +25,13 @@ export interface PromotionProductItem {
   productId: string;
   productCode?: string;
   productName?: string;
+  type?: string;
+  size?: string;
+  thickness?: string;
+  unit?: string;
+  mainImage?: string;
+  imageUrls?: string[];
+  images?: string[];
 }
 
 export interface PromotionListItem {

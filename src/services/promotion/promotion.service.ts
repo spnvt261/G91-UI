@@ -25,6 +25,14 @@ interface PromotionApiScopeProduct {
   productId: string;
   productCode?: string;
   productName?: string;
+  type?: string;
+  size?: string;
+  thickness?: string;
+  unit?: string;
+  mainImage?: string;
+  imageUrls?: string[];
+  images?: string[];
+  image?: string;
 }
 
 interface PromotionApiDetailResponse {
@@ -187,6 +195,13 @@ const toModelDetail = (detail: PromotionApiDetailResponse): PromotionDetail => {
       productId: item.productId,
       productCode: item.productCode,
       productName: item.productName,
+      type: item.type,
+      size: item.size,
+      thickness: item.thickness,
+      unit: item.unit,
+      mainImage: item.mainImage ?? item.image ?? item.imageUrls?.[0] ?? item.images?.[0],
+      imageUrls: item.imageUrls,
+      images: item.images,
     })),
     customerGroups: detail.customerGroups,
     priority: detail.priority,

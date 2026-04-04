@@ -1,8 +1,9 @@
-import { AppstoreOutlined } from "@ant-design/icons";
-import { Badge, Card, Empty, Space, Table } from "antd";
+import { AppstoreOutlined, PictureOutlined } from "@ant-design/icons";
+import { Badge, Card, Empty, Space, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useMemo } from "react";
 import type { PromotionProductItem } from "../../../models/promotion/promotion.model";
+import ProductImage from "../../products/components/ProductImage";
 
 interface PromotionProductsTableProps {
   products: PromotionProductItem[];
@@ -13,7 +14,13 @@ interface PromotionProductRow {
   key: string;
   productCode: string;
   productName: string;
+  productImage?: string;
+  productMeta?: string;
+  unit?: string;
 }
+
+const resolveProductImage = (product: PromotionProductItem): string | undefined =>
+  product.mainImage || product.imageUrls?.[0] || product.images?.[0];
 
 const PromotionProductsTable = ({ products, loading = false }: PromotionProductsTableProps) => {
   const rows = useMemo<PromotionProductRow[]>(
@@ -22,6 +29,9 @@ const PromotionProductsTable = ({ products, loading = false }: PromotionProducts
         key: item.productId,
         productCode: item.productCode || "-",
         productName: item.productName || "Chưa có tên sản phẩm",
+        productImage: resolveProductImage(item),
+        productMeta: [item.type, item.size, item.thickness].filter(Boolean).join(" • "),
+        unit: item.unit || "-",
       })),
     [products],
   );
@@ -29,15 +39,51 @@ const PromotionProductsTable = ({ products, loading = false }: PromotionProducts
   const columns = useMemo<ColumnsType<PromotionProductRow>>(
     () => [
       {
-        title: "Mã sản phẩm",
-        dataIndex: "productCode",
-        key: "productCode",
-        width: 180,
+        title: "Sản phẩm",
+        key: "product",
+        render: (_, row) => (
+          <Space size={10} align="start">
+            <div
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: 8,
+                border: "1px solid #d9d9d9",
+                overflow: "hidden",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "#f5f5f5",
+                flexShrink: 0,
+              }}
+            >
+              {row.productImage ? (
+                <ProductImage
+                  src={row.productImage}
+                  alt={row.productName || "Sản phẩm"}
+                  preview={false}
+                  width={42}
+                  height={42}
+                  style={{ objectFit: "cover" }}
+                />
+              ) : (
+                <PictureOutlined style={{ color: "#8c8c8c" }} />
+              )}
+            </div>
+
+            <Space orientation="vertical" size={2}>
+              <Typography.Text strong>{row.productName || "Chưa có tên sản phẩm"}</Typography.Text>
+              <Typography.Text type="secondary">{row.productCode || "-"}</Typography.Text>
+              {row.productMeta ? <Typography.Text type="secondary">{row.productMeta}</Typography.Text> : null}
+            </Space>
+          </Space>
+        ),
       },
       {
-        title: "Tên sản phẩm",
-        dataIndex: "productName",
-        key: "productName",
+        title: "Đơn vị",
+        dataIndex: "unit",
+        key: "unit",
+        width: 140,
       },
     ],
     [],
@@ -62,6 +108,7 @@ const PromotionProductsTable = ({ products, loading = false }: PromotionProducts
         dataSource={rows}
         loading={{ spinning: loading, description: "Đang tải danh sách sản phẩm..." }}
         pagination={false}
+        scroll={{ x: 780 }}
         locale={{
           emptyText: (
             <Empty

@@ -21,6 +21,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
+import type { ProductModel } from "../../models/product/product.model";
 import type { PromotionDetail } from "../../models/promotion/promotion.model";
 import { productService } from "../../services/product/product.service";
 import { promotionService } from "../../services/promotion/promotion.service";
@@ -81,6 +82,7 @@ const PromotionDetailPage = () => {
   const [formValues, setFormValues] = useState<PromotionFormValues>(createInitialPromotionFormValues());
   const [errors, setErrors] = useState<PromotionFormErrors>({});
   const [productOptions, setProductOptions] = useState<PromotionProductOption[]>([]);
+  const [productCatalog, setProductCatalog] = useState<ProductModel[]>([]);
   const [productLoadError, setProductLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
@@ -139,6 +141,7 @@ const PromotionDetailPage = () => {
           page: 1,
           pageSize: 1000,
         });
+        setProductCatalog(response.items);
         setProductOptions(
           response.items.map((item) => ({
             label: `${item.productCode} - ${item.productName}`,
@@ -147,6 +150,7 @@ const PromotionDetailPage = () => {
         );
       } catch (error) {
         const message = getErrorMessage(error, "Không thể tải danh sách sản phẩm áp dụng.");
+        setProductCatalog([]);
         setProductOptions([]);
         setProductLoadError(message);
       } finally {
@@ -169,6 +173,39 @@ const PromotionDetailPage = () => {
 
     return Array.from(optionMap.values());
   }, [productOptions, promotion?.productIds]);
+
+  const productCatalogById = useMemo(() => new Map(productCatalog.map((item) => [item.id, item])), [productCatalog]);
+
+  const promotionProductsForView = useMemo(() => {
+    const applicableProducts = promotion?.applicableProducts ?? [];
+
+    return applicableProducts.map((item) => {
+      const catalogProduct = productCatalogById.get(item.productId);
+      const mergedImages = [
+        ...(item.imageUrls ?? []),
+        ...(item.images ?? []),
+        ...(catalogProduct?.imageUrls ?? []),
+        ...(catalogProduct?.images ?? []),
+      ]
+        .map((image) => image.trim())
+        .filter(Boolean);
+      const uniqueImages = [...new Set(mergedImages)];
+      const mainImage = item.mainImage ?? catalogProduct?.mainImage ?? uniqueImages[0];
+
+      return {
+        ...item,
+        productCode: item.productCode ?? catalogProduct?.productCode,
+        productName: item.productName ?? catalogProduct?.productName,
+        type: item.type ?? catalogProduct?.type,
+        size: item.size ?? catalogProduct?.size,
+        thickness: item.thickness ?? catalogProduct?.thickness,
+        unit: item.unit ?? catalogProduct?.unit,
+        mainImage,
+        imageUrls: uniqueImages,
+        images: uniqueImages,
+      };
+    });
+  }, [productCatalogById, promotion?.applicableProducts]);
 
   const handleStartEdit = () => {
     if (!canModify) {
@@ -401,7 +438,7 @@ const PromotionDetailPage = () => {
               </Descriptions>
             </PromotionInfoCard>
 
-              <PromotionProductsTable products={promotion.applicableProducts ?? []} loading={loading} />
+              <PromotionProductsTable products={promotionProductsForView} loading={loading} />
             </Space>
           ) : (
             <Empty description="Không có dữ liệu chương trình khuyến mãi." />
