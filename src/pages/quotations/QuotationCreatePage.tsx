@@ -199,6 +199,7 @@ const QuotationCreatePage = () => {
 
       return {
         key: item.productId,
+        productImage: product ? getProductFirstImage(product) : undefined,
         productCode: product?.productCode ?? item.productId,
         productName: product?.productName ?? "Sản phẩm",
         productMeta: [product?.type, product?.size, product?.thickness].filter(Boolean).join(" • "),
@@ -579,7 +580,18 @@ const QuotationCreatePage = () => {
 
                                     return (
                                       <Select.Option key={product.id} value={product.id} label={productLabel} disabled={isAdded}>
-                                        <Flex align="center" justify="space-between" gap={12}>
+                                        <Flex
+                                          align="center"
+                                          justify="space-between"
+                                          gap={12}
+                                          style={{
+                                            width: "100%",
+                                            padding: "4px 8px",
+                                            borderRadius: 8,
+                                            background: isAdded ? "#e6f4ff" : "transparent",
+                                            border: isAdded ? "1px solid #d6e4ff" : "1px solid transparent",
+                                          }}
+                                        >
                                           <Flex align="center" gap={10} style={{ minWidth: 0 }}>
                                             <div
                                               style={{
@@ -618,30 +630,33 @@ const QuotationCreatePage = () => {
                                             </Space>
                                           </Flex>
 
-                                          <Button
-                                            type="link"
-                                            size="small"
-                                            onMouseDown={(event) => {
-                                              event.preventDefault();
-                                              event.stopPropagation();
-                                            }}
-                                            onClick={(event) => {
-                                              event.preventDefault();
-                                              event.stopPropagation();
-                                              navigate(ROUTE_URL.PRODUCT_DETAIL.replace(":id", product.id), {
-                                                state: {
-                                                  returnTo: ROUTE_URL.QUOTATION_CREATE,
-                                                  returnLabel: "Quay lại tạo báo giá",
-                                                  restoreDraft: {
-                                                    formValues: form.getFieldsValue(),
-                                                    quotationItems,
+                                          <Space size={4}>
+                                            {isAdded ? <Tag color="blue">Đã thêm</Tag> : null}
+                                            <Button
+                                              type="link"
+                                              size="small"
+                                              onMouseDown={(event) => {
+                                                event.preventDefault();
+                                                event.stopPropagation();
+                                              }}
+                                              onClick={(event) => {
+                                                event.preventDefault();
+                                                event.stopPropagation();
+                                                navigate(ROUTE_URL.PRODUCT_DETAIL.replace(":id", product.id), {
+                                                  state: {
+                                                    returnTo: ROUTE_URL.QUOTATION_CREATE,
+                                                    returnLabel: "Quay lại tạo báo giá",
+                                                    restoreDraft: {
+                                                      formValues: form.getFieldsValue(),
+                                                      quotationItems,
+                                                    },
                                                   },
-                                                },
-                                              });
-                                            }}
-                                          >
-                                            Xem chi tiết
-                                          </Button>
+                                                });
+                                              }}
+                                            >
+                                              Xem chi tiết
+                                            </Button>
+                                          </Space>
                                         </Flex>
                                       </Select.Option>
                                     );
