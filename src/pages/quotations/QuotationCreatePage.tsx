@@ -2,7 +2,6 @@ import { ArrowLeftOutlined, EyeOutlined, PictureOutlined, PlusOutlined, SaveOutl
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
-  Avatar,
   Badge,
   Button,
   Card,
@@ -38,6 +37,7 @@ import type {
 } from "../../models/quotation/quotation.model";
 import { quotationService } from "../../services/quotation/quotation.service";
 import { getErrorMessage } from "../shared/page.utils";
+import ProductImage from "../products/components/ProductImage";
 import QuotationItemsTable, { type QuotationItemTableRow } from "./components/QuotationItemsTable";
 import QuotationPreviewPanel from "./components/QuotationPreviewPanel";
 import { formatQuotationCurrency } from "./quotation.ui";
@@ -211,6 +211,7 @@ const QuotationCreatePage = () => {
   }, [productsById, quotationItems]);
 
   const selectedProject = watchedProjectId ? projectsById.get(watchedProjectId) : undefined;
+  const selectedProductIdSet = useMemo(() => new Set(quotationItems.map((item) => item.productId)), [quotationItems]);
   const previewValidationMessages = previewResult?.validation?.messages ?? [];
   const isPreviewValid = previewResult?.validation ? previewResult.validation.valid : true;
   const canSubmitQuotation =
@@ -259,9 +260,9 @@ const QuotationCreatePage = () => {
       return `Mã ưu đãi tối đa ${PROMOTION_MAX_LENGTH} ký tự.`;
     }
 
-    const invalidItem = quotationItems.find((item) => item.quantity <= 0);
+    const invalidItem = quotationItems.find((item) => !Number.isInteger(item.quantity) || item.quantity < 1);
     if (invalidItem) {
-      return "Số lượng của từng dòng sản phẩm phải lớn hơn 0.";
+      return "Số lượng của từng dòng sản phẩm phải là số nguyên lớn hơn hoặc bằng 1.";
     }
 
     if (mode === "submit") {
@@ -293,7 +294,7 @@ const QuotationCreatePage = () => {
   const handleAddProduct = () => {
     const productId = form.getFieldValue("productId");
     const draftQuantity = form.getFieldValue("quantityToAdd");
-    const quantity = typeof draftQuantity === "number" && draftQuantity > 0 ? draftQuantity : 1;
+    const quantity = Number.isFinite(Number(draftQuantity)) ? Math.max(1, Math.trunc(Number(draftQuantity))) : 1;
 
     if (!productId) {
       form.setFields([{ name: "productId", errors: ["Vui lòng chọn sản phẩm trước khi thêm."] }]);
@@ -333,6 +334,7 @@ const QuotationCreatePage = () => {
   };
 
   const updateItemQuantity = (productId: string, quantity: number) => {
+    const normalizedQuantity = Number.isFinite(quantity) ? Math.max(1, Math.trunc(quantity)) : 1;
     setQuotationItems((previous) =>
       previous.map((item) => {
         if (item.productId !== productId) {
@@ -340,7 +342,7 @@ const QuotationCreatePage = () => {
         }
         return {
           ...item,
-          quantity: Math.max(0.01, quantity),
+          quantity: normalizedQuantity,
         };
       }),
     );
@@ -562,7 +564,7 @@ const QuotationCreatePage = () => {
                             2. Sản phẩm báo giá
                           </Typography.Title>
 
-                          <Row gutter={[12, 12]} align="bottom">
+                          <Row gutter={[12, 12]} align="middle" className="items-center">
                             <Col xs={24} lg={14}>
                               <Form.Item name="productId" label="Sản phẩm">
                                 <Select
@@ -573,18 +575,39 @@ const QuotationCreatePage = () => {
                                   {products.map((product) => {
                                     const imageUrl = getProductFirstImage(product);
                                     const productLabel = getProductDisplayLabel(product);
+                                    const isAdded = selectedProductIdSet.has(product.id);
 
                                     return (
-                                      <Select.Option key={product.id} value={product.id} label={productLabel}>
+                                      <Select.Option key={product.id} value={product.id} label={productLabel} disabled={isAdded}>
                                         <Flex align="center" justify="space-between" gap={12}>
                                           <Flex align="center" gap={10} style={{ minWidth: 0 }}>
-                                            <Avatar
-                                              shape="square"
-                                              size={36}
-                                              src={imageUrl}
-                                              icon={!imageUrl ? <PictureOutlined /> : undefined}
-                                              style={{ flexShrink: 0 }}
-                                            />
+                                            <div
+                                              style={{
+                                                width: 36,
+                                                height: 36,
+                                                borderRadius: 8,
+                                                border: "1px solid #d9d9d9",
+                                                overflow: "hidden",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                flexShrink: 0,
+                                                background: "#f5f5f5",
+                                              }}
+                                            >
+                                              {imageUrl ? (
+                                                <ProductImage
+                                                  src={imageUrl}
+                                                  alt={product.productName}
+                                                  preview={false}
+                                                  width={36}
+                                                  height={36}
+                                                  style={{ objectFit: "cover" }}
+                                                />
+                                              ) : (
+                                                <PictureOutlined style={{ color: "#8c8c8c" }} />
+                                              )}
+                                            </div>
                                             <Space direction="vertical" size={0} style={{ minWidth: 0 }}>
                                               <Typography.Text ellipsis style={{ maxWidth: 280 }}>
                                                 {productLabel}
@@ -627,8 +650,24 @@ const QuotationCreatePage = () => {
                               </Form.Item>
                             </Col>
                             <Col xs={24} sm={12} lg={5}>
-                              <Form.Item name="quantityToAdd" label="Số lượng">
-                                <InputNumber className="w-full" min={0.01} precision={2} />
+                              <Form.Item
+                                name="quantityToAdd"
+                                label="Số lượng"
+                                rules={[
+                                  { required: true, message: "Vui lòng nhập số lượng." },
+                                  {
+                                    validator: (_, value) => {
+                                      const numeric = Number(value);
+                                      if (!Number.isFinite(numeric) || !Number.isInteger(numeric) || numeric < 1) {
+                                        return Promise.reject(new Error("Số lượng phải là số nguyên, tối thiểu 1."));
+                                      }
+
+                                      return Promise.resolve();
+                                    },
+                                  },
+                                ]}
+                              >
+                                <InputNumber className="w-full" min={1} precision={0} step={1} />
                               </Form.Item>
                             </Col>
                             <Col xs={24} sm={12} lg={5}>

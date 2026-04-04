@@ -56,15 +56,16 @@ const QuotationItemsTable = ({
 
           return (
             <InputNumber
-              min={0.01}
-              precision={2}
+              min={1}
+              precision={0}
+              step={1}
               value={quantity}
               onChange={(value) => {
                 if (!onQuantityChange) {
                   return;
                 }
 
-                const normalized = typeof value === "number" && value > 0 ? value : 0.01;
+                const normalized = typeof value === "number" && Number.isInteger(value) && value >= 1 ? value : 1;
                 onQuantityChange(row.key, normalized);
               }}
             />
