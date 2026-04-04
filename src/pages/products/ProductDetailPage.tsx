@@ -1,7 +1,7 @@
 ﻿import { ArrowLeftOutlined, EditOutlined, ShoppingCartOutlined } from "@ant-design/icons";
 import { Alert, Breadcrumb, Button, Col, Divider, Row, Space, Typography } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { canPerformAction } from "../../const/authz.const";
@@ -19,6 +19,7 @@ import ProductStatusTag from "./components/ProductStatusTag";
 
 const ProductDetailPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const role = getStoredUserRole() ?? "GUEST";
   const { id } = useParams();
   const { notify } = useNotify();
@@ -29,6 +30,9 @@ const ProductDetailPage = () => {
 
   const canUpdate = canPerformAction(role, "product.update");
   const showRequestQuotation = canPerformAction(role, "quotation.create");
+  const navigationState = (location.state ?? null) as { returnTo?: string; returnLabel?: string; restoreDraft?: unknown } | null;
+  const returnToPath = navigationState?.returnTo?.trim() || ROUTE_URL.PRODUCT_LIST;
+  const returnButtonLabel = navigationState?.returnLabel?.trim() || "Quay lại danh sách";
 
   const loadDetail = useCallback(async () => {
     if (!id) {
@@ -87,8 +91,22 @@ const ProductDetailPage = () => {
                   Yêu cầu báo giá
                 </Button>
               ) : null}
-              <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(ROUTE_URL.PRODUCT_LIST)}>
-                Quay lại danh sách
+              <Button
+                icon={<ArrowLeftOutlined />}
+                onClick={() =>
+                  navigate(
+                    returnToPath,
+                    navigationState?.restoreDraft
+                      ? {
+                          state: {
+                            restoreDraft: navigationState.restoreDraft,
+                          },
+                        }
+                      : undefined,
+                  )
+                }
+              >
+                {returnButtonLabel}
               </Button>
             </Space>
           }

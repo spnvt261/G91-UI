@@ -100,6 +100,9 @@ export interface QuotationFormInitProduct {
   referenceWeight?: number;
   status: string;
   referenceUnitPrice?: number;
+  mainImage?: string;
+  imageUrls?: string[];
+  images?: string[];
 }
 
 export interface QuotationFormInitProject {

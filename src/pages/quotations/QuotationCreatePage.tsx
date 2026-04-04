@@ -1,7 +1,8 @@
-import { ArrowLeftOutlined, EyeOutlined, PlusOutlined, SaveOutlined, SendOutlined } from "@ant-design/icons";
-import { useEffect, useMemo, useState } from "react";
+import { ArrowLeftOutlined, EyeOutlined, PictureOutlined, PlusOutlined, SaveOutlined, SendOutlined } from "@ant-design/icons";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
+  Avatar,
   Badge,
   Button,
   Card,
@@ -23,7 +24,7 @@ import {
   Typography,
 } from "antd";
 import type { AlertProps } from "antd";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
@@ -63,8 +64,10 @@ const PROMOTION_MAX_LENGTH = 50;
 
 const QuotationCreatePage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { notify } = useNotify();
   const screens = Grid.useBreakpoint();
+  const restoredDraftRef = useRef(false);
 
   const [form] = Form.useForm<QuotationCreateFormValues>();
   const watchedProjectId = Form.useWatch("projectId", form);
@@ -72,7 +75,6 @@ const QuotationCreatePage = () => {
   const watchedDeliveryRequirement = Form.useWatch("deliveryRequirements", form);
   const watchedNote = Form.useWatch("note", form);
 
-  const [productOptions, setProductOptions] = useState<Array<{ label: string; value: string }>>([]);
   const [projectOptions, setProjectOptions] = useState<Array<{ label: string; value: string }>>([]);
   const [promotionOptions, setPromotionOptions] = useState<Array<{ label: string; value: string }>>([]);
   const [products, setProducts] = useState<QuotationFormInitProduct[]>([]);
@@ -95,6 +97,47 @@ const QuotationCreatePage = () => {
   const [initError, setInitError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (restoredDraftRef.current) {
+      return;
+    }
+
+    restoredDraftRef.current = true;
+
+    const navigationState = (location.state ?? null) as
+      | {
+          restoreDraft?: {
+            formValues?: Partial<QuotationCreateFormValues>;
+            quotationItems?: QuotationItemForm[];
+          };
+        }
+      | null;
+    const draft = navigationState?.restoreDraft;
+
+    if (!draft) {
+      return;
+    }
+
+    const restoredItems =
+      Array.isArray(draft.quotationItems) && draft.quotationItems.length > 0
+        ? draft.quotationItems
+            .filter((item) => typeof item?.productId === "string" && item.productId.trim())
+            .map((item) => ({
+              productId: item.productId,
+              quantity: Number(item.quantity ?? 0) > 0 ? Number(item.quantity) : 1,
+            }))
+        : [];
+
+    if (restoredItems.length > 0) {
+      setQuotationItems(restoredItems);
+    }
+
+    form.setFieldsValue({
+      ...draft.formValues,
+      quantityToAdd: draft.formValues?.quantityToAdd ?? 1,
+    });
+  }, [form, location.state]);
+
+  useEffect(() => {
     const loadInit = async () => {
       try {
         setPageLoading(true);
@@ -104,12 +147,6 @@ const QuotationCreatePage = () => {
         setCustomerInfo(response.customer ?? null);
         setProducts(response.products ?? []);
         setProjects(response.projects ?? []);
-        setProductOptions(
-          (response.products ?? []).map((item) => ({
-            label: `${item.productCode} - ${item.productName}`,
-            value: item.id,
-          })),
-        );
         setProjectOptions(
           (response.projects ?? []).map((item) => ({
             label: `${item.projectCode ?? item.id} - ${item.name}`,
@@ -128,7 +165,6 @@ const QuotationCreatePage = () => {
         setCustomerInfo(null);
         setProducts([]);
         setProjects([]);
-        setProductOptions([]);
         setProjectOptions([]);
         setPromotionOptions([]);
         notify(message, "warning");
@@ -146,6 +182,8 @@ const QuotationCreatePage = () => {
 
   const productsById = useMemo(() => new Map(products.map((item) => [item.id, item])), [products]);
   const projectsById = useMemo(() => new Map(projects.map((item) => [item.id, item])), [projects]);
+  const getProductDisplayLabel = (product: QuotationFormInitProduct) => `${product.productCode} - ${product.productName}`;
+  const getProductFirstImage = (product: QuotationFormInitProduct) => product.mainImage || product.imageUrls?.[0] || product.images?.[0];
 
   const estimatedSubTotal = useMemo(() => {
     return quotationItems.reduce((sum, item) => {
@@ -530,9 +568,62 @@ const QuotationCreatePage = () => {
                                 <Select
                                   showSearch
                                   placeholder="Chọn sản phẩm để thêm vào báo giá"
-                                  options={productOptions}
                                   optionFilterProp="label"
-                                />
+                                >
+                                  {products.map((product) => {
+                                    const imageUrl = getProductFirstImage(product);
+                                    const productLabel = getProductDisplayLabel(product);
+
+                                    return (
+                                      <Select.Option key={product.id} value={product.id} label={productLabel}>
+                                        <Flex align="center" justify="space-between" gap={12}>
+                                          <Flex align="center" gap={10} style={{ minWidth: 0 }}>
+                                            <Avatar
+                                              shape="square"
+                                              size={36}
+                                              src={imageUrl}
+                                              icon={!imageUrl ? <PictureOutlined /> : undefined}
+                                              style={{ flexShrink: 0 }}
+                                            />
+                                            <Space direction="vertical" size={0} style={{ minWidth: 0 }}>
+                                              <Typography.Text ellipsis style={{ maxWidth: 280 }}>
+                                                {productLabel}
+                                              </Typography.Text>
+                                              <Typography.Text type="secondary" ellipsis style={{ maxWidth: 280 }}>
+                                                {[product.type, product.size, product.thickness].filter(Boolean).join(" • ") || "Chưa có thông tin kỹ thuật"}
+                                              </Typography.Text>
+                                            </Space>
+                                          </Flex>
+
+                                          <Button
+                                            type="link"
+                                            size="small"
+                                            onMouseDown={(event) => {
+                                              event.preventDefault();
+                                              event.stopPropagation();
+                                            }}
+                                            onClick={(event) => {
+                                              event.preventDefault();
+                                              event.stopPropagation();
+                                              navigate(ROUTE_URL.PRODUCT_DETAIL.replace(":id", product.id), {
+                                                state: {
+                                                  returnTo: ROUTE_URL.QUOTATION_CREATE,
+                                                  returnLabel: "Quay lại tạo báo giá",
+                                                  restoreDraft: {
+                                                    formValues: form.getFieldsValue(),
+                                                    quotationItems,
+                                                  },
+                                                },
+                                              });
+                                            }}
+                                          >
+                                            Xem chi tiết
+                                          </Button>
+                                        </Flex>
+                                      </Select.Option>
+                                    );
+                                  })}
+                                </Select>
                               </Form.Item>
                             </Col>
                             <Col xs={24} sm={12} lg={5}>
