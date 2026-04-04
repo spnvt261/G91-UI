@@ -1,9 +1,9 @@
 import { EditOutlined, StopOutlined } from "@ant-design/icons";
+import { Alert, Avatar, Button, Card, Col, Empty, Form, List, Row, Space, Statistic, Tag, Typography } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Avatar, Button, Card, Col, Empty, Form, List, Row, Skeleton, Space, Statistic, Tag, Typography } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
-import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { ApiClientError } from "../../apiConfig/axiosConfig";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
 import { canPerformAction } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
@@ -53,13 +53,12 @@ const CustomerDetailPage = () => {
       try {
         const summaryResponse = await customerService.getSummary(id);
         setSummary(summaryResponse);
-      } catch (summaryErr) {
-        const message = getErrorMessage(summaryErr, "Không thể tải tổng hợp khách hàng.");
+      } catch (error) {
+        const message = getErrorMessage(error, "Không thể tải tóm tắt khách hàng.");
         setSummaryError(message);
-        setSummary(null);
       }
-    } catch (err) {
-      const message = getErrorMessage(err, "Không thể tải chi tiết khách hàng.");
+    } catch (error) {
+      const message = getErrorMessage(error, "Không thể tải chi tiết khách hàng.");
       setErrorMessage(message);
       notify(message, "error");
     } finally {
@@ -103,21 +102,21 @@ const CustomerDetailPage = () => {
           : previous,
       );
       setIsDisableModalOpen(false);
-    } catch (err) {
-      if (typeof err === "object" && err !== null && "errorFields" in err) {
+    } catch (error) {
+      if (typeof error === "object" && error !== null && "errorFields" in error) {
         return;
       }
 
-      if (err instanceof ApiClientError && err.fieldErrors?.reason?.length) {
+      if (error instanceof ApiClientError && error.fieldErrors?.reason?.length) {
         disableForm.setFields([
           {
             name: "reason",
-            errors: err.fieldErrors.reason,
+            errors: error.fieldErrors.reason,
           },
         ]);
       }
 
-      notify(getErrorMessage(err, "Không thể vô hiệu hóa khách hàng."), "error");
+      notify(getErrorMessage(error, "Không thể vô hiệu hóa khách hàng."), "error");
     } finally {
       setDisabling(false);
     }
@@ -143,79 +142,23 @@ const CustomerDetailPage = () => {
     [customer],
   );
 
-  const financialInfoItems = useMemo(
+  const financeAndActivityItems = useMemo(
     () => [
-      { key: "priceGroup", label: "Nhóm giá", value: displayCustomerText(customer?.priceGroup) },
-      { key: "paymentTerms", label: "Điều khoản thanh toán", value: displayCustomerText(customer?.paymentTerms) },
-      {
-        key: "creditLimit",
-        label: "Hạn mức tín dụng",
-        value: customer?.creditLimit != null ? toCurrency(customer.creditLimit) : "Chưa thiết lập",
-      },
-      {
-        key: "currentDebt",
-        label: "Công nợ hiện tại",
-        value: customer?.currentDebt != null ? toCurrency(customer.currentDebt) : "Chưa cập nhật",
-      },
-    ],
-    [customer],
-  );
-
-  const portalAccountItems = useMemo(
-    () => [
-      { key: "portalUserId", label: "Portal userId", value: displayCustomerText(detail?.portalAccount?.userId) },
-      { key: "portalEmail", label: "Portal email", value: displayCustomerText(detail?.portalAccount?.email) },
-      { key: "portalStatus", label: "Portal status", value: displayCustomerText(detail?.portalAccount?.status) },
-    ],
-    [detail],
-  );
-
-  const summaryItems = useMemo(
-    () => [
+      { key: "creditLimit", label: "Hạn mức tín dụng", value: summary?.creditLimit != null ? toCurrency(summary.creditLimit) : "Chưa thiết lập" },
+      { key: "paymentTerms", label: "Điều khoản thanh toán", value: displayCustomerText(summary?.paymentTerms ?? customer?.paymentTerms) },
+      { key: "currentDebt", label: "Công nợ hiện tại", value: summary?.outstandingDebt != null ? toCurrency(summary.outstandingDebt) : "Chưa cập nhật" },
+      { key: "invoiceCount", label: "Số hóa đơn", value: summary?.invoiceCount ?? 0 },
+      { key: "contractCount", label: "Số hợp đồng", value: summary?.contractCount ?? 0 },
+      { key: "projectCount", label: "Số dự án", value: summary?.projectCount ?? 0 },
+      { key: "activeProjectCount", label: "Số dự án đang hoạt động", value: summary?.activeProjectCount ?? 0 },
+      { key: "openContractCount", label: "Số hợp đồng mở", value: summary?.openContractCount ?? 0 },
       {
         key: "canDisable",
         label: "Có thể vô hiệu hóa",
         value: summary?.canDisable == null ? "Chưa xác định" : summary.canDisable ? "Có" : "Không",
       },
-      {
-        key: "totalInvoicedAmount",
-        label: "Tổng đã xuất hóa đơn",
-        value: summary?.totalInvoicedAmount != null ? toCurrency(summary.totalInvoicedAmount) : "Chưa cập nhật",
-      },
-      {
-        key: "totalPaymentsReceived",
-        label: "Tổng đã thu",
-        value: summary?.totalPaymentsReceived != null ? toCurrency(summary.totalPaymentsReceived) : "Chưa cập nhật",
-      },
-      {
-        key: "totalAllocatedPayments",
-        label: "Tổng đã phân bổ",
-        value: summary?.totalAllocatedPayments != null ? toCurrency(summary.totalAllocatedPayments) : "Chưa cập nhật",
-      },
-      {
-        key: "outstandingDebt",
-        label: "Công nợ còn lại",
-        value: summary?.outstandingDebt != null ? toCurrency(summary.outstandingDebt) : "Chưa cập nhật",
-      },
-      {
-        key: "lastTransactionAt",
-        label: "Giao dịch gần nhất",
-        value: formatCustomerDateTime(summary?.lastTransactionAt),
-      },
     ],
-    [summary],
-  );
-
-  const activityItems = useMemo(
-    () => [
-      { key: "quotationCount", label: "Báo giá", value: detail?.activity?.quotationCount ?? 0 },
-      { key: "contractCount", label: "Hợp đồng", value: detail?.activity?.contractCount ?? 0 },
-      { key: "invoiceCount", label: "Hóa đơn", value: detail?.activity?.invoiceCount ?? 0 },
-      { key: "projectCount", label: "Dự án", value: detail?.activity?.projectCount ?? 0 },
-      { key: "activeProjectCount", label: "Dự án active", value: detail?.activity?.activeProjectCount ?? 0 },
-      { key: "openContractCount", label: "Hợp đồng mở", value: detail?.activity?.openContractCount ?? 0 },
-    ],
-    [detail],
+    [customer?.paymentTerms, summary],
   );
 
   const systemInfoItems = useMemo(
@@ -223,8 +166,9 @@ const CustomerDetailPage = () => {
       { key: "status", label: "Trạng thái", value: <CustomerStatusTag status={customer?.status} showBadge /> },
       { key: "createdAt", label: "Ngày tạo", value: formatCustomerDateTime(customer?.createdAt) },
       { key: "updatedAt", label: "Cập nhật gần nhất", value: formatCustomerDateTime(customer?.updatedAt) },
+      { key: "lastTransactionAt", label: "Giao dịch gần nhất", value: formatCustomerDateTime(summary?.lastTransactionAt) },
     ],
-    [customer],
+    [customer, summary?.lastTransactionAt],
   );
 
   const avatarLabel = displayCustomerText(customer?.companyName).charAt(0).toUpperCase();
@@ -232,7 +176,6 @@ const CustomerDetailPage = () => {
   return (
     <>
       <NoResizeScreenTemplate
-        loading={false}
         bodyClassName="px-0 pb-0 pt-4"
         header={
           <CustomerPageHeader
@@ -243,10 +186,10 @@ const CustomerDetailPage = () => {
                   <CustomerStatusTag status={customer.status} />
                 </Space>
               ) : (
-                "Hồ sơ khách hàng"
+                "Chi tiết khách hàng"
               )
             }
-            subtitle={customer ? `Mã khách hàng: ${displayCustomerText(customer.customerCode)}` : "Xem đầy đủ thông tin doanh nghiệp và lịch sử cập nhật."}
+            subtitle={customer ? `Mã khách hàng: ${displayCustomerText(customer.customerCode)}` : "Theo dõi thông tin hồ sơ và công nợ khách hàng."}
             breadcrumbItems={[
               { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Trang chủ</span> },
               { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)}>Khách hàng</span> },
@@ -256,7 +199,7 @@ const CustomerDetailPage = () => {
               <Space wrap>
                 {canUpdateCustomer ? (
                   <Button type="primary" icon={<EditOutlined />} onClick={() => navigate(ROUTE_URL.CUSTOMER_EDIT.replace(":id", id ?? ""))} disabled={!id || !customer || disabling}>
-                    Chỉnh sửa
+                    Cập nhật
                   </Button>
                 ) : null}
                 {canDisableCustomer ? (
@@ -269,7 +212,7 @@ const CustomerDetailPage = () => {
                     }}
                     disabled={!customer || customer.status === "INACTIVE" || disabling || summary?.canDisable === false}
                   >
-                    {customer?.status === "INACTIVE" ? "Đã ngừng hoạt động" : "Vô hiệu hóa"}
+                    {customer?.status === "INACTIVE" ? "Đã vô hiệu hóa" : "Vô hiệu hóa"}
                   </Button>
                 ) : null}
                 <Button onClick={() => navigate(ROUTE_URL.CUSTOMER_LIST)} disabled={disabling}>
@@ -286,15 +229,15 @@ const CustomerDetailPage = () => {
               <Alert
                 type="warning"
                 showIcon
-                message="Khách hàng đang ngừng hoạt động"
-                description="Khách hàng này đã được vô hiệu hóa. Hãy kiểm tra trước khi thực hiện các thao tác liên quan đến hợp đồng hoặc thanh toán."
+                message="Khách hàng đang ở trạng thái vô hiệu hóa."
+                description="Các thao tác nghiệp vụ như tạo hợp đồng/hóa đơn mới có thể bị hạn chế."
               />
             ) : null}
             {summary?.disableBlockers?.length ? (
               <Alert
                 type="warning"
                 showIcon
-                message="Có điều kiện chặn vô hiệu hóa khách hàng"
+                message="Danh sách lý do chặn vô hiệu hóa"
                 description={
                   <Space size={[6, 6]} wrap>
                     {summary.disableBlockers.map((item) => (
@@ -307,26 +250,10 @@ const CustomerDetailPage = () => {
               />
             ) : null}
             {errorMessage ? <Alert type="error" showIcon message="Không thể tải hồ sơ khách hàng." description={errorMessage} /> : null}
-            {summaryError ? <Alert type="warning" showIcon message="Không thể tải tổng hợp khách hàng." description={summaryError} /> : null}
+            {summaryError ? <Alert type="warning" showIcon message="Không thể tải dữ liệu tóm tắt khách hàng." description={summaryError} /> : null}
 
             {loading ? (
-              <>
-                <Card>
-                  <Skeleton active paragraph={{ rows: 4 }} />
-                </Card>
-                <Row gutter={[16, 16]}>
-                  <Col xs={24} xl={12}>
-                    <Card>
-                      <Skeleton active paragraph={{ rows: 6 }} />
-                    </Card>
-                  </Col>
-                  <Col xs={24} xl={12}>
-                    <Card>
-                      <Skeleton active paragraph={{ rows: 6 }} />
-                    </Card>
-                  </Col>
-                </Row>
-              </>
+              <Card loading />
             ) : customer ? (
               <>
                 <Card>
@@ -349,18 +276,10 @@ const CustomerDetailPage = () => {
                     <Col xs={24} lg={10}>
                       <Row gutter={[12, 12]}>
                         <Col xs={12}>
-                          <Statistic
-                            title="Hạn mức tín dụng"
-                            value={customer.creditLimit ?? 0}
-                            formatter={(value) => (customer.creditLimit != null ? toCurrency(Number(value)) : "Chưa thiết lập")}
-                          />
+                          <Statistic title="Hạn mức tín dụng" value={summary?.creditLimit ?? customer.creditLimit ?? 0} formatter={(value) => toCurrency(Number(value))} />
                         </Col>
                         <Col xs={12}>
-                          <Statistic
-                            title="Công nợ hiện tại"
-                            value={customer.currentDebt ?? 0}
-                            formatter={(value) => (customer.currentDebt != null ? toCurrency(Number(value)) : "Chưa cập nhật")}
-                          />
+                          <Statistic title="Công nợ hiện tại" value={summary?.outstandingDebt ?? customer.currentDebt ?? 0} formatter={(value) => toCurrency(Number(value))} />
                         </Col>
                       </Row>
                     </Col>
@@ -370,29 +289,13 @@ const CustomerDetailPage = () => {
                 <Row gutter={[16, 16]}>
                   <Col xs={24} xl={15}>
                     <Space direction="vertical" size={16} style={{ width: "100%" }}>
-                      <CustomerInfoSection
-                        title="Thông tin doanh nghiệp"
-                        description="Các thông tin pháp lý và nhận diện của khách hàng."
-                        items={businessInfoItems}
-                      />
-                      <CustomerInfoSection
-                        title="Thông tin liên hệ"
-                        description="Đầu mối liên hệ chính phục vụ chăm sóc và hỗ trợ."
-                        items={contactInfoItems}
-                      />
-                      <CustomerInfoSection title="Thông tin portal account" items={portalAccountItems} />
-                      <CustomerInfoSection title="Tổng quan tài chính và blockers" items={summaryItems} column={1} />
+                      <CustomerInfoSection title="Thông tin doanh nghiệp" items={businessInfoItems} />
+                      <CustomerInfoSection title="Thông tin liên hệ" items={contactInfoItems} />
                     </Space>
                   </Col>
                   <Col xs={24} xl={9}>
                     <Space direction="vertical" size={16} style={{ width: "100%" }}>
-                      <CustomerInfoSection
-                        title="Thông tin thương mại và thanh toán"
-                        description="Phục vụ quản lý giá bán, công nợ và điều khoản thanh toán."
-                        items={financialInfoItems}
-                        column={1}
-                      />
-                      <CustomerInfoSection title="Hoạt động" items={activityItems} column={1} />
+                      <CustomerInfoSection title="Tóm tắt tài chính và hoạt động" items={financeAndActivityItems} column={1} />
                       <CustomerInfoSection title="Thông tin hệ thống" items={systemInfoItems} column={1} />
                     </Space>
                   </Col>
@@ -400,7 +303,7 @@ const CustomerDetailPage = () => {
 
                 <Row gutter={[16, 16]}>
                   <Col xs={24} xl={8}>
-                    <Card title="Contact persons">
+                    <Card title="Danh sách người liên hệ">
                       {detail?.contactPersons?.length ? (
                         <List
                           size="small"
@@ -409,7 +312,7 @@ const CustomerDetailPage = () => {
                             <List.Item>
                               <Space direction="vertical" size={0}>
                                 <Typography.Text strong>
-                                  {displayCustomerText(item.fullName)} {item.primary ? <Tag color="blue">Primary</Tag> : null}
+                                  {displayCustomerText(item.fullName)} {item.primary ? <Tag color="blue">Liên hệ chính</Tag> : null}
                                 </Typography.Text>
                                 <Typography.Text type="secondary">{displayCustomerText(item.phone)}</Typography.Text>
                                 <Typography.Text type="secondary">{displayCustomerText(item.email)}</Typography.Text>
@@ -418,12 +321,12 @@ const CustomerDetailPage = () => {
                           )}
                         />
                       ) : (
-                        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có contact person." />
+                        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có dữ liệu người liên hệ." />
                       )}
                     </Card>
                   </Col>
                   <Col xs={24} xl={8}>
-                    <Card title="Recent transactions">
+                    <Card title="Giao dịch gần đây">
                       {detail?.recentTransactions?.length ? (
                         <List
                           size="small"
@@ -448,7 +351,7 @@ const CustomerDetailPage = () => {
                     </Card>
                   </Col>
                   <Col xs={24} xl={8}>
-                    <Card title="Documents">
+                    <Card title="Tài liệu khách hàng">
                       {detail?.documents?.length ? (
                         <List
                           size="small"
@@ -460,9 +363,11 @@ const CustomerDetailPage = () => {
                                 <Typography.Text type="secondary">
                                   {[displayCustomerText(item.type), formatCustomerDateTime(item.uploadedAt)].join(" • ")}
                                 </Typography.Text>
-                                <Typography.Link href={item.fileUrl} target="_blank">
-                                  {displayCustomerText(item.fileUrl)}
-                                </Typography.Link>
+                                {item.fileUrl ? (
+                                  <Typography.Link href={item.fileUrl} target="_blank">
+                                    Mở tài liệu
+                                  </Typography.Link>
+                                ) : null}
                               </Space>
                             </List.Item>
                           )}
@@ -486,6 +391,10 @@ const CustomerDetailPage = () => {
       <CustomerDisableModal
         open={isDisableModalOpen}
         customerName={customer?.companyName}
+        outstandingDebt={summary?.outstandingDebt ?? customer?.currentDebt}
+        activeProjectCount={summary?.activeProjectCount}
+        openContractCount={summary?.openContractCount}
+        disableBlockers={summary?.disableBlockers}
         form={disableForm}
         submitting={disabling}
         onCancel={() => setIsDisableModalOpen(false)}

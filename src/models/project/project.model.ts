@@ -66,6 +66,21 @@ export interface ProjectModel {
   budget?: number;
   linkedContractId?: string;
   linkedOrderReference?: string;
+  customerSignoffCompleted?: boolean;
+  customerSatisfactionScore?: number;
+  warrantyStartDate?: string;
+  warrantyEndDate?: string;
+  closeEligibility?: {
+    canClose?: boolean;
+    blockers?: string[];
+  };
+  financialDependencies?: {
+    openContracts?: number;
+    openInvoices?: number;
+    outstandingDebt?: number;
+  };
+  openContractCount?: number;
+  openInvoiceCount?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -174,7 +189,11 @@ export interface ProjectArchiveRequest {
 }
 
 export interface ProjectCloseRequest {
-  reason?: string;
+  closeReason: string;
+  customerSignoffCompleted?: boolean;
+  customerSatisfactionScore?: number;
+  warrantyStartDate?: string;
+  warrantyEndDate?: string;
   note?: string;
 }
 

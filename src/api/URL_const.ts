@@ -136,6 +136,31 @@ export const API = {
     DEBT_STATUS: "/api/debts",
   },
 
+  INVOICES: {
+    CREATE: "/api/invoices",
+    LIST: "/api/invoices",
+    DETAIL: "/api/invoices/{id}",
+    UPDATE: "/api/invoices/{id}",
+    CANCEL: "/api/invoices/{id}/cancel",
+  },
+
+  PAYMENTS: {
+    CREATE: "/api/payments",
+    DETAIL: "/api/payments/{id}",
+    OPEN_INVOICES_BY_CUSTOMER: "/api/customers/{customerId}/open-invoices",
+  },
+
+  DEBTS: {
+    LIST: "/api/debts",
+    EXPORT: "/api/debts/export",
+    REMINDERS: "/api/debts/reminders",
+    DETAIL: "/api/debts/{customerId}",
+    AGING: "/api/debts/{customerId}/aging",
+    HISTORY: "/api/debts/{customerId}/history",
+    SETTLEMENT_CONFIRMATION: "/api/debts/{customerId}/settlement-confirmation",
+    SETTLEMENTS: "/api/debts/{customerId}/settlements",
+  },
+
   REPORT: {
     SALES: "/api/reports/sales",
     INVENTORY: "/api/reports/inventory",

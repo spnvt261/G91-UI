@@ -28,6 +28,12 @@ import InventoryHistoryPage from "./pages/inventory/InventoryHistoryPage";
 import InventoryIssueCreatePage from "./pages/inventory/InventoryIssueCreatePage";
 import InventoryReceiptCreatePage from "./pages/inventory/InventoryReceiptCreatePage";
 import InventoryStatusPage from "./pages/inventory/InventoryStatusPage";
+import InvoiceCreatePage from "./pages/invoices/InvoiceCreatePage";
+import InvoiceDetailPage from "./pages/invoices/InvoiceDetailPage";
+import InvoiceEditPage from "./pages/invoices/InvoiceEditPage";
+import InvoiceListPage from "./pages/invoices/InvoiceListPage";
+import DebtDetailPage from "./pages/debts/DebtDetailPage";
+import DebtListPage from "./pages/debts/DebtListPage";
 import PaymentDetailPage from "./pages/payments/PaymentDetailPage";
 import PaymentListPage from "./pages/payments/PaymentListPage";
 import RecordPaymentPage from "./pages/payments/RecordPaymentPage";
@@ -194,9 +200,18 @@ function App() {
           <Route path={ROUTE_URL.PROJECT_PROGRESS_UPDATE} element={<ProjectProgressUpdatePage />} />
           <Route path={ROUTE_URL.PROJECT_FINANCIAL_SUMMARY} element={<ProjectFinancialSummaryPage />} />
 
+          <Route path={ROUTE_URL.INVOICE_LIST} element={<InvoiceListPage />} />
+          <Route path={ROUTE_URL.INVOICE_DETAIL} element={<InvoiceDetailPage />} />
+          <Route path={ROUTE_URL.INVOICE_CREATE} element={<InvoiceCreatePage />} />
+          <Route path={ROUTE_URL.INVOICE_EDIT} element={<InvoiceEditPage />} />
+
+          <Route path={ROUTE_URL.DEBT_LIST} element={<DebtListPage />} />
+          <Route path={ROUTE_URL.DEBT_DETAIL} element={<DebtDetailPage />} />
+
           <Route path={ROUTE_URL.PAYMENT_LIST} element={<PaymentListPage />} />
           <Route path={ROUTE_URL.PAYMENT_DETAIL} element={<PaymentDetailPage />} />
           <Route path={ROUTE_URL.PAYMENT_RECORD} element={<RecordPaymentPage />} />
+          <Route path={ROUTE_URL.PAYMENT_RECORD_BY_INVOICE} element={<RecordPaymentPage />} />
 
           <Route path={ROUTE_URL.INVENTORY_STATUS} element={<InventoryStatusPage />} />
           <Route path={ROUTE_URL.INVENTORY_RECEIPT_CREATE} element={<InventoryReceiptCreatePage />} />

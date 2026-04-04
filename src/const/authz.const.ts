@@ -13,6 +13,8 @@ export type MenuId =
   | "contract-approvals"
   | "customer-management"
   | "project-management"
+  | "invoice-management"
+  | "debt-management"
   | "payment-management"
   | "reports-sales"
   | "reports-project"
@@ -187,9 +189,9 @@ const PERMISSION_ROLE_MAP: Record<PermissionKey, UserRole[]> = {
   "project.financial-summary.view": ACCOUNTANT_OWNER,
   "project.close": ACCOUNTANT_ONLY,
   "invoice.create": ACCOUNTANT_ONLY,
-  "invoice.view": CUSTOMER_ACCOUNTANT,
-  "invoice.update": ACCOUNTANT_ONLY,
-  "invoice.cancel": ACCOUNTANT_ONLY,
+  "invoice.view": CUSTOMER_ACCOUNTANT_OWNER,
+  "invoice.update": ACCOUNTANT_OWNER,
+  "invoice.cancel": OWNER_ONLY,
   "payment.record": ACCOUNTANT_ONLY,
   "debt.view": CUSTOMER_ACCOUNTANT,
   "payment.reminder.send": ACCOUNTANT_ONLY,
@@ -255,7 +257,9 @@ const MENU_PERMISSION_MAP: Record<MenuId, PermissionKey> = {
   "contract-approvals": "contract.approve",
   "customer-management": "customer.view",
   "project-management": "project.view",
-  "payment-management": "invoice.view",
+  "invoice-management": "invoice.view",
+  "debt-management": "debt.view",
+  "payment-management": "payment.record",
   "reports-sales": "report.sales.view",
   "reports-project": "report.project.view",
   "reports-inventory": "report.inventory.view",
@@ -312,9 +316,18 @@ const PROTECTED_ROUTE_RULES: RoutePermissionRule[] = [
   { path: ROUTE_URL.PROJECT_DETAIL, permission: "project.view" },
   { path: ROUTE_URL.PROJECT_LIST, permission: "project.view" },
 
+  { path: ROUTE_URL.INVOICE_CREATE, permission: "invoice.create" },
+  { path: ROUTE_URL.INVOICE_EDIT, permission: "invoice.update" },
+  { path: ROUTE_URL.INVOICE_DETAIL, permission: "invoice.view" },
+  { path: ROUTE_URL.INVOICE_LIST, permission: "invoice.view" },
+
   { path: ROUTE_URL.PAYMENT_RECORD, permission: "payment.record" },
-  { path: ROUTE_URL.PAYMENT_DETAIL, permission: "invoice.view" },
-  { path: ROUTE_URL.PAYMENT_LIST, permission: "invoice.view" },
+  { path: ROUTE_URL.PAYMENT_RECORD_BY_INVOICE, permission: "payment.record" },
+  { path: ROUTE_URL.PAYMENT_DETAIL, permission: "payment.record" },
+  { path: ROUTE_URL.PAYMENT_LIST, permission: "payment.record" },
+
+  { path: ROUTE_URL.DEBT_DETAIL, permission: "debt.view" },
+  { path: ROUTE_URL.DEBT_LIST, permission: "debt.view" },
 
   { path: ROUTE_URL.INVENTORY_RECEIPT_CREATE, permission: "inventory.receipt.create" },
   { path: ROUTE_URL.INVENTORY_ISSUE_CREATE, permission: "inventory.issue.create" },

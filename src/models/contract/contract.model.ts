@@ -43,6 +43,21 @@ export interface ContractModel {
   depositAmount?: number;
   creditLimitSnapshot?: number;
   currentDebtSnapshot?: number;
+  confidentialityNote?: string;
+  approvalRequest?: {
+    requestedBy?: string;
+    requestedAt?: string;
+    reason?: string;
+    comment?: string;
+  };
+  reviewInsights?: string[];
+  documents?: Array<{
+    id: string;
+    name?: string;
+    status?: string;
+    generatedAt?: string;
+    lastExportedAt?: string;
+  }>;
   createdAt?: string;
   submittedAt?: string;
   approvedAt?: string;

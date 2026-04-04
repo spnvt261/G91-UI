@@ -16,22 +16,25 @@ interface ApprovalDecisionFormValues {
   comment?: string;
 }
 
-const DECISION_CONTENT: Record<ApprovalDecision, {
-  title: string;
-  description: string;
-  okText: string;
-  messageType: "success" | "warning" | "error";
-}> = {
+const DECISION_CONTENT: Record<
+  ApprovalDecision,
+  {
+    title: string;
+    description: string;
+    okText: string;
+    messageType: "success" | "warning" | "error";
+  }
+> = {
   APPROVE: {
     title: "Xác nhận phê duyệt hợp đồng",
-    description: "Hợp đồng sẽ được chuyển sang trạng thái đã phê duyệt để tiếp tục triển khai.",
+    description: "Hợp đồng sẽ chuyển sang trạng thái đã phê duyệt để tiếp tục triển khai.",
     okText: "Phê duyệt",
     messageType: "success",
   },
   REJECT: {
     title: "Xác nhận từ chối hợp đồng",
-    description: "Vui lòng nêu rõ lý do để đội phụ trách có thể điều chỉnh và xử lý tiếp.",
-    okText: "Từ chối hợp đồng",
+    description: "Vui lòng nêu rõ lý do để bộ phận liên quan xử lý và phản hồi kịp thời.",
+    okText: "Từ chối",
     messageType: "error",
   },
   REQUEST_MODIFICATION: {
@@ -42,14 +45,7 @@ const DECISION_CONTENT: Record<ApprovalDecision, {
   },
 };
 
-const ApprovalDecisionModal = ({
-  open,
-  decision,
-  loading = false,
-  contractNumber,
-  onCancel,
-  onSubmit,
-}: ApprovalDecisionModalProps) => {
+const ApprovalDecisionModal = ({ open, decision, loading = false, contractNumber, onCancel, onSubmit }: ApprovalDecisionModalProps) => {
   const [form] = Form.useForm<ApprovalDecisionFormValues>();
 
   useEffect(() => {
@@ -86,18 +82,9 @@ const ApprovalDecisionModal = ({
           <Form.Item
             label={requireComment ? "Lý do / ghi chú bắt buộc" : "Ghi chú phê duyệt (không bắt buộc)"}
             name="comment"
-            rules={
-              requireComment
-                ? [{ required: true, message: "Vui lòng nhập lý do trước khi gửi quyết định." }]
-                : undefined
-            }
+            rules={requireComment ? [{ required: true, message: "Vui lòng nhập lý do trước khi gửi quyết định." }] : undefined}
           >
-            <Input.TextArea
-              rows={4}
-              maxLength={1000}
-              showCount
-              placeholder={requireComment ? "Nhập nội dung chi tiết..." : "Có thể để trống nếu không cần thêm ghi chú."}
-            />
+            <Input.TextArea rows={4} maxLength={1000} showCount placeholder={requireComment ? "Nhập lý do chi tiết..." : "Có thể để trống."} />
           </Form.Item>
         </Form>
       </Space>

@@ -6,7 +6,6 @@ import type {
   ContractApprovalResponseData,
   ContractCancelRequest,
   ContractCreateRequest,
-  ContractDetailResponseData,
   ContractDocumentEmailRequest,
   ContractDocumentExportRequest,
   ContractDocumentGenerateRequest,
@@ -19,7 +18,7 @@ import type {
   ContractUpdateRequest,
   CreateContractFromQuotationRequest,
 } from "../../models/contract/contract.model";
-import { extractList } from "../service.utils";
+import { extractList, unwrapApiResponse } from "../service.utils";
 
 export interface ContractDocumentModel {
   id: string;
@@ -27,6 +26,27 @@ export interface ContractDocumentModel {
   status?: string;
   generatedAt?: string;
 }
+
+type UnknownRecord = Record<string, unknown>;
+
+const asRecord = (value: unknown): UnknownRecord => (typeof value === "object" && value !== null ? (value as UnknownRecord) : {});
+const asString = (value: unknown): string | undefined => (typeof value === "string" ? value : undefined);
+const asBoolean = (value: unknown): boolean | undefined => (typeof value === "boolean" ? value : undefined);
+const asArray = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
+const asNumber = (value: unknown): number | undefined => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return undefined;
+};
 
 const toContractModelFromListItem = (item: ContractListResponseData["items"][number]): ContractModel => ({
   id: item.id,
@@ -47,41 +67,78 @@ const toContractModelFromListItem = (item: ContractListResponseData["items"][num
   createdAt: item.createdAt,
 });
 
-const toContractModelFromDetail = (payload: ContractDetailResponseData): ContractModel => ({
-  id: payload.contract.id,
-  contractNumber: payload.contract.contractNumber,
-  quotationId: payload.contract.quotationId ?? payload.quotation?.id ?? "",
-  quotationNumber: payload.quotation?.quotationNumber,
-  customerId: payload.contract.customerId ?? payload.customer?.id ?? "",
-  customerName: payload.contract.customerName ?? payload.customer?.companyName,
-  items: (payload.items ?? []).map((item) => ({
-    productId: item.productId,
-    productCode: item.productCode,
-    productName: item.productName,
-    quantity: item.quantity,
-    unitPrice: item.unitPrice,
-    amount: item.amount ?? item.totalPrice,
-  })),
-  totalAmount: payload.contract.totalAmount,
-  paymentTerms: payload.contract.paymentTerms,
-  deliveryAddress: payload.contract.deliveryAddress,
-  deliveryTerms: payload.contract.deliveryTerms,
-  note: payload.contract.note,
-  confidential: payload.contract.confidential,
-  status: payload.contract.status,
-  approvalStatus: payload.contract.approvalStatus,
-  approvalTier: payload.contract.approvalTier,
-  requiresApproval: payload.contract.requiresApproval,
-  depositPercentage: payload.contract.depositPercentage,
-  depositAmount: payload.contract.depositAmount,
-  creditLimitSnapshot: payload.contract.creditLimitSnapshot,
-  currentDebtSnapshot: payload.contract.currentDebtSnapshot,
-  createdAt: payload.contract.createdAt,
-  submittedAt: payload.contract.submittedAt,
-  approvedAt: payload.contract.approvedAt,
-  cancelledAt: payload.contract.cancelledAt,
-  expectedDeliveryDate: payload.contract.expectedDeliveryDate,
-});
+const toContractModelFromDetail = (payload: unknown): ContractModel => {
+  const root = asRecord(payload);
+  const detail = asRecord(root.detail);
+  const source = Object.keys(detail).length > 0 ? detail : root;
+  const contract = asRecord(source.contract);
+  const customer = asRecord(source.customer);
+  const quotation = asRecord(source.quotation);
+  const approvalRequest = asRecord(root.approvalRequest ?? source.approvalRequest);
+  const insights = asRecord(root.insights);
+  const insightList = asArray(insights.warnings ?? insights.reasons ?? insights.items ?? root.reviewInsights).map((item) => String(item));
+  const documentList = asArray(source.documents).map((item) => {
+    const document = asRecord(item);
+    return {
+      id: String(document.id ?? document.documentId ?? ""),
+      name: asString(document.name ?? document.fileName),
+      status: asString(document.status),
+      generatedAt: asString(document.generatedAt ?? document.createdAt),
+      lastExportedAt: asString(document.lastExportedAt),
+    };
+  });
+
+  return {
+    id: asString(contract.id) ?? "",
+    contractNumber: asString(contract.contractNumber),
+    quotationId: asString(contract.quotationId ?? quotation.id) ?? "",
+    quotationNumber: asString(quotation.quotationNumber),
+    customerId: asString(contract.customerId ?? customer.id) ?? "",
+    customerName: asString(contract.customerName ?? customer.companyName),
+    items: asArray(source.items).map((item) => {
+      const contractItem = asRecord(item);
+      return {
+        productId: asString(contractItem.productId) ?? "",
+        productCode: asString(contractItem.productCode),
+        productName: asString(contractItem.productName),
+        quantity: asNumber(contractItem.quantity) ?? 0,
+        unitPrice: asNumber(contractItem.unitPrice) ?? 0,
+        amount: asNumber(contractItem.amount ?? contractItem.totalPrice) ?? 0,
+      };
+    }),
+    totalAmount: asNumber(contract.totalAmount) ?? 0,
+    paymentTerms: asString(contract.paymentTerms),
+    deliveryAddress: asString(contract.deliveryAddress),
+    deliveryTerms: asString(contract.deliveryTerms),
+    note: asString(contract.note),
+    confidential: asBoolean(contract.confidential),
+    status: asString(contract.status) ?? "DRAFT",
+    approvalStatus: asString(contract.approvalStatus),
+    approvalTier: asString(contract.approvalTier),
+    requiresApproval: asBoolean(contract.requiresApproval),
+    depositPercentage: asNumber(contract.depositPercentage),
+    depositAmount: asNumber(contract.depositAmount),
+    creditLimitSnapshot: asNumber(contract.creditLimitSnapshot),
+    currentDebtSnapshot: asNumber(contract.currentDebtSnapshot),
+    confidentialityNote: asString(source.confidentialityNote),
+    approvalRequest:
+      Object.keys(approvalRequest).length > 0
+        ? {
+            requestedBy: asString(approvalRequest.requestedBy),
+            requestedAt: asString(approvalRequest.requestedAt),
+            reason: asString(approvalRequest.reason),
+            comment: asString(approvalRequest.comment),
+          }
+        : undefined,
+    reviewInsights: insightList.length > 0 ? insightList : undefined,
+    documents: documentList.length > 0 ? documentList : undefined,
+    createdAt: asString(contract.createdAt),
+    submittedAt: asString(contract.submittedAt),
+    approvedAt: asString(contract.approvedAt),
+    cancelledAt: asString(contract.cancelledAt),
+    expectedDeliveryDate: asString(contract.expectedDeliveryDate),
+  };
+};
 
 const toCreateRequest = (request: Omit<ContractModel, "id">): ContractCreateRequest => ({
   customerId: request.customerId,
@@ -127,14 +184,14 @@ export const contractService = {
 
   async create(request: Omit<ContractModel, "id"> | ContractCreateRequest): Promise<ContractModel> {
     const payload = "status" in request ? toCreateRequest(request) : request;
-    const response = await api.post<ContractDetailResponseData>(API.CONTRACTS.CREATE, payload);
-    return toContractModelFromDetail(response.data);
+    const response = await api.post<unknown>(API.CONTRACTS.CREATE, payload);
+    return toContractModelFromDetail(unwrapApiResponse(response.data));
   },
 
   async update(id: string, request: Omit<ContractModel, "id"> | ContractUpdateRequest): Promise<ContractModel> {
     const payload = "changeReason" in request ? request : toUpdateRequest(request);
-    const response = await api.put<ContractDetailResponseData>(withId(API.CONTRACTS.UPDATE, id), payload);
-    return toContractModelFromDetail(response.data);
+    const response = await api.put<unknown>(withId(API.CONTRACTS.UPDATE, id), payload);
+    return toContractModelFromDetail(unwrapApiResponse(response.data));
   },
 
   async getList(params?: ContractListQuery): Promise<ContractModel[]> {
@@ -148,13 +205,13 @@ export const contractService = {
   },
 
   async getDetail(id: string): Promise<ContractModel> {
-    const response = await api.get<ContractDetailResponseData>(withId(API.CONTRACTS.DETAIL, id));
-    return toContractModelFromDetail(response.data);
+    const response = await api.get<unknown>(withId(API.CONTRACTS.DETAIL, id));
+    return toContractModelFromDetail(unwrapApiResponse(response.data));
   },
 
   async getApprovalReview(id: string): Promise<ContractModel> {
-    const response = await api.get<ContractDetailResponseData>(withId(API.CONTRACTS.APPROVAL_REVIEW, id));
-    return toContractModelFromDetail(response.data);
+    const response = await api.get<unknown>(withId(API.CONTRACTS.APPROVAL_REVIEW, id));
+    return toContractModelFromDetail(unwrapApiResponse(response.data));
   },
 
   async approve(id: string, request: ContractApprovalRequest | ContractApprovalDecisionRequest): Promise<ContractApprovalResponseData> {

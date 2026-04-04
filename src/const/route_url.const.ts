@@ -52,9 +52,18 @@ export const ROUTE_URL = {
   PROJECT_PROGRESS_UPDATE: "/projects/:id/progress",
   PROJECT_FINANCIAL_SUMMARY: "/projects/:id/financial-summary",
 
+  INVOICE_LIST: "/invoices",
+  INVOICE_DETAIL: "/invoices/:id",
+  INVOICE_CREATE: "/invoices/create",
+  INVOICE_EDIT: "/invoices/:id/edit",
+
   PAYMENT_LIST: "/payments",
   PAYMENT_DETAIL: "/payments/:id",
-  PAYMENT_RECORD: "/payments/:id/record",
+  PAYMENT_RECORD: "/payments/record",
+  PAYMENT_RECORD_BY_INVOICE: "/payments/:id/record",
+
+  DEBT_LIST: "/debts",
+  DEBT_DETAIL: "/debts/:customerId",
 
   INVENTORY_STATUS: "/inventory",
   INVENTORY_RECEIPT_CREATE: "/inventory/receipts/create",

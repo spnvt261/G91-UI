@@ -1,4 +1,4 @@
-import {
+﻿import {
   BarChartOutlined,
   DashboardOutlined,
   DollarOutlined,
@@ -28,6 +28,8 @@ type SidebarLeafId =
   | "contract-approvals"
   | "customers"
   | "projects"
+  | "invoices"
+  | "debts"
   | "payments"
   | "inventory-status"
   | "inventory-history"
@@ -80,115 +82,130 @@ interface SidebarVisibilityRule {
 const SIDEBAR_LEAF_DEFINITIONS: Record<SidebarLeafId, SidebarLeafDefinition> = {
   dashboard: {
     id: "dashboard",
-    label: "Tổng quan",
+    label: "Tá»•ng quan",
     path: ROUTE_URL.DASHBOARD,
     icon: <DashboardOutlined />,
     menuId: "dashboard",
   },
   users: {
     id: "users",
-    label: "Người dùng",
+    label: "NgÆ°á»i dÃ¹ng",
     path: ROUTE_URL.ACCOUNT_LIST,
     icon: <TeamOutlined />,
     menuId: "user-management",
   },
   products: {
     id: "products",
-    label: "Sản phẩm",
+    label: "Sáº£n pháº©m",
     path: ROUTE_URL.PRODUCT_LIST,
     icon: <ShoppingOutlined />,
     menuId: "product-management",
   },
   "price-lists": {
     id: "price-lists",
-    label: "Bảng giá",
+    label: "Báº£ng giÃ¡",
     path: ROUTE_URL.PRICE_LIST_LIST,
     icon: <WalletOutlined />,
     menuId: "price-list-management",
   },
   promotions: {
     id: "promotions",
-    label: "Khuyến mãi",
+    label: "Khuyáº¿n mÃ£i",
     path: ROUTE_URL.PROMOTION_LIST,
     icon: <TagsOutlined />,
     menuId: "promotion-management",
   },
   quotations: {
     id: "quotations",
-    label: "Báo giá",
+    label: "BÃ¡o giÃ¡",
     path: ROUTE_URL.QUOTATION_LIST,
     icon: <FileTextOutlined />,
     menuId: "quotation-management",
   },
   contracts: {
     id: "contracts",
-    label: "Hợp đồng",
+    label: "Há»£p Ä‘á»“ng",
     path: ROUTE_URL.CONTRACT_LIST,
     icon: <FileDoneOutlined />,
     menuId: "contract-management",
   },
   "contract-approvals": {
     id: "contract-approvals",
-    label: "Duyệt hợp đồng",
+    label: "Duyá»‡t há»£p Ä‘á»“ng",
     path: ROUTE_URL.CONTRACT_APPROVAL_LIST,
     icon: <FileDoneOutlined />,
     menuId: "contract-approvals",
   },
   customers: {
     id: "customers",
-    label: "Khách hàng",
+    label: "KhÃ¡ch hÃ ng",
     path: ROUTE_URL.CUSTOMER_LIST,
     icon: <UserOutlined />,
     menuId: "customer-management",
   },
   projects: {
     id: "projects",
-    label: "Dự án",
+    label: "Dá»± Ã¡n",
     path: ROUTE_URL.PROJECT_LIST,
     icon: <InboxOutlined />,
     menuId: "project-management",
   },
+  invoices: {
+    id: "invoices",
+    label: "H\u00f3a \u0111\u01a1n",
+    path: ROUTE_URL.INVOICE_LIST,
+    icon: <FileTextOutlined />,
+    menuId: "invoice-management",
+  },
+  debts: {
+    id: "debts",
+    label: "C\u00f4ng n\u1ee3",
+    path: ROUTE_URL.DEBT_LIST,
+    icon: <DollarOutlined />,
+    menuId: "debt-management",
+  },
   payments: {
     id: "payments",
-    label: "Công nợ",
+    label: "Thanh to\u00e1n",
     path: ROUTE_URL.PAYMENT_LIST,
     icon: <DollarOutlined />,
     menuId: "payment-management",
+    visible: (role) => role === "ACCOUNTANT",
   },
   "inventory-status": {
     id: "inventory-status",
-    label: "Tồn kho",
+    label: "Tá»“n kho",
     path: ROUTE_URL.INVENTORY_STATUS,
     menuId: "inventory-management",
   },
   "inventory-history": {
     id: "inventory-history",
-    label: "Lịch sử kho",
+    label: "Lá»‹ch sá»­ kho",
     path: ROUTE_URL.INVENTORY_HISTORY,
     menuId: "inventory-management",
   },
   "report-sales": {
     id: "report-sales",
-    label: "Báo cáo bán hàng",
+    label: "BÃ¡o cÃ¡o bÃ¡n hÃ ng",
     path: ROUTE_URL.REPORT_SALES,
     menuId: "reports-sales",
   },
   "report-inventory": {
     id: "report-inventory",
-    label: "Báo cáo tồn kho",
+    label: "BÃ¡o cÃ¡o tá»“n kho",
     path: ROUTE_URL.REPORT_INVENTORY,
     icon: <BarChartOutlined />,
     menuId: "reports-inventory",
   },
   "report-export": {
     id: "report-export",
-    label: "Xuất báo cáo",
+    label: "Xuáº¥t bÃ¡o cÃ¡o",
     path: ROUTE_URL.REPORT_EXPORT,
     menuId: "reports-export",
   },
   "report-financial-accountant": {
     id: "report-financial-accountant",
-    label: "Báo cáo tài chính / dự án",
+    label: "BÃ¡o cÃ¡o tÃ i chÃ­nh / dá»± Ã¡n",
     path: ROUTE_URL.REPORT_FINANCIAL,
     activeRoutePatterns: [ROUTE_URL.REPORT_PROJECT],
     visible: (role) =>
@@ -197,7 +214,7 @@ const SIDEBAR_LEAF_DEFINITIONS: Record<SidebarLeafId, SidebarLeafDefinition> = {
   },
   "report-financial-owner": {
     id: "report-financial-owner",
-    label: "Báo cáo tài chính",
+    label: "BÃ¡o cÃ¡o tÃ i chÃ­nh",
     path: ROUTE_URL.REPORT_FINANCIAL,
     activeRoutePatterns: [ROUTE_URL.REPORT_PROJECT],
     visible: (role) => role === "OWNER" && canPerformAction(role, "project.financial-summary.view"),
@@ -215,14 +232,14 @@ const SIDEBAR_GROUP_DEFINITIONS: Record<SidebarGroupId, SidebarGroupDefinition> 
   },
   "reports-accountant": {
     id: "reports-accountant",
-    label: "Báo cáo",
+    label: "BÃ¡o cÃ¡o",
     icon: <BarChartOutlined />,
     children: ["report-sales", "report-financial-accountant", "report-export"],
     flattenWhenSingleDestination: true,
   },
   "reports-owner": {
     id: "reports-owner",
-    label: "Báo cáo",
+    label: "BÃ¡o cÃ¡o",
     icon: <BarChartOutlined />,
     children: ["report-sales", "report-financial-owner", "report-export"],
     flattenWhenSingleDestination: true,
@@ -237,7 +254,8 @@ const ROLE_SIDEBAR_LAYOUTS: Record<UserRole, SidebarLayoutEntry[]> = {
     { type: "leaf", id: "quotations" },
     { type: "leaf", id: "contracts" },
     { type: "leaf", id: "projects" },
-    { type: "leaf", id: "payments" },
+    { type: "leaf", id: "invoices" },
+    { type: "leaf", id: "debts" },
   ],
   ACCOUNTANT: [
     { type: "leaf", id: "price-lists" },
@@ -246,7 +264,9 @@ const ROLE_SIDEBAR_LAYOUTS: Record<UserRole, SidebarLayoutEntry[]> = {
     { type: "leaf", id: "contracts" },
     { type: "leaf", id: "customers" },
     { type: "leaf", id: "projects" },
+    { type: "leaf", id: "invoices" },
     { type: "leaf", id: "payments" },
+    { type: "leaf", id: "debts" },
     { type: "group", id: "reports-accountant" },
   ],
   WAREHOUSE: [
@@ -259,6 +279,7 @@ const ROLE_SIDEBAR_LAYOUTS: Record<UserRole, SidebarLayoutEntry[]> = {
     { type: "leaf", id: "users" },
     { type: "leaf", id: "price-lists" },
     { type: "leaf", id: "promotions" },
+    { type: "leaf", id: "invoices" },
     { type: "leaf", id: "contract-approvals" },
     { type: "group", id: "reports-owner" },
   ],
@@ -291,8 +312,13 @@ export const CONTEXTUAL_ACTION_ROUTE_TEMPLATES = Object.freeze([
   ROUTE_URL.PROJECT_ASSIGN_WAREHOUSE,
   ROUTE_URL.PROJECT_PROGRESS_UPDATE,
   ROUTE_URL.PROJECT_FINANCIAL_SUMMARY,
+  ROUTE_URL.INVOICE_CREATE,
+  ROUTE_URL.INVOICE_DETAIL,
+  ROUTE_URL.INVOICE_EDIT,
+  ROUTE_URL.DEBT_DETAIL,
   ROUTE_URL.PAYMENT_DETAIL,
   ROUTE_URL.PAYMENT_RECORD,
+  ROUTE_URL.PAYMENT_RECORD_BY_INVOICE,
   ROUTE_URL.INVENTORY_RECEIPT_CREATE,
   ROUTE_URL.INVENTORY_ISSUE_CREATE,
   ROUTE_URL.INVENTORY_ADJUSTMENT_CREATE,
@@ -405,3 +431,4 @@ export const buildSidebarMenuByRole = (role: UserRole): SidebarNode[] =>
   getSidebarItemsForRole(role)
     .map((entry) => (entry.type === "leaf" ? buildLeafNode(role, entry.id) : buildGroupNode(role, entry.id)))
     .filter((node): node is SidebarNode => Boolean(node));
+

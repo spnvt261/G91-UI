@@ -247,11 +247,16 @@ export const projectService = {
     });
   },
 
-  async close(id: string, note?: string): Promise<void> {
-    const payload: ProjectCloseRequest = {
-      reason: note || "Closed from UI",
-      note: note || undefined,
-    };
+  async close(id: string, request?: ProjectCloseRequest | string): Promise<void> {
+    const payload: ProjectCloseRequest =
+      typeof request === "string"
+        ? {
+            closeReason: request || "Đóng dự án từ giao diện",
+            note: request || undefined,
+          }
+        : request ?? {
+            closeReason: "Đóng dự án từ giao diện",
+          };
 
     await api.post<void>(withId(API.PROJECT.CLOSE, id), payload);
   },

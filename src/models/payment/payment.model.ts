@@ -1,37 +1,52 @@
-﻿export interface InvoiceModel {
-  id: string;
-  contractId: string;
-  customerId: string;
+export type PaymentMethod = "CASH" | "BANK_TRANSFER" | "OTHER" | string;
+
+export interface OpenInvoiceModel {
+  invoiceId: string;
+  invoiceNumber?: string;
+  contractId?: string;
+  issueDate?: string;
+  dueDate?: string;
   totalAmount: number;
   paidAmount: number;
-  dueAmount: number;
-  dueDate?: string;
-  status: "UNPAID" | "PARTIAL" | "PAID";
+  remainingAmount: number;
+  overdueDays?: number;
+  status?: string;
 }
 
-export interface DebtModel {
+export interface PaymentAllocationRequest {
+  invoiceId: string;
+  allocatedAmount: number;
+}
+
+export interface PaymentCreateRequest {
   customerId: string;
-  customerName?: string;
-  totalDebt: number;
-  overdueDebt?: number;
-}
-
-export interface PaymentRecordRequest {
+  paymentDate: string;
   amount: number;
-  paidAt: string;
-  method?: string;
+  paymentMethod: PaymentMethod;
+  referenceNo?: string;
   note?: string;
+  allocations: PaymentAllocationRequest[];
 }
 
-export interface InvoiceListQuery {
-  page?: number;
-  size?: number;
-  status?: "UNPAID" | "PARTIAL" | "PAID";
-  keyword?: string;
+export interface PaymentAllocationModel {
+  invoiceId: string;
+  invoiceNumber?: string;
+  allocatedAmount: number;
+  invoiceTotal?: number;
+  invoicePaidAmount?: number;
+  invoiceOutstandingAmount?: number;
 }
 
-export interface DebtListQuery {
-  page?: number;
-  size?: number;
-  keyword?: string;
+export interface PaymentModel {
+  id: string;
+  receiptNumber?: string;
+  customerId?: string;
+  customerCode?: string;
+  customerName?: string;
+  paymentDate?: string;
+  amount: number;
+  paymentMethod?: PaymentMethod;
+  referenceNo?: string;
+  note?: string;
+  allocations: PaymentAllocationModel[];
 }
