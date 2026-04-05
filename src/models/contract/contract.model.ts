@@ -1,13 +1,21 @@
-﻿import type { PaginationMeta } from "../common/api.model";
+import type { PaginationMeta } from "../common/api.model";
 
 export type ContractStatus =
   | "DRAFT"
+  | "PENDING_APPROVAL"
   | "PENDING"
   | "APPROVED"
   | "REJECTED"
+  | "SUBMITTED"
+  | "PROCESSING"
+  | "RESERVED"
+  | "PICKED"
+  | "IN_TRANSIT"
+  | "DELIVERED"
   | "CONFIRMED"
   | "IN_PROGRESS"
   | "COMPLETED"
+  | "CANCELLED"
   | "ACTIVE"
   | string;
 
@@ -258,7 +266,7 @@ export interface ContractSubmitRequest {
 }
 
 export interface ContractCancelRequest {
-  cancellationReason: string;
+  cancellationReason: "CUSTOMER_REQUEST" | "PRICE_DISPUTE" | "INVENTORY_SHORTAGE" | "CREDIT_RISK" | "DATA_ERROR" | "OTHER" | string;
   cancellationNote?: string;
 }
 

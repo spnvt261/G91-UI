@@ -39,6 +39,10 @@ export const ROUTE_URL = {
   CONTRACT_APPROVAL_LIST: "/approvals/contracts",
   CONTRACT_APPROVAL_DETAIL: "/approvals/contracts/:id",
 
+  SALE_ORDER_LIST: "/sale-orders",
+  SALE_ORDER_DETAIL: "/sale-orders/:id",
+  SALE_ORDER_TIMELINE: "/sale-orders/:id/timeline",
+
   CUSTOMER_LIST: "/customers",
   CUSTOMER_DETAIL: "/customers/:id",
   CUSTOMER_CREATE: "/customers/create",

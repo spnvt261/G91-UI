@@ -109,6 +109,20 @@ export const API = {
     APPROVALS_PENDING: "/api/contracts/approvals/pending",
   },
 
+  SALE_ORDERS: {
+    LIST: "/api/sale-orders",
+    DETAIL: "/api/sale-orders/{saleOrderId}",
+    TIMELINE: "/api/sale-orders/{saleOrderId}/timeline",
+    UPDATE_STATUS: "/api/sale-orders/{saleOrderId}/status",
+    RESERVE: "/api/sale-orders/{saleOrderId}/reserve",
+    PICK: "/api/sale-orders/{saleOrderId}/pick",
+    DISPATCH: "/api/sale-orders/{saleOrderId}/dispatch",
+    DELIVER: "/api/sale-orders/{saleOrderId}/deliver",
+    COMPLETE: "/api/sale-orders/{saleOrderId}/complete",
+    CANCEL: "/api/sale-orders/{saleOrderId}/cancel",
+    CREATE_INVOICE: "/api/sale-orders/{saleOrderId}/invoices",
+  },
+
   PROJECT: {
     CREATE: "/api/projects",
     LIST: "/api/projects",

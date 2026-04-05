@@ -1,4 +1,4 @@
-﻿import type { UserRole } from "../models/auth/auth.model";
+import type { UserRole } from "../models/auth/auth.model";
 import { ROUTE_URL } from "./route_url.const";
 
 export type MenuId =
@@ -11,6 +11,7 @@ export type MenuId =
   | "quotation-management"
   | "contract-management"
   | "contract-approvals"
+  | "sale-order-management"
   | "customer-management"
   | "project-management"
   | "invoice-management"
@@ -60,6 +61,12 @@ export type PermissionKey =
   | "contract.track"
   | "contract.print"
   | "contract.approve"
+  | "sale-order.view"
+  | "sale-order.status.update"
+  | "sale-order.fulfillment"
+  | "sale-order.complete"
+  | "sale-order.cancel"
+  | "sale-order.create-invoice"
   | "customer.create"
   | "customer.view"
   | "customer.update"
@@ -109,6 +116,11 @@ export type AppAction =
   | "contract.update"
   | "contract.cancel"
   | "contract.print"
+  | "sale-order.status.update"
+  | "sale-order.fulfillment"
+  | "sale-order.complete"
+  | "sale-order.cancel"
+  | "sale-order.create-invoice"
   | "customer.create"
   | "customer.update"
   | "customer.delete-disable"
@@ -135,6 +147,8 @@ const ACCOUNTANT_OWNER: UserRole[] = ["ACCOUNTANT", "OWNER"];
 const CUSTOMER_ACCOUNTANT: UserRole[] = ["CUSTOMER", "ACCOUNTANT"];
 const CUSTOMER_ACCOUNTANT_OWNER: UserRole[] = ["CUSTOMER", "ACCOUNTANT", "OWNER"];
 const WAREHOUSE_ONLY: UserRole[] = ["WAREHOUSE"];
+const WAREHOUSE_OWNER: UserRole[] = ["WAREHOUSE", "OWNER"];
+const WAREHOUSE_ACCOUNTANT_OWNER: UserRole[] = ["WAREHOUSE", "ACCOUNTANT", "OWNER"];
 const ACCOUNTANT_ONLY: UserRole[] = ["ACCOUNTANT"];
 
 const PERMISSION_ROLE_MAP: Record<PermissionKey, UserRole[]> = {
@@ -175,6 +189,12 @@ const PERMISSION_ROLE_MAP: Record<PermissionKey, UserRole[]> = {
   "contract.track": CUSTOMER_ACCOUNTANT_OWNER,
   "contract.print": ACCOUNTANT_ONLY,
   "contract.approve": OWNER_ONLY,
+  "sale-order.view": AUTHENTICATED_ROLES,
+  "sale-order.status.update": WAREHOUSE_ACCOUNTANT_OWNER,
+  "sale-order.fulfillment": WAREHOUSE_OWNER,
+  "sale-order.complete": ACCOUNTANT_OWNER,
+  "sale-order.cancel": ACCOUNTANT_OWNER,
+  "sale-order.create-invoice": ACCOUNTANT_OWNER,
   "customer.create": ACCOUNTANT_ONLY,
   "customer.view": ACCOUNTANT_ONLY,
   "customer.update": ACCOUNTANT_ONLY,
@@ -225,6 +245,11 @@ const ACTION_PERMISSION_MAP: Record<AppAction, PermissionKey> = {
   "contract.update": "contract.update",
   "contract.cancel": "contract.cancel",
   "contract.print": "contract.print",
+  "sale-order.status.update": "sale-order.status.update",
+  "sale-order.fulfillment": "sale-order.fulfillment",
+  "sale-order.complete": "sale-order.complete",
+  "sale-order.cancel": "sale-order.cancel",
+  "sale-order.create-invoice": "sale-order.create-invoice",
   "customer.create": "customer.create",
   "customer.update": "customer.update",
   "customer.delete-disable": "customer.delete-disable",
@@ -255,6 +280,7 @@ const MENU_PERMISSION_MAP: Record<MenuId, PermissionKey> = {
   "quotation-management": "quotation.list.view",
   "contract-management": "contract.view",
   "contract-approvals": "contract.approve",
+  "sale-order-management": "sale-order.view",
   "customer-management": "customer.view",
   "project-management": "project.view",
   "invoice-management": "invoice.view",
@@ -302,6 +328,10 @@ const PROTECTED_ROUTE_RULES: RoutePermissionRule[] = [
   { path: ROUTE_URL.CONTRACT_LIST, permission: "contract.view" },
   { path: ROUTE_URL.CONTRACT_APPROVAL_DETAIL, permission: "contract.approve" },
   { path: ROUTE_URL.CONTRACT_APPROVAL_LIST, permission: "contract.approve" },
+
+  { path: ROUTE_URL.SALE_ORDER_LIST, permission: "sale-order.view" },
+  { path: ROUTE_URL.SALE_ORDER_DETAIL, permission: "sale-order.view" },
+  { path: ROUTE_URL.SALE_ORDER_TIMELINE, permission: "sale-order.view" },
 
   { path: ROUTE_URL.CUSTOMER_CREATE, permission: "customer.create" },
   { path: ROUTE_URL.CUSTOMER_EDIT, permission: "customer.update" },

@@ -37,6 +37,9 @@ import DebtListPage from "./pages/debts/DebtListPage";
 import PaymentDetailPage from "./pages/payments/PaymentDetailPage";
 import PaymentListPage from "./pages/payments/PaymentListPage";
 import RecordPaymentPage from "./pages/payments/RecordPaymentPage";
+import SaleOrderDetailPage from "./pages/sale-orders/SaleOrderDetailPage";
+import SaleOrderListPage from "./pages/sale-orders/SaleOrderListPage";
+import SaleOrderTimelinePage from "./pages/sale-orders/SaleOrderTimelinePage";
 import PriceListCreatePage from "./pages/pricing/PriceListCreatePage";
 import PriceListDetailPage from "./pages/pricing/PriceListDetailPage";
 import PriceListListPage from "./pages/pricing/PriceListListPage";
@@ -191,6 +194,10 @@ function App() {
           <Route path={ROUTE_URL.CONTRACT_TRACKING} element={<ContractTrackingPage />} />
           <Route path={ROUTE_URL.CONTRACT_APPROVAL_LIST} element={<ContractApprovalListPage />} />
           <Route path={ROUTE_URL.CONTRACT_APPROVAL_DETAIL} element={<ContractApprovalDetailPage />} />
+
+          <Route path={ROUTE_URL.SALE_ORDER_LIST} element={<SaleOrderListPage />} />
+          <Route path={ROUTE_URL.SALE_ORDER_DETAIL} element={<SaleOrderDetailPage />} />
+          <Route path={ROUTE_URL.SALE_ORDER_TIMELINE} element={<SaleOrderTimelinePage />} />
 
           <Route path={ROUTE_URL.CUSTOMER_LIST} element={<CustomerListPage />} />
           <Route path={ROUTE_URL.CUSTOMER_DETAIL} element={<CustomerDetailPage />} />

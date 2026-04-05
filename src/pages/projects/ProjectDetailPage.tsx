@@ -186,7 +186,7 @@ const ProjectDetailPage = () => {
   const milestoneColumns = useMemo<ColumnsType<ProjectMilestoneModel>>(
     () => [
       {
-        title: "Milestone",
+        title: "Mốc nghiệm thu",
         key: "name",
         render: (_, row) => (
           <Space direction="vertical" size={1}>

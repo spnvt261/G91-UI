@@ -23,12 +23,17 @@ const DEFAULT_PAGE_SIZE = 8;
 
 const CONTRACT_STATUS_OPTIONS = [
   { label: "Nháp", value: "DRAFT" },
-  { label: "Chờ duyệt", value: "PENDING" },
+  { label: "Chờ duyệt", value: "PENDING_APPROVAL" },
   { label: "Đã duyệt", value: "APPROVED" },
   { label: "Từ chối", value: "REJECTED" },
-  { label: "Đang xử lý", value: "IN_PROGRESS" },
-  { label: "Đang hiệu lực", value: "ACTIVE" },
+  { label: "Đã gửi thực hiện", value: "SUBMITTED" },
+  { label: "Đang xử lý", value: "PROCESSING" },
+  { label: "Đã dự trữ", value: "RESERVED" },
+  { label: "Đã soạn hàng", value: "PICKED" },
+  { label: "Đang xuất giao", value: "IN_TRANSIT" },
+  { label: "Đã giao", value: "DELIVERED" },
   { label: "Hoàn tất", value: "COMPLETED" },
+  { label: "Đã hủy", value: "CANCELLED" },
 ];
 
 const ContractListPage = () => {
@@ -61,7 +66,7 @@ const ContractListPage = () => {
       });
       setAllItems(result);
     } catch (error) {
-      const message = getErrorMessage(error, "Không thể tải danh sách hợp đồng.");
+      const message = getErrorMessage(error, "KhÃ´ng thá»ƒ táº£i danh sÃ¡ch há»£p Ä‘á»“ng.");
       setListError(message);
       notify(message, "error");
     } finally {
@@ -108,43 +113,43 @@ const ContractListPage = () => {
   const columns = useMemo<ColumnsType<ContractModel>>(
     () => [
       {
-        title: "Số hợp đồng",
+        title: "Sá»‘ há»£p Ä‘á»“ng",
         key: "contractNumber",
         width: 230,
         render: (_, row) => (
           <Space direction="vertical" size={1}>
             <Typography.Text strong>{getContractDisplayNumber(row)}</Typography.Text>
-            <Typography.Text type="secondary">Mã hệ thống: {row.id}</Typography.Text>
+            <Typography.Text type="secondary">MÃ£ há»‡ thá»‘ng: {row.id}</Typography.Text>
           </Space>
         ),
       },
       {
-        title: "Báo giá",
+        title: "BÃ¡o giÃ¡",
         key: "quotationId",
         width: 180,
         render: (_, row) => (
-          <Typography.Text code>{row.quotationNumber || row.quotationId || "Chưa liên kết"}</Typography.Text>
+          <Typography.Text code>{row.quotationNumber || row.quotationId || "ChÆ°a liÃªn káº¿t"}</Typography.Text>
         ),
       },
       {
-        title: "Khách hàng",
+        title: "KhÃ¡ch hÃ ng",
         key: "customer",
         render: (_, row) => (
           <Space direction="vertical" size={1}>
-            <Typography.Text>{row.customerName || "Chưa cập nhật tên khách hàng"}</Typography.Text>
+            <Typography.Text>{row.customerName || "ChÆ°a cáº­p nháº­t tÃªn khÃ¡ch hÃ ng"}</Typography.Text>
             <Typography.Text type="secondary">{row.customerId || "-"}</Typography.Text>
           </Space>
         ),
       },
       {
-        title: "Trạng thái",
+        title: "Tráº¡ng thÃ¡i",
         dataIndex: "status",
         key: "status",
         width: 160,
         render: (value: ContractModel["status"]) => <ContractStatusTag status={value} />,
       },
       {
-        title: "Tổng tiền",
+        title: "Tá»•ng tiá»n",
         dataIndex: "totalAmount",
         key: "totalAmount",
         width: 180,
@@ -152,14 +157,14 @@ const ContractListPage = () => {
         render: (value: number) => <Typography.Text strong>{formatContractCurrency(value)}</Typography.Text>,
       },
       {
-        title: "Ngày tạo",
+        title: "NgÃ y táº¡o",
         dataIndex: "createdAt",
         key: "createdAt",
         width: 160,
         render: (value?: string) => formatContractDate(value),
       },
       {
-        title: "Thao tác",
+        title: "Thao tÃ¡c",
         key: "actions",
         width: 170,
         fixed: "right",
@@ -169,7 +174,7 @@ const ContractListPage = () => {
           if (canEdit) {
             actionItems.push({
               key: "edit",
-              label: "Chỉnh sửa",
+              label: "Chá»‰nh sá»­a",
               onClick: () => navigate(ROUTE_URL.CONTRACT_EDIT.replace(":id", row.id)),
             });
           }
@@ -183,7 +188,7 @@ const ContractListPage = () => {
                   navigate(ROUTE_URL.CONTRACT_DETAIL.replace(":id", row.id));
                 }}
               >
-                Chi tiết
+                Chi tiáº¿t
               </Button>
               {actionItems.length > 0 ? (
                 <Dropdown menu={{ items: actionItems }} trigger={["click"]}>
@@ -206,11 +211,11 @@ const ContractListPage = () => {
   const emptyNode = (
     <Empty
       image={Empty.PRESENTED_IMAGE_SIMPLE}
-      description="Không có hợp đồng phù hợp với bộ lọc hiện tại."
+      description="KhÃ´ng cÃ³ há»£p Ä‘á»“ng phÃ¹ há»£p vá»›i bá»™ lá»c hiá»‡n táº¡i."
     >
       {canCreateContract ? (
         <Button onClick={() => navigate(ROUTE_URL.QUOTATION_LIST)}>
-          Đi tới danh sách báo giá
+          Äi tá»›i danh sÃ¡ch bÃ¡o giÃ¡
         </Button>
       ) : null}
     </Empty>
@@ -232,18 +237,18 @@ const ContractListPage = () => {
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Quản lý hợp đồng"
-          subtitle="Theo dõi toàn bộ vòng đời hợp đồng, lọc nhanh theo trạng thái và xử lý ngay các hợp đồng cần ưu tiên."
-          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Hợp đồng" }]} />}
+          title="Quáº£n lÃ½ há»£p Ä‘á»“ng"
+          subtitle="Theo dÃµi toÃ n bá»™ vÃ²ng Ä‘á»i há»£p Ä‘á»“ng, lá»c nhanh theo tráº¡ng thÃ¡i vÃ  xá»­ lÃ½ ngay cÃ¡c há»£p Ä‘á»“ng cáº§n Æ°u tiÃªn."
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chá»§" }, { label: "Há»£p Ä‘á»“ng" }]} />}
           actions={
             <Space wrap>
               {canCreateContract ? (
                 <Button onClick={() => navigate(ROUTE_URL.QUOTATION_LIST)}>
-                  Tạo từ báo giá
+                  Táº¡o tá»« bÃ¡o giÃ¡
                 </Button>
               ) : null}
               <Button icon={<ReloadOutlined />} onClick={() => void loadList()}>
-                Làm mới
+                LÃ m má»›i
               </Button>
             </Space>
           }
@@ -256,30 +261,30 @@ const ContractListPage = () => {
             items={[
               {
                 key: "total",
-                label: "Tổng hợp đồng",
+                label: "Tá»•ng há»£p Ä‘á»“ng",
                 value: summary.totalContracts,
-                description: "Toàn bộ hợp đồng theo bộ lọc hiện tại",
+                description: "ToÃ n bá»™ há»£p Ä‘á»“ng theo bá»™ lá»c hiá»‡n táº¡i",
               },
               {
                 key: "pending",
-                label: "Chờ duyệt",
+                label: "Chá» duyá»‡t",
                 value: summary.pendingContracts,
                 valueColor: "#d48806",
-                description: "Cần owner xem xét phê duyệt",
+                description: "Cáº§n owner xem xÃ©t phÃª duyá»‡t",
               },
               {
                 key: "processing",
-                label: "Đang hiệu lực / xử lý",
+                label: "Äang hiá»‡u lá»±c / xá»­ lÃ½",
                 value: summary.processingContracts,
                 valueColor: "#1677ff",
-                description: "Đang ở giai đoạn thực thi",
+                description: "Äang á»Ÿ giai Ä‘oáº¡n thá»±c thi",
               },
               {
                 key: "closed",
-                label: "Đã hủy / hoàn tất",
+                label: "ÄÃ£ há»§y / hoÃ n táº¥t",
                 value: summary.closedContracts,
                 valueColor: "#64748b",
-                description: "Không còn thao tác vận hành",
+                description: "KhÃ´ng cÃ²n thao tÃ¡c váº­n hÃ nh",
               },
             ]}
           />
@@ -291,7 +296,7 @@ const ContractListPage = () => {
                   <Input.Search
                     allowClear
                     value={keywordInput}
-                    placeholder="Tìm theo số hợp đồng, khách hàng hoặc mã báo giá"
+                    placeholder="TÃ¬m theo sá»‘ há»£p Ä‘á»“ng, khÃ¡ch hÃ ng hoáº·c mÃ£ bÃ¡o giÃ¡"
                     onChange={(event) => setKeywordInput(event.target.value)}
                     onSearch={(value) => {
                       setKeyword(value.trim());
@@ -303,7 +308,7 @@ const ContractListPage = () => {
                 <Col xs={24} sm={12} lg={4}>
                   <Select
                     allowClear
-                    placeholder="Lọc trạng thái"
+                    placeholder="Lá»c tráº¡ng thÃ¡i"
                     style={{ width: "100%" }}
                     options={CONTRACT_STATUS_OPTIONS}
                     value={status}
@@ -319,7 +324,7 @@ const ContractListPage = () => {
                     style={{ width: "100%" }}
                     value={createdRange}
                     format="DD/MM/YYYY"
-                    placeholder={["Từ ngày tạo", "Đến ngày tạo"]}
+                    placeholder={["Tá»« ngÃ y táº¡o", "Äáº¿n ngÃ y táº¡o"]}
                     onChange={(value) => {
                       if (!value || !value[0] || !value[1]) {
                         setCreatedRange(null);
@@ -335,7 +340,7 @@ const ContractListPage = () => {
                   <InputNumber<number>
                     min={0}
                     style={{ width: "100%" }}
-                    placeholder="Tổng tiền từ"
+                    placeholder="Tá»•ng tiá»n tá»«"
                     value={minTotal}
                     onChange={(value) => {
                       setMinTotal(value ?? null);
@@ -350,7 +355,7 @@ const ContractListPage = () => {
                   <InputNumber<number>
                     min={0}
                     style={{ width: "100%" }}
-                    placeholder="Đến"
+                    placeholder="Äáº¿n"
                     value={maxTotal}
                     onChange={(value) => {
                       setMaxTotal(value ?? null);
@@ -363,10 +368,10 @@ const ContractListPage = () => {
               </Row>
 
               <Space>
-                <Button onClick={handleResetFilters}>Đặt lại bộ lọc</Button>
-                <Tooltip title="Dữ liệu được lọc theo các tiêu chí hiện tại">
+                <Button onClick={handleResetFilters}>Äáº·t láº¡i bá»™ lá»c</Button>
+                <Tooltip title="Dá»¯ liá»‡u Ä‘Æ°á»£c lá»c theo cÃ¡c tiÃªu chÃ­ hiá»‡n táº¡i">
                   <Typography.Text type="secondary">
-                    {filteredItems.length} hợp đồng phù hợp
+                    {filteredItems.length} há»£p Ä‘á»“ng phÃ¹ há»£p
                   </Typography.Text>
                 </Tooltip>
               </Space>
@@ -375,11 +380,11 @@ const ContractListPage = () => {
                 <Alert
                   type="error"
                   showIcon
-                  message="Không thể tải danh sách hợp đồng"
+                  message="KhÃ´ng thá»ƒ táº£i danh sÃ¡ch há»£p Ä‘á»“ng"
                   description={listError}
                   action={
                     <Button size="small" onClick={() => void loadList()}>
-                      Thử lại
+                      Thá»­ láº¡i
                     </Button>
                   }
                 />
@@ -390,7 +395,7 @@ const ContractListPage = () => {
                 size="middle"
                 columns={columns}
                 dataSource={pagedItems}
-                loading={{ spinning: loading, tip: "Đang tải danh sách hợp đồng..." }}
+                loading={{ spinning: loading, tip: "Äang táº£i danh sÃ¡ch há»£p Ä‘á»“ng..." }}
                 rowClassName={() => "cursor-pointer"}
                 onRow={(record) => ({
                   onClick: (event) => {
@@ -410,7 +415,7 @@ const ContractListPage = () => {
                   showSizeChanger: true,
                   pageSizeOptions: [8, 16, 24, 32],
                   position: ["bottomRight"],
-                  showTotal: (total, range) => `${range[0]}-${range[1]} trên ${total} hợp đồng`,
+                  showTotal: (total, range) => `${range[0]}-${range[1]} trÃªn ${total} há»£p Ä‘á»“ng`,
                 }}
                 onChange={(pagination) => {
                   setPage(pagination.current ?? page);
@@ -427,3 +432,4 @@ const ContractListPage = () => {
 };
 
 export default ContractListPage;
+
