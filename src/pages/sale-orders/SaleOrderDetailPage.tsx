@@ -62,6 +62,7 @@ const SaleOrderDetailPage = () => {
   const canComplete = canPerformAction(role, "sale-order.complete");
   const canCancel = canPerformAction(role, "sale-order.cancel");
   const canCreateInvoice = canPerformAction(role, "sale-order.create-invoice");
+  const canViewRelatedInvoices = canPerformAction(role, "sale-order.related-invoices.view");
 
   const [detail, setDetail] = useState<SaleOrderDetailModel | null>(null);
   const [loading, setLoading] = useState(false);
@@ -376,15 +377,17 @@ const SaleOrderDetailPage = () => {
             </Descriptions>
           </Card>
 
-          <Card loading={loading} title="Chứng từ và hóa đơn liên quan">
-            <Table
-              rowKey={(row, index) => row.invoiceId || `invoice-${index}`}
-              columns={relatedInvoiceColumns}
-              dataSource={detail?.invoices ?? []}
-              pagination={false}
-              locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có hóa đơn liên kết với đơn bán này." /> }}
-            />
-          </Card>
+          {canViewRelatedInvoices ? (
+            <Card loading={loading} title="Chứng từ và hóa đơn liên quan">
+              <Table
+                rowKey={(row, index) => row.invoiceId || `invoice-${index}`}
+                columns={relatedInvoiceColumns}
+                dataSource={detail?.invoices ?? []}
+                pagination={false}
+                locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có hóa đơn liên kết với đơn bán này." /> }}
+              />
+            </Card>
+          ) : null}
 
           <Card loading={loading} title="Dòng thời gian xử lý">
             {timelineItems.length === 0 ? (

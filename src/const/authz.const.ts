@@ -67,6 +67,7 @@ export type PermissionKey =
   | "sale-order.complete"
   | "sale-order.cancel"
   | "sale-order.create-invoice"
+  | "sale-order.related-invoices.view"
   | "customer.create"
   | "customer.view"
   | "customer.update"
@@ -121,6 +122,7 @@ export type AppAction =
   | "sale-order.complete"
   | "sale-order.cancel"
   | "sale-order.create-invoice"
+  | "sale-order.related-invoices.view"
   | "customer.create"
   | "customer.update"
   | "customer.delete-disable"
@@ -147,8 +149,7 @@ const ACCOUNTANT_OWNER: UserRole[] = ["ACCOUNTANT", "OWNER"];
 const CUSTOMER_ACCOUNTANT: UserRole[] = ["CUSTOMER", "ACCOUNTANT"];
 const CUSTOMER_ACCOUNTANT_OWNER: UserRole[] = ["CUSTOMER", "ACCOUNTANT", "OWNER"];
 const WAREHOUSE_ONLY: UserRole[] = ["WAREHOUSE"];
-const WAREHOUSE_OWNER: UserRole[] = ["WAREHOUSE", "OWNER"];
-const WAREHOUSE_ACCOUNTANT_OWNER: UserRole[] = ["WAREHOUSE", "ACCOUNTANT", "OWNER"];
+const WAREHOUSE_ACCOUNTANT: UserRole[] = ["WAREHOUSE", "ACCOUNTANT"];
 const ACCOUNTANT_ONLY: UserRole[] = ["ACCOUNTANT"];
 
 const PERMISSION_ROLE_MAP: Record<PermissionKey, UserRole[]> = {
@@ -190,11 +191,12 @@ const PERMISSION_ROLE_MAP: Record<PermissionKey, UserRole[]> = {
   "contract.print": ACCOUNTANT_ONLY,
   "contract.approve": OWNER_ONLY,
   "sale-order.view": AUTHENTICATED_ROLES,
-  "sale-order.status.update": WAREHOUSE_ACCOUNTANT_OWNER,
-  "sale-order.fulfillment": WAREHOUSE_OWNER,
+  "sale-order.status.update": ACCOUNTANT_OWNER,
+  "sale-order.fulfillment": WAREHOUSE_ACCOUNTANT,
   "sale-order.complete": ACCOUNTANT_OWNER,
   "sale-order.cancel": ACCOUNTANT_OWNER,
-  "sale-order.create-invoice": ACCOUNTANT_OWNER,
+  "sale-order.create-invoice": ACCOUNTANT_ONLY,
+  "sale-order.related-invoices.view": CUSTOMER_ACCOUNTANT_OWNER,
   "customer.create": ACCOUNTANT_ONLY,
   "customer.view": ACCOUNTANT_ONLY,
   "customer.update": ACCOUNTANT_ONLY,
@@ -250,6 +252,7 @@ const ACTION_PERMISSION_MAP: Record<AppAction, PermissionKey> = {
   "sale-order.complete": "sale-order.complete",
   "sale-order.cancel": "sale-order.cancel",
   "sale-order.create-invoice": "sale-order.create-invoice",
+  "sale-order.related-invoices.view": "sale-order.related-invoices.view",
   "customer.create": "customer.create",
   "customer.update": "customer.update",
   "customer.delete-disable": "customer.delete-disable",
