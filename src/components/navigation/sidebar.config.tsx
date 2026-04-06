@@ -271,6 +271,7 @@ const ROLE_SIDEBAR_LAYOUTS: Record<UserRole, SidebarLayoutEntry[]> = {
   ],
   WAREHOUSE: [
     { type: "leaf", id: "products" },
+    { type: "leaf", id: "contracts" },
     { type: "group", id: "warehouse" },
     { type: "leaf", id: "report-inventory" },
   ],
@@ -280,6 +281,7 @@ const ROLE_SIDEBAR_LAYOUTS: Record<UserRole, SidebarLayoutEntry[]> = {
     { type: "leaf", id: "products" },
     { type: "leaf", id: "price-lists" },
     { type: "leaf", id: "promotions" },
+    { type: "leaf", id: "contracts" },
     { type: "leaf", id: "invoices" },
     { type: "leaf", id: "contract-approvals" },
     { type: "group", id: "reports-owner" },
@@ -432,4 +434,3 @@ export const buildSidebarMenuByRole = (role: UserRole): SidebarNode[] =>
   getSidebarItemsForRole(role)
     .map((entry) => (entry.type === "leaf" ? buildLeafNode(role, entry.id) : buildGroupNode(role, entry.id)))
     .filter((node): node is SidebarNode => Boolean(node));
-

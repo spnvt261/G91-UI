@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
-import { canPerformAction } from "../../const/authz.const";
+import { canPerformAction, hasPermission } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type { ContractModel } from "../../models/contract/contract.model";
@@ -36,6 +36,8 @@ const ContractListPage = () => {
   const role = getStoredUserRole();
   const canEdit = canPerformAction(role, "contract.update");
   const canCreateContract = canPerformAction(role, "contract.create");
+  const canViewDetail = hasPermission(role, "sale-order.detail.view");
+  const canSearchSaleOrder = hasPermission(role, "sale-order.search");
   const { notify } = useNotify();
 
   const [allItems, setAllItems] = useState<ContractModel[]>([]);
@@ -178,6 +180,7 @@ const ContractListPage = () => {
             <Space size={4}>
               <Button
                 type="link"
+                disabled={!canViewDetail}
                 onClick={(event) => {
                   event.stopPropagation();
                   navigate(ROUTE_URL.CONTRACT_DETAIL.replace(":id", row.id));
@@ -200,7 +203,7 @@ const ContractListPage = () => {
         },
       },
     ],
-    [canEdit, navigate],
+    [canEdit, canViewDetail, navigate],
   );
 
   const emptyNode = (
@@ -290,6 +293,7 @@ const ContractListPage = () => {
                 <Col xs={24} lg={8}>
                   <Input.Search
                     allowClear
+                    disabled={!canSearchSaleOrder}
                     value={keywordInput}
                     placeholder="Tìm theo số hợp đồng, khách hàng hoặc mã báo giá"
                     onChange={(event) => setKeywordInput(event.target.value)}
@@ -303,6 +307,7 @@ const ContractListPage = () => {
                 <Col xs={24} sm={12} lg={4}>
                   <Select
                     allowClear
+                    disabled={!canSearchSaleOrder}
                     placeholder="Lọc trạng thái"
                     style={{ width: "100%" }}
                     options={CONTRACT_STATUS_OPTIONS}
@@ -317,6 +322,7 @@ const ContractListPage = () => {
                 <Col xs={24} sm={12} lg={6}>
                   <DatePicker.RangePicker
                     style={{ width: "100%" }}
+                    disabled={[!canSearchSaleOrder, !canSearchSaleOrder]}
                     value={createdRange}
                     format="DD/MM/YYYY"
                     placeholder={["Từ ngày tạo", "Đến ngày tạo"]}
@@ -334,6 +340,7 @@ const ContractListPage = () => {
                 <Col xs={24} sm={12} lg={3}>
                   <InputNumber<number>
                     min={0}
+                    disabled={!canSearchSaleOrder}
                     style={{ width: "100%" }}
                     placeholder="Tổng tiền từ"
                     value={minTotal}
@@ -349,6 +356,7 @@ const ContractListPage = () => {
                 <Col xs={24} sm={12} lg={3}>
                   <InputNumber<number>
                     min={0}
+                    disabled={!canSearchSaleOrder}
                     style={{ width: "100%" }}
                     placeholder="Đến"
                     value={maxTotal}
@@ -363,7 +371,9 @@ const ContractListPage = () => {
               </Row>
 
               <Space>
-                <Button onClick={handleResetFilters}>Đặt lại bộ lọc</Button>
+                <Button onClick={handleResetFilters} disabled={!canSearchSaleOrder}>
+                  Đặt lại bộ lọc
+                </Button>
                 <Tooltip title="Dữ liệu được lọc theo các tiêu chí hiện tại">
                   <Typography.Text type="secondary">
                     {filteredItems.length} hợp đồng phù hợp
@@ -394,6 +404,10 @@ const ContractListPage = () => {
                 rowClassName={() => "cursor-pointer"}
                 onRow={(record) => ({
                   onClick: (event) => {
+                    if (!canViewDetail) {
+                      return;
+                    }
+
                     const target = event.target as HTMLElement;
                     if (target.closest("button") || target.closest("a") || target.closest(".ant-dropdown-trigger")) {
                       return;

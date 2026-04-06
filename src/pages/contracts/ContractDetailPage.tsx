@@ -6,7 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
-import { canPerformAction } from "../../const/authz.const";
+import { canPerformAction, hasPermission } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type { ContractModel } from "../../models/contract/contract.model";
@@ -35,7 +35,8 @@ const ContractDetailPage = () => {
   const canSubmit = canPerformAction(role, "contract.submit");
   const canApprove = canPerformAction(role, "contract.approve");
   const canEdit = canPerformAction(role, "contract.update");
-  const canCancel = canPerformAction(role, "contract.cancel");
+  const canCancel = canPerformAction(role, "sale-order.cancel");
+  const canViewTracking = hasPermission(role, "sale-order.tracking.view");
 
   const [contract, setContract] = useState<ContractModel | null>(null);
   const [documents, setDocuments] = useState<ContractDocumentModel[]>([]);
@@ -217,6 +218,11 @@ const ContractDetailPage = () => {
                 <Button icon={<ReloadOutlined />} onClick={() => void loadData()} loading={loading}>
                   Làm mới
                 </Button>
+                {canViewTracking ? (
+                  <Button onClick={() => navigate(ROUTE_URL.CONTRACT_TRACKING.replace(":id", contract?.id ?? id ?? ""))}>
+                    Theo dõi tiến độ
+                  </Button>
+                ) : null}
                 {canSubmit ? (
                   <Button
                     type="primary"
