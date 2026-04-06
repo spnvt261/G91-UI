@@ -146,10 +146,11 @@ const AUTHENTICATED_ROLES: UserRole[] = ["CUSTOMER", "WAREHOUSE", "ACCOUNTANT", 
 const PRODUCT_VIEW_ROLES: UserRole[] = ["GUEST", "CUSTOMER", "WAREHOUSE", "OWNER"];
 const OWNER_ONLY: UserRole[] = ["OWNER"];
 const ACCOUNTANT_OWNER: UserRole[] = ["ACCOUNTANT", "OWNER"];
+const SALE_ORDER_INTERNAL: UserRole[] = ["WAREHOUSE", "ACCOUNTANT", "OWNER"];
+const SALE_ORDER_FULFILLMENT: UserRole[] = ["WAREHOUSE", "OWNER"];
 const CUSTOMER_ACCOUNTANT: UserRole[] = ["CUSTOMER", "ACCOUNTANT"];
 const CUSTOMER_ACCOUNTANT_OWNER: UserRole[] = ["CUSTOMER", "ACCOUNTANT", "OWNER"];
 const WAREHOUSE_ONLY: UserRole[] = ["WAREHOUSE"];
-const WAREHOUSE_ACCOUNTANT: UserRole[] = ["WAREHOUSE", "ACCOUNTANT"];
 const ACCOUNTANT_ONLY: UserRole[] = ["ACCOUNTANT"];
 
 const PERMISSION_ROLE_MAP: Record<PermissionKey, UserRole[]> = {
@@ -191,12 +192,12 @@ const PERMISSION_ROLE_MAP: Record<PermissionKey, UserRole[]> = {
   "contract.print": ACCOUNTANT_ONLY,
   "contract.approve": OWNER_ONLY,
   "sale-order.view": AUTHENTICATED_ROLES,
-  "sale-order.status.update": ACCOUNTANT_OWNER,
-  "sale-order.fulfillment": WAREHOUSE_ACCOUNTANT,
+  "sale-order.status.update": SALE_ORDER_INTERNAL,
+  "sale-order.fulfillment": SALE_ORDER_FULFILLMENT,
   "sale-order.complete": ACCOUNTANT_OWNER,
   "sale-order.cancel": ACCOUNTANT_OWNER,
-  "sale-order.create-invoice": ACCOUNTANT_ONLY,
-  "sale-order.related-invoices.view": CUSTOMER_ACCOUNTANT_OWNER,
+  "sale-order.create-invoice": ACCOUNTANT_OWNER,
+  "sale-order.related-invoices.view": ACCOUNTANT_OWNER,
   "customer.create": ACCOUNTANT_ONLY,
   "customer.view": ACCOUNTANT_ONLY,
   "customer.update": ACCOUNTANT_ONLY,
@@ -215,9 +216,9 @@ const PERMISSION_ROLE_MAP: Record<PermissionKey, UserRole[]> = {
   "invoice.update": ACCOUNTANT_OWNER,
   "invoice.cancel": OWNER_ONLY,
   "payment.record": ACCOUNTANT_ONLY,
-  "debt.view": CUSTOMER_ACCOUNTANT,
-  "payment.reminder.send": ACCOUNTANT_ONLY,
-  "debt.settlement.confirm": ACCOUNTANT_ONLY,
+  "debt.view": CUSTOMER_ACCOUNTANT_OWNER,
+  "payment.reminder.send": ACCOUNTANT_OWNER,
+  "debt.settlement.confirm": ACCOUNTANT_OWNER,
   "report.sales.view": ACCOUNTANT_OWNER,
   "report.inventory.view": ["WAREHOUSE", "OWNER"],
   "report.project.view": ACCOUNTANT_OWNER,

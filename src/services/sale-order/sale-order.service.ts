@@ -13,9 +13,9 @@ import type {
   SaleOrderListQuery,
   SaleOrderModel,
   SaleOrderRelatedInvoiceModel,
+  SaleOrderStatusUpdateRequest,
   SaleOrderTimelineEventModel,
   SaleOrderTimelineResponseModel,
-  SaleOrderStatusUpdateRequest,
 } from "../../models/sale-order/sale-order.model";
 import { extractList, extractPagination, unwrapApiResponse } from "../service.utils";
 
@@ -24,7 +24,8 @@ type UnknownRecord = Record<string, unknown>;
 const asRecord = (value: unknown): UnknownRecord => (typeof value === "object" && value !== null ? (value as UnknownRecord) : {});
 const asArray = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
 const asString = (value: unknown): string | undefined => (typeof value === "string" ? value : undefined);
-const asNumber = (value: unknown): number => {
+
+const asNumber = (value: unknown, fallback = 0): number => {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;
   }
@@ -36,76 +37,108 @@ const asNumber = (value: unknown): number => {
     }
   }
 
-  return 0;
+  return fallback;
+};
+
+const asOptionalNumber = (value: unknown): number | undefined => {
+  const parsed = asNumber(value, Number.NaN);
+  return Number.isFinite(parsed) ? parsed : undefined;
 };
 
 const normalizeTimelineEvent = (payload: unknown): SaleOrderTimelineEventModel => {
   const source = asRecord(payload);
   return {
-    id: asString(source.id),
-    title: asString(source.title),
-    eventType: asString(source.eventType ?? source.type),
-    status: asString(source.status ?? source.eventStatus),
-    at: asString(source.at ?? source.eventAt ?? source.actualAt ?? source.expectedAt ?? source.createdAt),
-    note: asString(source.note ?? source.description),
-    trackingNumber: asString(source.trackingNumber),
-    actorName: asString(source.actorName),
+    id: asString(source.id ?? source.eventId),
+    title: asString(source.title ?? source.name),
+    eventType: asString(source.eventType ?? source.type ?? source.milestone),
+    status: asString(source.status ?? source.eventStatus ?? source.milestoneStatus),
+    at: asString(source.at ?? source.eventAt ?? source.actualAt ?? source.expectedAt ?? source.actedAt ?? source.createdAt),
+    note: asString(source.note ?? source.description ?? source.comment),
+    trackingNumber: asString(source.trackingNumber ?? source.trackingNo),
+    actorName: asString(source.actorName ?? source.actedBy),
     actorRole: asString(source.actorRole),
     milestone: asString(source.milestone),
   };
 };
 
+const dedupeTimelineEvents = (events: SaleOrderTimelineEventModel[]): SaleOrderTimelineEventModel[] => {
+  const seen = new Set<string>();
+  return events.filter((event) => {
+    const key = `${event.id ?? ""}|${event.eventType ?? ""}|${event.status ?? ""}|${event.at ?? ""}|${event.title ?? ""}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+};
+
 const normalizeItem = (payload: unknown): SaleOrderItemModel => {
-  const item = asRecord(payload);
+  const source = asRecord(payload);
   return {
-    id: asString(item.id),
-    productId: asString(item.productId),
-    productCode: asString(item.productCode),
-    productName: asString(item.productName),
-    description: asString(item.description),
-    unit: asString(item.unit),
-    quantity: asNumber(item.quantity ?? item.orderedQuantity),
-    reservedQuantity: asNumber(item.reservedQuantity),
-    pickedQuantity: asNumber(item.pickedQuantity),
-    issuedQuantity: asNumber(item.issuedQuantity),
-    deliveredQuantity: asNumber(item.deliveredQuantity),
-    unitPrice: asNumber(item.unitPrice),
-    lineTotal: asNumber(item.lineTotal ?? item.totalAmount ?? item.amount),
-    fulfillmentStatus: asString(item.fulfillmentStatus ?? item.status),
+    id: asString(source.id),
+    productId: asString(source.productId),
+    productCode: asString(source.productCode),
+    productName: asString(source.productName),
+    description: asString(source.description),
+    unit: asString(source.unit),
+    quantity: asNumber(source.quantity ?? source.orderedQuantity),
+    reservedQuantity: asOptionalNumber(source.reservedQuantity),
+    pickedQuantity: asOptionalNumber(source.pickedQuantity),
+    issuedQuantity: asOptionalNumber(source.issuedQuantity),
+    deliveredQuantity: asOptionalNumber(source.deliveredQuantity),
+    unitPrice: asOptionalNumber(source.unitPrice),
+    lineTotal: asOptionalNumber(source.lineTotal ?? source.totalAmount ?? source.amount),
+    fulfillmentStatus: asString(source.fulfillmentStatus ?? source.status),
   };
 };
 
 const normalizeRelatedInvoice = (payload: unknown): SaleOrderRelatedInvoiceModel => {
-  const item = asRecord(payload);
+  const source = asRecord(payload);
   return {
-    invoiceId: asString(item.invoiceId ?? item.id),
-    invoiceNumber: asString(item.invoiceNumber),
-    status: asString(item.status),
-    totalAmount: asNumber(item.totalAmount ?? item.grandTotal),
-    outstandingAmount: asNumber(item.outstandingAmount ?? item.remainingAmount),
-    issuedAt: asString(item.issuedAt ?? item.issueDate),
+    invoiceId: asString(source.invoiceId ?? source.id),
+    invoiceNumber: asString(source.invoiceNumber),
+    contractId: asString(source.contractId),
+    contractNumber: asString(source.contractNumber),
+    status: asString(source.status),
+    issueDate: asString(source.issueDate ?? source.issuedAt ?? source.createdAt),
+    dueDate: asString(source.dueDate),
+    totalAmount: asOptionalNumber(source.totalAmount ?? source.grandTotal),
+    paidAmount: asOptionalNumber(source.paidAmount),
+    outstandingAmount: asOptionalNumber(source.outstandingAmount ?? source.remainingAmount),
   };
 };
 
 const normalizeInventoryIssue = (payload: unknown): SaleOrderInventoryIssueModel => {
-  const item = asRecord(payload);
+  const source = asRecord(payload);
   return {
-    issueId: asString(item.issueId ?? item.id),
-    issueNumber: asString(item.issueNumber ?? item.referenceNo),
-    status: asString(item.status),
-    issuedAt: asString(item.issuedAt ?? item.createdAt),
-    note: asString(item.note),
+    transactionId: asString(source.transactionId ?? source.id ?? source.issueId),
+    transactionCode: asString(source.transactionCode ?? source.issueNumber ?? source.referenceNo),
+    transactionType: asString(source.transactionType ?? source.type ?? source.status),
+    productId: asString(source.productId),
+    productCode: asString(source.productCode),
+    productName: asString(source.productName),
+    quantity: asOptionalNumber(source.quantity),
+    quantityBefore: asOptionalNumber(source.quantityBefore),
+    quantityAfter: asOptionalNumber(source.quantityAfter ?? source.balanceAfter),
+    transactionDate: asString(source.transactionDate ?? source.issuedAt ?? source.createdAt),
+    operatorId: asString(source.operatorId),
+    operatorEmail: asString(source.operatorEmail),
+    reason: asString(source.reason),
+    note: asString(source.note),
+    relatedOrderId: asString(source.relatedOrderId),
   };
 };
 
 const normalizeOrderHeader = (payload: unknown): SaleOrderModel => {
   const source = asRecord(payload);
   const project = asRecord(source.project);
+  const headerId = asString(source.id ?? source.saleOrderId ?? source.contractId) ?? "";
 
   return {
-    id: asString(source.id ?? source.saleOrderId) ?? "",
+    id: headerId,
     saleOrderNumber: asString(source.saleOrderNumber ?? source.orderNumber),
-    contractId: asString(source.contractId),
+    contractId: asString(source.contractId) ?? headerId,
     contractNumber: asString(source.contractNumber),
     customerId: asString(source.customerId),
     customerCode: asString(source.customerCode),
@@ -113,7 +146,7 @@ const normalizeOrderHeader = (payload: unknown): SaleOrderModel => {
     projectId: asString(source.projectId ?? project.id),
     projectCode: asString(source.projectCode ?? project.code),
     projectName: asString(source.projectName ?? project.name),
-    orderDate: asString(source.orderDate ?? source.createdAt ?? source.submittedAt),
+    orderDate: asString(source.orderDate ?? source.submittedAt ?? source.createdAt),
     expectedDeliveryDate: asString(source.expectedDeliveryDate),
     actualDeliveryDate: asString(source.actualDeliveryDate),
     status: asString(source.status ?? source.currentStatus) ?? "SUBMITTED",
@@ -127,17 +160,19 @@ const normalizeDetail = (payload: unknown): SaleOrderDetailModel => {
   const root = asRecord(payload);
   const detail = asRecord(root.detail);
   const source = Object.keys(detail).length > 0 ? detail : root;
+
   const headerSource = asRecord(source.header ?? source.saleOrder ?? source.order ?? source);
   const customerSource = asRecord(source.customer);
   const projectSource = asRecord(source.project);
+  const fulfillmentSource = asRecord(source.fulfillment);
+
   const timelineSource = asArray(source.timeline);
   const timelineData = asRecord(source.timeline);
-
-  const timelineEvents = [
+  const timeline = dedupeTimelineEvents([
     ...timelineSource.map(normalizeTimelineEvent),
     ...asArray(timelineData.milestones).map(normalizeTimelineEvent),
     ...asArray(timelineData.events).map(normalizeTimelineEvent),
-  ];
+  ]);
 
   return {
     header: normalizeOrderHeader(headerSource),
@@ -160,19 +195,29 @@ const normalizeDetail = (payload: unknown): SaleOrderDetailModel => {
             code: asString(projectSource.code ?? projectSource.projectCode),
             name: asString(projectSource.name ?? projectSource.projectName),
             status: asString(projectSource.status),
+            linkedOrderReference: asString(projectSource.linkedOrderReference),
           }
         : undefined,
     items: asArray(source.items).map(normalizeItem),
-    fulfillment: {
-      reservedAt: asString(asRecord(source.fulfillment).reservedAt),
-      pickedAt: asString(asRecord(source.fulfillment).pickedAt),
-      dispatchedAt: asString(asRecord(source.fulfillment).dispatchedAt),
-      deliveredAt: asString(asRecord(source.fulfillment).deliveredAt),
-      completedAt: asString(asRecord(source.fulfillment).completedAt),
-      cancellationReason: asString(asRecord(source.fulfillment).cancellationReason),
-      cancellationNote: asString(asRecord(source.fulfillment).cancellationNote),
-    },
-    timeline: timelineEvents,
+    fulfillment:
+      Object.keys(fulfillmentSource).length > 0
+        ? {
+            totalOrderedQuantity: asOptionalNumber(fulfillmentSource.totalOrderedQuantity),
+            totalReservedQuantity: asOptionalNumber(fulfillmentSource.totalReservedQuantity),
+            totalIssuedQuantity: asOptionalNumber(fulfillmentSource.totalIssuedQuantity),
+            totalDeliveredQuantity: asOptionalNumber(fulfillmentSource.totalDeliveredQuantity),
+            inventoryIssueCount: asOptionalNumber(fulfillmentSource.inventoryIssueCount),
+            invoiceCount: asOptionalNumber(fulfillmentSource.invoiceCount),
+            reservedAt: asString(fulfillmentSource.reservedAt),
+            pickedAt: asString(fulfillmentSource.pickedAt),
+            dispatchedAt: asString(fulfillmentSource.dispatchedAt),
+            deliveredAt: asString(fulfillmentSource.deliveredAt),
+            completedAt: asString(fulfillmentSource.completedAt),
+            cancellationReason: asString(fulfillmentSource.cancellationReason),
+            cancellationNote: asString(fulfillmentSource.cancellationNote),
+          }
+        : undefined,
+    timeline,
     inventoryIssues: asArray(source.inventoryIssues).map(normalizeInventoryIssue),
     invoices: asArray(source.invoices).map(normalizeRelatedInvoice),
   };
@@ -182,8 +227,11 @@ const normalizeActionResponse = (payload: unknown): SaleOrderActionResponseModel
   const source = asRecord(payload);
   return {
     saleOrderId: asString(source.saleOrderId ?? source.id),
+    saleOrderNumber: asString(source.saleOrderNumber),
+    contractNumber: asString(source.contractNumber),
     previousStatus: asString(source.previousStatus),
     currentStatus: asString(source.currentStatus ?? source.status),
+    approvalStatus: asString(source.approvalStatus),
     decision: asString(source.decision),
     actedBy: asString(source.actedBy),
     actedAt: asString(source.actedAt),
@@ -194,14 +242,11 @@ const normalizeActionResponse = (payload: unknown): SaleOrderActionResponseModel
 
 const normalizeTimeline = (payload: unknown, fallbackSaleOrderId: string): SaleOrderTimelineResponseModel => {
   const source = asRecord(payload);
-  const milestones = asArray(source.milestones).map(normalizeTimelineEvent);
-  const events = asArray(source.events).map(normalizeTimelineEvent);
-
   return {
     saleOrderId: asString(source.saleOrderId) ?? fallbackSaleOrderId,
     currentStatus: asString(source.currentStatus ?? source.status),
-    milestones,
-    events,
+    milestones: dedupeTimelineEvents(asArray(source.milestones).map(normalizeTimelineEvent)),
+    events: dedupeTimelineEvents(asArray(source.events).map(normalizeTimelineEvent)),
   };
 };
 
@@ -209,6 +254,8 @@ const normalizeInvoice = (payload: unknown): InvoiceModel => {
   const source = asRecord(payload);
   const invoice = asRecord(source.invoice);
   const root = Object.keys(invoice).length > 0 ? invoice : source;
+  const items = asArray(source.items ?? root.items);
+  const paymentHistory = asArray(source.paymentHistory ?? root.paymentHistory);
 
   return {
     id: asString(root.id) ?? "",
@@ -231,28 +278,28 @@ const normalizeInvoice = (payload: unknown): InvoiceModel => {
     paymentTerms: asString(root.paymentTerms),
     note: asString(root.note),
     cancellationReason: asString(root.cancellationReason),
-    items: asArray(source.items).map((item) => {
-      const invoiceItem = asRecord(item);
+    items: items.map((itemPayload) => {
+      const item = asRecord(itemPayload);
       return {
-        id: asString(invoiceItem.id),
-        productId: asString(invoiceItem.productId),
-        description: asString(invoiceItem.description),
-        unit: asString(invoiceItem.unit),
-        quantity: asNumber(invoiceItem.quantity),
-        unitPrice: asNumber(invoiceItem.unitPrice),
-        lineTotal: asNumber(invoiceItem.lineTotal ?? invoiceItem.amount),
+        id: asString(item.id),
+        productId: asString(item.productId),
+        description: asString(item.description),
+        unit: asString(item.unit),
+        quantity: asNumber(item.quantity),
+        unitPrice: asNumber(item.unitPrice),
+        lineTotal: asNumber(item.lineTotal ?? item.amount),
       };
     }),
-    paymentHistory: asArray(source.paymentHistory).map((payment) => {
-      const history = asRecord(payment);
+    paymentHistory: paymentHistory.map((paymentPayload) => {
+      const payment = asRecord(paymentPayload);
       return {
-        paymentId: asString(history.paymentId ?? history.id),
-        receiptNumber: asString(history.receiptNumber),
-        paymentDate: asString(history.paymentDate),
-        paymentMethod: asString(history.paymentMethod),
-        referenceNo: asString(history.referenceNo),
-        allocatedAmount: asNumber(history.allocatedAmount ?? history.amount),
-        note: asString(history.note),
+        paymentId: asString(payment.paymentId ?? payment.id),
+        receiptNumber: asString(payment.receiptNumber),
+        paymentDate: asString(payment.paymentDate),
+        paymentMethod: asString(payment.paymentMethod),
+        referenceNo: asString(payment.referenceNo),
+        allocatedAmount: asNumber(payment.allocatedAmount ?? payment.amount),
+        note: asString(payment.note),
       };
     }),
   };

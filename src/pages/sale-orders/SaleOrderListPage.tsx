@@ -7,19 +7,31 @@ import { useNavigate } from "react-router-dom";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { canPerformAction } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type { SaleOrderListQuery, SaleOrderModel } from "../../models/sale-order/sale-order.model";
 import { saleOrderService } from "../../services/sale-order/sale-order.service";
+import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
 import SaleOrderStatusTag from "./components/SaleOrderStatusTag";
-import { formatSaleOrderDate, resolveSaleOrderNumber, SALE_ORDER_STATUS_OPTIONS } from "./saleOrder.ui";
+import {
+  formatSaleOrderDate,
+  getNextFulfillmentAction,
+  normalizeSaleOrderStatus,
+  resolveSaleOrderNumber,
+  SALE_ORDER_STATUS_OPTIONS,
+} from "./saleOrder.ui";
 
 const DEFAULT_PAGE_SIZE = 10;
 
 const SaleOrderListPage = () => {
   const navigate = useNavigate();
   const { notify } = useNotify();
+  const role = getStoredUserRole();
+
+  const canFulfillment = canPerformAction(role, "sale-order.fulfillment");
+  const canAccountingStep = canPerformAction(role, "sale-order.create-invoice") || canPerformAction(role, "sale-order.complete");
 
   const [items, setItems] = useState<SaleOrderModel[]>([]);
   const [loading, setLoading] = useState(false);
@@ -80,20 +92,20 @@ const SaleOrderListPage = () => {
         render: (_, record) => (
           <Space direction="vertical" size={1}>
             <Typography.Text strong>{resolveSaleOrderNumber(record.id, record.saleOrderNumber)}</Typography.Text>
-            <Typography.Text type="secondary">Mã hệ thống: {record.id}</Typography.Text>
+            <Typography.Text type="secondary">saleOrderId: {record.id}</Typography.Text>
           </Space>
         ),
       },
       {
         title: "Mã hợp đồng",
         key: "contractNumber",
-        width: 170,
-        render: (_, record) => record.contractNumber || record.contractId || "Chưa cập nhật",
+        width: 180,
+        render: (_, record) => record.contractNumber || record.contractId || record.id || "Chưa cập nhật",
       },
       {
         title: "Khách hàng",
         key: "customer",
-        width: 220,
+        width: 230,
         render: (_, record) => (
           <Space direction="vertical" size={1}>
             <Typography.Text>{record.customerName || "Chưa cập nhật"}</Typography.Text>
@@ -144,21 +156,37 @@ const SaleOrderListPage = () => {
       {
         title: "Thao tác",
         key: "actions",
-        width: 220,
+        width: 320,
         fixed: "right",
-        render: (_, record) => (
-          <Space size={4} wrap>
-            <Button type="link" onClick={() => navigate(ROUTE_URL.SALE_ORDER_DETAIL.replace(":id", record.id))}>
-              Chi tiết
-            </Button>
-            <Button size="small" onClick={() => navigate(ROUTE_URL.SALE_ORDER_TIMELINE.replace(":id", record.id))}>
-              Dòng thời gian
-            </Button>
-          </Space>
-        ),
+        render: (_, record) => {
+          const normalizedStatus = normalizeSaleOrderStatus(record.status);
+          const nextFulfillment = getNextFulfillmentAction(normalizedStatus);
+          const canGoAccounting = normalizedStatus === "DELIVERED" || normalizedStatus === "COMPLETED";
+
+          return (
+            <Space size={4} wrap>
+              <Button type="link" onClick={() => navigate(ROUTE_URL.SALE_ORDER_DETAIL.replace(":id", record.id))}>
+                Chi tiết
+              </Button>
+              <Button size="small" onClick={() => navigate(ROUTE_URL.SALE_ORDER_TIMELINE.replace(":id", record.id))}>
+                Timeline
+              </Button>
+              {canFulfillment && nextFulfillment ? (
+                <Button size="small" type="default" onClick={() => navigate(ROUTE_URL.SALE_ORDER_DETAIL.replace(":id", record.id))}>
+                  Xử lý {nextFulfillment.label}
+                </Button>
+              ) : null}
+              {canAccountingStep && canGoAccounting ? (
+                <Button size="small" type="dashed" onClick={() => navigate(ROUTE_URL.SALE_ORDER_DETAIL.replace(":id", record.id))}>
+                  Bước kế toán
+                </Button>
+              ) : null}
+            </Space>
+          );
+        },
       },
     ],
-    [navigate],
+    [canAccountingStep, canFulfillment, navigate],
   );
 
   const totalAmount = useMemo(() => items.reduce((sum, item) => sum + item.totalAmount, 0), [items]);
@@ -169,7 +197,7 @@ const SaleOrderListPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Danh sách đơn bán"
-          subtitle="Theo dõi đơn bán theo hợp đồng, trạng thái thực hiện và giá trị đơn hàng."
+          subtitle="Theo dõi đơn bán từ hợp đồng SUBMITTED đến fulfillment, hóa đơn, thanh toán và công nợ."
           breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Đơn bán" }]} />}
           actions={
             <Button icon={<ReloadOutlined />} onClick={() => void loadList()} loading={loading}>
@@ -199,9 +227,9 @@ const SaleOrderListPage = () => {
             </Col>
             <Col xs={24} md={8}>
               <Card>
-                <Typography.Text type="secondary">Đơn đang xử lý</Typography.Text>
+                <Typography.Text type="secondary">Đơn đang fulfillment</Typography.Text>
                 <Typography.Title level={3} style={{ margin: 0 }}>
-                  {items.filter((item) => ["PROCESSING", "RESERVED", "PICKED", "IN_TRANSIT"].includes(String(item.status).toUpperCase())).length}
+                  {items.filter((item) => ["SUBMITTED", "PROCESSING", "RESERVED", "PICKED", "IN_TRANSIT"].includes(normalizeSaleOrderStatus(item.status))).length}
                 </Typography.Title>
               </Card>
             </Col>
@@ -214,7 +242,7 @@ const SaleOrderListPage = () => {
                   <Input.Search
                     allowClear
                     value={keywordInput}
-                    placeholder="Tìm theo mã đơn bán, hợp đồng, khách hàng, dự án"
+                    placeholder="Tìm theo đơn bán, hợp đồng, khách hàng, dự án"
                     enterButton="Tìm"
                     onChange={(event) => setKeywordInput(event.target.value)}
                     onSearch={(value) => {
@@ -294,11 +322,9 @@ const SaleOrderListPage = () => {
                   setPage(pagination.current ?? 1);
                   setPageSize(pagination.pageSize ?? DEFAULT_PAGE_SIZE);
                 }}
-                scroll={{ x: 1550 }}
+                scroll={{ x: 1750 }}
                 locale={{
-                  emptyText: (
-                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có đơn bán phù hợp với bộ lọc hiện tại." />
-                  ),
+                  emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có đơn bán phù hợp với bộ lọc hiện tại." />,
                 }}
               />
             </Space>
@@ -310,4 +336,3 @@ const SaleOrderListPage = () => {
 };
 
 export default SaleOrderListPage;
-

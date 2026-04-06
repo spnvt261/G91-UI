@@ -32,6 +32,7 @@ export interface ContractItemModel {
 export interface ContractModel {
   id: string;
   contractNumber?: string;
+  saleOrderNumber?: string;
   quotationId: string;
   quotationNumber?: string;
   customerId: string;
@@ -171,6 +172,7 @@ export interface ContractListResponseData {
   items: Array<{
     id: string;
     contractNumber?: string;
+    saleOrderNumber?: string;
     quotationId?: string;
     quotationNumber?: string;
     customerId: string;
@@ -204,6 +206,7 @@ export interface ContractDetailResponseData {
   contract: {
     id: string;
     contractNumber?: string;
+    saleOrderNumber?: string;
     customerId: string;
     customerName?: string;
     quotationId: string;

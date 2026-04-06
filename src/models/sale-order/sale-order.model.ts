@@ -9,6 +9,16 @@ export type SaleOrderStatus =
   | "CANCELLED"
   | string;
 
+export type SaleOrderTimelineStageKey =
+  | "SUBMITTED"
+  | "RESERVED"
+  | "PICKED"
+  | "DISPATCHED"
+  | "DELIVERED"
+  | "INVOICE_CREATED"
+  | "PAYMENT_RECORDED"
+  | "DEBT_SETTLED";
+
 export interface SaleOrderModel {
   id: string;
   saleOrderNumber?: string;
@@ -62,18 +72,48 @@ export interface SaleOrderTimelineEventModel {
 export interface SaleOrderRelatedInvoiceModel {
   invoiceId?: string;
   invoiceNumber?: string;
+  contractId?: string;
+  contractNumber?: string;
   status?: string;
+  issueDate?: string;
+  dueDate?: string;
   totalAmount?: number;
+  paidAmount?: number;
   outstandingAmount?: number;
-  issuedAt?: string;
 }
 
 export interface SaleOrderInventoryIssueModel {
-  issueId?: string;
-  issueNumber?: string;
-  status?: string;
-  issuedAt?: string;
+  transactionId?: string;
+  transactionCode?: string;
+  transactionType?: string;
+  productId?: string;
+  productCode?: string;
+  productName?: string;
+  quantity?: number;
+  quantityBefore?: number;
+  quantityAfter?: number;
+  transactionDate?: string;
+  operatorId?: string;
+  operatorEmail?: string;
+  reason?: string;
   note?: string;
+  relatedOrderId?: string;
+}
+
+export interface SaleOrderFulfillmentModel {
+  totalOrderedQuantity?: number;
+  totalReservedQuantity?: number;
+  totalIssuedQuantity?: number;
+  totalDeliveredQuantity?: number;
+  inventoryIssueCount?: number;
+  invoiceCount?: number;
+  reservedAt?: string;
+  pickedAt?: string;
+  dispatchedAt?: string;
+  deliveredAt?: string;
+  completedAt?: string;
+  cancellationReason?: string;
+  cancellationNote?: string;
 }
 
 export interface SaleOrderDetailModel {
@@ -92,17 +132,10 @@ export interface SaleOrderDetailModel {
     code?: string;
     name?: string;
     status?: string;
+    linkedOrderReference?: string;
   };
   items: SaleOrderItemModel[];
-  fulfillment?: {
-    reservedAt?: string;
-    pickedAt?: string;
-    dispatchedAt?: string;
-    deliveredAt?: string;
-    completedAt?: string;
-    cancellationReason?: string;
-    cancellationNote?: string;
-  };
+  fulfillment?: SaleOrderFulfillmentModel;
   timeline: SaleOrderTimelineEventModel[];
   inventoryIssues: SaleOrderInventoryIssueModel[];
   invoices: SaleOrderRelatedInvoiceModel[];
@@ -139,7 +172,7 @@ export interface SaleOrderActionRequest {
 }
 
 export interface SaleOrderCancelRequest {
-  cancellationReason: string;
+  cancellationReason: "CUSTOMER_REQUEST" | "PRICE_DISPUTE" | "INVENTORY_SHORTAGE" | "CREDIT_RISK" | "DATA_ERROR" | "OTHER" | string;
   comment?: string;
 }
 
@@ -147,8 +180,8 @@ export interface SaleOrderInvoiceItemRequest {
   productId?: string;
   description?: string;
   unit?: string;
-  quantity: number;
-  unitPrice: number;
+  quantity?: number;
+  unitPrice?: number;
 }
 
 export interface SaleOrderCreateInvoiceRequest {
@@ -158,14 +191,17 @@ export interface SaleOrderCreateInvoiceRequest {
   billingAddress?: string;
   paymentTerms?: string;
   note?: string;
-  status?: "DRAFT" | "ISSUED";
+  status?: "DRAFT" | "ISSUED" | "OPEN";
   items?: SaleOrderInvoiceItemRequest[];
 }
 
 export interface SaleOrderActionResponseModel {
   saleOrderId?: string;
+  saleOrderNumber?: string;
+  contractNumber?: string;
   previousStatus?: SaleOrderStatus;
   currentStatus?: SaleOrderStatus;
+  approvalStatus?: string;
   decision?: string;
   actedBy?: string;
   actedAt?: string;

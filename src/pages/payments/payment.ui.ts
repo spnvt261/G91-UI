@@ -15,24 +15,14 @@ export const formatPaymentDate = (value?: string, fallback = "Chưa cập nhật
   if (!value) {
     return fallback;
   }
-
   const parsed = dayjs(value);
-  if (!parsed.isValid()) {
-    return fallback;
-  }
-
-  return parsed.format("DD/MM/YYYY");
+  return parsed.isValid() ? parsed.format("DD/MM/YYYY") : fallback;
 };
 
 export const formatPaymentDateTime = (value?: string, fallback = "Chưa cập nhật"): string => {
   if (!value) {
     return fallback;
   }
-
   const parsed = dayjs(value);
-  if (!parsed.isValid()) {
-    return fallback;
-  }
-
-  return parsed.format("DD/MM/YYYY HH:mm");
+  return parsed.isValid() ? parsed.format("DD/MM/YYYY HH:mm") : fallback;
 };

@@ -1,7 +1,7 @@
-import { ArrowLeftOutlined, EditOutlined, ExclamationCircleOutlined, FileTextOutlined, StopOutlined } from "@ant-design/icons";
+import { ArrowLeftOutlined, EditOutlined, ExclamationCircleOutlined, StopOutlined } from "@ant-design/icons";
 import { Alert, Button, Card, Col, Descriptions, Empty, Input, Modal, Row, Space, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
@@ -37,7 +37,6 @@ const InvoiceDetailPage = () => {
     if (!id) {
       return;
     }
-
     try {
       setLoading(true);
       setDetailError(null);
@@ -58,82 +57,22 @@ const InvoiceDetailPage = () => {
 
   const itemColumns = useMemo<ColumnsType<InvoiceModel["items"][number]>>(
     () => [
-      {
-        title: "Mặt hàng",
-        key: "description",
-        render: (_, item) => (
-          <Space direction="vertical" size={1}>
-            <Typography.Text strong>{item.description || "Chưa có mô tả"}</Typography.Text>
-            <Typography.Text type="secondary">{item.productId || "-"}</Typography.Text>
-          </Space>
-        ),
-      },
-      {
-        title: "Đơn vị",
-        dataIndex: "unit",
-        key: "unit",
-        width: 120,
-        render: (value?: string) => value || "-",
-      },
-      {
-        title: "Số lượng",
-        dataIndex: "quantity",
-        key: "quantity",
-        width: 100,
-        align: "right",
-      },
-      {
-        title: "Đơn giá",
-        dataIndex: "unitPrice",
-        key: "unitPrice",
-        width: 160,
-        align: "right",
-        render: (value: number) => toCurrency(value),
-      },
-      {
-        title: "Thành tiền",
-        dataIndex: "lineTotal",
-        key: "lineTotal",
-        width: 170,
-        align: "right",
-        render: (value: number | undefined, row) => <Typography.Text strong>{toCurrency(value ?? row.quantity * row.unitPrice)}</Typography.Text>,
-      },
+      { title: "Mặt hàng", key: "description", render: (_, row) => row.description || row.productId || "Chưa cập nhật" },
+      { title: "Đơn vị", dataIndex: "unit", key: "unit", width: 110, render: (value?: string) => value || "-" },
+      { title: "Số lượng", dataIndex: "quantity", key: "quantity", width: 100, align: "right" },
+      { title: "Đơn giá", dataIndex: "unitPrice", key: "unitPrice", width: 140, align: "right", render: (value: number) => toCurrency(value) },
+      { title: "Thành tiền", dataIndex: "lineTotal", key: "lineTotal", width: 150, align: "right", render: (value?: number) => toCurrency(value ?? 0) },
     ],
     [],
   );
 
   const paymentColumns = useMemo<ColumnsType<InvoiceModel["paymentHistory"][number]>>(
     () => [
-      {
-        title: "Số phiếu thu",
-        key: "receiptNumber",
-        render: (_, item) => item.receiptNumber || item.paymentId || "-",
-      },
-      {
-        title: "Ngày thanh toán",
-        dataIndex: "paymentDate",
-        key: "paymentDate",
-        render: (value?: string) => formatInvoiceDateTime(value),
-      },
-      {
-        title: "Phương thức",
-        dataIndex: "paymentMethod",
-        key: "paymentMethod",
-        render: (value?: string) => value || "Chưa cập nhật",
-      },
-      {
-        title: "Số tham chiếu",
-        dataIndex: "referenceNo",
-        key: "referenceNo",
-        render: (value?: string) => value || "-",
-      },
-      {
-        title: "Số tiền phân bổ",
-        dataIndex: "allocatedAmount",
-        key: "allocatedAmount",
-        align: "right",
-        render: (value: number) => <Typography.Text strong>{toCurrency(value)}</Typography.Text>,
-      },
+      { title: "Số phiếu thu", key: "receiptNumber", render: (_, row) => row.receiptNumber || row.paymentId || "-" },
+      { title: "Ngày thanh toán", dataIndex: "paymentDate", key: "paymentDate", render: (value?: string) => formatInvoiceDateTime(value) },
+      { title: "Phương thức", dataIndex: "paymentMethod", key: "paymentMethod", render: (value?: string) => value || "Chưa cập nhật" },
+      { title: "Số tham chiếu", dataIndex: "referenceNo", key: "referenceNo", render: (value?: string) => value || "-" },
+      { title: "Số tiền phân bổ", dataIndex: "allocatedAmount", key: "allocatedAmount", align: "right", render: (value: number) => toCurrency(value) },
     ],
     [],
   );
@@ -144,18 +83,11 @@ const InvoiceDetailPage = () => {
     if (!invoice) {
       return;
     }
-
     const reason = cancelReason.trim();
     if (!reason) {
       notify("Vui lòng nhập lý do hủy hóa đơn.", "warning");
       return;
     }
-
-    if (!canCancelByBusiness) {
-      notify("Không thể hủy hóa đơn đã có thanh toán hoặc phân bổ thanh toán.", "warning");
-      return;
-    }
-
     try {
       setCanceling(true);
       const updated = await invoiceService.cancel(invoice.id, { cancellationReason: reason });
@@ -170,6 +102,8 @@ const InvoiceDetailPage = () => {
     }
   };
 
+  const contractId = invoice?.contractId;
+
   return (
     <>
       <NoResizeScreenTemplate
@@ -177,16 +111,8 @@ const InvoiceDetailPage = () => {
         header={
           <ListScreenHeaderTemplate
             title={invoice ? resolveInvoiceNumber(invoice.id, invoice.invoiceNumber) : "Chi tiết hóa đơn"}
-            subtitle="Theo dõi thông tin hóa đơn, lịch sử thanh toán và trạng thái công nợ liên quan."
-            breadcrumb={
-              <CustomBreadcrumb
-                breadcrumbs={[
-                  { label: "Trang chủ" },
-                  { label: "Hóa đơn", url: ROUTE_URL.INVOICE_LIST },
-                  { label: "Chi tiết" },
-                ]}
-              />
-            }
+            subtitle="Theo dõi thông tin hóa đơn, thanh toán, và liên kết ngược hợp đồng/đơn bán."
+            breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Hóa đơn", url: ROUTE_URL.INVOICE_LIST }, { label: "Chi tiết" }]} />}
             actions={
               <Space wrap>
                 <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(ROUTE_URL.INVOICE_LIST)}>
@@ -203,15 +129,7 @@ const InvoiceDetailPage = () => {
                   </Button>
                 ) : null}
                 {canCancelInvoice ? (
-                  <Button
-                    danger
-                    icon={<StopOutlined />}
-                    onClick={() => {
-                      setCancelReason("");
-                      setCancelModalOpen(true);
-                    }}
-                    disabled={!invoice || ["CANCELLED", "VOID"].includes(String(invoice.status).toUpperCase())}
-                  >
+                  <Button danger icon={<StopOutlined />} onClick={() => setCancelModalOpen(true)} disabled={!invoice || !canCancelByBusiness}>
                     Hủy hóa đơn
                   </Button>
                 ) : null}
@@ -237,16 +155,14 @@ const InvoiceDetailPage = () => {
                     <Card title="Thông tin chung">
                       <Descriptions column={1} size="small" colon={false}>
                         <Descriptions.Item label="Số hóa đơn">{resolveInvoiceNumber(invoice.id, invoice.invoiceNumber)}</Descriptions.Item>
-                        <Descriptions.Item label="Trạng thái">
-                          <InvoiceStatusTag status={invoice.status} />
-                        </Descriptions.Item>
+                        <Descriptions.Item label="Trạng thái"><InvoiceStatusTag status={invoice.status} /></Descriptions.Item>
                         <Descriptions.Item label="Ngày xuất">{formatInvoiceDate(invoice.issueDate)}</Descriptions.Item>
                         <Descriptions.Item label="Hạn thanh toán">{formatInvoiceDate(invoice.dueDate)}</Descriptions.Item>
                       </Descriptions>
                     </Card>
                   </Col>
                   <Col xs={24} lg={12}>
-                    <Card title="Thông tin khách hàng">
+                    <Card title="Khách hàng">
                       <Descriptions column={1} size="small" colon={false}>
                         <Descriptions.Item label="Tên khách hàng">{invoice.customerName || "Chưa cập nhật"}</Descriptions.Item>
                         <Descriptions.Item label="Mã khách hàng">{invoice.customerCode || invoice.customerId || "-"}</Descriptions.Item>
@@ -257,42 +173,41 @@ const InvoiceDetailPage = () => {
                   </Col>
                 </Row>
 
-                <Card title="Thông tin hợp đồng">
+                <Card title="Liên kết hợp đồng / đơn bán">
+                  <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                    <Typography.Text>Mã hợp đồng: <Typography.Text strong>{invoice.contractNumber || contractId || "Chưa liên kết"}</Typography.Text></Typography.Text>
+                    {contractId ? (
+                      <Space wrap>
+                        <Button onClick={() => navigate(ROUTE_URL.CONTRACT_DETAIL.replace(":id", contractId))}>Mở hợp đồng</Button>
+                        <Button onClick={() => navigate(ROUTE_URL.SALE_ORDER_DETAIL.replace(":id", contractId))}>Mở đơn bán</Button>
+                      </Space>
+                    ) : null}
+                  </Space>
+                </Card>
+
+                <Card title="Giá trị hóa đơn">
                   <Descriptions column={{ xs: 1, md: 3 }} size="small" colon={false}>
-                    <Descriptions.Item label="Mã hợp đồng">{invoice.contractNumber || invoice.contractId || "Chưa liên kết"}</Descriptions.Item>
                     <Descriptions.Item label="Tạm tính">{toCurrency(invoice.subtotalAmount)}</Descriptions.Item>
                     <Descriptions.Item label="Điều chỉnh">{toCurrency(invoice.adjustmentAmount)}</Descriptions.Item>
                     <Descriptions.Item label="VAT">{toCurrency(invoice.vatAmount)}</Descriptions.Item>
                     <Descriptions.Item label="Tổng tiền">{toCurrency(invoice.grandTotal)}</Descriptions.Item>
+                    <Descriptions.Item label="Đã thu">{toCurrency(invoice.paidAmount)}</Descriptions.Item>
                     <Descriptions.Item label="Còn phải thu">{toCurrency(invoice.outstandingAmount)}</Descriptions.Item>
                   </Descriptions>
                 </Card>
 
                 <Card title="Danh sách mặt hàng">
-                  <Table rowKey={(item, index) => `${item.id ?? item.productId ?? index}`} columns={itemColumns} dataSource={invoice.items} pagination={false} />
+                  <Table rowKey={(row, index) => `${row.id ?? row.productId ?? index}`} columns={itemColumns} dataSource={invoice.items} pagination={false} />
                 </Card>
 
-                <Card title="Lịch sử thanh toán và phân bổ">
+                <Card title="Lịch sử thanh toán">
                   <Table
-                    rowKey={(item, index) => `${item.paymentId ?? item.receiptNumber ?? index}`}
+                    rowKey={(row, index) => `${row.paymentId ?? row.receiptNumber ?? index}`}
                     columns={paymentColumns}
                     dataSource={invoice.paymentHistory}
                     pagination={false}
-                    locale={{
-                      emptyText: (
-                        <Empty
-                          image={Empty.PRESENTED_IMAGE_SIMPLE}
-                          description="Chưa có thanh toán hoặc phân bổ thanh toán cho hóa đơn này."
-                        />
-                      ),
-                    }}
+                    locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có thanh toán cho hóa đơn này." /> }}
                   />
-                </Card>
-
-                <Card title="Ghi chú">
-                  <Typography.Paragraph style={{ marginBottom: 0 }}>
-                    {invoice.note || "Không có ghi chú bổ sung cho hóa đơn này."}
-                  </Typography.Paragraph>
                 </Card>
               </>
             ) : null}
@@ -310,34 +225,8 @@ const InvoiceDetailPage = () => {
         okButtonProps={{ danger: true, loading: canceling, icon: <ExclamationCircleOutlined />, disabled: !canCancelByBusiness }}
       >
         <Space direction="vertical" size={12} style={{ width: "100%" }}>
-          {canCancelByBusiness ? (
-            <Alert
-              type="warning"
-              showIcon
-              message="Thao tác hủy hóa đơn không thể hoàn tác."
-              description="Vui lòng kiểm tra kỹ thông tin trước khi xác nhận."
-            />
-          ) : (
-            <Alert
-              type="error"
-              showIcon
-              message="Hóa đơn đã có thanh toán nên không được hủy."
-              description="Theo quy tắc nghiệp vụ, hóa đơn có phát sinh thanh toán hoặc phân bổ thanh toán không thể hủy."
-            />
-          )}
-          <Typography.Text strong>Lý do hủy hóa đơn</Typography.Text>
-          <Typography.Text type="secondary">
-            Hóa đơn: <FileTextOutlined /> {resolveInvoiceNumber(invoice?.id, invoice?.invoiceNumber)}
-          </Typography.Text>
-          <Input.TextArea
-            rows={4}
-            maxLength={1000}
-            showCount
-            placeholder="Nhập lý do hủy bằng tiếng Việt rõ ràng."
-            value={cancelReason}
-            onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setCancelReason(event.target.value)}
-            disabled={!canCancelByBusiness || canceling}
-          />
+          {canCancelByBusiness ? <Alert type="warning" showIcon message="Thao tác hủy hóa đơn không thể hoàn tác." /> : <Alert type="error" showIcon message="Hóa đơn đã có thanh toán nên không thể hủy." />}
+          <Input.TextArea rows={4} maxLength={1000} showCount value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} placeholder="Nhập lý do hủy hóa đơn." />
         </Space>
       </Modal>
     </>

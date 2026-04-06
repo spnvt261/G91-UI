@@ -1,4 +1,4 @@
-import { Alert, Button, Card, DatePicker, Descriptions, Empty, Form, Input, Modal, Select, Space, Table, Timeline, Typography } from "antd";
+import { Alert, Button, Card, DatePicker, Descriptions, Empty, Form, Input, Modal, Select, Space, Steps, Table, Timeline, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -6,10 +6,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
-import { canPerformAction } from "../../const/authz.const";
+import { canPerformAction, hasPermission } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
-import type { SaleOrderDetailModel } from "../../models/sale-order/sale-order.model";
+import type { DebtStatusDetailModel } from "../../models/debt/debt.model";
+import type { SaleOrderDetailModel, SaleOrderTimelineEventModel } from "../../models/sale-order/sale-order.model";
+import { debtService } from "../../services/debt/debt.service";
 import { saleOrderService } from "../../services/sale-order/sale-order.service";
 import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
@@ -17,38 +19,49 @@ import SaleOrderStatusTag from "./components/SaleOrderStatusTag";
 import {
   formatSaleOrderDate,
   formatSaleOrderDateTime,
+  getNextFulfillmentAction,
   getTimelineEventLabel,
+  isSaleOrderTerminalStatus,
+  isStatusReached,
+  normalizeSaleOrderStatus,
   resolveSaleOrderNumber,
   SALE_ORDER_CANCELLATION_REASON_OPTIONS,
+  SALE_ORDER_FLOW_STEPS,
   toSaleOrderTransitionErrorMessage,
 } from "./saleOrder.ui";
 
-type ActionKey = "processing" | "reserve" | "pick" | "dispatch" | "deliver" | "complete" | "cancel" | "invoice" | null;
+type FulfillmentAction = "reserve" | "pick" | "dispatch" | "deliver" | "complete";
+type LoadingAction = FulfillmentAction | "cancel" | "invoice" | null;
 
-type CancelFormValues = {
-  cancellationReason: string;
-  comment?: string;
+type ActionFormValues = { note?: string; trackingNumber?: string; actualDeliveryDate?: dayjs.Dayjs };
+type CancelFormValues = { cancellationReason: string; comment?: string };
+type InvoiceFormValues = { issueDate?: dayjs.Dayjs; dueDate: dayjs.Dayjs; status?: "DRAFT" | "ISSUED"; billingAddress?: string; paymentTerms?: string; note?: string };
+
+const ACTION_META: Record<FulfillmentAction, { title: string; okText: string; success: string; fallback: string }> = {
+  reserve: { title: "Xác nhận Reserve (Dự trữ)", okText: "Reserve", success: "Đã Reserve đơn bán.", fallback: "Không thể Reserve đơn bán." },
+  pick: { title: "Xác nhận Pick (Soạn hàng)", okText: "Pick", success: "Đã Pick đơn bán.", fallback: "Không thể Pick đơn bán." },
+  dispatch: { title: "Xác nhận Dispatch (Xuất giao)", okText: "Dispatch", success: "Đã Dispatch đơn bán.", fallback: "Không thể Dispatch đơn bán." },
+  deliver: { title: "Xác nhận Delivered (Đã giao)", okText: "Delivered", success: "Đã xác nhận Delivered.", fallback: "Không thể xác nhận Delivered." },
+  complete: { title: "Xác nhận Complete (Hoàn tất)", okText: "Complete", success: "Đã hoàn tất đơn bán.", fallback: "Không thể hoàn tất đơn bán." },
 };
 
-type InvoiceFormValues = {
-  dueDate: dayjs.Dayjs;
-  issueDate?: dayjs.Dayjs;
-  status?: "DRAFT" | "ISSUED";
-  billingAddress?: string;
-  paymentTerms?: string;
-  note?: string;
+const dedupeTimeline = (events: SaleOrderTimelineEventModel[]): SaleOrderTimelineEventModel[] => {
+  const seen = new Set<string>();
+  return events.filter((event) => {
+    const key = `${event.id ?? ""}|${event.eventType ?? ""}|${event.status ?? ""}|${event.at ?? ""}|${event.title ?? ""}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
 };
 
-const TRANSITIONS: Record<string, string[]> = {
-  SUBMITTED: ["PROCESSING", "RESERVED"],
-  PROCESSING: ["RESERVED", "PICKED"],
-  RESERVED: ["PICKED"],
-  PICKED: ["IN_TRANSIT", "DELIVERED"],
-  IN_TRANSIT: ["DELIVERED"],
-  DELIVERED: ["COMPLETED"],
-};
-
-const normalizeStatus = (value?: string): string => String(value ?? "").trim().toUpperCase();
+const hasKeyword = (events: SaleOrderTimelineEventModel[], keywords: string[]) =>
+  events.some((event) => {
+    const content = `${event.eventType ?? ""} ${event.title ?? ""} ${event.note ?? ""}`.toUpperCase();
+    return keywords.some((keyword) => content.includes(keyword));
+  });
 
 const SaleOrderDetailPage = () => {
   const navigate = useNavigate();
@@ -57,19 +70,24 @@ const SaleOrderDetailPage = () => {
   const { notify } = useNotify();
 
   const isCustomer = role === "CUSTOMER";
-  const canUpdateStatus = canPerformAction(role, "sale-order.status.update");
   const canFulfillment = canPerformAction(role, "sale-order.fulfillment");
   const canComplete = canPerformAction(role, "sale-order.complete");
   const canCancel = canPerformAction(role, "sale-order.cancel");
   const canCreateInvoice = canPerformAction(role, "sale-order.create-invoice");
   const canViewRelatedInvoices = canPerformAction(role, "sale-order.related-invoices.view");
+  const canRecordPayment = canPerformAction(role, "payment.record");
+  const canTrackDebt = hasPermission(role, "debt.view");
 
   const [detail, setDetail] = useState<SaleOrderDetailModel | null>(null);
+  const [debtDetail, setDebtDetail] = useState<DebtStatusDetailModel | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [actionLoading, setActionLoading] = useState<ActionKey>(null);
+  const [loadingAction, setLoadingAction] = useState<LoadingAction>(null);
+  const [pendingAction, setPendingAction] = useState<FulfillmentAction | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+
+  const [actionForm] = Form.useForm<ActionFormValues>();
   const [cancelForm] = Form.useForm<CancelFormValues>();
   const [invoiceForm] = Form.useForm<InvoiceFormValues>();
 
@@ -82,18 +100,19 @@ const SaleOrderDetailPage = () => {
       setLoading(true);
       setError(null);
       const [detailData, timelineData] = await Promise.all([saleOrderService.getDetail(id), saleOrderService.getTimeline(id).catch(() => null)]);
+      const mergedTimeline = dedupeTimeline([...(detailData.timeline ?? []), ...(timelineData?.milestones ?? []), ...(timelineData?.events ?? [])]);
+      const nextDetail = {
+        ...detailData,
+        header: { ...detailData.header, status: timelineData?.currentStatus ?? detailData.header.status },
+        timeline: mergedTimeline,
+      };
+      setDetail(nextDetail);
 
-      if (timelineData) {
-        setDetail({
-          ...detailData,
-          header: {
-            ...detailData.header,
-            status: timelineData.currentStatus ?? detailData.header.status,
-          },
-          timeline: [...detailData.timeline, ...timelineData.milestones, ...timelineData.events],
-        });
+      if (nextDetail.header.customerId && canTrackDebt) {
+        const debt = await debtService.getDetail(nextDetail.header.customerId).catch(() => null);
+        setDebtDetail(debt);
       } else {
-        setDetail(detailData);
+        setDebtDetail(null);
       }
     } catch (loadError) {
       const message = getErrorMessage(loadError, "Không thể tải chi tiết đơn bán.");
@@ -102,181 +121,183 @@ const SaleOrderDetailPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, notify]);
+  }, [canTrackDebt, id, notify]);
 
   useEffect(() => {
     void loadData();
   }, [loadData]);
 
-  const currentStatus = normalizeStatus(detail?.header.status);
-  const isTerminal = currentStatus === "CANCELLED" || currentStatus === "COMPLETED";
-  const canTo = useCallback((target: string) => (TRANSITIONS[currentStatus] ?? []).includes(target), [currentStatus]);
+  const currentStatus = normalizeSaleOrderStatus(detail?.header.status);
+  const isTerminal = isSaleOrderTerminalStatus(currentStatus);
+  const deliveredGate = currentStatus === "DELIVERED" || currentStatus === "COMPLETED";
+  const nextFulfillment = getNextFulfillmentAction(currentStatus);
 
-  const hasInternalAction = !isCustomer && (canUpdateStatus || canFulfillment || canComplete || canCancel || canCreateInvoice);
-
-  const runAction = useCallback(
-    async (key: ActionKey, task: () => Promise<void>, successMessage: string, fallback: string) => {
+  const executeAction = useCallback(
+    async (key: LoadingAction, task: () => Promise<void>, successMessage: string, fallbackMessage: string) => {
       try {
-        setActionLoading(key);
+        setLoadingAction(key);
         await task();
         notify(successMessage, "success");
         await loadData();
       } catch (actionError) {
-        const message = getErrorMessage(actionError, fallback);
+        const message = getErrorMessage(actionError, fallbackMessage);
         notify(toSaleOrderTransitionErrorMessage(message), "error");
       } finally {
-        setActionLoading(null);
+        setLoadingAction(null);
       }
     },
     [loadData, notify],
   );
 
-  const itemColumns = useMemo<ColumnsType<SaleOrderDetailModel["items"][number]>>(
-    () => [
-      {
-        title: "Mặt hàng",
-        key: "name",
-        render: (_, item) => (
-          <Space direction="vertical" size={0}>
-            <Typography.Text strong>{item.productName || item.description || item.productCode || item.productId || "Chưa cập nhật"}</Typography.Text>
-            <Typography.Text type="secondary">{item.productCode || item.productId || "-"}</Typography.Text>
-          </Space>
-        ),
-      },
-      { title: "Số lượng", dataIndex: "quantity", key: "quantity", width: 90, align: "right" },
-      { title: "Dự trữ", dataIndex: "reservedQuantity", key: "reservedQuantity", width: 90, align: "right", render: (value?: number) => value ?? 0 },
-      { title: "Soạn", dataIndex: "pickedQuantity", key: "pickedQuantity", width: 80, align: "right", render: (value?: number) => value ?? 0 },
-      { title: "Xuất", dataIndex: "issuedQuantity", key: "issuedQuantity", width: 80, align: "right", render: (value?: number) => value ?? 0 },
-      { title: "Giao", dataIndex: "deliveredQuantity", key: "deliveredQuantity", width: 80, align: "right", render: (value?: number) => value ?? 0 },
-      {
-        title: "Đơn giá",
-        dataIndex: "unitPrice",
-        key: "unitPrice",
-        width: 140,
-        align: "right",
-        render: (value?: number) => (value != null ? toCurrency(value) : "-"),
-      },
-      {
-        title: "Thành tiền",
-        dataIndex: "lineTotal",
-        key: "lineTotal",
-        width: 150,
-        align: "right",
-        render: (value: number | undefined, row) => <Typography.Text strong>{toCurrency(value ?? (row.quantity || 0) * (row.unitPrice || 0))}</Typography.Text>,
-      },
-    ],
-    [],
-  );
-
-  const relatedInvoiceColumns = useMemo<ColumnsType<SaleOrderDetailModel["invoices"][number]>>(
-    () => [
-      { title: "Số hóa đơn", key: "invoiceNumber", render: (_, row) => row.invoiceNumber || row.invoiceId || "-" },
-      { title: "Ngày xuất", dataIndex: "issuedAt", key: "issuedAt", render: (value?: string) => formatSaleOrderDate(value) },
-      { title: "Trạng thái", dataIndex: "status", key: "status", render: (value?: string) => value || "Chưa cập nhật" },
-      { title: "Tổng tiền", dataIndex: "totalAmount", key: "totalAmount", align: "right", render: (value?: number) => (value != null ? toCurrency(value) : "-") },
-      { title: "Còn phải thu", dataIndex: "outstandingAmount", key: "outstandingAmount", align: "right", render: (value?: number) => (value != null ? toCurrency(value) : "-") },
-      {
-        title: "Thao tác",
-        key: "actions",
-        render: (_, row) =>
-          row.invoiceId ? (
-            <Button type="link" onClick={() => navigate(ROUTE_URL.INVOICE_DETAIL.replace(":id", row.invoiceId || ""))}>
-              Xem hóa đơn
-            </Button>
-          ) : (
-            "-"
-          ),
-      },
-    ],
-    [navigate],
-  );
-
-  const timelineItems = useMemo(() => {
-    const events = [...(detail?.timeline ?? [])];
-    events.sort((a, b) => dayjs(b.at).valueOf() - dayjs(a.at).valueOf());
-    return events;
-  }, [detail?.timeline]);
-
-  const fulfillInfo = detail?.fulfillment;
-  const subtotal = useMemo(() => (detail?.items ?? []).reduce((sum, item) => sum + (item.lineTotal ?? (item.quantity || 0) * (item.unitPrice || 0)), 0), [detail?.items]);
-
-  const openCancelModal = () => {
-    cancelForm.resetFields();
-    setCancelOpen(true);
+  const openActionModal = (action: FulfillmentAction) => {
+    actionForm.resetFields();
+    if (action === "deliver") {
+      actionForm.setFieldsValue({ actualDeliveryDate: dayjs() });
+    }
+    setPendingAction(action);
   };
 
-  const openInvoiceModal = () => {
-    invoiceForm.setFieldsValue({
-      dueDate: dayjs().add(7, "day"),
-      issueDate: dayjs(),
-      status: "DRAFT",
-      billingAddress: detail?.customer?.address,
-      paymentTerms: undefined,
-      note: undefined,
-    });
-    setInvoiceOpen(true);
+  const confirmAction = async () => {
+    if (!id || !pendingAction) {
+      return;
+    }
+    try {
+      const values = await actionForm.validateFields();
+      const payload = {
+        note: values.note?.trim() || undefined,
+        trackingNumber: values.trackingNumber?.trim() || undefined,
+        actualDeliveryDate: values.actualDeliveryDate?.format("YYYY-MM-DD"),
+      };
+      const meta = ACTION_META[pendingAction];
+      await executeAction(
+        pendingAction,
+        async () => {
+          if (pendingAction === "reserve") await saleOrderService.reserve(id, payload);
+          if (pendingAction === "pick") await saleOrderService.pick(id, payload);
+          if (pendingAction === "dispatch") await saleOrderService.dispatch(id, payload);
+          if (pendingAction === "deliver") await saleOrderService.deliver(id, { ...payload, actualDeliveryDate: payload.actualDeliveryDate || dayjs().format("YYYY-MM-DD") });
+          if (pendingAction === "complete") await saleOrderService.complete(id, payload);
+          setPendingAction(null);
+        },
+        meta.success,
+        meta.fallback,
+      );
+    } catch (formError) {
+      if (typeof formError === "object" && formError !== null && "errorFields" in formError) {
+        return;
+      }
+    }
   };
 
-  const handleCancelOrder = async () => {
+  const confirmCancel = async () => {
     if (!id) {
       return;
     }
-
     try {
       const values = await cancelForm.validateFields();
-      await runAction(
+      await executeAction(
         "cancel",
         async () => {
           await saleOrderService.cancel(id, values);
           setCancelOpen(false);
         },
-        "Đã hủy đơn bán thành công.",
+        "Đã hủy đơn bán.",
         "Không thể hủy đơn bán.",
       );
-    } catch {
-      return;
+    } catch (formError) {
+      if (typeof formError === "object" && formError !== null && "errorFields" in formError) {
+        return;
+      }
     }
   };
 
-  const handleCreateInvoice = async () => {
-    if (!id || !detail) {
+  const openInvoiceModal = () => {
+    invoiceForm.setFieldsValue({ issueDate: dayjs(), dueDate: dayjs().add(15, "day"), status: "ISSUED", billingAddress: detail?.customer?.address });
+    setInvoiceOpen(true);
+  };
+
+  const confirmCreateInvoice = async () => {
+    if (!id) {
       return;
     }
-
     try {
       const values = await invoiceForm.validateFields();
-      await runAction(
+      await executeAction(
         "invoice",
         async () => {
-          const invoice = await saleOrderService.createInvoice(id, {
-            dueDate: values.dueDate.format("YYYY-MM-DD"),
+          const created = await saleOrderService.createInvoice(id, {
             issueDate: values.issueDate?.format("YYYY-MM-DD"),
+            dueDate: values.dueDate.format("YYYY-MM-DD"),
             status: values.status,
-            billingAddress: values.billingAddress,
-            paymentTerms: values.paymentTerms,
-            note: values.note,
-            items: detail.items
-              .filter((item) => item.quantity > 0 && (item.unitPrice ?? 0) >= 0)
-              .map((item) => ({
-                productId: item.productId,
-                description: item.productName || item.description,
-                unit: item.unit,
-                quantity: item.quantity,
-                unitPrice: item.unitPrice ?? 0,
-              })),
+            billingAddress: values.billingAddress?.trim() || undefined,
+            paymentTerms: values.paymentTerms?.trim() || undefined,
+            note: values.note?.trim() || undefined,
           });
           setInvoiceOpen(false);
-          if (invoice.id) {
-            navigate(ROUTE_URL.INVOICE_DETAIL.replace(":id", invoice.id));
-          }
+          if (created.id) navigate(ROUTE_URL.INVOICE_DETAIL.replace(":id", created.id));
         },
         "Đã tạo hóa đơn từ đơn bán.",
         "Không thể tạo hóa đơn từ đơn bán.",
       );
-    } catch {
-      return;
+    } catch (formError) {
+      if (typeof formError === "object" && formError !== null && "errorFields" in formError) {
+        return;
+      }
     }
   };
+
+  const timelineItems = useMemo(() => [...(detail?.timeline ?? [])].sort((a, b) => dayjs(b.at).valueOf() - dayjs(a.at).valueOf()), [detail?.timeline]);
+  const flowItems = useMemo(() => {
+    const completion = {
+      SUBMITTED: currentStatus.length > 0,
+      RESERVED: isStatusReached(currentStatus, "RESERVED"),
+      PICKED: isStatusReached(currentStatus, "PICKED"),
+      DISPATCHED: isStatusReached(currentStatus, "IN_TRANSIT"),
+      DELIVERED: isStatusReached(currentStatus, "DELIVERED"),
+      INVOICE_CREATED: (detail?.invoices.length ?? 0) > 0 || hasKeyword(timelineItems, ["INVOICE", "CREATE_INVOICE"]),
+      PAYMENT_RECORDED: (debtDetail?.paymentHistory.length ?? 0) > 0 || hasKeyword(timelineItems, ["PAYMENT"]),
+      DEBT_SETTLED: hasKeyword(timelineItems, ["SETTLEMENT", "DEBT_SETTLED"]),
+    } as Record<string, boolean>;
+    let usedProcess = false;
+    return SALE_ORDER_FLOW_STEPS.map((step) => {
+      const done = completion[step.key];
+      const status: "finish" | "process" | "wait" = done ? "finish" : usedProcess ? "wait" : "process";
+      if (!done && !usedProcess) usedProcess = true;
+      return { key: step.key, title: step.label, status, description: `${step.owner === "WAREHOUSE" ? "Kho" : "Kế toán"}: ${step.description}` };
+    });
+  }, [currentStatus, debtDetail?.paymentHistory.length, detail?.invoices.length, timelineItems]);
+
+  const contractId = detail?.header.contractId || detail?.header.id;
+  const customerId = detail?.header.customerId;
+  const outstandingInvoice = (detail?.invoices ?? []).find((invoice) => (invoice.outstandingAmount ?? 0) > 0 && invoice.invoiceId);
+  const totalOutstanding = (detail?.invoices ?? []).reduce((sum, invoice) => sum + (invoice.outstandingAmount ?? 0), 0);
+
+  const itemColumns: ColumnsType<SaleOrderDetailModel["items"][number]> = [
+    { title: "Mặt hàng", key: "name", render: (_, row) => row.productName || row.description || row.productCode || row.productId || "Chưa cập nhật" },
+    { title: "SL", dataIndex: "quantity", key: "quantity", align: "right", width: 80 },
+    { title: "Dự trữ", dataIndex: "reservedQuantity", key: "reservedQuantity", align: "right", width: 90, render: (value?: number) => value ?? 0 },
+    { title: "Soạn", dataIndex: "pickedQuantity", key: "pickedQuantity", align: "right", width: 80, render: (value?: number) => value ?? 0 },
+    { title: "Xuất", dataIndex: "issuedQuantity", key: "issuedQuantity", align: "right", width: 80, render: (value?: number) => value ?? 0 },
+    { title: "Giao", dataIndex: "deliveredQuantity", key: "deliveredQuantity", align: "right", width: 80, render: (value?: number) => value ?? 0 },
+    { title: "Thành tiền", dataIndex: "lineTotal", key: "lineTotal", align: "right", width: 140, render: (value?: number) => (value != null ? toCurrency(value) : "-") },
+  ];
+
+  const inventoryColumns: ColumnsType<SaleOrderDetailModel["inventoryIssues"][number]> = [
+    { title: "Mã giao dịch", key: "code", render: (_, row) => row.transactionCode || row.transactionId || "-" },
+    { title: "Thời điểm", dataIndex: "transactionDate", key: "transactionDate", render: (value?: string) => formatSaleOrderDateTime(value) },
+    { title: "Sản phẩm", key: "product", render: (_, row) => row.productName || row.productCode || row.productId || "-" },
+    { title: "Số lượng", dataIndex: "quantity", key: "quantity", align: "right", width: 100, render: (value?: number) => value ?? "-" },
+    { title: "Người thao tác", key: "operator", render: (_, row) => row.operatorEmail || row.operatorId || "-" },
+  ];
+
+  const invoiceColumns: ColumnsType<SaleOrderDetailModel["invoices"][number]> = [
+    { title: "Số hóa đơn", key: "invoiceNumber", render: (_, row) => row.invoiceNumber || row.invoiceId || "-" },
+    { title: "Ngày xuất", dataIndex: "issueDate", key: "issueDate", render: (value?: string) => formatSaleOrderDate(value) },
+    { title: "Trạng thái", dataIndex: "status", key: "status", render: (value?: string) => value || "Chưa cập nhật" },
+    { title: "Tổng tiền", dataIndex: "totalAmount", key: "totalAmount", align: "right", render: (value?: number) => (value != null ? toCurrency(value) : "-") },
+    { title: "Còn phải thu", dataIndex: "outstandingAmount", key: "outstandingAmount", align: "right", render: (value?: number) => (value != null ? toCurrency(value) : "-") },
+    { title: "Thao tác", key: "action", render: (_, row) => (row.invoiceId ? <Button type="link" onClick={() => navigate(ROUTE_URL.INVOICE_DETAIL.replace(":id", row.invoiceId || ""))}>Xem</Button> : "-") },
+  ];
 
   return (
     <NoResizeScreenTemplate
@@ -284,345 +305,59 @@ const SaleOrderDetailPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Chi tiết đơn bán"
-          subtitle="Theo dõi thực hiện đơn, chứng từ liên quan và thao tác nhanh theo vai trò."
-          breadcrumb={
-            <CustomBreadcrumb
-              breadcrumbs={[
-                { label: "Trang chủ" },
-                { label: "Đơn bán", url: ROUTE_URL.SALE_ORDER_LIST },
-                { label: detail ? resolveSaleOrderNumber(detail.header.id, detail.header.saleOrderNumber) : "Chi tiết đơn bán" },
-              ]}
-            />
-          }
-          actions={
-            <Space wrap>
-              <Button onClick={() => void loadData()} loading={loading}>
-                Làm mới
-              </Button>
-              <Button onClick={() => navigate(ROUTE_URL.SALE_ORDER_TIMELINE.replace(":id", id ?? ""))} disabled={!id}>
-                Xem dòng thời gian
-              </Button>
-            </Space>
-          }
+          subtitle="Flow chuẩn: Submitted → Reserve → Pick → Dispatch → Delivered → Invoice → Payment/Debt."
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Đơn bán", url: ROUTE_URL.SALE_ORDER_LIST }, { label: detail ? resolveSaleOrderNumber(detail.header.id, detail.header.saleOrderNumber) : "Chi tiết" }]} />}
+          actions={<Space><Button onClick={() => void loadData()} loading={loading}>Làm mới</Button><Button onClick={() => navigate(ROUTE_URL.SALE_ORDER_TIMELINE.replace(":id", id ?? ""))} disabled={!id}>Mở timeline</Button></Space>}
         />
       }
       body={
         <Space direction="vertical" size={16} style={{ width: "100%" }}>
           {!id ? <Alert type="warning" showIcon message="Không tìm thấy mã đơn bán trên đường dẫn." /> : null}
           {error ? <Alert type="error" showIcon message="Không thể tải chi tiết đơn bán." description={error} /> : null}
-          {isCustomer ? <Alert type="info" showIcon message="Bạn chỉ có quyền xem thông tin đơn bán, không thể thao tác nội bộ." /> : null}
+          {isCustomer ? <Alert type="info" showIcon message="Bạn đang ở chế độ xem thông tin đơn bán." /> : null}
 
           <Card loading={loading} title="Thông tin đơn bán">
-            {!detail ? (
-              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có dữ liệu đơn bán để hiển thị." />
-            ) : (
-              <Space direction="vertical" size={16} style={{ width: "100%" }}>
-                <Descriptions column={{ xs: 1, sm: 2, md: 3 }} bordered size="small">
-                  <Descriptions.Item label="Mã đơn bán">{resolveSaleOrderNumber(detail.header.id, detail.header.saleOrderNumber)}</Descriptions.Item>
-                  <Descriptions.Item label="Trạng thái">
-                    <SaleOrderStatusTag status={detail.header.status} />
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Tổng tiền">
-                    <Typography.Text strong>{toCurrency(detail.header.totalAmount || subtotal)}</Typography.Text>
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Ngày đơn">{formatSaleOrderDate(detail.header.orderDate)}</Descriptions.Item>
-                  <Descriptions.Item label="Ngày giao dự kiến">{formatSaleOrderDate(detail.header.expectedDeliveryDate)}</Descriptions.Item>
-                  <Descriptions.Item label="Ngày giao thực tế">{formatSaleOrderDate(detail.header.actualDeliveryDate)}</Descriptions.Item>
-                  <Descriptions.Item label="Mã hợp đồng">{detail.header.contractNumber || detail.header.contractId || "Chưa liên kết"}</Descriptions.Item>
-                  <Descriptions.Item label="Mã dự án">{detail.header.projectCode || detail.header.projectId || "Chưa liên kết"}</Descriptions.Item>
-                  <Descriptions.Item label="Mã vận đơn">{detail.header.trackingNumber || "Chưa cập nhật"}</Descriptions.Item>
-                </Descriptions>
-
-                <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small" title="Khách hàng">
-                  <Descriptions.Item label="Mã khách hàng">{detail.customer?.code || detail.header.customerCode || detail.header.customerId || "-"}</Descriptions.Item>
-                  <Descriptions.Item label="Tên khách hàng">{detail.customer?.name || detail.header.customerName || "-"}</Descriptions.Item>
-                  <Descriptions.Item label="Người liên hệ">{detail.customer?.contactPerson || "Chưa cập nhật"}</Descriptions.Item>
-                  <Descriptions.Item label="Số điện thoại">{detail.customer?.phone || "Chưa cập nhật"}</Descriptions.Item>
-                  <Descriptions.Item label="Email">{detail.customer?.email || "Chưa cập nhật"}</Descriptions.Item>
-                  <Descriptions.Item label="Địa chỉ">{detail.customer?.address || "Chưa cập nhật"}</Descriptions.Item>
-                </Descriptions>
-
-                <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small" title="Dự án">
-                  <Descriptions.Item label="Mã dự án">{detail.project?.code || detail.header.projectCode || detail.header.projectId || "Chưa liên kết"}</Descriptions.Item>
-                  <Descriptions.Item label="Tên dự án">{detail.project?.name || detail.header.projectName || "Chưa liên kết"}</Descriptions.Item>
-                  <Descriptions.Item label="Trạng thái dự án">{detail.project?.status || "Chưa cập nhật"}</Descriptions.Item>
-                  <Descriptions.Item label="Ghi chú đơn">{detail.header.note || "Không có ghi chú"}</Descriptions.Item>
-                </Descriptions>
-              </Space>
-            )}
+            {!detail ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có dữ liệu đơn bán." /> : <Descriptions column={{ xs: 1, sm: 2, md: 3 }} bordered size="small">
+              <Descriptions.Item label="Mã đơn bán">{resolveSaleOrderNumber(detail.header.id, detail.header.saleOrderNumber)}</Descriptions.Item>
+              <Descriptions.Item label="Trạng thái"><SaleOrderStatusTag status={detail.header.status} /></Descriptions.Item>
+              <Descriptions.Item label="Tổng tiền">{toCurrency(detail.header.totalAmount)}</Descriptions.Item>
+              <Descriptions.Item label="Ngày đơn">{formatSaleOrderDate(detail.header.orderDate)}</Descriptions.Item>
+              <Descriptions.Item label="Ngày giao dự kiến">{formatSaleOrderDate(detail.header.expectedDeliveryDate)}</Descriptions.Item>
+              <Descriptions.Item label="Ngày giao thực tế">{formatSaleOrderDate(detail.header.actualDeliveryDate)}</Descriptions.Item>
+              <Descriptions.Item label="Mã hợp đồng">{detail.header.contractNumber || contractId || "-"}</Descriptions.Item>
+              <Descriptions.Item label="saleOrderId = contractId">{`${detail.header.id} = ${contractId || "?"}`}</Descriptions.Item>
+              <Descriptions.Item label="Hợp đồng nguồn">{contractId ? <Button type="link" onClick={() => navigate(ROUTE_URL.CONTRACT_DETAIL.replace(":id", contractId))}>Mở hợp đồng</Button> : "-"}</Descriptions.Item>
+            </Descriptions>}
           </Card>
 
-          <Card loading={loading} title="Danh sách mặt hàng">
-            <Table
-              rowKey={(item, index) => item.id || item.productId || `item-${index}`}
-              columns={itemColumns}
-              dataSource={detail?.items ?? []}
-              pagination={false}
-              scroll={{ x: 1050 }}
-              locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có mặt hàng trong đơn bán này." /> }}
-            />
-          </Card>
-
-          <Card loading={loading} title="Tình trạng thực hiện">
-            <Descriptions column={{ xs: 1, sm: 2, md: 3 }} bordered size="small">
-              <Descriptions.Item label="Đã dự trữ lúc">{formatSaleOrderDateTime(fulfillInfo?.reservedAt)}</Descriptions.Item>
-              <Descriptions.Item label="Đã soạn lúc">{formatSaleOrderDateTime(fulfillInfo?.pickedAt)}</Descriptions.Item>
-              <Descriptions.Item label="Đã xuất giao lúc">{formatSaleOrderDateTime(fulfillInfo?.dispatchedAt)}</Descriptions.Item>
-              <Descriptions.Item label="Đã giao lúc">{formatSaleOrderDateTime(fulfillInfo?.deliveredAt)}</Descriptions.Item>
-              <Descriptions.Item label="Hoàn tất lúc">{formatSaleOrderDateTime(fulfillInfo?.completedAt)}</Descriptions.Item>
-              <Descriptions.Item label="Lý do hủy">{fulfillInfo?.cancellationReason || "Không có"}</Descriptions.Item>
-              <Descriptions.Item label="Ghi chú hủy" span={3}>
-                {fulfillInfo?.cancellationNote || "Không có"}
-              </Descriptions.Item>
+          <Card loading={loading} title="Khách hàng / Dự án">
+            <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
+              <Descriptions.Item label="Khách hàng">{detail?.customer?.name || detail?.header.customerName || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Mã khách hàng">{detail?.customer?.code || detail?.header.customerCode || detail?.header.customerId || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Dự án">{detail?.project?.name || detail?.header.projectName || "Chưa liên kết"}</Descriptions.Item>
+              <Descriptions.Item label="Mã dự án">{detail?.project?.code || detail?.header.projectCode || detail?.header.projectId || "-"}</Descriptions.Item>
             </Descriptions>
           </Card>
 
-          {canViewRelatedInvoices ? (
-            <Card loading={loading} title="Chứng từ và hóa đơn liên quan">
-              <Table
-                rowKey={(row, index) => row.invoiceId || `invoice-${index}`}
-                columns={relatedInvoiceColumns}
-                dataSource={detail?.invoices ?? []}
-                pagination={false}
-                locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có hóa đơn liên kết với đơn bán này." /> }}
-              />
-            </Card>
-          ) : null}
+          <Card loading={loading} title="Mặt hàng đơn bán"><Table rowKey={(row, index) => row.id || row.productId || `item-${index}`} columns={itemColumns} dataSource={detail?.items ?? []} pagination={false} scroll={{ x: 900 }} /></Card>
 
-          <Card loading={loading} title="Dòng thời gian xử lý">
-            {timelineItems.length === 0 ? (
-              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có bản ghi dòng thời gian cho đơn bán này." />
-            ) : (
-              <Timeline
-                items={timelineItems.map((event, index) => ({
-                  key: `${event.id || event.at || event.eventType || index}`,
-                  children: (
-                    <Space direction="vertical" size={2}>
-                      <Typography.Text strong>{getTimelineEventLabel(event.eventType, event.title)}</Typography.Text>
-                      <Typography.Text type="secondary">{formatSaleOrderDateTime(event.at)}</Typography.Text>
-                      {event.status ? <SaleOrderStatusTag compact status={event.status} /> : null}
-                      {event.actorName ? <Typography.Text type="secondary">Người thực hiện: {event.actorName}</Typography.Text> : null}
-                      {event.note ? <Typography.Text>{event.note}</Typography.Text> : null}
-                      {event.trackingNumber ? <Typography.Text type="secondary">Mã vận đơn: {event.trackingNumber}</Typography.Text> : null}
-                    </Space>
-                  ),
-                }))}
-              />
-            )}
-          </Card>
+          <Card loading={loading} title="Inventory issue liên quan"><Table rowKey={(row, index) => row.transactionId || `issue-${index}`} columns={inventoryColumns} dataSource={detail?.inventoryIssues ?? []} pagination={false} locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có giao dịch xuất kho liên quan." /> }} /></Card>
 
-          {hasInternalAction ? (
-            <Card title="Thao tác xử lý đơn bán">
-              <Space wrap>
-                {canUpdateStatus ? (
-                  <Button
-                    loading={actionLoading === "processing"}
-                    disabled={isTerminal || !canTo("PROCESSING")}
-                    onClick={() =>
-                      void runAction(
-                        "processing",
-                        async () => {
-                          if (!id) {
-                            return;
-                          }
-                          await saleOrderService.updateStatus(id, { status: "PROCESSING" });
-                        },
-                        "Đã chuyển đơn bán sang trạng thái Đang xử lý.",
-                        "Không thể chuyển đơn bán sang trạng thái Đang xử lý.",
-                      )
-                    }
-                  >
-                    Chuyển xử lý
-                  </Button>
-                ) : null}
+          {canViewRelatedInvoices ? <Card loading={loading} title="Hóa đơn liên quan"><Table rowKey={(row, index) => row.invoiceId || `invoice-${index}`} columns={invoiceColumns} dataSource={detail?.invoices ?? []} pagination={false} locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có hóa đơn liên quan." /> }} /></Card> : null}
 
-                {canFulfillment ? (
-                  <Button
-                    loading={actionLoading === "reserve"}
-                    disabled={isTerminal || !canTo("RESERVED")}
-                    onClick={() =>
-                      void runAction(
-                        "reserve",
-                        async () => {
-                          if (!id) {
-                            return;
-                          }
-                          await saleOrderService.reserve(id);
-                        },
-                        "Đã dự trữ hàng cho đơn bán.",
-                        "Không thể dự trữ hàng cho đơn bán.",
-                      )
-                    }
-                  >
-                    Dự trữ hàng
-                  </Button>
-                ) : null}
+          {canTrackDebt && debtDetail ? <Card loading={loading} title="Thanh toán / Công nợ liên quan"><Space direction="vertical" size={8}><Typography.Text>Trạng thái công nợ: <Typography.Text strong>{debtDetail.summary.status || "Chưa cập nhật"}</Typography.Text></Typography.Text><Typography.Text>Dư nợ còn lại: <Typography.Text strong>{toCurrency(debtDetail.summary.outstandingAmount)}</Typography.Text></Typography.Text><Typography.Text>Tổng công nợ từ hóa đơn đơn bán: <Typography.Text strong>{toCurrency(totalOutstanding)}</Typography.Text></Typography.Text>{customerId ? <Space><Button onClick={() => navigate(ROUTE_URL.DEBT_DETAIL.replace(":customerId", customerId))}>Theo dõi công nợ</Button><Button onClick={() => navigate(ROUTE_URL.DEBT_DETAIL.replace(":customerId", customerId), { state: { tab: "settlement" } })}>Xác nhận quyết toán</Button></Space> : null}</Space></Card> : null}
 
-                {canFulfillment ? (
-                  <Button
-                    loading={actionLoading === "pick"}
-                    disabled={isTerminal || !canTo("PICKED")}
-                    onClick={() =>
-                      void runAction(
-                        "pick",
-                        async () => {
-                          if (!id) {
-                            return;
-                          }
-                          await saleOrderService.pick(id);
-                        },
-                        "Đã soạn hàng cho đơn bán.",
-                        "Không thể soạn hàng cho đơn bán.",
-                      )
-                    }
-                  >
-                    Soạn hàng
-                  </Button>
-                ) : null}
+          <Card loading={loading} title="Timeline nghiệp vụ"><Space direction="vertical" size={12} style={{ width: "100%" }}><Steps direction="vertical" current={-1} items={flowItems} />{timelineItems.length === 0 ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có timeline." /> : <Timeline items={timelineItems.map((event, index) => ({ key: `${event.id || event.at || event.eventType || index}`, children: <Space direction="vertical" size={2}><Typography.Text strong>{getTimelineEventLabel(event.eventType, event.title)}</Typography.Text><Typography.Text type="secondary">{formatSaleOrderDateTime(event.at)}</Typography.Text>{event.status ? <SaleOrderStatusTag compact status={event.status} /> : null}</Space> }))} />}</Space></Card>
 
-                {canFulfillment ? (
-                  <Button
-                    loading={actionLoading === "dispatch"}
-                    disabled={isTerminal || !canTo("IN_TRANSIT")}
-                    onClick={() =>
-                      void runAction(
-                        "dispatch",
-                        async () => {
-                          if (!id) {
-                            return;
-                          }
-                          await saleOrderService.dispatch(id);
-                        },
-                        "Đã chuyển trạng thái xuất giao cho đơn bán.",
-                        "Không thể chuyển đơn bán sang trạng thái xuất giao.",
-                      )
-                    }
-                  >
-                    Xuất giao
-                  </Button>
-                ) : null}
+          {!isCustomer && canFulfillment ? <Card title="Thao tác fulfillment (Kho)"><Space direction="vertical" size={10}><Alert type="info" showIcon message="Kho chỉ thao tác đúng bước hợp lệ theo trạng thái hiện tại." />{nextFulfillment && !isTerminal ? <Button type="primary" loading={loadingAction === nextFulfillment.key} onClick={() => openActionModal(nextFulfillment.key)}>Thực hiện {nextFulfillment.label}</Button> : <Typography.Text type="secondary">Không có thao tác fulfillment hợp lệ.</Typography.Text>}</Space></Card> : null}
 
-                {canFulfillment ? (
-                  <Button
-                    loading={actionLoading === "deliver"}
-                    disabled={isTerminal || !canTo("DELIVERED")}
-                    onClick={() =>
-                      void runAction(
-                        "deliver",
-                        async () => {
-                          if (!id) {
-                            return;
-                          }
-                          await saleOrderService.deliver(id, { actualDeliveryDate: dayjs().format("YYYY-MM-DD") });
-                        },
-                        "Đã xác nhận giao hàng thành công.",
-                        "Không thể xác nhận đã giao cho đơn bán.",
-                      )
-                    }
-                  >
-                    Xác nhận đã giao
-                  </Button>
-                ) : null}
+          {!isCustomer && (canCreateInvoice || canRecordPayment || canTrackDebt || canComplete || canCancel) ? <Card title="Chuyển sang kế toán sau Delivered"><Space direction="vertical" size={12}><Alert type={deliveredGate ? "success" : "warning"} showIcon message={deliveredGate ? "Đơn đã đủ điều kiện bước kế toán." : "CTA kế toán sẽ bật sau khi đơn đạt Delivered."} /><Space wrap>{canCreateInvoice ? <Button type="primary" disabled={!deliveredGate || isTerminal} loading={loadingAction === "invoice"} onClick={openInvoiceModal}>Tạo hóa đơn</Button> : null}{detail?.invoices[0]?.invoiceId ? <Button onClick={() => navigate(ROUTE_URL.INVOICE_DETAIL.replace(":id", detail.invoices[0].invoiceId || ""))}>Xem hóa đơn</Button> : <Button disabled>Chưa có hóa đơn</Button>}{canRecordPayment ? <Button disabled={!deliveredGate || !outstandingInvoice?.invoiceId} onClick={() => navigate(ROUTE_URL.PAYMENT_RECORD_BY_INVOICE.replace(":id", outstandingInvoice?.invoiceId || ""))}>Ghi nhận thanh toán</Button> : null}{canComplete ? <Button type="dashed" disabled={currentStatus !== "DELIVERED"} loading={loadingAction === "complete"} onClick={() => openActionModal("complete")}>Complete</Button> : null}{canCancel ? <Button danger disabled={isTerminal} loading={loadingAction === "cancel"} onClick={() => setCancelOpen(true)}>Hủy đơn bán</Button> : null}</Space></Space></Card> : null}
 
-                {canComplete ? (
-                  <Button
-                    type="primary"
-                    loading={actionLoading === "complete"}
-                    disabled={isTerminal || !canTo("COMPLETED")}
-                    onClick={() =>
-                      void runAction(
-                        "complete",
-                        async () => {
-                          if (!id) {
-                            return;
-                          }
-                          await saleOrderService.complete(id);
-                        },
-                        "Đã hoàn tất đơn bán.",
-                        "Không thể hoàn tất đơn bán.",
-                      )
-                    }
-                  >
-                    Hoàn tất đơn
-                  </Button>
-                ) : null}
+          <Modal open={Boolean(pendingAction)} title={pendingAction ? ACTION_META[pendingAction].title : "Xác nhận thao tác"} okText={pendingAction ? ACTION_META[pendingAction].okText : "Xác nhận"} cancelText="Đóng" onCancel={() => setPendingAction(null)} onOk={() => void confirmAction()} okButtonProps={{ loading: pendingAction ? loadingAction === pendingAction : false }}><Form form={actionForm} layout="vertical"><Form.Item name="trackingNumber" label="Mã vận đơn"><Input placeholder="Nhập mã vận đơn (nếu có)" maxLength={100} /></Form.Item>{pendingAction === "deliver" ? <Form.Item name="actualDeliveryDate" label="Ngày giao thực tế"><DatePicker className="w-full" format="DD/MM/YYYY" /></Form.Item> : null}<Form.Item name="note" label="Ghi chú"><Input.TextArea rows={3} maxLength={500} /></Form.Item></Form></Modal>
 
-                {canCreateInvoice ? (
-                  <Button type="dashed" loading={actionLoading === "invoice"} disabled={isTerminal || !id} onClick={openInvoiceModal}>
-                    Tạo hóa đơn
-                  </Button>
-                ) : null}
+          <Modal open={cancelOpen} title="Xác nhận hủy đơn bán" okText="Xác nhận hủy" cancelText="Đóng" onCancel={() => setCancelOpen(false)} onOk={() => void confirmCancel()} okButtonProps={{ danger: true, loading: loadingAction === "cancel" }}><Form form={cancelForm} layout="vertical"><Form.Item name="cancellationReason" label="Lý do hủy" rules={[{ required: true, message: "Vui lòng chọn lý do hủy." }]}><Select options={SALE_ORDER_CANCELLATION_REASON_OPTIONS} placeholder="Chọn lý do hủy" /></Form.Item><Form.Item name="comment" label="Ghi chú"><Input.TextArea rows={3} maxLength={1000} /></Form.Item></Form></Modal>
 
-                {canCancel ? (
-                  <Button danger loading={actionLoading === "cancel"} disabled={isTerminal || !id} onClick={openCancelModal}>
-                    Hủy đơn
-                  </Button>
-                ) : null}
-              </Space>
-            </Card>
-          ) : null}
-
-          <Modal
-            open={cancelOpen}
-            title="Xác nhận hủy đơn bán"
-            okText="Xác nhận hủy"
-            cancelText="Đóng"
-            okButtonProps={{ danger: true, loading: actionLoading === "cancel" }}
-            onCancel={() => setCancelOpen(false)}
-            onOk={() => void handleCancelOrder()}
-          >
-            <Space direction="vertical" size={12} style={{ width: "100%" }}>
-              <Alert showIcon type="warning" message="Hành động này sẽ hủy đơn bán và không thể khôi phục trạng thái trước đó." />
-              <Form form={cancelForm} layout="vertical">
-                <Form.Item
-                  name="cancellationReason"
-                  label="Lý do hủy"
-                  rules={[{ required: true, message: "Vui lòng chọn lý do hủy đơn bán." }]}
-                >
-                  <Select placeholder="Chọn lý do hủy" options={SALE_ORDER_CANCELLATION_REASON_OPTIONS} />
-                </Form.Item>
-                <Form.Item name="comment" label="Ghi chú">
-                  <Input.TextArea rows={3} placeholder="Nhập thông tin bổ sung cho quyết định hủy đơn (nếu có)." />
-                </Form.Item>
-              </Form>
-            </Space>
-          </Modal>
-
-          <Modal
-            open={invoiceOpen}
-            title="Tạo hóa đơn từ đơn bán"
-            okText="Tạo hóa đơn"
-            cancelText="Đóng"
-            okButtonProps={{ loading: actionLoading === "invoice" }}
-            onCancel={() => setInvoiceOpen(false)}
-            onOk={() => void handleCreateInvoice()}
-          >
-            <Form form={invoiceForm} layout="vertical">
-              <Form.Item name="dueDate" label="Hạn thanh toán" rules={[{ required: true, message: "Vui lòng chọn hạn thanh toán." }]}> 
-                <DatePicker className="w-full" format="DD/MM/YYYY" placeholder="Chọn hạn thanh toán" />
-              </Form.Item>
-              <Form.Item name="issueDate" label="Ngày xuất hóa đơn">
-                <DatePicker className="w-full" format="DD/MM/YYYY" placeholder="Chọn ngày xuất hóa đơn" />
-              </Form.Item>
-              <Form.Item name="status" label="Trạng thái ban đầu">
-                <Select
-                  options={[
-                    { label: "Nháp", value: "DRAFT" },
-                    { label: "Đã phát hành", value: "ISSUED" },
-                  ]}
-                />
-              </Form.Item>
-              <Form.Item name="billingAddress" label="Địa chỉ thanh toán">
-                <Input.TextArea rows={2} placeholder="Nhập địa chỉ thanh toán trên hóa đơn" />
-              </Form.Item>
-              <Form.Item name="paymentTerms" label="Điều khoản thanh toán">
-                <Input placeholder="Ví dụ: Thanh toán trong vòng 15 ngày" />
-              </Form.Item>
-              <Form.Item name="note" label="Ghi chú hóa đơn">
-                <Input.TextArea rows={2} placeholder="Nhập ghi chú (nếu có)" />
-              </Form.Item>
-            </Form>
-          </Modal>
+          <Modal open={invoiceOpen} title="Tạo hóa đơn từ đơn bán" okText="Tạo hóa đơn" cancelText="Đóng" onCancel={() => setInvoiceOpen(false)} onOk={() => void confirmCreateInvoice()} okButtonProps={{ loading: loadingAction === "invoice" }}><Form form={invoiceForm} layout="vertical"><Form.Item name="issueDate" label="Ngày xuất hóa đơn"><DatePicker className="w-full" format="DD/MM/YYYY" /></Form.Item><Form.Item name="dueDate" label="Hạn thanh toán" rules={[{ required: true, message: "Vui lòng chọn hạn thanh toán." }]}><DatePicker className="w-full" format="DD/MM/YYYY" /></Form.Item><Form.Item name="status" label="Trạng thái ban đầu"><Select options={[{ label: "Nháp", value: "DRAFT" }, { label: "Đã phát hành", value: "ISSUED" }]} /></Form.Item><Form.Item name="billingAddress" label="Địa chỉ thanh toán"><Input.TextArea rows={2} maxLength={500} /></Form.Item><Form.Item name="paymentTerms" label="Điều khoản thanh toán"><Input maxLength={255} /></Form.Item><Form.Item name="note" label="Ghi chú"><Input.TextArea rows={2} maxLength={1000} /></Form.Item></Form></Modal>
         </Space>
       }
     />

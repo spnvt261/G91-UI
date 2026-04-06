@@ -6,7 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
-import { canPerformAction } from "../../const/authz.const";
+import { canPerformAction, hasPermission } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type { ContractModel } from "../../models/contract/contract.model";
@@ -45,6 +45,7 @@ const ContractDetailPage = () => {
   const canApprove = canPerformAction(role, "contract.approve");
   const canEdit = canPerformAction(role, "contract.update");
   const canCancel = canPerformAction(role, "contract.cancel");
+  const canViewSaleOrder = hasPermission(role, "sale-order.view");
 
   const [contract, setContract] = useState<ContractModel | null>(null);
   const [documents, setDocuments] = useState<ContractDocumentModel[]>([]);
@@ -355,12 +356,22 @@ const ContractDetailPage = () => {
                     <Card title="Thông tin chính">
                       <Descriptions column={1} size="small" colon={false}>
                         <Descriptions.Item label="Số hợp đồng">{getContractDisplayNumber(contract)}</Descriptions.Item>
+                        <Descriptions.Item label="Mã đơn bán">{contract.saleOrderNumber || "Chưa phát sinh"}</Descriptions.Item>
                         <Descriptions.Item label="Trạng thái">
                           <ContractStatusTag status={contract.status} />
                         </Descriptions.Item>
                         <Descriptions.Item label="Khách hàng">{contract.customerName || contract.customerId}</Descriptions.Item>
                         <Descriptions.Item label="Báo giá liên kết">{contract.quotationNumber || contract.quotationId || "Không có"}</Descriptions.Item>
                         <Descriptions.Item label="Ngày giao dự kiến">{formatContractDate(contract.expectedDeliveryDate)}</Descriptions.Item>
+                        <Descriptions.Item label="Liên kết đơn bán">
+                          {contract.saleOrderNumber && canViewSaleOrder ? (
+                            <Button type="link" onClick={() => navigate(ROUTE_URL.SALE_ORDER_DETAIL.replace(":id", contract.id))}>
+                              Mở chi tiết đơn bán
+                            </Button>
+                          ) : (
+                            "Chưa có"
+                          )}
+                        </Descriptions.Item>
                       </Descriptions>
                     </Card>
                   </Col>
