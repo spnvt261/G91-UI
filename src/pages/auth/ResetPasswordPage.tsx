@@ -24,6 +24,7 @@ interface PasswordStrengthInfo {
 }
 
 type TokenValidationState = "checking" | "valid" | "invalid";
+
 const INVALID_RESET_LINK_MESSAGE = "Liên kết đổi mật khẩu không hợp lệ hoặc đã hết hạn.";
 
 const evaluatePasswordStrength = (password: string): PasswordStrengthInfo => {
@@ -308,7 +309,7 @@ const ResetPasswordPage = () => {
                 type="info"
                 message={
                   formattedExpiry
-                    ? `Bạn vui lòng hoàn tất trước ${formattedExpiry}.`
+                    ? `Liên kết có giá trị đến ${formattedExpiry}.`
                     : "Mật khẩu mới nên có chữ hoa, chữ thường, số và ký tự đặc biệt để an toàn hơn."
                 }
               />
@@ -316,9 +317,7 @@ const ResetPasswordPage = () => {
               <Form.Item
                 label="Mật khẩu mới"
                 name="newPassword"
-                rules={[
-                  { required: true, message: "Vui lòng nhập mật khẩu mới." },
-                ]}
+                rules={[{ required: true, message: "Vui lòng nhập mật khẩu mới." }]}
                 style={{ marginTop: 16 }}
               >
                 <Input.Password size="large" placeholder="Nhập mật khẩu mới" prefix={<LockOutlined />} />

@@ -136,7 +136,7 @@ const CustomerCreatePage = () => {
                       { max: 255, message: "Tên công ty tối đa 255 ký tự." },
                     ]}
                   >
-                    <Input placeholder="Ví dụ: Công ty TNHH G91" />
+                    <Input placeholder="Ví dụ: Công ty TNHH G90" />
                   </Form.Item>
                 </Col>
 

@@ -20,11 +20,7 @@ const NotificationBell = () => {
       trigger={["click"]}
       placement="bottomRight"
       popupRender={() => (
-        <Card
-          variant="borderless"
-          className="app-notification-dropdown"
-          styles={{ body: { padding: 14 } }}
-        >
+        <Card variant="borderless" className="app-notification-dropdown" styles={{ body: { padding: 14 } }}>
           <Space orientation="vertical" size={10} style={{ width: "100%" }}>
             <Space align="center" size={8}>
               <InfoCircleOutlined style={{ color: "#1677ff" }} />
@@ -49,10 +45,7 @@ const NotificationBell = () => {
                 ))}
               </Space>
             ) : (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="Hiện chưa có thông báo mới."
-              />
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Hiện chưa có thông báo mới." />
             )}
           </Space>
         </Card>

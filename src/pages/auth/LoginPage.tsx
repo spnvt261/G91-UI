@@ -83,7 +83,7 @@ const LoginPage = () => {
     <AuthPageShell
       sidePanel={
         <AuthHeroPanel
-          eyebrow="Không gian làm việc G91"
+          eyebrow="Không gian làm việc 0"
           title="Quản lý dữ liệu tập trung, bảo mật theo vai trò"
           description="Đăng nhập để theo dõi tiến độ, phối hợp phòng ban và kiểm soát toàn bộ quy trình vận hành trong một giao diện thống nhất."
           highlights={[
@@ -105,7 +105,7 @@ const LoginPage = () => {
       <AuthFormCard
         eyebrow="Chào mừng bạn quay lại"
         title="Đăng nhập"
-        description="Nhập email và mật khẩu để truy cập hệ thống điều hành doanh nghiệp G91."
+        description="Nhập email và mật khẩu để truy cập hệ thống điều hành doanh nghiệp G90."
         icon={<LoginOutlined />}
         footer={
           <Space direction="vertical" size={8} className="auth-footer-links">
