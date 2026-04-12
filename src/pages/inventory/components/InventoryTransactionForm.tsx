@@ -54,7 +54,7 @@ const InventoryTransactionForm = <TValues extends object>({
       <Col xs={24} lg={16}>
         <Form form={form} layout="vertical" onFinish={onSubmit} requiredMark="optional">
           <Space direction="vertical" size={16} style={{ width: "100%" }}>
-            <Card title="1. Chọn sản phẩm">
+            <Card title="Chọn sản phẩm">
               {productLoadError ? (
                 <Alert
                   type="error"
@@ -78,9 +78,9 @@ const InventoryTransactionForm = <TValues extends object>({
               </Form.Item>
             </Card>
 
-            <Card title={`2. ${sectionTwoTitle}`}>{sectionTwo}</Card>
-            <Card title={`3. ${sectionThreeTitle}`}>{sectionThree}</Card>
-            <Card title={`4. ${sectionFourTitle}`}>
+            <Card title={sectionTwoTitle}>{sectionTwo}</Card>
+            <Card title={sectionThreeTitle}>{sectionThree}</Card>
+            <Card title={sectionFourTitle}>
               {helperAlert}
               {sectionFour}
             </Card>
