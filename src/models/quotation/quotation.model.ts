@@ -69,6 +69,7 @@ export interface QuotationRequest {
   note?: string;
   deliveryRequirements?: string;
   promotionCode?: string;
+  paymentOptionCode?: string;
 }
 
 export interface QuotationSubmitActionRequest {
@@ -76,6 +77,7 @@ export interface QuotationSubmitActionRequest {
   projectId?: string;
   deliveryRequirements?: string;
   promotionCode?: string;
+  paymentOptionCode?: string;
   note?: string;
   items?: QuotationItemModel[];
 }
@@ -112,6 +114,12 @@ export interface QuotationFormInitProject {
   status: string;
 }
 
+export interface QuotationPaymentOption {
+  code: string;
+  name: string;
+  description?: string;
+}
+
 export interface QuotationFormInitResponseData {
   customer?: {
     id: string;
@@ -127,6 +135,7 @@ export interface QuotationFormInitResponseData {
     discountType?: string;
     discountValue?: number;
   }>;
+  availablePaymentOptions: QuotationPaymentOption[];
 }
 
 export interface CustomerQuotationListItem {

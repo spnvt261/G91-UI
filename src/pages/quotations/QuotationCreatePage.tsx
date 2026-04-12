@@ -31,6 +31,7 @@ import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type {
   QuotationFormInitProduct,
+  QuotationPaymentOption,
   QuotationFormInitProject,
   QuotationItemModel,
   QuotationPreviewResponseData,
@@ -49,6 +50,7 @@ interface QuotationItemForm {
 
 interface QuotationCreateFormValues {
   projectId?: string;
+  paymentOptionCode?: string;
   productId?: string;
   quantityToAdd?: number;
   deliveryRequirements?: string;
@@ -61,6 +63,7 @@ const MIN_SUBMIT_AMOUNT = 10_000_000;
 const NOTE_MAX_LENGTH = 1000;
 const DELIVERY_MAX_LENGTH = 1000;
 const PROMOTION_MAX_LENGTH = 50;
+const PAYMENT_OPTION_CODE_MAX_LENGTH = 20;
 
 const QuotationCreatePage = () => {
   const navigate = useNavigate();
@@ -71,6 +74,7 @@ const QuotationCreatePage = () => {
 
   const [form] = Form.useForm<QuotationCreateFormValues>();
   const watchedProjectId = Form.useWatch("projectId", form);
+  const watchedPaymentOptionCode = Form.useWatch("paymentOptionCode", form);
   const watchedPromotionCode = Form.useWatch("promotionCode", form);
   const watchedDeliveryRequirement = Form.useWatch("deliveryRequirements", form);
   const watchedNote = Form.useWatch("note", form);
@@ -79,6 +83,7 @@ const QuotationCreatePage = () => {
   const [promotionOptions, setPromotionOptions] = useState<Array<{ label: string; value: string }>>([]);
   const [products, setProducts] = useState<QuotationFormInitProduct[]>([]);
   const [projects, setProjects] = useState<QuotationFormInitProject[]>([]);
+  const [paymentOptions, setPaymentOptions] = useState<QuotationPaymentOption[]>([]);
   const [customerInfo, setCustomerInfo] = useState<{
     companyName?: string;
     customerType?: string;
@@ -147,6 +152,7 @@ const QuotationCreatePage = () => {
         setCustomerInfo(response.customer ?? null);
         setProducts(response.products ?? []);
         setProjects(response.projects ?? []);
+        setPaymentOptions(response.availablePaymentOptions ?? []);
         setProjectOptions(
           (response.projects ?? []).map((item) => ({
             label: `${item.projectCode ?? item.id} - ${item.name}`,
@@ -165,6 +171,7 @@ const QuotationCreatePage = () => {
         setCustomerInfo(null);
         setProducts([]);
         setProjects([]);
+        setPaymentOptions([]);
         setProjectOptions([]);
         setPromotionOptions([]);
         notify(message, "warning");
@@ -178,10 +185,11 @@ const QuotationCreatePage = () => {
 
   useEffect(() => {
     setIsPreviewStale(true);
-  }, [watchedDeliveryRequirement, watchedNote, watchedProjectId, watchedPromotionCode, quotationItems]);
+  }, [watchedDeliveryRequirement, watchedNote, watchedPaymentOptionCode, watchedProjectId, watchedPromotionCode, quotationItems]);
 
   const productsById = useMemo(() => new Map(products.map((item) => [item.id, item])), [products]);
   const projectsById = useMemo(() => new Map(projects.map((item) => [item.id, item])), [projects]);
+  const paymentOptionsByCode = useMemo(() => new Map(paymentOptions.map((item) => [item.code, item])), [paymentOptions]);
   const getProductDisplayLabel = (product: QuotationFormInitProduct) => `${product.productCode} - ${product.productName}`;
   const getProductFirstImage = (product: QuotationFormInitProduct) => product.mainImage || product.imageUrls?.[0] || product.images?.[0];
 
@@ -212,6 +220,7 @@ const QuotationCreatePage = () => {
   }, [productsById, quotationItems]);
 
   const selectedProject = watchedProjectId ? projectsById.get(watchedProjectId) : undefined;
+  const selectedPaymentOption = watchedPaymentOptionCode ? paymentOptionsByCode.get(watchedPaymentOptionCode) : undefined;
   const selectedProductIdSet = useMemo(() => new Set(quotationItems.map((item) => item.productId)), [quotationItems]);
   const previewValidationMessages = previewResult?.validation?.messages ?? [];
   const isPreviewValid = previewResult?.validation ? previewResult.validation.valid : true;
@@ -230,6 +239,7 @@ const QuotationCreatePage = () => {
       { name: "quantityToAdd", errors: [] },
       { name: "deliveryRequirements", errors: [] },
       { name: "note", errors: [] },
+      { name: "paymentOptionCode", errors: [] },
       { name: "promotionCode", errors: [] },
     ]);
   };
@@ -243,6 +253,7 @@ const QuotationCreatePage = () => {
   const getValidationError = (mode: "draft" | "preview" | "submit"): string | null => {
     const deliveryRequirement = form.getFieldValue("deliveryRequirements") ?? "";
     const note = form.getFieldValue("note") ?? "";
+    const paymentOptionCode = form.getFieldValue("paymentOptionCode") ?? "";
     const promotionCode = form.getFieldValue("promotionCode") ?? "";
 
     if (quotationItems.length === 0) {
@@ -259,6 +270,10 @@ const QuotationCreatePage = () => {
     }
     if (promotionCode.length > PROMOTION_MAX_LENGTH) {
       return `Mã ưu đãi tối đa ${PROMOTION_MAX_LENGTH} ký tự.`;
+    }
+
+    if (paymentOptionCode.length > PAYMENT_OPTION_CODE_MAX_LENGTH) {
+      return `Ma dieu khoan thanh toan toi da ${PAYMENT_OPTION_CODE_MAX_LENGTH} ky tu.`;
     }
 
     const invalidItem = quotationItems.find((item) => !Number.isInteger(item.quantity) || item.quantity < 1);
@@ -285,6 +300,7 @@ const QuotationCreatePage = () => {
     const values = form.getFieldsValue();
     return {
       projectId: values.projectId || undefined,
+      paymentOptionCode: values.paymentOptionCode || undefined,
       deliveryRequirements: values.deliveryRequirements?.trim() || undefined,
       promotionCode: values.promotionCode || undefined,
       note: values.note?.trim() || undefined,
@@ -356,7 +372,7 @@ const QuotationCreatePage = () => {
   const handlePreview = async () => {
     try {
       clearInlineFieldErrors();
-      await form.validateFields(["deliveryRequirements", "note", "promotionCode"]);
+      await form.validateFields(["deliveryRequirements", "note", "paymentOptionCode", "promotionCode"]);
 
       const error = getValidationError("preview");
       if (error) {
@@ -410,7 +426,7 @@ const QuotationCreatePage = () => {
   const handleSubmit = async () => {
     try {
       clearInlineFieldErrors();
-      await form.validateFields(["deliveryRequirements", "note", "promotionCode"]);
+      await form.validateFields(["deliveryRequirements", "note", "paymentOptionCode", "promotionCode"]);
 
       const error = getValidationError("submit");
       if (error) {
@@ -442,7 +458,7 @@ const QuotationCreatePage = () => {
   const handleSaveDraft = async () => {
     try {
       clearInlineFieldErrors();
-      await form.validateFields(["deliveryRequirements", "note", "promotionCode"]);
+      await form.validateFields(["deliveryRequirements", "note", "paymentOptionCode", "promotionCode"]);
 
       const error = getValidationError("draft");
       if (error) {
@@ -554,6 +570,32 @@ const QuotationCreatePage = () => {
                                   <Typography.Text type="secondary">Chưa chọn dự án</Typography.Text>
                                 )}
                               </Form.Item>
+                            </Col>
+                            <Col xs={24}>
+                              <Form.Item
+                                name="paymentOptionCode"
+                                label="Điều khoản thanh toán"
+                                rules={[{ max: PAYMENT_OPTION_CODE_MAX_LENGTH, message: `Tối đa ${PAYMENT_OPTION_CODE_MAX_LENGTH} ký tự.` }]}
+                              >
+                                <Select
+                                  allowClear
+                                  showSearch
+                                  placeholder="Chọn điều khoản thanh toán áp dụng"
+                                  optionFilterProp="label"
+                                  options={paymentOptions.map((item) => ({
+                                    label: `${item.code} - ${item.name}`,
+                                    value: item.code,
+                                  }))}
+                                />
+                              </Form.Item>
+                              {selectedPaymentOption ? (
+                                <Typography.Text type="secondary">
+                                  Đang chọn: <Tag color="cyan">{selectedPaymentOption.name}</Tag>
+                                  {selectedPaymentOption.description ? ` ${selectedPaymentOption.description}` : ""}
+                                </Typography.Text>
+                              ) : (
+                                <Typography.Text type="secondary">Chưa chọn điều khoản thanh toán.</Typography.Text>
+                              )}
                             </Col>
                           </Row>
                         </Space>
