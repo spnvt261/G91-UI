@@ -26,7 +26,6 @@ const PaymentDetailPage = () => {
       if (!id) {
         return;
       }
-
       try {
         setLoading(true);
         setDetailError(null);
@@ -40,53 +39,33 @@ const PaymentDetailPage = () => {
         setLoading(false);
       }
     };
-
     void loadDetail();
   }, [id, notify]);
 
   const allocationColumns = useMemo<ColumnsType<PaymentModel["allocations"][number]>>(
     () => [
+      { title: "Số hóa đơn", key: "invoiceNumber", render: (_, row) => row.invoiceNumber || row.invoiceId },
+      { title: "Tổng hóa đơn", dataIndex: "invoiceTotal", key: "invoiceTotal", align: "right", render: (value?: number) => (value != null ? toCurrency(value) : "-") },
+      { title: "Đã thanh toán", dataIndex: "invoicePaidAmount", key: "invoicePaidAmount", align: "right", render: (value?: number) => (value != null ? toCurrency(value) : "-") },
+      { title: "Còn lại", dataIndex: "invoiceOutstandingAmount", key: "invoiceOutstandingAmount", align: "right", render: (value?: number) => (value != null ? toCurrency(value) : "-") },
+      { title: "Số tiền phân bổ", dataIndex: "allocatedAmount", key: "allocatedAmount", align: "right", render: (value: number) => <Typography.Text strong>{toCurrency(value)}</Typography.Text> },
       {
-        title: "Số hóa đơn",
-        key: "invoiceNumber",
-        render: (_, row) => row.invoiceNumber || row.invoiceId,
-      },
-      {
-        title: "Tổng hóa đơn",
-        dataIndex: "invoiceTotal",
-        key: "invoiceTotal",
-        align: "right",
-        render: (value?: number) => (value != null ? toCurrency(value) : "-"),
-      },
-      {
-        title: "Đã thanh toán",
-        dataIndex: "invoicePaidAmount",
-        key: "invoicePaidAmount",
-        align: "right",
-        render: (value?: number) => (value != null ? toCurrency(value) : "-"),
-      },
-      {
-        title: "Còn lại",
-        dataIndex: "invoiceOutstandingAmount",
-        key: "invoiceOutstandingAmount",
-        align: "right",
-        render: (value?: number) => (value != null ? toCurrency(value) : "-"),
-      },
-      {
-        title: "Số tiền phân bổ",
-        dataIndex: "allocatedAmount",
-        key: "allocatedAmount",
-        align: "right",
-        render: (value: number) => <Typography.Text strong>{toCurrency(value)}</Typography.Text>,
+        title: "Thao tác",
+        key: "action",
+        render: (_, row) =>
+          row.invoiceId ? (
+            <Button type="link" onClick={() => navigate(ROUTE_URL.INVOICE_DETAIL.replace(":id", row.invoiceId))}>
+              Mở hóa đơn
+            </Button>
+          ) : (
+            "-"
+          ),
       },
     ],
-    [],
+    [navigate],
   );
 
-  const totalAllocated = useMemo(
-    () => payment?.allocations.reduce((sum, allocation) => sum + (allocation.allocatedAmount ?? 0), 0) ?? 0,
-    [payment],
-  );
+  const totalAllocated = useMemo(() => payment?.allocations.reduce((sum, allocation) => sum + (allocation.allocatedAmount ?? 0), 0) ?? 0, [payment]);
 
   return (
     <NoResizeScreenTemplate
@@ -94,48 +73,18 @@ const PaymentDetailPage = () => {
       header={
         <ListScreenHeaderTemplate
           title={payment?.receiptNumber ? `Chi tiết thanh toán ${payment.receiptNumber}` : "Chi tiết thanh toán"}
-          subtitle="Theo dõi thông tin phiếu thu và danh sách phân bổ vào từng hóa đơn."
-          breadcrumb={
-            <CustomBreadcrumb
-              breadcrumbs={[
-                { label: "Trang chủ" },
-                { label: "Thanh toán", url: ROUTE_URL.PAYMENT_LIST },
-                { label: "Chi tiết" },
-              ]}
-            />
-          }
-          actions={
-            <Space wrap>
-              <Button onClick={() => navigate(ROUTE_URL.PAYMENT_LIST)}>Quay lại</Button>
-              <Button type="primary" onClick={() => navigate(ROUTE_URL.PAYMENT_RECORD)}>
-                Ghi nhận thanh toán mới
-              </Button>
-            </Space>
-          }
+          subtitle="Theo dõi phiếu thu và phân bổ vào từng hóa đơn."
+          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Thanh toán", url: ROUTE_URL.PAYMENT_LIST }, { label: "Chi tiết" }]} />}
+          actions={<Space wrap><Button onClick={() => navigate(ROUTE_URL.PAYMENT_LIST)}>Quay lại</Button><Button type="primary" onClick={() => navigate(ROUTE_URL.PAYMENT_RECORD)}>Ghi nhận thanh toán mới</Button></Space>}
         />
       }
       body={
         !id ? (
-          <Result
-            status="warning"
-            title="Không tìm thấy mã thanh toán"
-            subTitle="Đường dẫn hiện tại không chứa mã thanh toán hợp lệ."
-            extra={
-              <Button type="primary" onClick={() => navigate(ROUTE_URL.PAYMENT_LIST)}>
-                Về trang thanh toán
-              </Button>
-            }
-          />
+          <Result status="warning" title="Không tìm thấy mã thanh toán" subTitle="Đường dẫn hiện tại không chứa mã thanh toán hợp lệ." extra={<Button type="primary" onClick={() => navigate(ROUTE_URL.PAYMENT_LIST)}>Về trang thanh toán</Button>} />
         ) : (
           <Space direction="vertical" size={16} style={{ width: "100%" }}>
             {detailError ? <Alert type="error" showIcon message="Không thể tải chi tiết thanh toán." description={detailError} /> : null}
-
-            {!loading && !payment ? (
-              <Card>
-                <Empty description="Không có dữ liệu thanh toán để hiển thị." />
-              </Card>
-            ) : null}
-
+            {!loading && !payment ? <Card><Empty description="Không có dữ liệu thanh toán để hiển thị." /></Card> : null}
             {payment ? (
               <>
                 <Card title="Thông tin phiếu thu">
@@ -147,34 +96,12 @@ const PaymentDetailPage = () => {
                     <Descriptions.Item label="Số tiền">{toCurrency(payment.amount)}</Descriptions.Item>
                     <Descriptions.Item label="Ngày thanh toán">{formatPaymentDate(payment.paymentDate)}</Descriptions.Item>
                     <Descriptions.Item label="Số tham chiếu">{payment.referenceNo || "Không có"}</Descriptions.Item>
-                    <Descriptions.Item label="Ghi chú" span={2}>
-                      {payment.note || "Không có ghi chú"}
-                    </Descriptions.Item>
+                    <Descriptions.Item label="Ghi chú" span={2}>{payment.note || "Không có ghi chú"}</Descriptions.Item>
                   </Descriptions>
                 </Card>
 
-                <Card
-                  title="Danh sách phân bổ vào từng hóa đơn"
-                  extra={
-                    <Typography.Text type="secondary">
-                      Tổng phân bổ: <Typography.Text strong>{toCurrency(totalAllocated)}</Typography.Text>
-                    </Typography.Text>
-                  }
-                >
-                  <Table
-                    rowKey={(row) => `${row.invoiceId}-${row.invoiceNumber ?? ""}`}
-                    columns={allocationColumns}
-                    dataSource={payment.allocations}
-                    pagination={false}
-                    locale={{
-                      emptyText: (
-                        <Empty
-                          image={Empty.PRESENTED_IMAGE_SIMPLE}
-                          description="Khoản thanh toán này chưa có dữ liệu phân bổ hóa đơn."
-                        />
-                      ),
-                    }}
-                  />
+                <Card title="Phân bổ vào hóa đơn" extra={<Typography.Text type="secondary">Tổng phân bổ: <Typography.Text strong>{toCurrency(totalAllocated)}</Typography.Text></Typography.Text>}>
+                  <Table rowKey={(row) => `${row.invoiceId}-${row.invoiceNumber ?? ""}`} columns={allocationColumns} dataSource={payment.allocations} pagination={false} locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Khoản thanh toán này chưa có dữ liệu phân bổ." /> }} />
                 </Card>
               </>
             ) : null}

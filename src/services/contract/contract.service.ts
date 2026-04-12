@@ -51,6 +51,7 @@ const asNumber = (value: unknown): number | undefined => {
 const toContractModelFromListItem = (item: ContractListResponseData["items"][number]): ContractModel => ({
   id: item.id,
   contractNumber: item.contractNumber,
+  saleOrderNumber: item.saleOrderNumber,
   quotationId: item.quotationId ?? "",
   quotationNumber: item.quotationNumber,
   customerId: item.customerId,
@@ -91,6 +92,7 @@ const toContractModelFromDetail = (payload: unknown): ContractModel => {
   return {
     id: asString(contract.id) ?? "",
     contractNumber: asString(contract.contractNumber),
+    saleOrderNumber: asString(contract.saleOrderNumber),
     quotationId: asString(contract.quotationId ?? quotation.id) ?? "",
     quotationNumber: asString(quotation.quotationNumber),
     customerId: asString(contract.customerId ?? customer.id) ?? "",

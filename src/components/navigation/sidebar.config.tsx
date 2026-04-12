@@ -1,4 +1,4 @@
-﻿import {
+import {
   BarChartOutlined,
   DashboardOutlined,
   DollarOutlined,
@@ -6,6 +6,7 @@
   FileTextOutlined,
   InboxOutlined,
   ShoppingOutlined,
+  ShoppingCartOutlined,
   TagsOutlined,
   TeamOutlined,
   UserOutlined,
@@ -26,6 +27,7 @@ type SidebarLeafId =
   | "quotations"
   | "contracts"
   | "contract-approvals"
+  | "sale-orders"
   | "customers"
   | "projects"
   | "invoices"
@@ -135,6 +137,13 @@ const SIDEBAR_LEAF_DEFINITIONS: Record<SidebarLeafId, SidebarLeafDefinition> = {
     path: ROUTE_URL.CONTRACT_APPROVAL_LIST,
     icon: <FileDoneOutlined />,
     menuId: "contract-approvals",
+  },
+  "sale-orders": {
+    id: "sale-orders",
+    label: "Đơn bán",
+    path: ROUTE_URL.SALE_ORDER_LIST,
+    icon: <ShoppingCartOutlined />,
+    menuId: "sale-order-management",
   },
   customers: {
     id: "customers",
@@ -253,6 +262,7 @@ const ROLE_SIDEBAR_LAYOUTS: Record<UserRole, SidebarLayoutEntry[]> = {
     { type: "leaf", id: "promotions" },
     { type: "leaf", id: "quotations" },
     { type: "leaf", id: "contracts" },
+    { type: "leaf", id: "sale-orders" },
     { type: "leaf", id: "projects" },
     { type: "leaf", id: "invoices" },
     { type: "leaf", id: "debts" },
@@ -262,6 +272,7 @@ const ROLE_SIDEBAR_LAYOUTS: Record<UserRole, SidebarLayoutEntry[]> = {
     { type: "leaf", id: "promotions" },
     { type: "leaf", id: "quotations" },
     { type: "leaf", id: "contracts" },
+    { type: "leaf", id: "sale-orders" },
     { type: "leaf", id: "customers" },
     { type: "leaf", id: "projects" },
     { type: "leaf", id: "invoices" },
@@ -271,7 +282,11 @@ const ROLE_SIDEBAR_LAYOUTS: Record<UserRole, SidebarLayoutEntry[]> = {
   ],
   WAREHOUSE: [
     { type: "leaf", id: "products" },
+<<<<<<< HEAD
     { type: "leaf", id: "contracts" },
+=======
+    { type: "leaf", id: "sale-orders" },
+>>>>>>> new3
     { type: "group", id: "warehouse" },
     { type: "leaf", id: "report-inventory" },
   ],
@@ -281,7 +296,11 @@ const ROLE_SIDEBAR_LAYOUTS: Record<UserRole, SidebarLayoutEntry[]> = {
     { type: "leaf", id: "products" },
     { type: "leaf", id: "price-lists" },
     { type: "leaf", id: "promotions" },
+<<<<<<< HEAD
     { type: "leaf", id: "contracts" },
+=======
+    { type: "leaf", id: "sale-orders" },
+>>>>>>> new3
     { type: "leaf", id: "invoices" },
     { type: "leaf", id: "contract-approvals" },
     { type: "group", id: "reports-owner" },
@@ -306,6 +325,8 @@ export const CONTEXTUAL_ACTION_ROUTE_TEMPLATES = Object.freeze([
   ROUTE_URL.CONTRACT_EDIT,
   ROUTE_URL.CONTRACT_TRACKING,
   ROUTE_URL.CONTRACT_APPROVAL_DETAIL,
+  ROUTE_URL.SALE_ORDER_DETAIL,
+  ROUTE_URL.SALE_ORDER_TIMELINE,
   ROUTE_URL.CUSTOMER_CREATE,
   ROUTE_URL.CUSTOMER_DETAIL,
   ROUTE_URL.CUSTOMER_EDIT,

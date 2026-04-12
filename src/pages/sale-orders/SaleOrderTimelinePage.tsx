@@ -1,0 +1,189 @@
+import { Alert, Button, Card, Empty, Space, Steps, Timeline, Typography } from "antd";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
+import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
+import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
+import { ROUTE_URL } from "../../const/route_url.const";
+import { useNotify } from "../../context/notifyContext";
+import type { SaleOrderTimelineEventModel, SaleOrderTimelineResponseModel } from "../../models/sale-order/sale-order.model";
+import { saleOrderService } from "../../services/sale-order/sale-order.service";
+import { getErrorMessage } from "../shared/page.utils";
+import SaleOrderStatusTag from "./components/SaleOrderStatusTag";
+import {
+  formatSaleOrderDateTime,
+  getTimelineEventLabel,
+  isStatusReached,
+  normalizeSaleOrderStatus,
+  SALE_ORDER_FLOW_STEPS,
+} from "./saleOrder.ui";
+
+const hasEventByKeyword = (events: SaleOrderTimelineEventModel[], keywords: string[]): boolean =>
+  events.some((event) => {
+    const content = `${event.eventType ?? ""} ${event.title ?? ""} ${event.note ?? ""}`.toUpperCase();
+    return keywords.some((keyword) => content.includes(keyword));
+  });
+
+const SaleOrderTimelinePage = () => {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const { notify } = useNotify();
+
+  const [timeline, setTimeline] = useState<SaleOrderTimelineResponseModel | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadTimeline = useCallback(async () => {
+    if (!id) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await saleOrderService.getTimeline(id);
+      setTimeline(response);
+    } catch (timelineError) {
+      const message = getErrorMessage(timelineError, "Không thể tải timeline đơn bán.");
+      setError(message);
+      notify(message, "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [id, notify]);
+
+  useEffect(() => {
+    void loadTimeline();
+  }, [loadTimeline]);
+
+  const mergedEvents = useMemo(() => {
+    const merged = [...(timeline?.milestones ?? []), ...(timeline?.events ?? [])];
+    merged.sort((a, b) => new Date(b.at || 0).getTime() - new Date(a.at || 0).getTime());
+    return merged;
+  }, [timeline?.events, timeline?.milestones]);
+
+  const flowStepItems = useMemo(() => {
+    const currentStatus = normalizeSaleOrderStatus(timeline?.currentStatus);
+
+    const submittedDone = currentStatus.length > 0;
+    const reserveDone = isStatusReached(currentStatus, "RESERVED");
+    const pickDone = isStatusReached(currentStatus, "PICKED");
+    const dispatchDone = isStatusReached(currentStatus, "IN_TRANSIT");
+    const deliveredDone = isStatusReached(currentStatus, "DELIVERED");
+    const invoiceDone = hasEventByKeyword(mergedEvents, ["INVOICE", "CREATE_INVOICE", "INVOICE_CREATED"]);
+    const paymentDone = hasEventByKeyword(mergedEvents, ["PAYMENT", "PAYMENT_RECORDED", "RECEIPT"]);
+    const settlementDone = hasEventByKeyword(mergedEvents, ["SETTLEMENT", "DEBT_SETTLED", "SETTLED"]);
+
+    const completionMap: Record<string, boolean> = {
+      SUBMITTED: submittedDone,
+      RESERVED: reserveDone,
+      PICKED: pickDone,
+      DISPATCHED: dispatchDone,
+      DELIVERED: deliveredDone,
+      INVOICE_CREATED: invoiceDone,
+      PAYMENT_RECORDED: paymentDone,
+      DEBT_SETTLED: settlementDone,
+    };
+
+    let firstPendingFound = false;
+
+    return SALE_ORDER_FLOW_STEPS.map((step) => {
+      const done = completionMap[step.key];
+      let status: "finish" | "process" | "wait" = "wait";
+
+      if (done) {
+        status = "finish";
+      } else if (!firstPendingFound) {
+        status = "process";
+        firstPendingFound = true;
+      }
+
+      return {
+        key: step.key,
+        title: step.label,
+        status,
+        description: (
+          <Space direction="vertical" size={0}>
+            <Typography.Text type="secondary">{step.description}</Typography.Text>
+            <Typography.Text type="secondary">Phụ trách: {step.owner === "WAREHOUSE" ? "Kho" : "Kế toán"}</Typography.Text>
+          </Space>
+        ),
+      };
+    });
+  }, [mergedEvents, timeline?.currentStatus]);
+
+  return (
+    <NoResizeScreenTemplate
+      bodyClassName="px-0 pb-0 pt-4"
+      header={
+        <ListScreenHeaderTemplate
+          title="Timeline đơn bán"
+          subtitle="Theo dõi mốc Submitted → Fulfillment kho → Hóa đơn/Thanh toán/Công nợ kế toán."
+          breadcrumb={
+            <CustomBreadcrumb
+              breadcrumbs={[
+                { label: "Trang chủ" },
+                { label: "Đơn bán", url: ROUTE_URL.SALE_ORDER_LIST },
+                { label: "Timeline" },
+              ]}
+            />
+          }
+          actions={
+            <Space>
+              <Button onClick={() => void loadTimeline()} loading={loading}>
+                Làm mới
+              </Button>
+              <Button onClick={() => navigate(ROUTE_URL.SALE_ORDER_DETAIL.replace(":id", id ?? ""))} disabled={!id}>
+                Về chi tiết
+              </Button>
+            </Space>
+          }
+        />
+      }
+      body={
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          {!id ? <Alert type="warning" showIcon message="Không tìm thấy mã đơn bán trên đường dẫn." /> : null}
+          {error ? <Alert type="error" showIcon message="Không thể tải timeline đơn bán." description={error} /> : null}
+
+          <Card loading={loading}>
+            <Space direction="vertical" size={8} style={{ width: "100%" }}>
+              <Typography.Text type="secondary">Trạng thái hiện tại</Typography.Text>
+              {timeline?.currentStatus ? <SaleOrderStatusTag status={timeline.currentStatus} /> : <Typography.Text>Chưa cập nhật</Typography.Text>}
+              <Typography.Text type="secondary">
+                Mốc kế toán chỉ được đánh dấu hoàn tất khi API timeline trả về sự kiện thực tế tương ứng.
+              </Typography.Text>
+            </Space>
+          </Card>
+
+          <Card loading={loading} title="Luồng nghiệp vụ chuẩn">
+            <Steps direction="vertical" current={-1} items={flowStepItems} />
+          </Card>
+
+          <Card loading={loading} title="Sự kiện thực tế từ API timeline">
+            {mergedEvents.length === 0 ? (
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có bản ghi timeline cho đơn bán này." />
+            ) : (
+              <Timeline
+                items={mergedEvents.map((event, index) => ({
+                  key: `${event.id || event.at || event.eventType || index}`,
+                  children: (
+                    <Space direction="vertical" size={2}>
+                      <Typography.Text strong>{getTimelineEventLabel(event.eventType, event.title)}</Typography.Text>
+                      <Typography.Text type="secondary">{formatSaleOrderDateTime(event.at)}</Typography.Text>
+                      {event.status ? <SaleOrderStatusTag compact status={event.status} /> : null}
+                      {event.actorName ? <Typography.Text type="secondary">Người thực hiện: {event.actorName}</Typography.Text> : null}
+                      {event.note ? <Typography.Text>{event.note}</Typography.Text> : null}
+                      {event.trackingNumber ? <Typography.Text type="secondary">Mã vận đơn: {event.trackingNumber}</Typography.Text> : null}
+                    </Space>
+                  ),
+                }))}
+              />
+            )}
+          </Card>
+        </Space>
+      }
+    />
+  );
+};
+
+export default SaleOrderTimelinePage;

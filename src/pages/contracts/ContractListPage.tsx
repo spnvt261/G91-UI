@@ -23,12 +23,17 @@ const DEFAULT_PAGE_SIZE = 8;
 
 const CONTRACT_STATUS_OPTIONS = [
   { label: "Nháp", value: "DRAFT" },
-  { label: "Chờ duyệt", value: "PENDING" },
+  { label: "Chờ duyệt", value: "PENDING_APPROVAL" },
   { label: "Đã duyệt", value: "APPROVED" },
   { label: "Từ chối", value: "REJECTED" },
-  { label: "Đang xử lý", value: "IN_PROGRESS" },
-  { label: "Đang hiệu lực", value: "ACTIVE" },
+  { label: "Đã gửi thực hiện", value: "SUBMITTED" },
+  { label: "Đang xử lý", value: "PROCESSING" },
+  { label: "Đã dự trữ", value: "RESERVED" },
+  { label: "Đã soạn hàng", value: "PICKED" },
+  { label: "Đang xuất giao", value: "IN_TRANSIT" },
+  { label: "Đã giao", value: "DELIVERED" },
   { label: "Hoàn tất", value: "COMPLETED" },
+  { label: "Đã hủy", value: "CANCELLED" },
 ];
 
 const ContractListPage = () => {
@@ -259,7 +264,7 @@ const ContractListPage = () => {
             items={[
               {
                 key: "total",
-                label: "Tổng hợp đồng",
+                label: "Tổng hợp hợp đồng",
                 value: summary.totalContracts,
                 description: "Toàn bộ hợp đồng theo bộ lọc hiện tại",
               },

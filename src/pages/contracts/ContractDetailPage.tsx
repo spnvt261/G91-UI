@@ -26,6 +26,15 @@ interface EmailDocumentFormValues {
   message?: string;
 }
 
+const CONTRACT_CANCELLATION_REASON_OPTIONS = [
+  { label: "Khách hàng yêu cầu", value: "CUSTOMER_REQUEST" },
+  { label: "Tranh chấp giá", value: "PRICE_DISPUTE" },
+  { label: "Thiếu tồn kho", value: "INVENTORY_SHORTAGE" },
+  { label: "Rủi ro tín dụng", value: "CREDIT_RISK" },
+  { label: "Sai dữ liệu", value: "DATA_ERROR" },
+  { label: "Lý do khác", value: "OTHER" },
+];
+
 const ContractDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -35,8 +44,13 @@ const ContractDetailPage = () => {
   const canSubmit = canPerformAction(role, "contract.submit");
   const canApprove = canPerformAction(role, "contract.approve");
   const canEdit = canPerformAction(role, "contract.update");
+<<<<<<< HEAD
   const canCancel = canPerformAction(role, "sale-order.cancel");
   const canViewTracking = hasPermission(role, "sale-order.tracking.view");
+=======
+  const canCancel = canPerformAction(role, "contract.cancel");
+  const canViewSaleOrder = hasPermission(role, "sale-order.view");
+>>>>>>> new3
 
   const [contract, setContract] = useState<ContractModel | null>(null);
   const [documents, setDocuments] = useState<ContractDocumentModel[]>([]);
@@ -44,7 +58,7 @@ const ContractDetailPage = () => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<ContractActionKey | null>(null);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
-  const [cancelReason, setCancelReason] = useState("");
+  const [cancelReason, setCancelReason] = useState<string | undefined>(undefined);
   const [cancelNote, setCancelNote] = useState("");
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [emailForm] = Form.useForm<EmailDocumentFormValues>();
@@ -314,7 +328,7 @@ const ContractDetailPage = () => {
                   <Button
                     danger
                     onClick={() => {
-                      setCancelReason("");
+                      setCancelReason(undefined);
                       setCancelNote("");
                       setCancelModalOpen(true);
                     }}
@@ -352,12 +366,22 @@ const ContractDetailPage = () => {
                     <Card title="Thông tin chính">
                       <Descriptions column={1} size="small" colon={false}>
                         <Descriptions.Item label="Số hợp đồng">{getContractDisplayNumber(contract)}</Descriptions.Item>
+                        <Descriptions.Item label="Mã đơn bán">{contract.saleOrderNumber || "Chưa phát sinh"}</Descriptions.Item>
                         <Descriptions.Item label="Trạng thái">
                           <ContractStatusTag status={contract.status} />
                         </Descriptions.Item>
                         <Descriptions.Item label="Khách hàng">{contract.customerName || contract.customerId}</Descriptions.Item>
                         <Descriptions.Item label="Báo giá liên kết">{contract.quotationNumber || contract.quotationId || "Không có"}</Descriptions.Item>
                         <Descriptions.Item label="Ngày giao dự kiến">{formatContractDate(contract.expectedDeliveryDate)}</Descriptions.Item>
+                        <Descriptions.Item label="Liên kết đơn bán">
+                          {contract.saleOrderNumber && canViewSaleOrder ? (
+                            <Button type="link" onClick={() => navigate(ROUTE_URL.SALE_ORDER_DETAIL.replace(":id", contract.id))}>
+                              Mở chi tiết đơn bán
+                            </Button>
+                          ) : (
+                            "Chưa có"
+                          )}
+                        </Descriptions.Item>
                       </Descriptions>
                     </Card>
                   </Col>
@@ -479,13 +503,12 @@ const ContractDetailPage = () => {
                 return;
               }
 
-              const reason = cancelReason.trim();
-              if (!reason) {
-                throw new Error("Vui lòng nhập lý do hủy hợp đồng.");
+              if (!cancelReason) {
+                throw new Error("Vui lòng chọn lý do hủy hợp đồng.");
               }
 
               await contractService.cancel(id, {
-                cancellationReason: reason,
+                cancellationReason: cancelReason,
                 cancellationNote: cancelNote.trim() || undefined,
               });
               setCancelModalOpen(false);
@@ -500,13 +523,11 @@ const ContractDetailPage = () => {
       >
         <Space direction="vertical" size={12} style={{ width: "100%" }}>
           <Alert type="warning" showIcon message="Thao tác hủy hợp đồng không thể hoàn tác." />
-          <Input.TextArea
-            rows={3}
-            maxLength={500}
-            showCount
+          <Select
             value={cancelReason}
-            onChange={(event) => setCancelReason(event.target.value)}
-            placeholder="Lý do hủy hợp đồng (bắt buộc)"
+            onChange={(value) => setCancelReason(value)}
+            placeholder="Chọn lý do hủy hợp đồng (bắt buộc)"
+            options={CONTRACT_CANCELLATION_REASON_OPTIONS}
           />
           <Input.TextArea
             rows={3}
