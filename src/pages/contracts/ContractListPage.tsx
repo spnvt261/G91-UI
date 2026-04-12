@@ -190,6 +190,7 @@ const ContractListPage = () => {
       {
         title: "Khách hàng",
         key: "customer",
+        width: 300,
         render: (_, row) => (
           <Space direction="vertical" size={1}>
             <Typography.Text>{row.customerName || "Chưa cập nhật tên khách hàng"}</Typography.Text>
@@ -222,12 +223,27 @@ const ContractListPage = () => {
       {
         title: "Thao tác",
         key: "actions",
-        width: 260,
+        width: 96,
         fixed: "right",
+        align: "center",
         render: (_, row) => {
           const normalizedStatus = String(row.status ?? "").trim().toUpperCase();
           const canCreateInvoiceFromContract = canCreateInvoice && normalizedStatus === "DELIVERED";
-          const actionItems: MenuProps["items"] = [];
+          const actionItems: MenuProps["items"] = [
+            {
+              key: "detail",
+              label: "Chi tiết",
+              onClick: () => navigate(ROUTE_URL.CONTRACT_DETAIL.replace(":id", row.id)),
+            },
+          ];
+
+          if (canCreateInvoiceFromContract) {
+            actionItems.push({
+              key: "create-invoice",
+              label: "Tạo invoice",
+              onClick: () => openCreateInvoiceModal(row),
+            });
+          }
 
           if (canEdit) {
             actionItems.push({
@@ -238,38 +254,14 @@ const ContractListPage = () => {
           }
 
           return (
-            <Space size={4}>
+            <Dropdown menu={{ items: actionItems }} trigger={["click"]} placement="bottomRight">
               <Button
-                type="link"
+                icon={<MoreOutlined />}
                 onClick={(event) => {
                   event.stopPropagation();
-                  navigate(ROUTE_URL.CONTRACT_DETAIL.replace(":id", row.id));
                 }}
-              >
-                Chi tiết
-              </Button>
-              {canCreateInvoiceFromContract ? (
-                <Button
-                  type="link"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    openCreateInvoiceModal(row);
-                  }}
-                >
-                  Tạo invoice
-                </Button>
-              ) : null}
-              {actionItems.length > 0 ? (
-                <Dropdown menu={{ items: actionItems }} trigger={["click"]}>
-                  <Button
-                    icon={<MoreOutlined />}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                    }}
-                  />
-                </Dropdown>
-              ) : null}
-            </Space>
+              />
+            </Dropdown>
           );
         },
       },
@@ -491,7 +483,7 @@ const ContractListPage = () => {
                     setPage(pagination.current ?? page);
                     setPageSize(pagination.pageSize ?? pageSize);
                   }}
-                  scroll={{ x: 1240 }}
+                  scroll={{ x: 1320 }}
                 />
               </Space>
             </Card>
