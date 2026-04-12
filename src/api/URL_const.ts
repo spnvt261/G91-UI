@@ -155,6 +155,7 @@ export const API = {
 
   INVOICES: {
     CREATE: "/api/invoices",
+    FROM_CONTRACT: "/api/invoices/from-contract/{contractId}",
     LIST: "/api/invoices",
     DETAIL: "/api/invoices/{id}",
     UPDATE: "/api/invoices/{id}",

@@ -96,6 +96,17 @@ export interface InvoiceCreateRequest {
   items?: InvoiceItemRequest[];
 }
 
+export interface ConvertContractToInvoiceRequest {
+  dueDate: string;
+  issueDate?: string;
+  adjustmentAmount?: number;
+  billingAddress?: string;
+  paymentTerms?: string;
+  note?: string;
+  status?: "DRAFT" | "ISSUED";
+  items?: InvoiceItemRequest[];
+}
+
 export interface InvoiceUpdateRequest {
   dueDate?: string;
   issueDate?: string;
