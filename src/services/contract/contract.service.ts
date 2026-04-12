@@ -221,6 +221,21 @@ export const contractService = {
     return response.data;
   },
 
+  async customerApprove(id: string, request: ContractApprovalDecisionRequest = {}): Promise<ContractApprovalResponseData> {
+    const response = await api.post<ContractApprovalResponseData>(withId(API.CONTRACTS.CUSTOMER_APPROVE, id), request);
+    return response.data;
+  },
+
+  async customerReject(id: string, request: ContractApprovalDecisionRequest = {}): Promise<ContractApprovalResponseData> {
+    const response = await api.post<ContractApprovalResponseData>(withId(API.CONTRACTS.CUSTOMER_REJECT, id), request);
+    return response.data;
+  },
+
+  async accountantReject(id: string, request: ContractApprovalDecisionRequest = {}): Promise<ContractApprovalResponseData> {
+    const response = await api.post<ContractApprovalResponseData>(withId(API.CONTRACTS.ACCOUNTANT_REJECT, id), request);
+    return response.data;
+  },
+
   async requestModification(id: string, request: ContractApprovalRequest | ContractApprovalDecisionRequest): Promise<ContractApprovalResponseData> {
     const response = await api.post<ContractApprovalResponseData>(withId(API.CONTRACTS.REQUEST_MODIFICATION, id), request);
     return response.data;

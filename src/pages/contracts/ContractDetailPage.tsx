@@ -17,7 +17,18 @@ import { getErrorMessage } from "../shared/page.utils";
 import ContractStatusTag from "./components/ContractStatusTag";
 import { formatContractCurrency, formatContractDate, formatContractDateTime, getContractDisplayNumber } from "./contract.ui";
 
-type ContractActionKey = "submit" | "approve" | "reject" | "request-modification" | "cancel" | "generate-doc" | "export-doc" | "email-doc";
+type ContractActionKey =
+  | "submit"
+  | "approve"
+  | "reject"
+  | "customer-approve"
+  | "customer-reject"
+  | "accountant-reject"
+  | "request-modification"
+  | "cancel"
+  | "generate-doc"
+  | "export-doc"
+  | "email-doc";
 
 interface EmailDocumentFormValues {
   documentId: string;
@@ -46,6 +57,8 @@ const ContractDetailPage = () => {
   const canEdit = canPerformAction(role, "contract.update");
   const canCancel = canPerformAction(role, "contract.cancel");
   const canViewSaleOrder = hasPermission(role, "sale-order.view");
+  const isCustomerRole = role === "CUSTOMER";
+  const isAccountantRole = role === "ACCOUNTANT";
 
   const [contract, setContract] = useState<ContractModel | null>(null);
   const [documents, setDocuments] = useState<ContractDocumentModel[]>([]);
@@ -205,6 +218,13 @@ const ContractDetailPage = () => {
     [emailForm],
   );
 
+  const normalizedStatus = String(contract?.status ?? "").trim().toUpperCase();
+  const canRequestCustomerApproval = Boolean(canSubmit && normalizedStatus === "DRAFT");
+  const canSubmitApprovedContract = Boolean(canSubmit && normalizedStatus === "CUSTOMER_APPROVAL");
+  const canCustomerApprove = Boolean(isCustomerRole && normalizedStatus === "PENDING_CUSTOMER_APPROVAL");
+  const canCustomerReject = canCustomerApprove;
+  const canAccountantRejectCustomerApproval = Boolean(isAccountantRole && normalizedStatus === "CUSTOMER_APPROVAL");
+
   return (
     <>
       <NoResizeScreenTemplate
@@ -227,7 +247,7 @@ const ContractDetailPage = () => {
                 <Button icon={<ReloadOutlined />} onClick={() => void loadData()} loading={loading}>
                   Làm mới
                 </Button>
-                {canSubmit ? (
+                {canRequestCustomerApproval ? (
                   <Button
                     type="primary"
                     loading={actionLoading === "submit"}
@@ -240,26 +260,26 @@ const ContractDetailPage = () => {
                           }
                           await contractService.submit(id, {});
                         },
-                        "Đã gửi thực hiện hợp đồng.",
-                        "Không thể gửi thực hiện hợp đồng.",
+                        "Đã gửi yêu cầu khách hàng xác nhận hợp đồng.",
+                        "Không thể gửi yêu cầu khách hàng xác nhận.",
                       )
                     }
                   >
-                    Gửi thực hiện
+                    Gửi khách hàng xác nhận
                   </Button>
                 ) : null}
-                {canApprove ? (
+                {canCustomerReject ? (
                   <Button
                     danger
-                    loading={actionLoading === "reject"}
+                    loading={actionLoading === "customer-reject"}
                     onClick={() =>
                       void runAction(
-                        "reject",
+                        "customer-reject",
                         async () => {
                           if (!id) {
                             return;
                           }
-                          await contractService.reject(id, { comment: "Từ chối từ trang chi tiết hợp đồng." });
+                          await contractService.customerReject(id, { comment: "Khách hàng từ chối từ trang chi tiết hợp đồng." });
                         },
                         "Đã từ chối hợp đồng.",
                         "Không thể từ chối hợp đồng.",
@@ -267,6 +287,27 @@ const ContractDetailPage = () => {
                     }
                   >
                     Từ chối
+                  </Button>
+                ) : null}
+                {canCustomerApprove ? (
+                  <Button
+                    type="primary"
+                    loading={actionLoading === "customer-approve"}
+                    onClick={() =>
+                      void runAction(
+                        "customer-approve",
+                        async () => {
+                          if (!id) {
+                            return;
+                          }
+                          await contractService.customerApprove(id, { comment: "Khách hàng chấp nhận từ trang chi tiết hợp đồng." });
+                        },
+                        "Đã chấp nhận hợp đồng.",
+                        "Không thể chấp nhận hợp đồng.",
+                      )
+                    }
+                  >
+                    Chấp nhận hợp đồng
                   </Button>
                 ) : null}
                 {canApprove ? (
@@ -287,6 +328,48 @@ const ContractDetailPage = () => {
                     }
                   >
                     Yêu cầu chỉnh sửa
+                  </Button>
+                ) : null}
+                {canAccountantRejectCustomerApproval ? (
+                  <Button
+                    danger
+                    loading={actionLoading === "accountant-reject"}
+                    onClick={() =>
+                      void runAction(
+                        "accountant-reject",
+                        async () => {
+                          if (!id) {
+                            return;
+                          }
+                          await contractService.accountantReject(id, { comment: "Kế toán từ chối xác nhận của khách hàng từ trang chi tiết." });
+                        },
+                        "Đã trả hợp đồng về nháp để chỉnh sửa.",
+                        "Không thể trả hợp đồng về nháp.",
+                      )
+                    }
+                  >
+                    Trả về nháp
+                  </Button>
+                ) : null}
+                {canSubmitApprovedContract ? (
+                  <Button
+                    type="primary"
+                    loading={actionLoading === "submit"}
+                    onClick={() =>
+                      void runAction(
+                        "submit",
+                        async () => {
+                          if (!id) {
+                            return;
+                          }
+                          await contractService.submit(id, {});
+                        },
+                        "Đã gửi thực hiện hợp đồng.",
+                        "Không thể gửi thực hiện hợp đồng.",
+                      )
+                    }
+                  >
+                    Gửi thực hiện
                   </Button>
                 ) : null}
                 {canApprove ? (

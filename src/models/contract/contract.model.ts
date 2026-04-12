@@ -2,6 +2,8 @@ import type { PaginationMeta } from "../common/api.model";
 
 export type ContractStatus =
   | "DRAFT"
+  | "PENDING_CUSTOMER_APPROVAL"
+  | "CUSTOMER_APPROVAL"
   | "PENDING_APPROVAL"
   | "PENDING"
   | "APPROVED"

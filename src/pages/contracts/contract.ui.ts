@@ -14,6 +14,16 @@ const CONTRACT_STATUS_META: Record<string, ContractStatusMeta> = {
     tagColor: "default",
     badgeStatus: "default",
   },
+  PENDING_CUSTOMER_APPROVAL: {
+    label: "Chờ khách hàng xác nhận",
+    tagColor: "cyan",
+    badgeStatus: "processing",
+  },
+  CUSTOMER_APPROVAL: {
+    label: "Khách hàng đã chấp nhận",
+    tagColor: "blue",
+    badgeStatus: "processing",
+  },
   PENDING_APPROVAL: {
     label: "Chờ duyệt",
     tagColor: "gold",
@@ -188,7 +198,9 @@ export const isProcessingContractStatus = (status?: string) => {
 
 export const getContractSummary = (items: ContractModel[]) => {
   const totalContracts = items.length;
-  const pendingContracts = items.filter((item) => ["PENDING", "PENDING_APPROVAL"].includes(normalizeStatus(item.status))).length;
+  const pendingContracts = items.filter((item) =>
+    ["PENDING", "PENDING_APPROVAL", "PENDING_CUSTOMER_APPROVAL", "CUSTOMER_APPROVAL"].includes(normalizeStatus(item.status)),
+  ).length;
   const processingContracts = items.filter((item) => isProcessingContractStatus(item.status)).length;
   const closedContracts = items.filter((item) => isClosedContractStatus(item.status)).length;
 
@@ -253,7 +265,11 @@ export const getContractNextStepHint = (status?: string) => {
 
   switch (normalized) {
     case "DRAFT":
-      return "Rà soát điều khoản và gửi thực hiện khi dữ liệu hợp đồng đã đầy đủ.";
+      return "Rà soát điều khoản và gửi khách hàng xác nhận khi dữ liệu hợp đồng đã đầy đủ.";
+    case "PENDING_CUSTOMER_APPROVAL":
+      return "Hợp đồng đang chờ khách hàng xác nhận. Theo dõi phản hồi để chuyển sang bước thực hiện.";
+    case "CUSTOMER_APPROVAL":
+      return "Khách hàng đã chấp nhận. Kế toán có thể gửi thực hiện hoặc trả về nháp nếu cần chỉnh sửa.";
     case "PENDING":
     case "PENDING_APPROVAL":
       return "Hợp đồng đang chờ duyệt. Chuẩn bị đầy đủ tài liệu bổ sung để phản hồi nhanh.";
