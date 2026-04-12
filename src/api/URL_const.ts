@@ -7,6 +7,7 @@ export const API = {
     LOGOUT: "/api/auth/logout",
     CHANGE_PASSWORD: "/api/auth/change-password",
     FORGOT_PASSWORD: "/api/auth/forgot-password",
+    RESET_PASSWORD_VALIDATE: "/api/auth/reset-password/validate",
     RESET_PASSWORD: "/api/auth/reset-password",
   },
 
