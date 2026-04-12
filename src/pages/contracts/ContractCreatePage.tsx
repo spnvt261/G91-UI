@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Col, Empty, Input, Result, Row, Space, Statistic, Typography } from "antd";
+import { Alert, Button, Card, Col, Empty, Input, Result, Row, Select, Space, Statistic, Typography } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
@@ -17,6 +17,7 @@ import ContractKeyValueList, { type ContractKeyValueItem } from "./components/Co
 import { formatContractCurrency, formatContractDate } from "./contract.ui";
 
 const PAYMENT_TERMS_MAX_LENGTH = 255;
+const PAYMENT_OPTION_CODE_MAX_LENGTH = 20;
 const DELIVERY_ADDRESS_MAX_LENGTH = 500;
 
 const ContractCreatePage = () => {
@@ -26,6 +27,8 @@ const ContractCreatePage = () => {
 
   const [quotation, setQuotation] = useState<QuotationModel | null>(null);
   const [paymentTerms, setPaymentTerms] = useState("Thanh toán 70% khi giao hàng, 30% còn lại trong vòng 30 ngày.");
+  const [paymentOptionCode, setPaymentOptionCode] = useState<string | undefined>(undefined);
+  const [paymentOptions, setPaymentOptions] = useState<Array<{ code: string; name: string; description?: string }>>([]);
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [canCreateFromQuotation, setCanCreateFromQuotation] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
@@ -45,13 +48,21 @@ const ContractCreatePage = () => {
     try {
       setPageLoading(true);
       setLoadError(null);
-      const detail = await quotationService.getDetail(quotationId);
+      const [detail, formInit] = await Promise.all([
+        quotationService.getDetail(quotationId),
+        contractService.getFormInit({ quotationId }),
+      ]);
       setQuotation(detail);
       setCanCreateFromQuotation(Boolean(detail.actions?.accountantCanCreateContract));
+      setPaymentOptions(formInit.availablePaymentOptions ?? []);
+      setPaymentTerms(formInit.defaults?.suggestedPaymentTerms ?? "Thanh toÃ¡n 70% khi giao hÃ ng, 30% cÃ²n láº¡i trong vÃ²ng 30 ngÃ y.");
+      setDeliveryAddress(formInit.defaults?.suggestedDeliveryAddress ?? "");
+      setPaymentOptionCode(formInit.defaults?.suggestedPaymentOption?.code ?? detail.paymentOption?.code ?? undefined);
     } catch (error) {
       const message = getErrorMessage(error, "Không thể tải thông tin báo giá để tạo hợp đồng.");
       setLoadError(message);
       setQuotation(null);
+      setPaymentOptions([]);
       notify(message, "error");
     } finally {
       setPageLoading(false);
@@ -78,6 +89,9 @@ const ContractCreatePage = () => {
     [quotation?.items],
   );
 
+  const paymentOptionsByCode = useMemo(() => new Map(paymentOptions.map((item) => [item.code, item])), [paymentOptions]);
+  const selectedPaymentOption = paymentOptionCode ? paymentOptionsByCode.get(paymentOptionCode) : undefined;
+
   const createBlockedReason = useMemo(() => {
     if (!quotationId) {
       return "Thiếu mã báo giá. Vui lòng quay lại danh sách báo giá và chọn lại.";
@@ -102,12 +116,16 @@ const ContractCreatePage = () => {
       return `Điều khoản thanh toán tối đa ${PAYMENT_TERMS_MAX_LENGTH} ký tự.`;
     }
 
+    if ((paymentOptionCode ?? "").length > PAYMENT_OPTION_CODE_MAX_LENGTH) {
+      return `Mã payment option tối đa ${PAYMENT_OPTION_CODE_MAX_LENGTH} ký tự.`;
+    }
+
     if (normalizedDeliveryAddress.length > DELIVERY_ADDRESS_MAX_LENGTH) {
       return `Địa chỉ giao hàng tối đa ${DELIVERY_ADDRESS_MAX_LENGTH} ký tự.`;
     }
 
     return null;
-  }, [canCreateFromQuotation, deliveryAddress, paymentTerms, quotationId]);
+  }, [canCreateFromQuotation, deliveryAddress, paymentOptionCode, paymentTerms, quotationId]);
 
   const canCreate = !createBlockedReason;
 
@@ -143,6 +161,11 @@ const ContractCreatePage = () => {
         label: "Yêu cầu giao hàng",
         value: quotation?.deliveryRequirements || "Chưa có yêu cầu bổ sung",
       },
+      {
+        key: "paymentOption",
+        label: "Payment option",
+        value: quotation?.paymentOption ? `${quotation.paymentOption.code} - ${quotation.paymentOption.name}` : "Chưa có",
+      },
     ],
     [quotation],
   );
@@ -165,12 +188,17 @@ const ContractCreatePage = () => {
         value: <Typography.Text strong>{formatContractCurrency(quotation?.totalAmount ?? 0)}</Typography.Text>,
       },
       {
+        key: "paymentOption",
+        label: "Payment option",
+        value: selectedPaymentOption ? `${selectedPaymentOption.code} - ${selectedPaymentOption.name}` : "Không áp dụng",
+      },
+      {
         key: "eligibility",
         label: "Điều kiện phát hành",
         value: canCreate ? "Đủ điều kiện tạo hợp đồng" : createBlockedReason,
       },
     ],
-    [canCreate, createBlockedReason, quotation, quotationItems.length],
+    [canCreate, createBlockedReason, quotation, quotationItems.length, selectedPaymentOption],
   );
 
   const sidebarSummaryItems = useMemo<ContractKeyValueItem[]>(
@@ -190,8 +218,13 @@ const ContractCreatePage = () => {
         label: "Số dòng hàng",
         value: quotationItems.length,
       },
+      {
+        key: "paymentOption",
+        label: "Payment option",
+        value: selectedPaymentOption?.code || "Không áp dụng",
+      },
     ],
-    [quotation, quotationItems.length],
+    [quotation, quotationItems.length, selectedPaymentOption?.code],
   );
 
   const handleCreate = async () => {
@@ -227,6 +260,7 @@ const ContractCreatePage = () => {
         customerId: quotation.customerId,
         quotationId,
         paymentTerms: paymentTerms.trim(),
+        paymentOptionCode,
         deliveryAddress: deliveryAddress.trim(),
         items,
       });
@@ -369,14 +403,38 @@ const ContractCreatePage = () => {
                     subtitle="Thiết lập chính sách thanh toán áp dụng cho hợp đồng."
                     loading={pageLoading}
                     content={
-                      <Input.TextArea
-                        rows={3}
-                        maxLength={PAYMENT_TERMS_MAX_LENGTH}
-                        showCount
-                        value={paymentTerms}
-                        onChange={(event) => setPaymentTerms(event.target.value)}
-                        placeholder="Ví dụ: Thanh toán 70% khi giao hàng, 30% còn lại trong vòng 30 ngày."
-                      />
+                      <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                        <div>
+                          <Typography.Text strong>Payment option</Typography.Text>
+                          <Select
+                            className="mt-2 w-full"
+                            allowClear
+                            showSearch
+                            value={paymentOptionCode}
+                            onChange={(value) => setPaymentOptionCode(value)}
+                            placeholder="Chọn payment option áp dụng"
+                            optionFilterProp="label"
+                            options={paymentOptions.map((item) => ({
+                              value: item.code,
+                              label: `${item.code} - ${item.name}`,
+                            }))}
+                          />
+                          <Typography.Text type="secondary" className="mt-2 block">
+                            {selectedPaymentOption
+                              ? `${selectedPaymentOption.name}${selectedPaymentOption.description ? ` - ${selectedPaymentOption.description}` : ""}`
+                              : "Chưa chọn payment option."}
+                          </Typography.Text>
+                        </div>
+
+                        <Input.TextArea
+                          rows={3}
+                          maxLength={PAYMENT_TERMS_MAX_LENGTH}
+                          showCount
+                          value={paymentTerms}
+                          onChange={(event) => setPaymentTerms(event.target.value)}
+                          placeholder="Ví dụ: Thanh toán 70% khi giao hàng, 30% còn lại trong vòng 30 ngày."
+                        />
+                      </Space>
                     }
                   />
 
