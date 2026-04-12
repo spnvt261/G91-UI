@@ -33,6 +33,7 @@ export interface QuotationModel {
   createdAt?: string;
   deliveryRequirements?: string;
   promotionCode?: string;
+  paymentOption?: QuotationPaymentOption;
   actions?: QuotationActionModel;
 }
 
@@ -228,6 +229,7 @@ export interface QuotationSubmitResponseData {
     projectId?: string;
     totalAmount: number;
     status: QuotationStatus;
+    paymentOption?: QuotationPaymentOption;
     validUntil?: string;
     createdAt?: string;
   };
@@ -270,6 +272,7 @@ export interface QuotationDetailResponseData {
     totalAmount?: number;
     promotionCode?: string;
   };
+  paymentOption?: QuotationPaymentOption;
   deliveryRequirements?: string;
   actions?: QuotationActionModel;
 }
@@ -289,6 +292,7 @@ export interface QuotationSaveResponseData {
   metadata?: {
     deliveryRequirements?: string;
     promotionCode?: string;
+    paymentOption?: QuotationPaymentOption;
   };
 }
 

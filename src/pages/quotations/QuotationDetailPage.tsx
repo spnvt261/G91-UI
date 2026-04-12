@@ -254,6 +254,17 @@ const QuotationDetailPage = () => {
 
                         <Descriptions column={1} size="small" colon={false}>
                           <Descriptions.Item label="Mã khuyến mãi">{detail.pricing?.promotionCode || "Không áp dụng"}</Descriptions.Item>
+                          <Descriptions.Item label="Điều khoản thanh toán">
+                            {detail.paymentOption ? (
+                              <Space size={8} wrap>
+                                <Tag color="cyan">{detail.paymentOption.code}</Tag>
+                                <Typography.Text>{detail.paymentOption.name}</Typography.Text>
+                                {detail.paymentOption.description ? <Typography.Text type="secondary">{detail.paymentOption.description}</Typography.Text> : null}
+                              </Space>
+                            ) : (
+                              "Không áp dụng"
+                            )}
+                          </Descriptions.Item>
                           <Descriptions.Item label="Tạm tính">{formatQuotationCurrency(subTotal)}</Descriptions.Item>
                           <Descriptions.Item label="Giảm giá">{formatQuotationCurrency(discountAmount)}</Descriptions.Item>
                           <Descriptions.Item label="Tổng cuối">
