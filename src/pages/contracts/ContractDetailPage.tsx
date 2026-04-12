@@ -1,6 +1,8 @@
-import { MailOutlined, PrinterOutlined, ReloadOutlined } from "@ant-design/icons";
-import { Alert, Button, Card, Col, Descriptions, Empty, Form, Input, Modal, Row, Select, Space, Statistic, Table, Typography } from "antd";
+import { MailOutlined, PrinterOutlined } from "@ant-design/icons";
+import { Alert, Button, Card, Col, DatePicker, Descriptions, Empty, Form, Input, Modal, Row, Select, Space, Statistic, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import type { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
@@ -12,6 +14,7 @@ import { useNotify } from "../../context/notifyContext";
 import type { ContractModel } from "../../models/contract/contract.model";
 import type { ContractDocumentModel } from "../../services/contract/contract.service";
 import { contractService } from "../../services/contract/contract.service";
+import { invoiceService } from "../../services/invoice/invoice.service";
 import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage } from "../shared/page.utils";
 import ContractStatusTag from "./components/ContractStatusTag";
@@ -37,6 +40,11 @@ interface EmailDocumentFormValues {
   message?: string;
 }
 
+interface CreateInvoiceFromContractFormValues {
+  issueDate?: Dayjs;
+  dueDate: Dayjs;
+}
+
 const CONTRACT_CANCELLATION_REASON_OPTIONS = [
   { label: "Khách hàng yêu cầu", value: "CUSTOMER_REQUEST" },
   { label: "Tranh chấp giá", value: "PRICE_DISPUTE" },
@@ -56,6 +64,7 @@ const ContractDetailPage = () => {
   const canApprove = canPerformAction(role, "contract.approve");
   const canEdit = canPerformAction(role, "contract.update");
   const canCancel = canPerformAction(role, "contract.cancel");
+  const canCreateInvoice = canPerformAction(role, "invoice.create");
   const canViewSaleOrder = hasPermission(role, "sale-order.view");
   const isCustomerRole = role === "CUSTOMER";
   const isAccountantRole = role === "ACCOUNTANT";
@@ -70,6 +79,9 @@ const ContractDetailPage = () => {
   const [cancelNote, setCancelNote] = useState("");
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [emailForm] = Form.useForm<EmailDocumentFormValues>();
+  const [createInvoiceModalOpen, setCreateInvoiceModalOpen] = useState(false);
+  const [createInvoiceLoading, setCreateInvoiceLoading] = useState(false);
+  const [createInvoiceForm] = Form.useForm<CreateInvoiceFromContractFormValues>();
 
   const loadData = useCallback(async () => {
     if (!id) {
@@ -128,6 +140,59 @@ const ContractDetailPage = () => {
       "Không thể xuất tài liệu hợp đồng.",
     );
   };
+
+  const openCreateInvoiceModal = useCallback(() => {
+    if (!contract) {
+      return;
+    }
+
+    createInvoiceForm.setFieldsValue({
+      issueDate: dayjs(),
+      dueDate: undefined,
+    });
+    setCreateInvoiceModalOpen(true);
+  }, [contract, createInvoiceForm]);
+
+  const closeCreateInvoiceModal = useCallback(() => {
+    if (createInvoiceLoading) {
+      return;
+    }
+
+    setCreateInvoiceModalOpen(false);
+    createInvoiceForm.resetFields();
+  }, [createInvoiceForm, createInvoiceLoading]);
+
+  const handleCreateInvoiceFromContract = useCallback(
+    async (values: CreateInvoiceFromContractFormValues) => {
+      if (!contract) {
+        return;
+      }
+
+      try {
+        setCreateInvoiceLoading(true);
+        const created = await invoiceService.convertFromContract(contract.id, {
+          issueDate: values.issueDate?.format("YYYY-MM-DD"),
+          dueDate: values.dueDate.format("YYYY-MM-DD"),
+          status: "DRAFT",
+        });
+        notify(
+          "Đã tạo hóa đơn nháp từ hợp đồng. Chuyển sang màn chỉnh sửa hóa đơn.",
+          "success",
+        );
+        setCreateInvoiceModalOpen(false);
+        createInvoiceForm.resetFields();
+        navigate(ROUTE_URL.INVOICE_EDIT.replace(":id", created.id));
+      } catch (error) {
+        notify(
+          getErrorMessage(error, "Không thể tạo hóa đơn từ hợp đồng."),
+          "error",
+        );
+      } finally {
+        setCreateInvoiceLoading(false);
+      }
+    },
+    [contract, createInvoiceForm, navigate, notify],
+  );
 
   const itemColumns = useMemo<ColumnsType<ContractModel["items"][number]>>(
     () => [
@@ -219,6 +284,9 @@ const ContractDetailPage = () => {
   );
 
   const normalizedStatus = String(contract?.status ?? "").trim().toUpperCase();
+  const canCreateInvoiceFromContract = Boolean(
+    canCreateInvoice && normalizedStatus === "DELIVERED",
+  );
   const canRequestCustomerApproval = Boolean(canSubmit && normalizedStatus === "DRAFT");
   const canSubmitApprovedContract = Boolean(canSubmit && normalizedStatus === "CUSTOMER_APPROVAL");
   const canCustomerApprove = Boolean(isCustomerRole && normalizedStatus === "PENDING_CUSTOMER_APPROVAL");
@@ -244,9 +312,11 @@ const ContractDetailPage = () => {
             }
             actions={
               <Space wrap>
-                <Button icon={<ReloadOutlined />} onClick={() => void loadData()} loading={loading}>
-                  Làm mới
-                </Button>
+                {canCreateInvoiceFromContract ? (
+                  <Button onClick={openCreateInvoiceModal} disabled={!contract}>
+                    Tạo invoice
+                  </Button>
+                ) : null}
                 {canRequestCustomerApproval ? (
                   <Button
                     type="primary"
@@ -563,6 +633,49 @@ const ContractDetailPage = () => {
           </Space>
         }
       />
+
+      <Modal
+        title={
+          contract
+            ? `Tạo hóa đơn từ ${getContractDisplayNumber(contract)}`
+            : "Tạo hóa đơn từ hợp đồng"
+        }
+        open={createInvoiceModalOpen}
+        onCancel={closeCreateInvoiceModal}
+        onOk={() => createInvoiceForm.submit()}
+        okText="Tạo hóa đơn nháp"
+        cancelText="Đóng"
+        okButtonProps={{ loading: createInvoiceLoading }}
+      >
+        <Form<CreateInvoiceFromContractFormValues>
+          form={createInvoiceForm}
+          layout="vertical"
+          onFinish={(values) => void handleCreateInvoiceFromContract(values)}
+        >
+          <Typography.Paragraph type="secondary">
+            Hệ thống sẽ tạo invoice nháp từ contract đã giao hàng, sau đó chuyển
+            sang màn chỉnh sửa invoice để hoàn thiện thông tin.
+          </Typography.Paragraph>
+          <Form.Item label="Ngày xuất hóa đơn" name="issueDate">
+            <DatePicker
+              className="w-full"
+              format="DD/MM/YYYY"
+              placeholder="Mặc định hôm nay nếu bỏ trống"
+            />
+          </Form.Item>
+          <Form.Item
+            label="Hạn thanh toán"
+            name="dueDate"
+            rules={[{ required: true, message: "Vui lòng chọn hạn thanh toán." }]}
+          >
+            <DatePicker
+              className="w-full"
+              format="DD/MM/YYYY"
+              placeholder="Chọn hạn thanh toán"
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
 
       <Modal
         title="Xác nhận hủy hợp đồng"
