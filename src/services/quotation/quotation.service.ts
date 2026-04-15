@@ -68,6 +68,7 @@ const toQuotationModelFromDetail = (detail: QuotationDetailResponseData): Quotat
   createdAt: detail.quotation.createdAt,
   deliveryRequirements: detail.deliveryRequirements,
   promotionCode: detail.pricing?.promotionCode,
+  paymentOption: detail.paymentOption,
   actions: detail.actions,
 });
 
@@ -79,6 +80,7 @@ const toQuotationModelFromSubmit = (payload: QuotationSubmitResponseData): Quota
   items: [],
   totalAmount: payload.quotation.totalAmount,
   status: payload.quotation.status,
+  paymentOption: payload.quotation.paymentOption,
   validUntil: payload.quotation.validUntil,
   createdAt: payload.quotation.createdAt,
 });
@@ -98,6 +100,7 @@ const toQuotationModelFromSave = (payload: QuotationSaveResponseData): Quotation
   createdAt: payload.quotation.createdAt,
   deliveryRequirements: payload.metadata?.deliveryRequirements,
   promotionCode: payload.metadata?.promotionCode,
+  paymentOption: payload.metadata?.paymentOption,
 });
 
 export const quotationService = {

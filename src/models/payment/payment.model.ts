@@ -35,6 +35,8 @@ export interface PaymentAllocationModel {
   invoiceTotal?: number;
   invoicePaidAmount?: number;
   invoiceOutstandingAmount?: number;
+  invoiceRemainingAmount?: number;
+  invoiceStatus?: string;
 }
 
 export interface PaymentModel {
@@ -48,5 +50,7 @@ export interface PaymentModel {
   paymentMethod?: PaymentMethod;
   referenceNo?: string;
   note?: string;
+  createdBy?: string;
+  createdAt?: string;
   allocations: PaymentAllocationModel[];
 }

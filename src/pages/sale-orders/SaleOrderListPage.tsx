@@ -1,5 +1,20 @@
-import { ReloadOutlined } from "@ant-design/icons";
-import { Alert, Button, Card, Col, DatePicker, Empty, Input, Row, Select, Space, Table, Typography } from "antd";
+import { MoreOutlined, ReloadOutlined } from "@ant-design/icons";
+import {
+  Alert,
+  Button,
+  Card,
+  Col,
+  DatePicker,
+  Dropdown,
+  Empty,
+  Input,
+  Row,
+  Select,
+  Space,
+  Table,
+  Typography,
+} from "antd";
+import type { MenuProps } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -10,7 +25,10 @@ import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTem
 import { canPerformAction } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
-import type { SaleOrderListQuery, SaleOrderModel } from "../../models/sale-order/sale-order.model";
+import type {
+  SaleOrderListQuery,
+  SaleOrderModel,
+} from "../../models/sale-order/sale-order.model";
 import { saleOrderService } from "../../services/sale-order/sale-order.service";
 import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage, toCurrency } from "../shared/page.utils";
@@ -25,13 +43,22 @@ import {
 
 const DEFAULT_PAGE_SIZE = 10;
 
+interface SaleOrderQuickAction {
+  key: string;
+  label: string;
+  danger?: boolean;
+  onClick: () => void;
+}
+
 const SaleOrderListPage = () => {
   const navigate = useNavigate();
   const { notify } = useNotify();
   const role = getStoredUserRole();
 
   const canFulfillment = canPerformAction(role, "sale-order.fulfillment");
-  const canAccountingStep = canPerformAction(role, "sale-order.create-invoice") || canPerformAction(role, "sale-order.complete");
+  const canAccountingStep =
+    canPerformAction(role, "sale-order.create-invoice") ||
+    canPerformAction(role, "sale-order.complete");
 
   const [items, setItems] = useState<SaleOrderModel[]>([]);
   const [loading, setLoading] = useState(false);
@@ -40,8 +67,12 @@ const SaleOrderListPage = () => {
   const [keywordInput, setKeywordInput] = useState("");
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState<string | undefined>(undefined);
-  const [orderRange, setOrderRange] = useState<[string | undefined, string | undefined]>([undefined, undefined]);
-  const [deliveryRange, setDeliveryRange] = useState<[string | undefined, string | undefined]>([undefined, undefined]);
+  const [orderRange, setOrderRange] = useState<
+    [string | undefined, string | undefined]
+  >([undefined, undefined]);
+  const [deliveryRange, setDeliveryRange] = useState<
+    [string | undefined, string | undefined]
+  >([undefined, undefined]);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -71,7 +102,10 @@ const SaleOrderListPage = () => {
       setItems(response.items);
       setTotalItems(response.pagination.totalItems);
     } catch (error) {
-      const message = getErrorMessage(error, "Không thể tải danh sách đơn bán.");
+      const message = getErrorMessage(
+        error,
+        "Không thể tải danh sách đơn bán.",
+      );
       setListError(message);
       notify(message, "error");
     } finally {
@@ -83,6 +117,64 @@ const SaleOrderListPage = () => {
     void loadList();
   }, [loadList]);
 
+  const buildActionItems = useCallback(
+    (record: SaleOrderModel): MenuProps["items"] => {
+      const normalizedStatus = normalizeSaleOrderStatus(record.status);
+    const nextFulfillment = getNextFulfillmentAction(normalizedStatus);
+    const canGoAccounting =
+      normalizedStatus === "DELIVERED" || normalizedStatus === "COMPLETED";
+
+    const actions: SaleOrderQuickAction[] = [
+      {
+        key: "detail",
+        label: "Chi tiết đơn bán",
+        onClick: () =>
+          navigate(
+            ROUTE_URL.SALE_ORDER_DETAIL.replace(":id", record.id),
+          ),
+      },
+      {
+        key: "timeline",
+        label: "Xem timeline",
+        onClick: () =>
+          navigate(
+            ROUTE_URL.SALE_ORDER_TIMELINE.replace(":id", record.id),
+          ),
+      },
+    ];
+
+    if (canFulfillment && nextFulfillment) {
+      actions.push({
+        key: "fulfillment",
+        label: `Xử lý ${nextFulfillment.label}`,
+        onClick: () =>
+          navigate(
+            ROUTE_URL.SALE_ORDER_DETAIL.replace(":id", record.id),
+          ),
+      });
+    }
+
+    if (canAccountingStep && canGoAccounting) {
+      actions.push({
+        key: "accounting",
+        label: "Bước kế toán",
+        onClick: () =>
+          navigate(
+            ROUTE_URL.SALE_ORDER_DETAIL.replace(":id", record.id),
+          ),
+      });
+    }
+
+      return actions.map((action) => ({
+        key: `${action.key}-${record.id}`,
+        label: action.label,
+        danger: action.danger,
+        onClick: action.onClick,
+      }));
+    },
+    [canAccountingStep, canFulfillment, navigate],
+  );
+
   const columns = useMemo<ColumnsType<SaleOrderModel>>(
     () => [
       {
@@ -91,8 +183,12 @@ const SaleOrderListPage = () => {
         width: 200,
         render: (_, record) => (
           <Space direction="vertical" size={1}>
-            <Typography.Text strong>{resolveSaleOrderNumber(record.id, record.saleOrderNumber)}</Typography.Text>
-            <Typography.Text type="secondary">saleOrderId: {record.id}</Typography.Text>
+            <Typography.Text strong>
+              {resolveSaleOrderNumber(record.id, record.saleOrderNumber)}
+            </Typography.Text>
+            <Typography.Text type="secondary">
+              saleOrderId: {record.id}
+            </Typography.Text>
           </Space>
         ),
       },
@@ -100,7 +196,11 @@ const SaleOrderListPage = () => {
         title: "Mã hợp đồng",
         key: "contractNumber",
         width: 180,
-        render: (_, record) => record.contractNumber || record.contractId || record.id || "Chưa cập nhật",
+        render: (_, record) =>
+          record.contractNumber ||
+          record.contractId ||
+          record.id ||
+          "Chưa cập nhật",
       },
       {
         title: "Khách hàng",
@@ -108,8 +208,12 @@ const SaleOrderListPage = () => {
         width: 230,
         render: (_, record) => (
           <Space direction="vertical" size={1}>
-            <Typography.Text>{record.customerName || "Chưa cập nhật"}</Typography.Text>
-            <Typography.Text type="secondary">{record.customerCode || record.customerId || "-"}</Typography.Text>
+            <Typography.Text>
+              {record.customerName || "Chưa cập nhật"}
+            </Typography.Text>
+            <Typography.Text type="secondary">
+              {record.customerCode || record.customerId || "-"}
+            </Typography.Text>
           </Space>
         ),
       },
@@ -119,8 +223,12 @@ const SaleOrderListPage = () => {
         width: 220,
         render: (_, record) => (
           <Space direction="vertical" size={1}>
-            <Typography.Text>{record.projectName || "Chưa liên kết"}</Typography.Text>
-            <Typography.Text type="secondary">{record.projectCode || record.projectId || "-"}</Typography.Text>
+            <Typography.Text>
+              {record.projectName || "Chưa liên kết"}
+            </Typography.Text>
+            <Typography.Text type="secondary">
+              {record.projectCode || record.projectId || "-"}
+            </Typography.Text>
           </Space>
         ),
       },
@@ -151,45 +259,40 @@ const SaleOrderListPage = () => {
         key: "totalAmount",
         width: 170,
         align: "right",
-        render: (value: number) => <Typography.Text strong>{toCurrency(value)}</Typography.Text>,
+        render: (value: number) => (
+          <Typography.Text strong>{toCurrency(value)}</Typography.Text>
+        ),
       },
       {
         title: "Thao tác",
         key: "actions",
-        width: 320,
+        width: 96,
         fixed: "right",
-        render: (_, record) => {
-          const normalizedStatus = normalizeSaleOrderStatus(record.status);
-          const nextFulfillment = getNextFulfillmentAction(normalizedStatus);
-          const canGoAccounting = normalizedStatus === "DELIVERED" || normalizedStatus === "COMPLETED";
-
-          return (
-            <Space size={4} wrap>
-              <Button type="link" onClick={() => navigate(ROUTE_URL.SALE_ORDER_DETAIL.replace(":id", record.id))}>
-                Chi tiết
-              </Button>
-              <Button size="small" onClick={() => navigate(ROUTE_URL.SALE_ORDER_TIMELINE.replace(":id", record.id))}>
-                Timeline
-              </Button>
-              {canFulfillment && nextFulfillment ? (
-                <Button size="small" type="default" onClick={() => navigate(ROUTE_URL.SALE_ORDER_DETAIL.replace(":id", record.id))}>
-                  Xử lý {nextFulfillment.label}
-                </Button>
-              ) : null}
-              {canAccountingStep && canGoAccounting ? (
-                <Button size="small" type="dashed" onClick={() => navigate(ROUTE_URL.SALE_ORDER_DETAIL.replace(":id", record.id))}>
-                  Bước kế toán
-                </Button>
-              ) : null}
-            </Space>
-          );
-        },
+        align: "center",
+        render: (_, record) => (
+          <Dropdown
+            menu={{ items: buildActionItems(record) }}
+            trigger={["click"]}
+            placement="bottomRight"
+          >
+            <Button
+              icon={<MoreOutlined />}
+              aria-label={`Thao tác cho ${resolveSaleOrderNumber(
+                record.id,
+                record.saleOrderNumber,
+              )}`}
+            />
+          </Dropdown>
+        ),
       },
     ],
-    [canAccountingStep, canFulfillment, navigate],
+    [buildActionItems],
   );
 
-  const totalAmount = useMemo(() => items.reduce((sum, item) => sum + item.totalAmount, 0), [items]);
+  const totalAmount = useMemo(
+    () => items.reduce((sum, item) => sum + item.totalAmount, 0),
+    [items],
+  );
 
   return (
     <NoResizeScreenTemplate
@@ -198,9 +301,17 @@ const SaleOrderListPage = () => {
         <ListScreenHeaderTemplate
           title="Danh sách đơn bán"
           subtitle="Theo dõi đơn bán từ hợp đồng SUBMITTED đến fulfillment, hóa đơn, thanh toán và công nợ."
-          breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Đơn bán" }]} />}
+          breadcrumb={
+            <CustomBreadcrumb
+              breadcrumbs={[{ label: "Trang chủ" }, { label: "Đơn bán" }]}
+            />
+          }
           actions={
-            <Button icon={<ReloadOutlined />} onClick={() => void loadList()} loading={loading}>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={() => void loadList()}
+              loading={loading}
+            >
               Làm mới
             </Button>
           }
@@ -211,7 +322,9 @@ const SaleOrderListPage = () => {
           <Row gutter={[16, 16]}>
             <Col xs={24} md={8}>
               <Card>
-                <Typography.Text type="secondary">Đơn bán trong trang hiện tại</Typography.Text>
+                <Typography.Text type="secondary">
+                  Đơn bán trong trang hiện tại
+                </Typography.Text>
                 <Typography.Title level={3} style={{ margin: 0 }}>
                   {items.length}
                 </Typography.Title>
@@ -219,7 +332,9 @@ const SaleOrderListPage = () => {
             </Col>
             <Col xs={24} md={8}>
               <Card>
-                <Typography.Text type="secondary">Tổng giá trị trang hiện tại</Typography.Text>
+                <Typography.Text type="secondary">
+                  Tổng giá trị trang hiện tại
+                </Typography.Text>
                 <Typography.Title level={3} style={{ margin: 0 }}>
                   {toCurrency(totalAmount)}
                 </Typography.Title>
@@ -227,9 +342,21 @@ const SaleOrderListPage = () => {
             </Col>
             <Col xs={24} md={8}>
               <Card>
-                <Typography.Text type="secondary">Đơn đang fulfillment</Typography.Text>
+                <Typography.Text type="secondary">
+                  Đơn đang fulfillment
+                </Typography.Text>
                 <Typography.Title level={3} style={{ margin: 0 }}>
-                  {items.filter((item) => ["SUBMITTED", "PROCESSING", "RESERVED", "PICKED", "IN_TRANSIT"].includes(normalizeSaleOrderStatus(item.status))).length}
+                  {
+                    items.filter((item) =>
+                      [
+                        "SUBMITTED",
+                        "PROCESSING",
+                        "RESERVED",
+                        "PICKED",
+                        "IN_TRANSIT",
+                      ].includes(normalizeSaleOrderStatus(item.status)),
+                    ).length
+                  }
                 </Typography.Title>
               </Card>
             </Col>
@@ -269,9 +396,15 @@ const SaleOrderListPage = () => {
                     className="w-full"
                     format="DD/MM/YYYY"
                     placeholder={["Từ ngày đơn", "Đến ngày đơn"]}
-                    value={[orderRange[0] ? dayjs(orderRange[0]) : null, orderRange[1] ? dayjs(orderRange[1]) : null]}
+                    value={[
+                      orderRange[0] ? dayjs(orderRange[0]) : null,
+                      orderRange[1] ? dayjs(orderRange[1]) : null,
+                    ]}
                     onChange={(dates) => {
-                      setOrderRange([dates?.[0]?.format("YYYY-MM-DD"), dates?.[1]?.format("YYYY-MM-DD")]);
+                      setOrderRange([
+                        dates?.[0]?.format("YYYY-MM-DD"),
+                        dates?.[1]?.format("YYYY-MM-DD"),
+                      ]);
                       setPage(1);
                     }}
                   />
@@ -281,9 +414,15 @@ const SaleOrderListPage = () => {
                     className="w-full"
                     format="DD/MM/YYYY"
                     placeholder={["Từ ngày giao", "Đến ngày giao"]}
-                    value={[deliveryRange[0] ? dayjs(deliveryRange[0]) : null, deliveryRange[1] ? dayjs(deliveryRange[1]) : null]}
+                    value={[
+                      deliveryRange[0] ? dayjs(deliveryRange[0]) : null,
+                      deliveryRange[1] ? dayjs(deliveryRange[1]) : null,
+                    ]}
                     onChange={(dates) => {
-                      setDeliveryRange([dates?.[0]?.format("YYYY-MM-DD"), dates?.[1]?.format("YYYY-MM-DD")]);
+                      setDeliveryRange([
+                        dates?.[0]?.format("YYYY-MM-DD"),
+                        dates?.[1]?.format("YYYY-MM-DD"),
+                      ]);
                       setPage(1);
                     }}
                   />
@@ -304,11 +443,21 @@ const SaleOrderListPage = () => {
                 Đặt lại bộ lọc
               </Button>
 
-              {listError ? <Alert type="error" showIcon message="Không thể tải danh sách đơn bán." description={listError} /> : null}
+              {listError ? (
+                <Alert
+                  type="error"
+                  showIcon
+                  message="Không thể tải danh sách đơn bán."
+                  description={listError}
+                />
+              ) : null}
 
               <Table<SaleOrderModel>
                 rowKey="id"
-                loading={{ spinning: loading, tip: "Đang tải danh sách đơn bán..." }}
+                loading={{
+                  spinning: loading,
+                  tip: "Đang tải danh sách đơn bán...",
+                }}
                 columns={columns}
                 dataSource={items}
                 pagination={{
@@ -316,15 +465,21 @@ const SaleOrderListPage = () => {
                   pageSize,
                   total: totalItems,
                   showSizeChanger: true,
-                  showTotal: (total, range) => `${range[0]}-${range[1]} trên ${total} đơn bán`,
+                  showTotal: (total, range) =>
+                    `${range[0]}-${range[1]} trên ${total} đơn bán`,
                 }}
                 onChange={(pagination) => {
                   setPage(pagination.current ?? 1);
                   setPageSize(pagination.pageSize ?? DEFAULT_PAGE_SIZE);
                 }}
-                scroll={{ x: 1750 }}
+                scroll={{ x: 1520 }}
                 locale={{
-                  emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có đơn bán phù hợp với bộ lọc hiện tại." />,
+                  emptyText: (
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description="Không có đơn bán phù hợp với bộ lọc hiện tại."
+                    />
+                  ),
                 }}
               />
             </Space>

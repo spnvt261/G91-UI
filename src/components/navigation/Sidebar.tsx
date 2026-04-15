@@ -6,11 +6,7 @@ import { useSelector } from "react-redux";
 import type { UserRole } from "../../models/auth/auth.model";
 import type { RootState } from "../../store";
 import { getStoredUserRole, normalizeUserRole } from "../../utils/authSession";
-import {
-  buildSidebarMenuItems,
-  resolveSidebarActiveState,
-  type SidebarNode,
-} from "./SidebarItem";
+import { buildSidebarMenuItems, resolveSidebarActiveState, type SidebarNode } from "./SidebarItem";
 import { buildSidebarMenuByRole } from "./sidebar.config";
 
 interface SidebarProps {
@@ -92,15 +88,15 @@ const Sidebar = ({ collapsed = false, activePath, onNavigate, className = "" }: 
     <aside className={`app-sidebar flex h-full min-h-0 flex-col bg-white ${className}`.trim()}>
       <div className="app-sidebar__brand px-4 py-4">
         <Space align="start" size={12}>
-          <Tooltip title="G91 Điều hành">
+          <Tooltip title="G90 Điều hành">
             <div className="app-sidebar__logo">
-              <span>G91</span>
+              <span>G90</span>
             </div>
           </Tooltip>
           {!collapsed ? (
             <Space orientation="vertical" size={2}>
               <Typography.Title level={5} style={{ margin: 0 }}>
-                G91 Điều Hành
+                G90 Điều Hành
               </Typography.Title>
               <Dropdown menu={{ items: roleHintMenu }} trigger={["click"]}>
                 <Tag className="app-sidebar__role-tag" color="blue" icon={<InfoCircleOutlined />}>

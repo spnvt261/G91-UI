@@ -1,6 +1,7 @@
 import api from "../../apiConfig/axiosConfig";
-import { API, withId } from "../../api/URL_const";
+import { API, withId, withPathParams } from "../../api/URL_const";
 import type {
+  ConvertContractToInvoiceRequest,
   InvoiceCancelRequest,
   InvoiceCreateRequest,
   InvoiceItemModel,
@@ -115,6 +116,11 @@ export const invoiceService = {
 
   async create(request: InvoiceCreateRequest): Promise<InvoiceModel> {
     const response = await api.post<unknown>(API.INVOICES.CREATE, request);
+    return normalizeInvoice(unwrapApiResponse(response.data));
+  },
+
+  async convertFromContract(contractId: string, request: ConvertContractToInvoiceRequest): Promise<InvoiceModel> {
+    const response = await api.post<unknown>(withPathParams(API.INVOICES.FROM_CONTRACT, { contractId }), request);
     return normalizeInvoice(unwrapApiResponse(response.data));
   },
 

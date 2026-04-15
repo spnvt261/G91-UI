@@ -2,6 +2,8 @@ import type { PaginationMeta } from "../common/api.model";
 
 export type ContractStatus =
   | "DRAFT"
+  | "PENDING_CUSTOMER_APPROVAL"
+  | "CUSTOMER_APPROVAL"
   | "PENDING_APPROVAL"
   | "PENDING"
   | "APPROVED"
@@ -29,6 +31,12 @@ export interface ContractItemModel {
   priceOverrideReason?: string;
 }
 
+export interface ContractPaymentOption {
+  code: string;
+  name: string;
+  description?: string;
+}
+
 export interface ContractModel {
   id: string;
   contractNumber?: string;
@@ -40,6 +48,8 @@ export interface ContractModel {
   items: ContractItemModel[];
   totalAmount: number;
   paymentTerms?: string;
+  paymentOptionCode?: string;
+  paymentOption?: ContractPaymentOption;
   deliveryAddress?: string;
   deliveryTerms?: string;
   note?: string;
@@ -94,6 +104,7 @@ export interface ContractListQuery {
 
 export interface CreateContractFromQuotationRequest {
   paymentTerms: string;
+  paymentOptionCode?: string;
   deliveryAddress: string;
 }
 
@@ -106,6 +117,7 @@ export interface ContractFromQuotationResponseData {
     totalAmount: number;
     status: ContractStatus;
     paymentTerms: string;
+    paymentOption?: ContractPaymentOption;
     deliveryAddress: string;
     createdAt?: string;
   };
@@ -143,6 +155,7 @@ export interface ContractCreateRequest {
   customerId: string;
   quotationId?: string;
   paymentTerms: string;
+  paymentOptionCode?: string;
   deliveryAddress: string;
   deliveryTerms?: string;
   note?: string;
@@ -160,6 +173,7 @@ export interface ContractPreviewRequest {
   customerId?: string;
   quotationId?: string;
   paymentTerms?: string;
+  paymentOptionCode?: string;
   deliveryAddress?: string;
   deliveryTerms?: string;
   note?: string;
@@ -215,6 +229,7 @@ export interface ContractDetailResponseData {
     approvalTier?: string;
     requiresApproval?: boolean;
     paymentTerms?: string;
+    paymentOption?: ContractPaymentOption;
     deliveryAddress?: string;
     deliveryTerms?: string;
     note?: string;
@@ -248,6 +263,53 @@ export interface ContractDetailResponseData {
     quotationNumber?: string;
     status?: string;
   };
+}
+
+export interface ContractFormInitResponseData {
+  customer?: {
+    id: string;
+    companyName?: string;
+    customerType?: string;
+    contactPerson?: string;
+    phone?: string;
+    email?: string;
+    address?: string;
+    creditLimit?: number;
+    currentDebt?: number;
+    availableCredit?: number;
+    depositPercentage?: number;
+  };
+  quotation?: {
+    id: string;
+    quotationNumber?: string;
+    status?: string;
+    validUntil?: string;
+    projectId?: string;
+    projectCode?: string;
+    projectName?: string;
+    deliveryRequirements?: string;
+    note?: string;
+    paymentOption?: ContractPaymentOption;
+  };
+  defaults?: {
+    suggestedPaymentTerms?: string;
+    suggestedDeliveryAddress?: string;
+    suggestedDeliveryTerms?: string;
+    suggestedPaymentOption?: ContractPaymentOption;
+  };
+  items: Array<{
+    productId: string;
+    productCode?: string;
+    productName?: string;
+    unit?: string;
+    quantity?: number;
+    quotedUnitPrice?: number;
+    baseUnitPrice?: number;
+    suggestedUnitPrice?: number;
+    totalPrice?: number;
+  }>;
+  warnings: string[];
+  availablePaymentOptions: ContractPaymentOption[];
 }
 
 export interface ContractUpdateRequest {

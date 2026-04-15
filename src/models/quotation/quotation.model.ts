@@ -33,6 +33,7 @@ export interface QuotationModel {
   createdAt?: string;
   deliveryRequirements?: string;
   promotionCode?: string;
+  paymentOption?: QuotationPaymentOption;
   actions?: QuotationActionModel;
 }
 
@@ -69,6 +70,7 @@ export interface QuotationRequest {
   note?: string;
   deliveryRequirements?: string;
   promotionCode?: string;
+  paymentOptionCode?: string;
 }
 
 export interface QuotationSubmitActionRequest {
@@ -76,6 +78,7 @@ export interface QuotationSubmitActionRequest {
   projectId?: string;
   deliveryRequirements?: string;
   promotionCode?: string;
+  paymentOptionCode?: string;
   note?: string;
   items?: QuotationItemModel[];
 }
@@ -112,6 +115,12 @@ export interface QuotationFormInitProject {
   status: string;
 }
 
+export interface QuotationPaymentOption {
+  code: string;
+  name: string;
+  description?: string;
+}
+
 export interface QuotationFormInitResponseData {
   customer?: {
     id: string;
@@ -127,6 +136,7 @@ export interface QuotationFormInitResponseData {
     discountType?: string;
     discountValue?: number;
   }>;
+  availablePaymentOptions: QuotationPaymentOption[];
 }
 
 export interface CustomerQuotationListItem {
@@ -219,6 +229,7 @@ export interface QuotationSubmitResponseData {
     projectId?: string;
     totalAmount: number;
     status: QuotationStatus;
+    paymentOption?: QuotationPaymentOption;
     validUntil?: string;
     createdAt?: string;
   };
@@ -261,6 +272,7 @@ export interface QuotationDetailResponseData {
     totalAmount?: number;
     promotionCode?: string;
   };
+  paymentOption?: QuotationPaymentOption;
   deliveryRequirements?: string;
   actions?: QuotationActionModel;
 }
@@ -280,6 +292,7 @@ export interface QuotationSaveResponseData {
   metadata?: {
     deliveryRequirements?: string;
     promotionCode?: string;
+    paymentOption?: QuotationPaymentOption;
   };
 }
 

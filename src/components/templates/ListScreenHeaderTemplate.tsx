@@ -29,19 +29,19 @@ const ListScreenHeaderTemplate = ({
         <div>{breadcrumb ?? <AppBreadcrumb />}</div>
 
         <Flex align="flex-start" justify="space-between" wrap="wrap" gap={14}>
-          <Space orientation="vertical" size={4} style={{ maxWidth: 820 }}>
-            <Typography.Title level={3} className="!mb-0 !text-slate-900">
+          <Space orientation="vertical" size={4} className="min-w-0 flex-1" style={{ maxWidth: 820 }}>
+            <Typography.Title level={3} className="!mb-0 !break-words !text-slate-900">
               {title}
             </Typography.Title>
             {subtitle ? (
-              <Typography.Paragraph type="secondary" className="!mb-0">
+              <Typography.Paragraph type="secondary" className="!mb-0 !break-words">
                 {subtitle}
               </Typography.Paragraph>
             ) : null}
           </Space>
 
           {actions ? (
-            <div style={{ maxWidth: "100%" }}>
+            <div className="min-w-0 max-w-full">
               <Flex gap={8} justify="flex-end" wrap="wrap">
                 {actions}
               </Flex>

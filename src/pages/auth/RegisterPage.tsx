@@ -73,7 +73,7 @@ const RegisterPage = () => {
         <AuthHeroPanel
           eyebrow="Bắt đầu trong vài phút"
           title="Hành trình onboarding rõ ràng và an tâm"
-          description="Bạn chỉ cần hoàn tất thông tin tài khoản, xác thực email và đăng nhập để bắt đầu sử dụng toàn bộ tiện ích của hệ thống G91."
+          description="Bạn chỉ cần hoàn tất thông tin tài khoản, xác thực email và đăng nhập để bắt đầu sử dụng toàn bộ tiện ích của hệ thống G90."
           steps={[
             { title: "Điền thông tin", description: "Nhập họ tên, email và mật khẩu mới." },
             { title: "Xác thực email", description: "Nhập mã xác thực được gửi đến hộp thư." },

@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Empty, Space, Steps, Timeline, Typography } from "antd";
+import { Alert, Button, Card, Space, Steps, Typography } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
@@ -11,8 +11,6 @@ import { saleOrderService } from "../../services/sale-order/sale-order.service";
 import { getErrorMessage } from "../shared/page.utils";
 import SaleOrderStatusTag from "./components/SaleOrderStatusTag";
 import {
-  formatSaleOrderDateTime,
-  getTimelineEventLabel,
   isStatusReached,
   normalizeSaleOrderStatus,
   SALE_ORDER_FLOW_STEPS,
@@ -117,7 +115,7 @@ const SaleOrderTimelinePage = () => {
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Timeline đơn bán"
+          title="Timeline"
           subtitle="Theo dõi mốc Submitted → Fulfillment kho → Hóa đơn/Thanh toán/Công nợ kế toán."
           breadcrumb={
             <CustomBreadcrumb
@@ -149,36 +147,11 @@ const SaleOrderTimelinePage = () => {
             <Space direction="vertical" size={8} style={{ width: "100%" }}>
               <Typography.Text type="secondary">Trạng thái hiện tại</Typography.Text>
               {timeline?.currentStatus ? <SaleOrderStatusTag status={timeline.currentStatus} /> : <Typography.Text>Chưa cập nhật</Typography.Text>}
-              <Typography.Text type="secondary">
-                Mốc kế toán chỉ được đánh dấu hoàn tất khi API timeline trả về sự kiện thực tế tương ứng.
-              </Typography.Text>
             </Space>
           </Card>
 
-          <Card loading={loading} title="Luồng nghiệp vụ chuẩn">
+          <Card loading={loading} title="Timeline">
             <Steps direction="vertical" current={-1} items={flowStepItems} />
-          </Card>
-
-          <Card loading={loading} title="Sự kiện thực tế từ API timeline">
-            {mergedEvents.length === 0 ? (
-              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có bản ghi timeline cho đơn bán này." />
-            ) : (
-              <Timeline
-                items={mergedEvents.map((event, index) => ({
-                  key: `${event.id || event.at || event.eventType || index}`,
-                  children: (
-                    <Space direction="vertical" size={2}>
-                      <Typography.Text strong>{getTimelineEventLabel(event.eventType, event.title)}</Typography.Text>
-                      <Typography.Text type="secondary">{formatSaleOrderDateTime(event.at)}</Typography.Text>
-                      {event.status ? <SaleOrderStatusTag compact status={event.status} /> : null}
-                      {event.actorName ? <Typography.Text type="secondary">Người thực hiện: {event.actorName}</Typography.Text> : null}
-                      {event.note ? <Typography.Text>{event.note}</Typography.Text> : null}
-                      {event.trackingNumber ? <Typography.Text type="secondary">Mã vận đơn: {event.trackingNumber}</Typography.Text> : null}
-                    </Space>
-                  ),
-                }))}
-              />
-            )}
           </Card>
         </Space>
       }

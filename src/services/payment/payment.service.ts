@@ -56,6 +56,8 @@ const normalizePayment = (payload: unknown): PaymentModel => {
     paymentMethod: asString(source.paymentMethod ?? source.method),
     referenceNo: asString(source.referenceNo),
     note: asString(source.note),
+    createdBy: asString(source.createdBy),
+    createdAt: asString(source.createdAt),
     allocations: allocationsSource.map((allocation) => {
       const item = asRecord(allocation);
       return {
@@ -64,7 +66,19 @@ const normalizePayment = (payload: unknown): PaymentModel => {
         allocatedAmount: asNumber(item.allocatedAmount ?? item.amount),
         invoiceTotal: asNumber(item.invoiceTotal ?? item.totalAmount),
         invoicePaidAmount: asNumber(item.invoicePaidAmount ?? item.paidAmount),
-        invoiceOutstandingAmount: asNumber(item.invoiceOutstandingAmount ?? item.remainingAmount ?? item.outstandingAmount),
+        invoiceOutstandingAmount: asNumber(
+          item.invoiceOutstandingAmount ??
+            item.invoiceRemainingAmount ??
+            item.remainingAmount ??
+            item.outstandingAmount,
+        ),
+        invoiceRemainingAmount: asNumber(
+          item.invoiceRemainingAmount ??
+            item.invoiceOutstandingAmount ??
+            item.remainingAmount ??
+            item.outstandingAmount,
+        ),
+        invoiceStatus: asString(item.invoiceStatus ?? item.status),
       };
     }),
   };

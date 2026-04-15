@@ -10,6 +10,7 @@ import type {
   ContractDocumentExportRequest,
   ContractDocumentGenerateRequest,
   ContractFromQuotationResponseData,
+  ContractFormInitResponseData,
   ContractListQuery,
   ContractListResponseData,
   ContractModel,
@@ -110,6 +111,17 @@ const toContractModelFromDetail = (payload: unknown): ContractModel => {
     }),
     totalAmount: asNumber(contract.totalAmount) ?? 0,
     paymentTerms: asString(contract.paymentTerms),
+    paymentOptionCode: asString(asRecord(contract.paymentOption).code),
+    paymentOption: (() => {
+      const paymentOption = asRecord(contract.paymentOption);
+      return Object.keys(paymentOption).length > 0
+        ? {
+            code: asString(paymentOption.code) ?? "",
+            name: asString(paymentOption.name) ?? "",
+            description: asString(paymentOption.description),
+          }
+        : undefined;
+    })(),
     deliveryAddress: asString(contract.deliveryAddress),
     deliveryTerms: asString(contract.deliveryTerms),
     note: asString(contract.note),
@@ -146,6 +158,7 @@ const toCreateRequest = (request: Omit<ContractModel, "id">): ContractCreateRequ
   customerId: request.customerId,
   quotationId: request.quotationId || undefined,
   paymentTerms: request.paymentTerms ?? "",
+  paymentOptionCode: request.paymentOptionCode,
   deliveryAddress: request.deliveryAddress ?? "",
   deliveryTerms: request.deliveryTerms,
   note: request.note,
@@ -173,6 +186,11 @@ const toDocumentModel = (item: Record<string, unknown>): ContractDocumentModel =
 });
 
 export const contractService = {
+  async getFormInit(params?: { customerId?: string; quotationId?: string }): Promise<ContractFormInitResponseData> {
+    const response = await api.get<ContractFormInitResponseData>(API.CONTRACTS.FORM_INIT, { params });
+    return response.data;
+  },
+
   async createFromQuotation(
     quotationId: string,
     request: CreateContractFromQuotationRequest,
@@ -218,6 +236,21 @@ export const contractService = {
 
   async approve(id: string, request: ContractApprovalRequest | ContractApprovalDecisionRequest): Promise<ContractApprovalResponseData> {
     const response = await api.post<ContractApprovalResponseData>(withId(API.CONTRACTS.APPROVE, id), request);
+    return response.data;
+  },
+
+  async customerApprove(id: string, request: ContractApprovalDecisionRequest = {}): Promise<ContractApprovalResponseData> {
+    const response = await api.post<ContractApprovalResponseData>(withId(API.CONTRACTS.CUSTOMER_APPROVE, id), request);
+    return response.data;
+  },
+
+  async customerReject(id: string, request: ContractApprovalDecisionRequest = {}): Promise<ContractApprovalResponseData> {
+    const response = await api.post<ContractApprovalResponseData>(withId(API.CONTRACTS.CUSTOMER_REJECT, id), request);
+    return response.data;
+  },
+
+  async accountantReject(id: string, request: ContractApprovalDecisionRequest = {}): Promise<ContractApprovalResponseData> {
+    const response = await api.post<ContractApprovalResponseData>(withId(API.CONTRACTS.ACCOUNTANT_REJECT, id), request);
     return response.data;
   },
 

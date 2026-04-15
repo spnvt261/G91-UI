@@ -25,7 +25,7 @@ const AuthPageShell = ({ children, sidePanel }: AuthPageShellProps) => {
             <Col xs={{ span: 24, order: 1 }} lg={{ span: hasSidePanel ? 14 : 24, order: 2 }} className="auth-shell__form-col">
               <Space direction="vertical" size={16} className="auth-shell__form-stack">
                 <Space direction="vertical" size={2}>
-                  <Typography.Text className="auth-shell__eyebrow">Nền tảng điều hành G91</Typography.Text>
+                  <Typography.Text className="auth-shell__eyebrow">Nền tảng điều hành G90</Typography.Text>
                   <Typography.Title level={4} className="auth-shell__title">
                     Truy cập bảo mật, vận hành liền mạch
                   </Typography.Title>

@@ -17,7 +17,7 @@ const DefaultLogo = () => (
 
 const AuthHeader = ({
   logo,
-  systemName = "G91 Điều Hành",
+  systemName = "G90 Điều Hành",
   tagline = "Nền tảng quản trị vận hành doanh nghiệp",
 }: AuthHeaderProps) => {
   return (

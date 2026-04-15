@@ -80,11 +80,11 @@ const UserAvatarDropdown = () => {
   return (
     <Dropdown menu={{ items: menuItems }} trigger={["click"]} placement="bottomRight">
       <Button type="text" className="app-user-dropdown" aria-label="Mở menu tài khoản">
-        <Space size={10}>
+        <Space size={10} className="min-w-0">
           <Avatar size={32} style={{ backgroundColor: "#dbeafe", color: "#1d4ed8" }}>
             {initials}
           </Avatar>
-          <Space orientation="vertical" size={0} className="app-user-dropdown__meta">
+          <Space orientation="vertical" size={0} className="app-user-dropdown__meta min-w-0 overflow-hidden">
             <Typography.Text className="app-user-dropdown__name">{displayName}</Typography.Text>
             <Typography.Text type="secondary" className="app-user-dropdown__role">
               Tài khoản đang hoạt động

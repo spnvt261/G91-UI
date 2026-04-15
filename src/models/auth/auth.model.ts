@@ -81,6 +81,11 @@ export interface ResetPasswordRequest {
   confirmNewPassword: string;
 }
 
+export interface ResetPasswordTokenValidationResponse {
+  valid: boolean;
+  expiredAt: string;
+}
+
 export interface UpdateProfileRequest {
   fullName: string;
   phone?: string;

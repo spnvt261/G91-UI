@@ -8,6 +8,10 @@ interface AppLayoutProps {
   children: ReactNode;
 }
 
+const DESKTOP_SIDER_WIDTH = 292;
+const DESKTOP_SIDER_COLLAPSED_WIDTH = 88;
+const APP_HEADER_HEIGHT = 72;
+
 const AppLayout = ({ children }: AppLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -15,6 +19,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const location = useLocation();
   const screens = Grid.useBreakpoint();
   const isDesktop = Boolean(screens.lg);
+  const desktopSidebarWidth = sidebarCollapsed
+    ? DESKTOP_SIDER_COLLAPSED_WIDTH
+    : DESKTOP_SIDER_WIDTH;
 
   useEffect(() => {
     if (isDesktop && mobileOpen) {
@@ -29,10 +36,11 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           className="app-shell__sider"
           collapsible
           collapsed={sidebarCollapsed}
-          width={292}
-          collapsedWidth={88}
+          width={DESKTOP_SIDER_WIDTH}
+          collapsedWidth={DESKTOP_SIDER_COLLAPSED_WIDTH}
           trigger={null}
           theme="light"
+          style={{ position: "fixed", top: 0, left: 0, bottom: 0, height: "100vh", overflow: "hidden" }}
         >
           <Sidebar
             collapsed={sidebarCollapsed}
@@ -42,9 +50,18 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         </Layout.Sider>
       ) : null}
 
-      <Layout className="app-shell__main min-w-0 bg-slate-50">
+      <Layout
+        className="app-shell__main min-w-0 bg-slate-50"
+        style={{
+          marginLeft: isDesktop ? desktopSidebarWidth : 0,
+          height: "100vh",
+          overflow: "hidden",
+        }}
+      >
         <TopNavbar
           sidebarCollapsed={sidebarCollapsed}
+          fixedLeft={isDesktop ? desktopSidebarWidth : 0}
+          headerHeight={APP_HEADER_HEIGHT}
           onToggleSidebar={() => {
             if (isDesktop) {
               setSidebarCollapsed((previous) => !previous);
@@ -55,8 +72,15 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           }}
         />
 
-        <Layout.Content className="app-shell__content">
-          <div className="app-shell__content-inner">{children}</div>
+        <Layout.Content
+          className="app-shell__content"
+          style={{
+            marginTop: APP_HEADER_HEIGHT,
+            height: `calc(100vh - ${APP_HEADER_HEIGHT}px)`,
+            overflow: "auto",
+          }}
+        >
+          <div className="app-shell__content-inner h-full min-h-0">{children}</div>
         </Layout.Content>
       </Layout>
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CheckCircleOutlined, KeyOutlined, LockOutlined, SafetyOutlined } from "@ant-design/icons";
 import { Alert, Button, Form, Input, Progress, Result, Space, Tag, Typography } from "antd";
@@ -13,7 +13,6 @@ import { authService } from "../../services/auth/auth.service";
 import { getErrorMessage } from "../shared/page.utils";
 
 interface ResetPasswordFormValues {
-  token: string;
   newPassword: string;
   confirmNewPassword: string;
 }
@@ -23,6 +22,10 @@ interface PasswordStrengthInfo {
   color: string;
   label: string;
 }
+
+type TokenValidationState = "checking" | "valid" | "invalid";
+
+const INVALID_RESET_LINK_MESSAGE = "Liên kết đổi mật khẩu không hợp lệ hoặc đã hết hạn.";
 
 const evaluatePasswordStrength = (password: string): PasswordStrengthInfo => {
   let score = 0;
@@ -52,38 +55,132 @@ const evaluatePasswordStrength = (password: string): PasswordStrengthInfo => {
   return { percent: 100, color: "#16a34a", label: "Mạnh" };
 };
 
+const formatExpiry = (value: string | null) => {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(parsed);
+};
+
 const ResetPasswordPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { notify } = useNotify();
   const [form] = Form.useForm<ResetPasswordFormValues>();
 
-  const tokenFromQuery = useMemo(() => new URLSearchParams(location.search).get("token") ?? "", [location.search]);
-  const hasTokenFromQuery = tokenFromQuery.trim().length > 0;
+  const token = new URLSearchParams(location.search).get("token")?.trim() ?? "";
+  const redirectTimeoutRef = useRef<number | null>(null);
 
-  const [manualTokenMode, setManualTokenMode] = useState(hasTokenFromQuery);
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<AuthInlineStatusValue | null>(null);
   const [completed, setCompleted] = useState(false);
+  const [status, setStatus] = useState<AuthInlineStatusValue | null>(null);
+  const [validationState, setValidationState] = useState<TokenValidationState>("checking");
+  const [validationMessage, setValidationMessage] = useState<string | null>(null);
+  const [expiredAt, setExpiredAt] = useState<string | null>(null);
 
   const newPassword = Form.useWatch("newPassword", form) ?? "";
   const passwordStrength = evaluatePasswordStrength(newPassword);
+  const shouldShowPasswordStrength = newPassword.length > 4;
+  const formattedExpiry = formatExpiry(expiredAt);
+
+  useEffect(() => {
+    let active = true;
+
+    const scheduleRedirectToLogin = (message: string) => {
+      if (!active) {
+        return;
+      }
+
+      setValidationState("invalid");
+      setValidationMessage(message);
+      notify(message, "error");
+
+      if (redirectTimeoutRef.current) {
+        window.clearTimeout(redirectTimeoutRef.current);
+      }
+
+      redirectTimeoutRef.current = window.setTimeout(() => {
+        navigate(ROUTE_URL.LOGIN, { replace: true });
+      }, 1500);
+    };
+
+    if (!token) {
+      scheduleRedirectToLogin(INVALID_RESET_LINK_MESSAGE);
+      return () => {
+        active = false;
+        if (redirectTimeoutRef.current) {
+          window.clearTimeout(redirectTimeoutRef.current);
+        }
+      };
+    }
+
+    const validateToken = async () => {
+      setValidationState("checking");
+      setValidationMessage(null);
+      setExpiredAt(null);
+      setStatus(null);
+
+      try {
+        const response = await authService.validateResetPasswordToken(token);
+        if (!active) {
+          return;
+        }
+
+        if (!response.valid) {
+          scheduleRedirectToLogin(INVALID_RESET_LINK_MESSAGE);
+          return;
+        }
+
+        setValidationState("valid");
+        setExpiredAt(response.expiredAt);
+      } catch (error) {
+        if (!active) {
+          return;
+        }
+
+        const message = getErrorMessage(error, INVALID_RESET_LINK_MESSAGE);
+        const normalizedMessage = message.toLowerCase();
+        const shouldHideTechnicalMessage =
+          normalizedMessage.includes("token") || normalizedMessage.includes("hết hạn") || normalizedMessage.includes("liên kết");
+
+        scheduleRedirectToLogin(shouldHideTechnicalMessage ? INVALID_RESET_LINK_MESSAGE : message);
+      }
+    };
+
+    void validateToken();
+
+    return () => {
+      active = false;
+      if (redirectTimeoutRef.current) {
+        window.clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, [navigate, notify, token]);
 
   const sidePanel = (
     <AuthHeroPanel
-      eyebrow="Cập nhật mật khẩu"
-      title="Khôi phục tài khoản an toàn và nhanh chóng"
-      description="Thiết lập mật khẩu mới để hoàn tất quá trình khôi phục quyền truy cập. Hệ thống sẽ kiểm tra tính hợp lệ của liên kết và độ mạnh mật khẩu."
+      eyebrow="Đặt lại mật khẩu"
+      title="Kiểm tra liên kết trước khi cập nhật mật khẩu mới"
+      description="Trang này chỉ cho phép tiếp tục khi liên kết trong email còn hợp lệ. Sau khi xác thực xong, bạn có thể đặt mật khẩu mới và đăng nhập lại ngay."
       highlights={[
         {
           icon: <SafetyOutlined />,
           title: "Liên kết có thời hạn",
-          description: "Mã đặt lại chỉ dùng trong thời gian ngắn để bảo vệ tài khoản của bạn.",
+          description: "Hệ thống xác thực liên kết trước khi hiển thị form để tránh dùng liên kết hết hạn hoặc đã sử dụng.",
         },
         {
           icon: <CheckCircleOutlined />,
-          title: "Mật khẩu mạnh hơn",
-          description: "Gợi ý độ mạnh giúp bạn chọn mật khẩu an toàn và dễ quản lý.",
+          title: "Cập nhật an toàn",
+          description: "Sau khi đổi mật khẩu thành công, tài khoản có thể đăng nhập lại bằng mật khẩu mới ngay lập tức.",
         },
       ]}
     />
@@ -95,31 +192,52 @@ const ResetPasswordPage = () => {
     try {
       setLoading(true);
       await authService.resetPassword({
-        token: (hasTokenFromQuery ? tokenFromQuery : values.token).trim(),
+        token,
         newPassword: values.newPassword,
         confirmNewPassword: values.confirmNewPassword,
       });
 
       setCompleted(true);
+      form.resetFields();
       notify("Đặt lại mật khẩu thành công.", "success");
-    } catch (err) {
-      if (err instanceof ApiClientError && err.errors?.length) {
+    } catch (error) {
+      if (error instanceof ApiClientError && error.errors?.length) {
         form.setFields(
-          err.errors.map((item) => ({
-            name: item.field as keyof ResetPasswordFormValues,
-            errors: [item.message],
-          })),
+          error.errors
+            .filter((item) => item.field === "newPassword" || item.field === "confirmNewPassword")
+            .map((item) => ({
+              name: item.field as keyof ResetPasswordFormValues,
+              errors: [item.message],
+            })),
         );
       }
 
-      const message = getErrorMessage(err, "Không thể đặt lại mật khẩu. Vui lòng thử lại.");
-      const tokenRelatedError =
-        err instanceof ApiClientError &&
-        (err.code?.toUpperCase().includes("TOKEN") || message.toLowerCase().includes("token") || message.toLowerCase().includes("liên kết"));
+      const message = getErrorMessage(error, "Không thể đặt lại mật khẩu. Vui lòng thử lại.");
+      const isTokenError =
+        error instanceof ApiClientError &&
+        (error.code?.toUpperCase().includes("TOKEN") ||
+          message.toLowerCase().includes("token") ||
+          message.toLowerCase().includes("hết hạn") ||
+          message.toLowerCase().includes("liên kết"));
+
+      if (isTokenError) {
+        setValidationState("invalid");
+        setValidationMessage(INVALID_RESET_LINK_MESSAGE);
+        notify(INVALID_RESET_LINK_MESSAGE, "error");
+
+        if (redirectTimeoutRef.current) {
+          window.clearTimeout(redirectTimeoutRef.current);
+        }
+
+        redirectTimeoutRef.current = window.setTimeout(() => {
+          navigate(ROUTE_URL.LOGIN, { replace: true });
+        }, 1500);
+        return;
+      }
 
       setStatus({
-        type: tokenRelatedError ? "warning" : "error",
-        message: tokenRelatedError ? "Mã đặt lại mật khẩu không hợp lệ hoặc đã hết hạn" : "Đặt lại mật khẩu chưa thành công",
+        type: "error",
+        message: "Đặt lại mật khẩu chưa thành công",
         description: message,
       });
       notify(message, "error");
@@ -128,64 +246,17 @@ const ResetPasswordPage = () => {
     }
   };
 
-  if (!manualTokenMode) {
-    return (
-      <AuthPageShell sidePanel={sidePanel}>
-        <AuthFormCard
-          eyebrow="Khôi phục quyền truy cập"
-          title="Đặt lại mật khẩu"
-          description="Liên kết hiện tại chưa chứa mã xác thực đặt lại mật khẩu."
-          icon={<KeyOutlined />}
-          footer={
-            <Typography.Text className="auth-footer-links__text">
-              Bạn có thể yêu cầu liên kết mới tại{" "}
-              <Link to={ROUTE_URL.FORGOT_PASSWORD} className="auth-footer-links__primary">
-                trang quên mật khẩu
-              </Link>
-              .
-            </Typography.Text>
-          }
-        >
-          <Result
-            status="warning"
-            title="Thiếu mã đặt lại"
-            subTitle="Vui lòng mở lại liên kết từ email hoặc nhập mã thủ công nếu bạn đã có."
-            extra={
-              <div className="auth-result-actions">
-                <Button type="primary" className="auth-primary-btn" onClick={() => setManualTokenMode(true)}>
-                  Tôi đã có mã đặt lại
-                </Button>
-                <Link to={ROUTE_URL.FORGOT_PASSWORD}>
-                  <Button>Gửi lại email đặt lại</Button>
-                </Link>
-              </div>
-            }
-          />
-        </AuthFormCard>
-      </AuthPageShell>
-    );
-  }
-
   return (
     <AuthPageShell sidePanel={sidePanel}>
       <AuthFormCard
         eyebrow="Thiết lập mật khẩu mới"
         title="Đặt lại mật khẩu"
-        description="Tạo mật khẩu mới để hoàn tất khôi phục và truy cập lại tài khoản của bạn."
+        description="Hệ thống sẽ xác thực liên kết từ email trước khi cho phép bạn đặt mật khẩu mới."
         icon={<LockOutlined />}
-        extraTop={
-          hasTokenFromQuery ? (
-            <Alert
-              showIcon
-              type="info"
-              message="Hệ thống đã nhận mã xác thực từ liên kết email."
-              description="Bạn chỉ cần nhập mật khẩu mới và xác nhận để hoàn tất."
-            />
-          ) : null
-        }
+        extraTop={null}
         footer={
           <Typography.Text className="auth-footer-links__text">
-            Nhớ mật khẩu rồi?{" "}
+            Nhớ lại mật khẩu rồi?{" "}
             <Link to={ROUTE_URL.LOGIN} className="auth-footer-links__primary">
               Quay lại đăng nhập
             </Link>
@@ -195,11 +266,28 @@ const ResetPasswordPage = () => {
         {completed ? (
           <Result
             status="success"
-            title="Đổi mật khẩu thành công"
-            subTitle="Mật khẩu mới đã được cập nhật. Bạn có thể đăng nhập lại ngay bây giờ."
+            title="Đặt lại mật khẩu thành công"
+            subTitle="Mật khẩu mới đã được cập nhật. Bạn có thể quay lại trang đăng nhập để tiếp tục."
             extra={
-              <Button type="primary" className="auth-primary-btn" onClick={() => navigate(ROUTE_URL.LOGIN)}>
+              <Button type="primary" className="auth-primary-btn" onClick={() => navigate(ROUTE_URL.LOGIN, { replace: true })}>
                 Đến trang đăng nhập
+              </Button>
+            }
+          />
+        ) : validationState === "checking" ? (
+          <Result
+            status="info"
+            title="Đang xác thực liên kết"
+            subTitle="Hệ thống đang kiểm tra đường dẫn từ email trước khi hiển thị form đổi mật khẩu."
+          />
+        ) : validationState === "invalid" ? (
+          <Result
+            status="warning"
+            title="Liên kết đổi mật khẩu không hợp lệ"
+            subTitle={validationMessage ?? "Bạn sẽ được chuyển về trang đăng nhập sau ít giây."}
+            extra={
+              <Button type="primary" className="auth-primary-btn" onClick={() => navigate(ROUTE_URL.LOGIN, { replace: true })}>
+                Về trang đăng nhập
               </Button>
             }
           />
@@ -214,38 +302,36 @@ const ResetPasswordPage = () => {
               requiredMark={false}
               autoComplete="off"
               disabled={loading}
-              initialValues={{ token: tokenFromQuery, newPassword: "", confirmNewPassword: "" }}
+              initialValues={{ newPassword: "", confirmNewPassword: "" }}
             >
-              {!hasTokenFromQuery ? (
-                <Form.Item
-                  label="Mã đặt lại mật khẩu"
-                  name="token"
-                  rules={[{ required: true, message: "Vui lòng nhập mã đặt lại mật khẩu." }]}
-                >
-                  <Input size="large" placeholder="Dán mã bạn nhận được từ email" />
-                </Form.Item>
-              ) : (
-                <Alert showIcon type="success" message="Mã đặt lại đã được điền tự động." className="auth-token-ready" />
-              )}
+              <Alert
+                showIcon
+                type="info"
+                message={
+                  formattedExpiry
+                    ? `Liên kết có giá trị đến ${formattedExpiry}.`
+                    : "Mật khẩu mới nên có chữ hoa, chữ thường, số và ký tự đặc biệt để an toàn hơn."
+                }
+              />
 
               <Form.Item
                 label="Mật khẩu mới"
                 name="newPassword"
-                rules={[
-                  { required: true, message: "Vui lòng nhập mật khẩu mới." },
-                  { min: 6, message: "Mật khẩu mới cần có ít nhất 6 ký tự." },
-                ]}
+                rules={[{ required: true, message: "Vui lòng nhập mật khẩu mới." }]}
+                style={{ marginTop: 16 }}
               >
                 <Input.Password size="large" placeholder="Nhập mật khẩu mới" prefix={<LockOutlined />} />
               </Form.Item>
 
-              <div style={{ marginTop: -4, marginBottom: 14 }}>
-                <Space size={8} style={{ marginBottom: 6 }}>
-                  <Typography.Text type="secondary">Độ mạnh mật khẩu:</Typography.Text>
-                  <Tag color="blue">{passwordStrength.label}</Tag>
-                </Space>
-                <Progress percent={passwordStrength.percent} strokeColor={passwordStrength.color} showInfo={false} />
-              </div>
+              {shouldShowPasswordStrength ? (
+                <div style={{ marginTop: -4, marginBottom: 14 }}>
+                  <Space size={8} style={{ marginBottom: 6 }}>
+                    <Typography.Text type="secondary">Độ mạnh mật khẩu:</Typography.Text>
+                    <Tag color="blue">{passwordStrength.label}</Tag>
+                  </Space>
+                  <Progress percent={passwordStrength.percent} strokeColor={passwordStrength.color} showInfo={false} />
+                </div>
+              ) : null}
 
               <Form.Item
                 label="Xác nhận mật khẩu mới"
@@ -258,6 +344,7 @@ const ResetPasswordPage = () => {
                       if (!value || value === getFieldValue("newPassword")) {
                         return Promise.resolve();
                       }
+
                       return Promise.reject(new Error("Mật khẩu xác nhận không khớp."));
                     },
                   }),

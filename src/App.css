@@ -1,3 +1,102 @@
 html {
   font-size: 16px;
 }
+
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell__sider.ant-layout-sider {
+  z-index: 40;
+  border-right: 1px solid #e2e8f0;
+  box-shadow: 8px 0 30px rgba(15, 23, 42, 0.04);
+}
+
+.app-top-navbar.ant-layout-header {
+  position: fixed;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  line-height: normal;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+}
+
+.app-top-navbar__context,
+.app-top-navbar__title,
+.app-user-dropdown__name,
+.app-user-dropdown__role {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-top-navbar__context {
+  max-width: 100%;
+}
+
+.app-top-navbar__title.ant-typography {
+  margin-bottom: 0;
+  max-width: 100%;
+}
+
+.app-user-dropdown {
+  max-width: min(100%, 320px);
+  height: auto;
+  padding-inline: 10px;
+}
+
+.app-user-dropdown > span {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.app-user-dropdown__meta {
+  max-width: 220px;
+  align-items: flex-start;
+}
+
+.app-user-dropdown__name {
+  max-width: 100%;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.app-user-dropdown__role {
+  max-width: 100%;
+  font-size: 12px;
+}
+
+@media (max-width: 1279px) {
+  .app-user-dropdown {
+    max-width: 220px;
+  }
+
+  .app-user-dropdown__meta {
+    max-width: 132px;
+  }
+}
+
+@media (max-width: 767px) {
+  .app-top-navbar.ant-layout-header {
+    padding-inline: 16px;
+  }
+
+  .app-user-dropdown {
+    padding-inline: 6px;
+  }
+
+  .app-user-dropdown__role {
+    display: none;
+  }
+
+  .app-user-dropdown__meta {
+    max-width: 96px;
+  }
+}

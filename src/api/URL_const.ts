@@ -7,6 +7,7 @@ export const API = {
     LOGOUT: "/api/auth/logout",
     CHANGE_PASSWORD: "/api/auth/change-password",
     FORGOT_PASSWORD: "/api/auth/forgot-password",
+    RESET_PASSWORD_VALIDATE: "/api/auth/reset-password/validate",
     RESET_PASSWORD: "/api/auth/reset-password",
   },
 
@@ -98,6 +99,9 @@ export const API = {
     DETAIL: "/api/contracts/{id}",
     CANCEL: "/api/contracts/{id}/cancel",
     APPROVE: "/api/contracts/{id}/approve",
+    CUSTOMER_APPROVE: "/api/contracts/{id}/customer-approve",
+    CUSTOMER_REJECT: "/api/contracts/{id}/customer-reject",
+    ACCOUNTANT_REJECT: "/api/contracts/{id}/accountant-reject",
     SUBMIT: "/api/contracts/{id}/submit",
     TRACK: "/api/contracts/{id}/tracking",
     DOCUMENTS: "/api/contracts/{id}/documents",
@@ -152,6 +156,7 @@ export const API = {
 
   INVOICES: {
     CREATE: "/api/invoices",
+    FROM_CONTRACT: "/api/invoices/from-contract/{contractId}",
     LIST: "/api/invoices",
     DETAIL: "/api/invoices/{id}",
     UPDATE: "/api/invoices/{id}",

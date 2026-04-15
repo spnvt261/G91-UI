@@ -10,6 +10,7 @@ import type {
   ResendVerificationCodeRequest,
   ResendVerificationCodeResponse,
   ResetPasswordRequest,
+  ResetPasswordTokenValidationResponse,
   UpdateProfileRequest,
   UserProfileModel,
   VerifyRegistrationRequest,
@@ -47,6 +48,13 @@ export const authService = {
 
   async forgotPassword(request: ForgotPasswordRequest): Promise<void> {
     await api.post<void>(API.AUTH.FORGOT_PASSWORD, request);
+  },
+
+  async validateResetPasswordToken(token: string): Promise<ResetPasswordTokenValidationResponse> {
+    const response = await api.get<ResetPasswordTokenValidationResponse>(API.AUTH.RESET_PASSWORD_VALIDATE, {
+      params: { token },
+    });
+    return response.data;
   },
 
   async resetPassword(request: ResetPasswordRequest): Promise<void> {
