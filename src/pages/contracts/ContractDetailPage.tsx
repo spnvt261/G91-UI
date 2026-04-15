@@ -573,7 +573,7 @@ const ContractDetailPage = () => {
                 <Card title="Điều khoản hợp đồng">
                   <Descriptions column={{ xs: 1, md: 2 }} size="small" colon={false}>
                     <Descriptions.Item label="Điều khoản thanh toán">{contract.paymentTerms || "Chưa cập nhật"}</Descriptions.Item>
-                    <Descriptions.Item label="Payment option">
+                    <Descriptions.Item label="Tùy chọn thanh toán">
                       {contract.paymentOption ? (
                         <Space size={8} wrap>
                           <Typography.Text strong>{contract.paymentOption.code}</Typography.Text>

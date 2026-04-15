@@ -451,14 +451,14 @@ const SaleOrderDetailPage = () => {
       width: 90,
       render: (value?: number) => value ?? 0,
     },
-    {
-      title: "Soạn",
-      dataIndex: "pickedQuantity",
-      key: "pickedQuantity",
-      align: "right",
-      width: 80,
-      render: (value?: number) => value ?? 0,
-    },
+    // {
+    //   title: "Soạn",
+    //   dataIndex: "pickedQuantity",
+    //   key: "pickedQuantity",
+    //   align: "right",
+    //   width: 80,
+    //   render: (value?: number) => value ?? 0,
+    // },
     {
       title: "Xuất",
       dataIndex: "issuedQuantity",
@@ -477,8 +477,8 @@ const SaleOrderDetailPage = () => {
     },
     {
       title: "Thành tiền",
-      dataIndex: "lineTotal",
-      key: "lineTotal",
+      dataIndex: "lineAmount",
+      key: "lineAmount",
       align: "right",
       width: 140,
       render: (value?: number) => (value != null ? toCurrency(value) : "-"),

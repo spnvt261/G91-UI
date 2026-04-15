@@ -117,7 +117,7 @@ const ContractCreatePage = () => {
     }
 
     if ((paymentOptionCode ?? "").length > PAYMENT_OPTION_CODE_MAX_LENGTH) {
-      return `Mã payment option tối đa ${PAYMENT_OPTION_CODE_MAX_LENGTH} ký tự.`;
+      return `Mã tùy chọn thanh toán tối đa ${PAYMENT_OPTION_CODE_MAX_LENGTH} ký tự.`;
     }
 
     if (normalizedDeliveryAddress.length > DELIVERY_ADDRESS_MAX_LENGTH) {
@@ -163,7 +163,7 @@ const ContractCreatePage = () => {
       },
       {
         key: "paymentOption",
-        label: "Payment option",
+        label: "Tùy chọn thanh toán",
         value: quotation?.paymentOption ? `${quotation.paymentOption.code} - ${quotation.paymentOption.name}` : "Chưa có",
       },
     ],
@@ -189,7 +189,7 @@ const ContractCreatePage = () => {
       },
       {
         key: "paymentOption",
-        label: "Payment option",
+        label: "Tùy chọn thanh toán",
         value: selectedPaymentOption ? `${selectedPaymentOption.code} - ${selectedPaymentOption.name}` : "Không áp dụng",
       },
       {
@@ -220,7 +220,7 @@ const ContractCreatePage = () => {
       },
       {
         key: "paymentOption",
-        label: "Payment option",
+        label: "Tùy chọn thanh toán",
         value: selectedPaymentOption?.code || "Không áp dụng",
       },
     ],
@@ -405,14 +405,14 @@ const ContractCreatePage = () => {
                     content={
                       <Space direction="vertical" size={12} style={{ width: "100%" }}>
                         <div>
-                          <Typography.Text strong>Payment option</Typography.Text>
+                          <Typography.Text strong>Tùy chọn thanh toán</Typography.Text>
                           <Select
                             className="mt-2 w-full"
                             allowClear
                             showSearch
                             value={paymentOptionCode}
                             onChange={(value) => setPaymentOptionCode(value)}
-                            placeholder="Chọn payment option áp dụng"
+                            placeholder="Chọn tùy chọn thanh toán áp dụng"
                             optionFilterProp="label"
                             options={paymentOptions.map((item) => ({
                               value: item.code,
@@ -422,7 +422,7 @@ const ContractCreatePage = () => {
                           <Typography.Text type="secondary" className="mt-2 block">
                             {selectedPaymentOption
                               ? `${selectedPaymentOption.name}${selectedPaymentOption.description ? ` - ${selectedPaymentOption.description}` : ""}`
-                              : "Chưa chọn payment option."}
+                              : "Chưa chọn tùy chọn thanh toán."}
                           </Typography.Text>
                         </div>
 
