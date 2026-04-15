@@ -26,6 +26,7 @@ type RecordPaymentFormValues = {
 };
 
 const CASH_LIMIT = 50_000_000;
+const CUSTOMER_PAGE_SIZE = 100;
 
 const RecordPaymentPage = () => {
   const navigate = useNavigate();
@@ -51,9 +52,33 @@ const RecordPaymentPage = () => {
   const loadCustomers = useCallback(async () => {
     try {
       setLoadingCustomers(true);
-      const response = await customerService.getList({ page: 1, pageSize: 200, status: "ACTIVE", sortBy: "companyName", sortDir: "asc" });
+      const collectedCustomers: Array<{ id: string; companyName: string; customerCode?: string }> = [];
+      let currentPage = 1;
+      let totalPages = 1;
+
+      while (currentPage <= totalPages) {
+        const response = await customerService.getList({
+          page: currentPage,
+          pageSize: CUSTOMER_PAGE_SIZE,
+          status: "ACTIVE",
+          sortBy: "companyName",
+          sortDir: "asc",
+        });
+
+        collectedCustomers.push(
+          ...response.items.map((customer) => ({
+            id: customer.id,
+            companyName: customer.companyName,
+            customerCode: customer.customerCode,
+          })),
+        );
+
+        totalPages = Math.max(response.pagination.totalPages || 1, 1);
+        currentPage += 1;
+      }
+
       setCustomerOptions(
-        response.items.map((customer) => ({
+        collectedCustomers.map((customer) => ({
           value: customer.id,
           label: `${customer.companyName} (${customer.customerCode || customer.id})`,
         })),
