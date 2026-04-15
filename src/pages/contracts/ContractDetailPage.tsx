@@ -63,19 +63,11 @@ const ContractDetailPage = () => {
   const canSubmit = canPerformAction(role, "contract.submit");
   const canApprove = canPerformAction(role, "contract.approve");
   const canEdit = canPerformAction(role, "contract.update");
-<<<<<<< HEAD
-  const canCancel = canPerformAction(role, "sale-order.cancel");
-  const canViewTracking = hasPermission(role, "sale-order.tracking.view");
-=======
   const canCancel = canPerformAction(role, "contract.cancel");
   const canCreateInvoice = canPerformAction(role, "invoice.create");
   const canViewSaleOrder = hasPermission(role, "sale-order.view");
-<<<<<<< HEAD
->>>>>>> new3
-=======
   const isCustomerRole = role === "CUSTOMER";
   const isAccountantRole = role === "ACCOUNTANT";
->>>>>>> new3
 
   const [contract, setContract] = useState<ContractModel | null>(null);
   const [documents, setDocuments] = useState<ContractDocumentModel[]>([]);
@@ -320,24 +312,12 @@ const ContractDetailPage = () => {
             }
             actions={
               <Space wrap>
-<<<<<<< HEAD
-                <Button icon={<ReloadOutlined />} onClick={() => void loadData()} loading={loading}>
-                  Làm mới
-                </Button>
-                {canViewTracking ? (
-                  <Button onClick={() => navigate(ROUTE_URL.CONTRACT_TRACKING.replace(":id", contract?.id ?? id ?? ""))}>
-                    Theo dõi tiến độ
-                  </Button>
-                ) : null}
-                {canSubmit ? (
-=======
                 {canCreateInvoiceFromContract ? (
                   <Button onClick={openCreateInvoiceModal} disabled={!contract}>
                     Tạo invoice
                   </Button>
                 ) : null}
                 {canRequestCustomerApproval ? (
->>>>>>> new3
                   <Button
                     type="primary"
                     loading={actionLoading === "submit"}

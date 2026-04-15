@@ -282,11 +282,7 @@ const ROLE_SIDEBAR_LAYOUTS: Record<UserRole, SidebarLayoutEntry[]> = {
   ],
   WAREHOUSE: [
     { type: "leaf", id: "products" },
-<<<<<<< HEAD
-    { type: "leaf", id: "contracts" },
-=======
     { type: "leaf", id: "sale-orders" },
->>>>>>> new3
     { type: "group", id: "warehouse" },
     { type: "leaf", id: "report-inventory" },
   ],
@@ -296,11 +292,7 @@ const ROLE_SIDEBAR_LAYOUTS: Record<UserRole, SidebarLayoutEntry[]> = {
     { type: "leaf", id: "products" },
     { type: "leaf", id: "price-lists" },
     { type: "leaf", id: "promotions" },
-<<<<<<< HEAD
-    { type: "leaf", id: "contracts" },
-=======
     { type: "leaf", id: "sale-orders" },
->>>>>>> new3
     { type: "leaf", id: "invoices" },
     { type: "leaf", id: "contract-approvals" },
     { type: "group", id: "reports-owner" },

@@ -4,12 +4,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
-import { hasPermission } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type { ContractTrackEvent } from "../../models/contract/contract.model";
 import { contractService } from "../../services/contract/contract.service";
-import { getStoredUserRole } from "../../utils/authSession";
 import { getErrorMessage } from "../shared/page.utils";
 import ContractStatusTag from "./components/ContractStatusTag";
 import ContractTrackingTimeline from "./components/ContractTrackingTimeline";
@@ -19,10 +17,6 @@ const ContractTrackingPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { notify } = useNotify();
-  const role = getStoredUserRole();
-
-  const canViewTracking = hasPermission(role, "sale-order.tracking.view");
-  const canViewFulfillmentHistory = hasPermission(role, "sale-order.fulfillment-history.view");
 
   const [timeline, setTimeline] = useState<ContractTrackEvent[]>([]);
   const [currentStatus, setCurrentStatus] = useState("");
@@ -95,28 +89,24 @@ const ContractTrackingPage = () => {
             />
           ) : null}
 
-          {canViewTracking ? (
-            <Card bordered={false} className="shadow-sm" loading={loading}>
-              <Space direction="vertical" size={8} style={{ width: "100%" }}>
-                <Typography.Title level={5} className="!mb-0">
-                  Trạng thái hiện tại
-                </Typography.Title>
-                {currentStatus ? <ContractStatusTag status={currentStatus} /> : <Typography.Text type="secondary">Chưa có trạng thái cập nhật</Typography.Text>}
-                <Typography.Text type="secondary">{getContractNextStepHint(currentStatus)}</Typography.Text>
-              </Space>
-            </Card>
-          ) : null}
+          <Card bordered={false} className="shadow-sm" loading={loading}>
+            <Space direction="vertical" size={8} style={{ width: "100%" }}>
+              <Typography.Title level={5} className="!mb-0">
+                Trạng thái hiện tại
+              </Typography.Title>
+              {currentStatus ? <ContractStatusTag status={currentStatus} /> : <Typography.Text type="secondary">Chưa có trạng thái cập nhật</Typography.Text>}
+              <Typography.Text type="secondary">{getContractNextStepHint(currentStatus)}</Typography.Text>
+            </Space>
+          </Card>
 
-          {canViewFulfillmentHistory ? (
-            <Card bordered={false} className="shadow-sm" loading={loading}>
-              <Space direction="vertical" size={12} style={{ width: "100%" }}>
-                <Typography.Title level={5} className="!mb-0">
-                  Lịch sử theo dõi xử lý
-                </Typography.Title>
-                <ContractTrackingTimeline events={timeline} />
-              </Space>
-            </Card>
-          ) : null}
+          <Card bordered={false} className="shadow-sm" loading={loading}>
+            <Space direction="vertical" size={12} style={{ width: "100%" }}>
+              <Typography.Title level={5} className="!mb-0">
+                Lịch sử theo dõi xử lý
+              </Typography.Title>
+              <ContractTrackingTimeline events={timeline} />
+            </Space>
+          </Card>
         </Space>
       }
     />

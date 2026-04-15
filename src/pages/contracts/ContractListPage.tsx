@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import CustomBreadcrumb from "../../components/navigation/CustomBreadcrumb";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
-import { canPerformAction, hasPermission } from "../../const/authz.const";
+import { canPerformAction } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type { ContractModel } from "../../models/contract/contract.model";
@@ -48,12 +48,7 @@ const ContractListPage = () => {
   const role = getStoredUserRole();
   const canEdit = canPerformAction(role, "contract.update");
   const canCreateContract = canPerformAction(role, "contract.create");
-<<<<<<< HEAD
-  const canViewDetail = hasPermission(role, "sale-order.detail.view");
-  const canSearchSaleOrder = hasPermission(role, "sale-order.search");
-=======
   const canCreateInvoice = canPerformAction(role, "invoice.create");
->>>>>>> new3
   const { notify } = useNotify();
 
   const [allItems, setAllItems] = useState<ContractModel[]>([]);
@@ -261,12 +256,7 @@ const ContractListPage = () => {
           return (
             <Dropdown menu={{ items: actionItems }} trigger={["click"]} placement="bottomRight">
               <Button
-<<<<<<< HEAD
-                type="link"
-                disabled={!canViewDetail}
-=======
                 icon={<MoreOutlined />}
->>>>>>> new3
                 onClick={(event) => {
                   event.stopPropagation();
                 }}
@@ -276,11 +266,7 @@ const ContractListPage = () => {
         },
       },
     ],
-<<<<<<< HEAD
-    [canEdit, canViewDetail, navigate],
-=======
     [canCreateInvoice, canEdit, navigate, openCreateInvoiceModal],
->>>>>>> new3
   );
 
   const emptyNode = (
@@ -326,144 +312,6 @@ const ContractListPage = () => {
                 <Button icon={<ReloadOutlined />} onClick={() => void loadList()}>
                   Làm mới
                 </Button>
-<<<<<<< HEAD
-              ) : null}
-              <Button icon={<ReloadOutlined />} onClick={() => void loadList()}>
-                Làm mới
-              </Button>
-            </Space>
-          }
-        />
-      }
-      body={
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
-          <ContractSummaryCards
-            loading={loading}
-            items={[
-              {
-                key: "total",
-                label: "Tổng hợp hợp đồng",
-                value: summary.totalContracts,
-                description: "Toàn bộ hợp đồng theo bộ lọc hiện tại",
-              },
-              {
-                key: "pending",
-                label: "Chờ duyệt",
-                value: summary.pendingContracts,
-                valueColor: "#d48806",
-                description: "Cần owner xem xét phê duyệt",
-              },
-              {
-                key: "processing",
-                label: "Đang hiệu lực / xử lý",
-                value: summary.processingContracts,
-                valueColor: "#1677ff",
-                description: "Đang ở giai đoạn thực thi",
-              },
-              {
-                key: "closed",
-                label: "Đã hủy / hoàn tất",
-                value: summary.closedContracts,
-                valueColor: "#64748b",
-                description: "Không còn thao tác vận hành",
-              },
-            ]}
-          />
-
-          <Card bordered={false} className="shadow-sm">
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
-              <Row gutter={[12, 12]} align="middle">
-                <Col xs={24} lg={8}>
-                  <Input.Search
-                    allowClear
-                    disabled={!canSearchSaleOrder}
-                    value={keywordInput}
-                    placeholder="Tìm theo số hợp đồng, khách hàng hoặc mã báo giá"
-                    onChange={(event) => setKeywordInput(event.target.value)}
-                    onSearch={(value) => {
-                      setKeyword(value.trim());
-                      setPage(1);
-                    }}
-                  />
-                </Col>
-
-                <Col xs={24} sm={12} lg={4}>
-                  <Select
-                    allowClear
-                    disabled={!canSearchSaleOrder}
-                    placeholder="Lọc trạng thái"
-                    style={{ width: "100%" }}
-                    options={CONTRACT_STATUS_OPTIONS}
-                    value={status}
-                    onChange={(value) => {
-                      setStatus(value);
-                      setPage(1);
-                    }}
-                  />
-                </Col>
-
-                <Col xs={24} sm={12} lg={6}>
-                  <DatePicker.RangePicker
-                    style={{ width: "100%" }}
-                    disabled={[!canSearchSaleOrder, !canSearchSaleOrder]}
-                    value={createdRange}
-                    format="DD/MM/YYYY"
-                    placeholder={["Từ ngày tạo", "Đến ngày tạo"]}
-                    onChange={(value) => {
-                      if (!value || !value[0] || !value[1]) {
-                        setCreatedRange(null);
-                      } else {
-                        setCreatedRange([value[0], value[1]]);
-                      }
-                      setPage(1);
-                    }}
-                  />
-                </Col>
-
-                <Col xs={24} sm={12} lg={3}>
-                  <InputNumber<number>
-                    min={0}
-                    disabled={!canSearchSaleOrder}
-                    style={{ width: "100%" }}
-                    placeholder="Tổng tiền từ"
-                    value={minTotal}
-                    onChange={(value) => {
-                      setMinTotal(value ?? null);
-                      setPage(1);
-                    }}
-                    formatter={(value) => `${value ?? ""}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
-                    parser={(value) => Number(value?.replace(/\./g, "") || "0")}
-                  />
-                </Col>
-
-                <Col xs={24} sm={12} lg={3}>
-                  <InputNumber<number>
-                    min={0}
-                    disabled={!canSearchSaleOrder}
-                    style={{ width: "100%" }}
-                    placeholder="Đến"
-                    value={maxTotal}
-                    onChange={(value) => {
-                      setMaxTotal(value ?? null);
-                      setPage(1);
-                    }}
-                    formatter={(value) => `${value ?? ""}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
-                    parser={(value) => Number(value?.replace(/\./g, "") || "0")}
-                  />
-                </Col>
-              </Row>
-
-              <Space>
-                <Button onClick={handleResetFilters} disabled={!canSearchSaleOrder}>
-                  Đặt lại bộ lọc
-                </Button>
-                <Tooltip title="Dữ liệu được lọc theo các tiêu chí hiện tại">
-                  <Typography.Text type="secondary">
-                    {filteredItems.length} hợp đồng phù hợp
-                  </Typography.Text>
-                </Tooltip>
-=======
->>>>>>> new3
               </Space>
             }
           />
@@ -519,24 +367,6 @@ const ContractListPage = () => {
                     />
                   </Col>
 
-<<<<<<< HEAD
-              <Table<ContractModel>
-                rowKey="id"
-                size="middle"
-                columns={columns}
-                dataSource={pagedItems}
-                loading={{ spinning: loading, tip: "Đang tải danh sách hợp đồng..." }}
-                rowClassName={() => "cursor-pointer"}
-                onRow={(record) => ({
-                  onClick: (event) => {
-                    if (!canViewDetail) {
-                      return;
-                    }
-
-                    const target = event.target as HTMLElement;
-                    if (target.closest("button") || target.closest("a") || target.closest(".ant-dropdown-trigger")) {
-                      return;
-=======
                   <Col xs={24} sm={12} lg={4}>
                     <Select
                       allowClear
@@ -618,7 +448,6 @@ const ContractListPage = () => {
                       <Button size="small" onClick={() => void loadList()}>
                         Thử lại
                       </Button>
->>>>>>> new3
                     }
                   />
                 ) : null}

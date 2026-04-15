@@ -53,20 +53,6 @@ export type PermissionKey =
   | "inventory.history.view"
   | "quotation.create"
   | "quotation.list.view"
-  | "sale-order.list.view"
-  | "sale-order.detail.view"
-  | "sale-order.tracking.view"
-  | "sale-order.search"
-  | "sale-order.status.update"
-  | "sale-order.reserve"
-  | "sale-order.pick"
-  | "sale-order.dispatch"
-  | "sale-order.deliver"
-  | "sale-order.complete"
-  | "sale-order.cancel"
-  | "sale-order.create-invoice"
-  | "sale-order.related-invoices.view"
-  | "sale-order.fulfillment-history.view"
   | "contract.create"
   | "contract.view"
   | "contract.update"
@@ -125,14 +111,6 @@ export type AppAction =
   | "inventory.issue.create"
   | "inventory.adjustment.create"
   | "quotation.create"
-  | "sale-order.status.update"
-  | "sale-order.reserve"
-  | "sale-order.pick"
-  | "sale-order.dispatch"
-  | "sale-order.deliver"
-  | "sale-order.complete"
-  | "sale-order.cancel"
-  | "sale-order.create-invoice"
   | "contract.create"
   | "contract.approve"
   | "contract.submit"
@@ -172,9 +150,7 @@ const SALE_ORDER_INTERNAL: UserRole[] = ["WAREHOUSE", "ACCOUNTANT", "OWNER"];
 const SALE_ORDER_FULFILLMENT: UserRole[] = ["WAREHOUSE", "OWNER"];
 const CUSTOMER_ACCOUNTANT: UserRole[] = ["CUSTOMER", "ACCOUNTANT"];
 const CUSTOMER_ACCOUNTANT_OWNER: UserRole[] = ["CUSTOMER", "ACCOUNTANT", "OWNER"];
-const CUSTOMER_WAREHOUSE_ACCOUNTANT_OWNER: UserRole[] = ["CUSTOMER", "WAREHOUSE", "ACCOUNTANT", "OWNER"];
 const WAREHOUSE_ONLY: UserRole[] = ["WAREHOUSE"];
-const WAREHOUSE_ACCOUNTANT: UserRole[] = ["WAREHOUSE", "ACCOUNTANT"];
 const ACCOUNTANT_ONLY: UserRole[] = ["ACCOUNTANT"];
 
 const PERMISSION_ROLE_MAP: Record<PermissionKey, UserRole[]> = {
@@ -207,20 +183,6 @@ const PERMISSION_ROLE_MAP: Record<PermissionKey, UserRole[]> = {
   "inventory.history.view": WAREHOUSE_ONLY,
   "quotation.create": ["CUSTOMER"],
   "quotation.list.view": CUSTOMER_ACCOUNTANT_OWNER,
-  "sale-order.list.view": CUSTOMER_WAREHOUSE_ACCOUNTANT_OWNER,
-  "sale-order.detail.view": CUSTOMER_WAREHOUSE_ACCOUNTANT_OWNER,
-  "sale-order.tracking.view": CUSTOMER_WAREHOUSE_ACCOUNTANT_OWNER,
-  "sale-order.search": CUSTOMER_WAREHOUSE_ACCOUNTANT_OWNER,
-  "sale-order.status.update": ACCOUNTANT_OWNER,
-  "sale-order.reserve": WAREHOUSE_ACCOUNTANT,
-  "sale-order.pick": WAREHOUSE_ACCOUNTANT,
-  "sale-order.dispatch": WAREHOUSE_ACCOUNTANT,
-  "sale-order.deliver": WAREHOUSE_ACCOUNTANT,
-  "sale-order.complete": ACCOUNTANT_OWNER,
-  "sale-order.cancel": ACCOUNTANT_OWNER,
-  "sale-order.create-invoice": ACCOUNTANT_ONLY,
-  "sale-order.related-invoices.view": CUSTOMER_ACCOUNTANT_OWNER,
-  "sale-order.fulfillment-history.view": CUSTOMER_WAREHOUSE_ACCOUNTANT_OWNER,
   "contract.create": ACCOUNTANT_ONLY,
   "contract.view": CUSTOMER_ACCOUNTANT_OWNER,
   "contract.update": ACCOUNTANT_ONLY,
@@ -280,14 +242,6 @@ const ACTION_PERMISSION_MAP: Record<AppAction, PermissionKey> = {
   "inventory.issue.create": "inventory.issue.create",
   "inventory.adjustment.create": "inventory.adjustment.create",
   "quotation.create": "quotation.create",
-  "sale-order.status.update": "sale-order.status.update",
-  "sale-order.reserve": "sale-order.reserve",
-  "sale-order.pick": "sale-order.pick",
-  "sale-order.dispatch": "sale-order.dispatch",
-  "sale-order.deliver": "sale-order.deliver",
-  "sale-order.complete": "sale-order.complete",
-  "sale-order.cancel": "sale-order.cancel",
-  "sale-order.create-invoice": "sale-order.create-invoice",
   "contract.create": "contract.create",
   "contract.approve": "contract.approve",
   "contract.submit": "contract.submit",
@@ -328,7 +282,7 @@ const MENU_PERMISSION_MAP: Record<MenuId, PermissionKey> = {
   "promotion-management": "promotion.view",
   "inventory-management": "inventory.status.view",
   "quotation-management": "quotation.list.view",
-  "contract-management": "sale-order.list.view",
+  "contract-management": "contract.view",
   "contract-approvals": "contract.approve",
   "sale-order-management": "sale-order.view",
   "customer-management": "customer.view",
@@ -373,9 +327,9 @@ const PROTECTED_ROUTE_RULES: RoutePermissionRule[] = [
 
   { path: ROUTE_URL.CONTRACT_CREATE, permission: "contract.create" },
   { path: ROUTE_URL.CONTRACT_EDIT, permission: "contract.update" },
-  { path: ROUTE_URL.CONTRACT_TRACKING, permission: "sale-order.tracking.view" },
-  { path: ROUTE_URL.CONTRACT_DETAIL, permission: "sale-order.detail.view" },
-  { path: ROUTE_URL.CONTRACT_LIST, permission: "sale-order.list.view" },
+  { path: ROUTE_URL.CONTRACT_TRACKING, permission: "contract.track" },
+  { path: ROUTE_URL.CONTRACT_DETAIL, permission: "contract.view" },
+  { path: ROUTE_URL.CONTRACT_LIST, permission: "contract.view" },
   { path: ROUTE_URL.CONTRACT_APPROVAL_DETAIL, permission: "contract.approve" },
   { path: ROUTE_URL.CONTRACT_APPROVAL_LIST, permission: "contract.approve" },
 
