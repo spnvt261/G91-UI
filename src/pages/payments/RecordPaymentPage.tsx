@@ -52,7 +52,7 @@ const RecordPaymentPage = () => {
   const loadCustomers = useCallback(async () => {
     try {
       setLoadingCustomers(true);
-      const collectedCustomers: Array<{ id: string; companyName: string; customerCode?: string }> = [];
+      const collectedCustomers: Array<{ id: string; contactPerson?: string; companyName: string; customerCode?: string }> = [];
       let currentPage = 1;
       let totalPages = 1;
 
@@ -68,8 +68,9 @@ const RecordPaymentPage = () => {
         collectedCustomers.push(
           ...response.items.map((customer) => ({
             id: customer.id,
+            contactPerson: customer.contactPerson?.trim(),
             companyName: customer.companyName,
-            customerCode: customer.customerCode,
+            customerCode: customer.customerCode?.trim(),
           })),
         );
 
@@ -80,7 +81,12 @@ const RecordPaymentPage = () => {
       setCustomerOptions(
         collectedCustomers.map((customer) => ({
           value: customer.id,
-          label: `${customer.companyName} (${customer.customerCode || customer.id})`,
+          label: [
+            [customer.contactPerson, customer.companyName].filter(Boolean).join(" - "),
+            customer.customerCode ? `(${customer.customerCode})` : null,
+          ]
+            .filter(Boolean)
+            .join(" "),
         })),
       );
     } catch (error) {
