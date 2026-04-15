@@ -19,17 +19,19 @@ const PaymentDetailPage = () => {
   const { notify } = useNotify();
 
   const [payment, setPayment] = useState<PaymentModel | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(() => Boolean(id));
   const [detailError, setDetailError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadDetail = async () => {
       if (!id) {
+        setLoading(false);
         return;
       }
 
       try {
         setLoading(true);
+        setPayment(null);
         setDetailError(null);
         const response = await paymentService.getDetail(id);
         setPayment(response);
@@ -95,6 +97,8 @@ const PaymentDetailPage = () => {
 
   return (
     <NoResizeScreenTemplate
+      loading={Boolean(id) && loading && !payment && !detailError}
+      loadingText="Đang tải chi tiết thanh toán..."
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
