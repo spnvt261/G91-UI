@@ -65,6 +65,8 @@ export const ROUTE_URL = {
   PAYMENT_DETAIL: "/payments/:id",
   PAYMENT_RECORD: "/payments/record",
   PAYMENT_RECORD_BY_INVOICE: "/payments/:id/record",
+  PAYMENT_CONFIRMATION_LIST: "/payment-confirmation-requests",
+  PAYMENT_CONFIRMATION_DETAIL: "/payment-confirmation-requests/:id",
 
   DEBT_LIST: "/debts",
   DEBT_DETAIL: "/debts/:customerId",

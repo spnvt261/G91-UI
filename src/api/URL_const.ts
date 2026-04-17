@@ -161,12 +161,21 @@ export const API = {
     DETAIL: "/api/invoices/{id}",
     UPDATE: "/api/invoices/{id}",
     CANCEL: "/api/invoices/{id}/cancel",
+    PAYMENT_INSTRUCTION: "/api/invoices/{id}/payment-instruction",
+    PAYMENT_CONFIRMATION_REQUESTS: "/api/invoices/{id}/payment-confirmation-requests",
   },
 
   PAYMENTS: {
     CREATE: "/api/payments",
     DETAIL: "/api/payments/{id}",
     OPEN_INVOICES_BY_CUSTOMER: "/api/customers/{customerId}/open-invoices",
+  },
+
+  PAYMENT_CONFIRMATION_REQUESTS: {
+    LIST: "/api/payment-confirmation-requests",
+    DETAIL: "/api/payment-confirmation-requests/{id}",
+    CONFIRM: "/api/payment-confirmation-requests/{id}/confirm",
+    REJECT: "/api/payment-confirmation-requests/{id}/reject",
   },
 
   DEBTS: {

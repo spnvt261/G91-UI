@@ -37,6 +37,8 @@ import DebtListPage from "./pages/debts/DebtListPage";
 import PaymentDetailPage from "./pages/payments/PaymentDetailPage";
 import PaymentListPage from "./pages/payments/PaymentListPage";
 import RecordPaymentPage from "./pages/payments/RecordPaymentPage";
+import PaymentConfirmationDetailPage from "./pages/payment-confirmations/PaymentConfirmationDetailPage";
+import PaymentConfirmationListPage from "./pages/payment-confirmations/PaymentConfirmationListPage";
 import SaleOrderDetailPage from "./pages/sale-orders/SaleOrderDetailPage";
 import SaleOrderListPage from "./pages/sale-orders/SaleOrderListPage";
 import SaleOrderTimelinePage from "./pages/sale-orders/SaleOrderTimelinePage";
@@ -224,6 +226,8 @@ function App() {
           <Route path={ROUTE_URL.PAYMENT_DETAIL} element={<PaymentDetailPage />} />
           <Route path={ROUTE_URL.PAYMENT_RECORD} element={<RecordPaymentPage />} />
           <Route path={ROUTE_URL.PAYMENT_RECORD_BY_INVOICE} element={<RecordPaymentPage />} />
+          <Route path={ROUTE_URL.PAYMENT_CONFIRMATION_LIST} element={<PaymentConfirmationListPage />} />
+          <Route path={ROUTE_URL.PAYMENT_CONFIRMATION_DETAIL} element={<PaymentConfirmationDetailPage />} />
 
           <Route path={ROUTE_URL.INVENTORY_STATUS} element={<InventoryStatusPage />} />
           <Route path={ROUTE_URL.INVENTORY_RECEIPT_CREATE} element={<InventoryReceiptCreatePage />} />

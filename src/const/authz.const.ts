@@ -15,6 +15,7 @@ export type MenuId =
   | "customer-management"
   | "project-management"
   | "invoice-management"
+  | "payment-confirmation-management"
   | "debt-management"
   | "payment-management"
   | "reports-sales"
@@ -85,6 +86,8 @@ export type PermissionKey =
   | "invoice.view"
   | "invoice.update"
   | "invoice.cancel"
+  | "payment-confirmation.view"
+  | "payment-confirmation.review"
   | "payment.record"
   | "debt.view"
   | "payment.reminder.send"
@@ -137,6 +140,7 @@ export type AppAction =
   | "invoice.create"
   | "invoice.update"
   | "invoice.cancel"
+  | "payment-confirmation.review"
   | "payment.record"
   | "payment.reminder.send"
   | "debt.settlement.confirm"
@@ -215,6 +219,8 @@ const PERMISSION_ROLE_MAP: Record<PermissionKey, UserRole[]> = {
   "invoice.view": CUSTOMER_ACCOUNTANT_OWNER,
   "invoice.update": ACCOUNTANT_OWNER,
   "invoice.cancel": OWNER_ONLY,
+  "payment-confirmation.view": CUSTOMER_ACCOUNTANT_OWNER,
+  "payment-confirmation.review": ACCOUNTANT_OWNER,
   "payment.record": ACCOUNTANT_ONLY,
   "debt.view": CUSTOMER_ACCOUNTANT_OWNER,
   "payment.reminder.send": ACCOUNTANT_OWNER,
@@ -268,6 +274,7 @@ const ACTION_PERMISSION_MAP: Record<AppAction, PermissionKey> = {
   "invoice.create": "invoice.create",
   "invoice.update": "invoice.update",
   "invoice.cancel": "invoice.cancel",
+  "payment-confirmation.review": "payment-confirmation.review",
   "payment.record": "payment.record",
   "payment.reminder.send": "payment.reminder.send",
   "debt.settlement.confirm": "debt.settlement.confirm",
@@ -288,6 +295,7 @@ const MENU_PERMISSION_MAP: Record<MenuId, PermissionKey> = {
   "customer-management": "customer.view",
   "project-management": "project.view",
   "invoice-management": "invoice.view",
+  "payment-confirmation-management": "payment-confirmation.review",
   "debt-management": "debt.view",
   "payment-management": "payment.record",
   "reports-sales": "report.sales.view",
@@ -354,6 +362,8 @@ const PROTECTED_ROUTE_RULES: RoutePermissionRule[] = [
   { path: ROUTE_URL.INVOICE_EDIT, permission: "invoice.update" },
   { path: ROUTE_URL.INVOICE_DETAIL, permission: "invoice.view" },
   { path: ROUTE_URL.INVOICE_LIST, permission: "invoice.view" },
+  { path: ROUTE_URL.PAYMENT_CONFIRMATION_LIST, permission: "payment-confirmation.review" },
+  { path: ROUTE_URL.PAYMENT_CONFIRMATION_DETAIL, permission: "payment-confirmation.view" },
 
   { path: ROUTE_URL.PAYMENT_RECORD, permission: "payment.record" },
   { path: ROUTE_URL.PAYMENT_RECORD_BY_INVOICE, permission: "payment.record" },

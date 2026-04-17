@@ -1,4 +1,5 @@
 import {
+  AuditOutlined,
   BarChartOutlined,
   DashboardOutlined,
   DollarOutlined,
@@ -31,6 +32,7 @@ type SidebarLeafId =
   | "customers"
   | "projects"
   | "invoices"
+  | "payment-confirmations"
   | "debts"
   | "payments"
   | "inventory-status"
@@ -166,6 +168,13 @@ const SIDEBAR_LEAF_DEFINITIONS: Record<SidebarLeafId, SidebarLeafDefinition> = {
     icon: <FileTextOutlined />,
     menuId: "invoice-management",
   },
+  "payment-confirmations": {
+    id: "payment-confirmations",
+    label: "Xác nhận chuyển khoản",
+    path: ROUTE_URL.PAYMENT_CONFIRMATION_LIST,
+    icon: <AuditOutlined />,
+    menuId: "payment-confirmation-management",
+  },
   debts: {
     id: "debts",
     label: "C\u00f4ng n\u1ee3",
@@ -276,6 +285,7 @@ const ROLE_SIDEBAR_LAYOUTS: Record<UserRole, SidebarLayoutEntry[]> = {
     { type: "leaf", id: "customers" },
     { type: "leaf", id: "projects" },
     { type: "leaf", id: "invoices" },
+    { type: "leaf", id: "payment-confirmations" },
     { type: "leaf", id: "payments" },
     { type: "leaf", id: "debts" },
     { type: "group", id: "reports-accountant" },
@@ -294,6 +304,7 @@ const ROLE_SIDEBAR_LAYOUTS: Record<UserRole, SidebarLayoutEntry[]> = {
     { type: "leaf", id: "promotions" },
     { type: "leaf", id: "sale-orders" },
     { type: "leaf", id: "invoices" },
+    { type: "leaf", id: "payment-confirmations" },
     { type: "leaf", id: "contract-approvals" },
     { type: "group", id: "reports-owner" },
   ],
@@ -331,6 +342,7 @@ export const CONTEXTUAL_ACTION_ROUTE_TEMPLATES = Object.freeze([
   ROUTE_URL.INVOICE_CREATE,
   ROUTE_URL.INVOICE_DETAIL,
   ROUTE_URL.INVOICE_EDIT,
+  ROUTE_URL.PAYMENT_CONFIRMATION_DETAIL,
   ROUTE_URL.DEBT_DETAIL,
   ROUTE_URL.PAYMENT_DETAIL,
   ROUTE_URL.PAYMENT_RECORD,
