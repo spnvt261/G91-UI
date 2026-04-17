@@ -387,7 +387,7 @@ const InvoiceDetailPage = () => {
                   }}
                   loading={loading || requestLoading}
                 >
-                  LÃ m má»›i
+                  Làm mới
                 </Button>
                 {canRecordPayment && (invoice?.outstandingAmount ?? 0) > 0 ? (
                   <Button type="primary" onClick={() => navigate(ROUTE_URL.PAYMENT_RECORD_BY_INVOICE.replace(":id", invoice?.id ?? ""))}>
