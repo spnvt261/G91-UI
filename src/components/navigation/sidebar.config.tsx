@@ -277,8 +277,6 @@ const ROLE_SIDEBAR_LAYOUTS: Record<UserRole, SidebarLayoutEntry[]> = {
     { type: "leaf", id: "debts" },
   ],
   ACCOUNTANT: [
-    { type: "leaf", id: "price-lists" },
-    { type: "leaf", id: "promotions" },
     { type: "leaf", id: "quotations" },
     { type: "leaf", id: "contracts" },
     { type: "leaf", id: "sale-orders" },
