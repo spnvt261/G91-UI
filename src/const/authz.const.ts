@@ -387,6 +387,7 @@ const PROTECTED_ROUTE_RULES: RoutePermissionRule[] = [
 ];
 
 const GUEST_PUBLIC_ROUTES = [
+  ROUTE_URL.HOME,
   ROUTE_URL.LOGIN,
   ROUTE_URL.REGISTER,
   ROUTE_URL.VERIFY_REGISTRATION,
@@ -477,12 +478,7 @@ export const canViewMenu = canSeeMenu;
 
 export const canAccessPathByRole = (role: UserRole, pathname: string): boolean => {
   if (GUEST_PUBLIC_ROUTES.some((route) => isRouteMatch(pathname, route))) {
-    return role === "GUEST";
-  }
-
-  // Guests are only allowed on explicit public auth routes.
-  if (role === "GUEST") {
-    return false;
+    return role === "GUEST" || role === "CUSTOMER";
   }
 
   const permission = resolveRoutePermission(pathname);

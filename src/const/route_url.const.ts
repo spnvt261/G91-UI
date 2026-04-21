@@ -1,4 +1,5 @@
 export const ROUTE_URL = {
+  HOME: "/",
   LOGIN: "/login",
   REGISTER: "/register",
   VERIFY_REGISTRATION: "/verify-registration",

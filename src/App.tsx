@@ -23,6 +23,7 @@ import CustomerDetailPage from "./pages/customers/CustomerDetailPage";
 import CustomerEditPage from "./pages/customers/CustomerEditPage";
 import CustomerListPage from "./pages/customers/CustomerListPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
+import HomePage from "./pages/home/HomePage";
 import InventoryAdjustmentCreatePage from "./pages/inventory/InventoryAdjustmentCreatePage";
 import InventoryHistoryPage from "./pages/inventory/InventoryHistoryPage";
 import InventoryIssueCreatePage from "./pages/inventory/InventoryIssueCreatePage";
@@ -155,7 +156,7 @@ function App() {
   return (
     <div className="min-h-screen w-full">
       <Routes>
-        <Route path="/" element={<Navigate to={defaultRoute} replace />} />
+        <Route path={ROUTE_URL.HOME} element={<HomePage />} />
 
         <Route path={ROUTE_URL.LOGIN} element={hasSession ? <Navigate to={defaultRoute} replace /> : <LoginPage />} />
         <Route path={ROUTE_URL.REGISTER} element={hasSession ? <Navigate to={defaultRoute} replace /> : <RegisterPage />} />

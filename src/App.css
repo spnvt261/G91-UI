@@ -100,3 +100,309 @@ body {
     max-width: 96px;
   }
 }
+
+.landing-page.ant-layout {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(14, 165, 233, 0.16), transparent 24%),
+    linear-gradient(180deg, #f8fbff 0%, #eef4fb 48%, #ffffff 100%);
+}
+
+.landing-page__container {
+  width: min(1280px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.landing-page__header.ant-layout-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: auto;
+  padding: 0;
+  line-height: normal;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.landing-page__header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 0;
+}
+
+.landing-page__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.landing-page__brand-mark.ant-avatar {
+  background: linear-gradient(135deg, #0f4c81, #1d4ed8);
+  color: #f8fafc;
+  font-weight: 700;
+  box-shadow: 0 16px 28px rgba(29, 78, 216, 0.22);
+}
+
+.landing-page__brand-title.ant-typography,
+.landing-page__panel-title.ant-typography,
+.landing-page__section-title.ant-typography,
+.landing-page__service-title.ant-typography,
+.landing-page__workflow-title.ant-typography,
+.landing-page__product-title.ant-typography,
+.landing-page__cta-title.ant-typography,
+.landing-page__footer-title.ant-typography,
+.landing-page__footer-subtitle.ant-typography,
+.landing-page__feature-title.ant-typography {
+  margin: 0;
+  color: #0f172a;
+}
+
+.landing-page__brand-subtitle,
+.landing-page__section-eyebrow,
+.landing-page__nav a,
+.landing-page__contact-icon,
+.landing-page__footer-link.ant-btn-link {
+  color: #475569;
+}
+
+.landing-page__nav a {
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.landing-page__hero {
+  padding: 56px 0 28px;
+}
+
+.landing-page__hero-copy {
+  width: 100%;
+}
+
+.landing-page__hero-title.ant-typography {
+  margin: 0;
+  font-size: clamp(2.4rem, 4vw, 4.4rem);
+  line-height: 1.06;
+  color: #0f172a;
+  letter-spacing: -0.04em;
+}
+
+.landing-page__hero-description.ant-typography,
+.landing-page__section-description.ant-typography,
+.landing-page__feature-description.ant-typography,
+.landing-page__service-description.ant-typography,
+.landing-page__workflow-description.ant-typography,
+.landing-page__product-description.ant-typography,
+.landing-page__cta-description.ant-typography,
+.landing-page__footer-description.ant-typography {
+  margin: 0;
+  color: #334155;
+  font-size: 1rem;
+}
+
+.landing-page__metric-card.ant-card,
+.landing-page__hero-panel.ant-card,
+.landing-page__service-card.ant-card,
+.landing-page__workflow-card.ant-card,
+.landing-page__product-card.ant-card,
+.landing-page__cta-card.ant-card {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+}
+
+.landing-page__metric-card.ant-card {
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.landing-page__metric-card .ant-card-body {
+  padding: 18px 20px;
+}
+
+.landing-page__metric-card .ant-typography {
+  margin: 0;
+}
+
+.landing-page__hero-panel.ant-card {
+  border-radius: 28px;
+  background:
+    linear-gradient(160deg, rgba(15, 23, 42, 0.96), rgba(15, 76, 129, 0.92)),
+    #0f172a;
+}
+
+.landing-page__hero-panel .landing-page__section-eyebrow,
+.landing-page__hero-panel .landing-page__panel-title.ant-typography,
+.landing-page__hero-panel .landing-page__feature-title.ant-typography,
+.landing-page__hero-panel .landing-page__feature-description.ant-typography {
+  color: #f8fafc;
+}
+
+.landing-page__feature-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.landing-page__feature-icon.ant-avatar,
+.landing-page__service-icon.ant-avatar {
+  background: rgba(255, 255, 255, 0.14);
+  color: #eff6ff;
+}
+
+.landing-page__service-icon.ant-avatar {
+  background: linear-gradient(135deg, #0f4c81, #2563eb);
+}
+
+.landing-page__section {
+  padding: 28px 0;
+}
+
+.landing-page__section-heading {
+  max-width: 760px;
+}
+
+.landing-page__section-heading--split {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: none;
+}
+
+.landing-page__section-eyebrow {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.landing-page__service-card.ant-card,
+.landing-page__workflow-card.ant-card,
+.landing-page__cta-card.ant-card,
+.landing-page__product-card.ant-card {
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.landing-page__workflow-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #f8fafc;
+  color: #0f4c81;
+}
+
+.landing-page__workflow-item .ant-typography {
+  color: #0f172a;
+}
+
+.landing-page__section--products {
+  padding-top: 36px;
+}
+
+.landing-page__product-placeholder {
+  display: grid;
+  place-items: center;
+  height: 228px;
+  font-size: 36px;
+  color: #1d4ed8;
+  background: linear-gradient(135deg, #dbeafe, #eff6ff);
+}
+
+.landing-page__product-title.ant-typography {
+  margin-top: 4px;
+}
+
+.landing-page__product-link.ant-btn-link {
+  padding-inline: 0;
+  font-weight: 600;
+}
+
+.landing-page__cta-card.ant-card {
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+}
+
+.landing-page__footer.ant-layout-footer {
+  margin-top: 12px;
+  padding: 36px 0 44px;
+  background: #0f172a;
+}
+
+.landing-page__footer .landing-page__footer-title.ant-typography,
+.landing-page__footer .landing-page__footer-subtitle.ant-typography,
+.landing-page__footer .landing-page__footer-description.ant-typography,
+.landing-page__footer .ant-typography,
+.landing-page__footer .ant-typography a,
+.landing-page__footer .landing-page__footer-link.ant-btn-link {
+  color: #e2e8f0;
+}
+
+.landing-page__footer .landing-page__footer-description.ant-typography,
+.landing-page__footer .ant-typography[type="secondary"] {
+  color: #94a3b8;
+}
+
+.landing-page__contact-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.landing-page__contact-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.12);
+}
+
+@media (max-width: 991px) {
+  .landing-page__header-inner {
+    flex-wrap: wrap;
+  }
+
+  .landing-page__section-heading--split {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 767px) {
+  .landing-page__container {
+    width: min(100% - 24px, 1280px);
+  }
+
+  .landing-page__hero {
+    padding-top: 36px;
+  }
+
+  .landing-page__header-inner {
+    padding: 14px 0;
+  }
+
+  .landing-page__hero-title.ant-typography {
+    font-size: 2.2rem;
+  }
+
+  .landing-page__hero-panel.ant-card,
+  .landing-page__service-card.ant-card,
+  .landing-page__workflow-card.ant-card,
+  .landing-page__product-card.ant-card,
+  .landing-page__cta-card.ant-card {
+    border-radius: 20px;
+  }
+}
