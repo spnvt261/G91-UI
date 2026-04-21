@@ -45,6 +45,16 @@ interface CreateInvoiceFromContractFormValues {
   dueDate: Dayjs;
 }
 
+const disablePastDueDate = (current: Dayjs) => current.isBefore(dayjs().startOf("day"), "day");
+
+const validateDueDateNotInPast = (_: unknown, value: Dayjs | undefined) => {
+  if (!value || !value.isBefore(dayjs().startOf("day"), "day")) {
+    return Promise.resolve();
+  }
+
+  return Promise.reject(new Error("Hạn thanh toán không được là ngày trong quá khứ."));
+};
+
 const CONTRACT_CANCELLATION_REASON_OPTIONS = [
   { label: "Khách hàng yêu cầu", value: "CUSTOMER_REQUEST" },
   { label: "Tranh chấp giá", value: "PRICE_DISPUTE" },
@@ -677,12 +687,16 @@ const ContractDetailPage = () => {
           <Form.Item
             label="Hạn thanh toán"
             name="dueDate"
-            rules={[{ required: true, message: "Vui lòng chọn hạn thanh toán." }]}
+            rules={[
+              { required: true, message: "Vui lòng chọn hạn thanh toán." },
+              { validator: validateDueDateNotInPast },
+            ]}
           >
             <DatePicker
               className="w-full"
               format="DD/MM/YYYY"
               placeholder="Chọn hạn thanh toán"
+              disabledDate={disablePastDueDate}
             />
           </Form.Item>
         </Form>
