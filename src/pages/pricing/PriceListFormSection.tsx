@@ -49,6 +49,18 @@ const toDateValue = (value: string): Dayjs | null => {
   return parsed.isValid() ? parsed : null;
 };
 
+const disablePastDatePreservingSelected = (selectedDate: Dayjs | null, predicate?: (current: Dayjs) => boolean) => (current: Dayjs) => {
+  if (selectedDate && current.isSame(selectedDate, "day")) {
+    return false;
+  }
+
+  if (current.isBefore(dayjs().startOf("day"), "day")) {
+    return true;
+  }
+
+  return predicate ? predicate(current) : false;
+};
+
 const updateItem = (
   currentItems: PriceListFormItemValues[],
   targetRowId: string,
@@ -232,7 +244,9 @@ const PriceListFormSection = ({
                       validFrom: dateValue ? dateValue.format("YYYY-MM-DD") : "",
                     }))
                   }
-                  disabledDate={(current) => (validToDate ? current.endOf("day").isAfter(validToDate.endOf("day")) : false)}
+                  disabledDate={disablePastDatePreservingSelected(validFromDate, (current) =>
+                    validToDate ? current.endOf("day").isAfter(validToDate.endOf("day")) : false,
+                  )}
                 />
               </Form.Item>
             </Col>
@@ -255,7 +269,12 @@ const PriceListFormSection = ({
                       validTo: dateValue ? dateValue.format("YYYY-MM-DD") : "",
                     }))
                   }
-                  disabledDate={(current) => (validFromDate ? current.startOf("day").isBefore(validFromDate.startOf("day")) : false)}
+                  disabledDate={disablePastDatePreservingSelected(validToDate, (current) => {
+                    const minDate = validFromDate && validFromDate.isAfter(dayjs().startOf("day"), "day")
+                      ? validFromDate.startOf("day")
+                      : dayjs().startOf("day");
+                    return current.startOf("day").isBefore(minDate);
+                  })}
                 />
               </Form.Item>
             </Col>

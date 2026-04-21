@@ -72,6 +72,16 @@ type InvoiceFormValues = {
   note?: string;
 };
 
+const disablePastDueDate = (current: dayjs.Dayjs) => current.isBefore(dayjs().startOf("day"), "day");
+
+const validateDueDateNotInPast = (_: unknown, value: dayjs.Dayjs | undefined) => {
+  if (!value || !value.isBefore(dayjs().startOf("day"), "day")) {
+    return Promise.resolve();
+  }
+
+  return Promise.reject(new Error("Hạn thanh toán không được là ngày trong quá khứ."));
+};
+
 const ACTION_META: Record<
   FulfillmentAction,
   { title: string; okText: string; success: string; fallback: string }
@@ -1049,9 +1059,10 @@ const SaleOrderDetailPage = () => {
                 label="Hạn thanh toán"
                 rules={[
                   { required: true, message: "Vui lòng chọn hạn thanh toán." },
+                  { validator: validateDueDateNotInPast },
                 ]}
               >
-                <DatePicker className="w-full" format="DD/MM/YYYY" />
+                <DatePicker className="w-full" format="DD/MM/YYYY" disabledDate={disablePastDueDate} />
               </Form.Item>
               <Form.Item name="status" label="Trạng thái ban đầu">
                 <Select

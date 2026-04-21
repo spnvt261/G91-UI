@@ -28,6 +28,9 @@ interface ContractEditFormValues {
   changeReason: string;
 }
 
+const disablePastDatePreservingSelected = (selectedDate?: Dayjs) => (current: Dayjs) =>
+  current.isBefore(dayjs().startOf("day"), "day") && !selectedDate?.isSame(current, "day");
+
 const ContractEditPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -38,6 +41,7 @@ const ContractEditPage = () => {
   const [pageLoading, setPageLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const watchedExpectedDeliveryDate = Form.useWatch("expectedDeliveryDate", form);
 
   const firstItem = contract?.items[0];
   const hasMultipleItems = (contract?.items.length ?? 0) > 1;
@@ -118,6 +122,19 @@ const ContractEditPage = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const validateExpectedDeliveryDate = (_: unknown, value: Dayjs | undefined) => {
+    if (!value || !value.isBefore(dayjs().startOf("day"), "day")) {
+      return Promise.resolve();
+    }
+
+    const originalExpectedDeliveryDate = contract?.expectedDeliveryDate ? dayjs(contract.expectedDeliveryDate) : null;
+    if (originalExpectedDeliveryDate?.isValid() && value.isSame(originalExpectedDeliveryDate, "day")) {
+      return Promise.resolve();
+    }
+
+    return Promise.reject(new Error("Ngày giao dự kiến không được là ngày trong quá khứ."));
   };
 
   return (
@@ -247,8 +264,12 @@ const ContractEditPage = () => {
                 </Typography.Title>
                 <Row gutter={[16, 0]}>
                   <Col xs={24} md={12}>
-                    <Form.Item label="Ngày giao dự kiến" name="expectedDeliveryDate">
-                      <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                    <Form.Item label="Ngày giao dự kiến" name="expectedDeliveryDate" rules={[{ validator: validateExpectedDeliveryDate }]}>
+                      <DatePicker
+                        style={{ width: "100%" }}
+                        format="DD/MM/YYYY"
+                        disabledDate={disablePastDatePreservingSelected(watchedExpectedDeliveryDate)}
+                      />
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={12}>

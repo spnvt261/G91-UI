@@ -53,6 +53,18 @@ const toPickerValue = (value: string) => {
   return parsed.isValid() ? parsed : null;
 };
 
+const disablePastDatePreservingSelected = (selectedDate: dayjs.Dayjs | null, predicate?: (current: dayjs.Dayjs) => boolean) => (current: dayjs.Dayjs) => {
+  if (selectedDate && current.isSame(selectedDate, "day")) {
+    return false;
+  }
+
+  if (current.isBefore(dayjs().startOf("day"), "day")) {
+    return true;
+  }
+
+  return predicate ? predicate(current) : false;
+};
+
 const getProductImage = (item: PromotionProductOption): string | undefined =>
   item.mainImage || item.imageUrls?.[0] || item.images?.[0];
 
@@ -73,6 +85,8 @@ const PromotionFormSections = ({
   const selectedProductIds = formValues.productIds ?? [];
   const [pendingProductId, setPendingProductId] = useState<string | undefined>(undefined);
   const isEditMode = useMemo(() => new URLSearchParams(location.search).get("mode") === "edit", [location.search]);
+  const startDateValue = toPickerValue(formValues.startDate);
+  const endDateValue = toPickerValue(formValues.endDate);
 
   const navigateToProductDetail = (productId: string) => {
     navigate(ROUTE_URL.PRODUCT_DETAIL.replace(":id", productId), {
@@ -382,6 +396,9 @@ const PromotionFormSections = ({
                 format="DD/MM/YYYY"
                 placeholder="Chọn ngày bắt đầu"
                 onChange={(value) => onValuesChange({ startDate: value ? value.format("YYYY-MM-DD") : "" })}
+                disabledDate={disablePastDatePreservingSelected(startDateValue, (current) =>
+                  endDateValue ? current.isAfter(endDateValue, "day") : false,
+                )}
               />
             </Form.Item>
           </Col>
@@ -400,6 +417,12 @@ const PromotionFormSections = ({
                 format="DD/MM/YYYY"
                 placeholder="Chọn ngày kết thúc"
                 onChange={(value) => onValuesChange({ endDate: value ? value.format("YYYY-MM-DD") : "" })}
+                disabledDate={disablePastDatePreservingSelected(endDateValue, (current) => {
+                  const minDate = startDateValue && startDateValue.isAfter(dayjs().startOf("day"), "day")
+                    ? startDateValue.startOf("day")
+                    : dayjs().startOf("day");
+                  return current.startOf("day").isBefore(minDate);
+                })}
               />
             </Form.Item>
           </Col>

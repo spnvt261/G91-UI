@@ -33,6 +33,11 @@ type InvoiceFormValues = {
   }>;
 };
 
+const isSameDay = (left?: dayjs.Dayjs | null, right?: dayjs.Dayjs | null) => Boolean(left && right && left.isSame(right, "day"));
+
+const disablePastDatePreservingSelected = (selectedDate?: dayjs.Dayjs | null) => (current: dayjs.Dayjs) =>
+  current.isBefore(dayjs().startOf("day"), "day") && !isSameDay(current, selectedDate);
+
 interface InvoiceFormPageProps {
   mode: "create" | "edit";
 }
@@ -117,6 +122,20 @@ const InvoiceFormPage = ({ mode }: InvoiceFormPageProps) => {
 
   const watchedItems = Form.useWatch("items", form) ?? [];
   const watchedAdjustment = Form.useWatch("adjustmentAmount", form) ?? 0;
+  const watchedDueDate = Form.useWatch("dueDate", form);
+
+  const validateDueDateNotInPast = (_: unknown, value: dayjs.Dayjs | undefined) => {
+    if (!value || !value.isBefore(dayjs().startOf("day"), "day")) {
+      return Promise.resolve();
+    }
+
+    const originalDueDate = currentInvoice?.dueDate ? dayjs(currentInvoice.dueDate) : null;
+    if (originalDueDate?.isValid() && value.isSame(originalDueDate, "day")) {
+      return Promise.resolve();
+    }
+
+    return Promise.reject(new Error("Hạn thanh toán không được là ngày trong quá khứ."));
+  };
 
   const totals = useMemo(() => {
     const subtotal = watchedItems.reduce((sum, item) => sum + Number(item?.quantity ?? 0) * Number(item?.unitPrice ?? 0), 0);
@@ -354,9 +373,17 @@ const InvoiceFormPage = ({ mode }: InvoiceFormPageProps) => {
                           <Form.Item
                             label="Hạn thanh toán"
                             name="dueDate"
-                            rules={[{ required: true, message: "Vui lòng chọn hạn thanh toán." }]}
+                            rules={[
+                              { required: true, message: "Vui lòng chọn hạn thanh toán." },
+                              { validator: validateDueDateNotInPast },
+                            ]}
                           >
-                            <DatePicker className="w-full" format="DD/MM/YYYY" placeholder="Chọn hạn thanh toán" />
+                            <DatePicker
+                              className="w-full"
+                              format="DD/MM/YYYY"
+                              placeholder="Chọn hạn thanh toán"
+                              disabledDate={disablePastDatePreservingSelected(watchedDueDate)}
+                            />
                           </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
