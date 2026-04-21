@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FormOutlined, LockOutlined, MailOutlined, UserAddOutlined, UserOutlined } from "@ant-design/icons";
+import { FormOutlined, HomeOutlined, LockOutlined, MailOutlined, UserAddOutlined, UserOutlined } from "@ant-design/icons";
 import { Alert, Button, Col, Divider, Form, Input, Row, Space, Typography } from "antd";
 import AuthFormCard from "../../components/auth/AuthFormCard";
 import AuthHeroPanel from "../../components/auth/AuthHeroPanel";
@@ -91,12 +91,20 @@ const RegisterPage = () => {
         icon={<UserAddOutlined />}
         extraTop={<Alert showIcon type="info" message="Sau khi đăng ký, bạn cần xác thực email để kích hoạt tài khoản." />}
         footer={
-          <Typography.Text className="auth-footer-links__text">
-            Đã có tài khoản?{" "}
-            <Link to={ROUTE_URL.LOGIN} className="auth-footer-links__primary">
-              Quay lại đăng nhập
-            </Link>
-          </Typography.Text>
+          <Space direction="vertical" size={8} className="auth-footer-links">
+            <Typography.Text className="auth-footer-links__text">
+              Đã có tài khoản?{" "}
+              <Link to={ROUTE_URL.LOGIN} className="auth-footer-links__primary">
+                Quay lại đăng nhập
+              </Link>
+            </Typography.Text>
+            <Typography.Text className="auth-footer-links__text">
+              <Link to={ROUTE_URL.HOME} className="auth-footer-links__secondary">
+                <HomeOutlined style={{ marginRight: 6 }} />
+                Về trang chủ
+              </Link>
+            </Typography.Text>
+          </Space>
         }
       >
         <Space direction="vertical" size={18} style={{ width: "100%" }}>
@@ -136,7 +144,9 @@ const RegisterPage = () => {
             <Divider style={{ margin: "8px 0 14px", borderColor: "#e8eef5" }} />
 
             <Typography.Text className="auth-form-section-title">Mật khẩu</Typography.Text>
-            <Typography.Text className="auth-form-helper">Mật khẩu nên có chữ hoa, chữ thường, số và ký tự đặc biệt để tăng độ an toàn.</Typography.Text>
+            <Typography.Text className="auth-form-helper">
+              Mật khẩu nên có chữ hoa, chữ thường, số và ký tự đặc biệt để tăng độ an toàn.
+            </Typography.Text>
 
             <Form.Item
               label="Mật khẩu"

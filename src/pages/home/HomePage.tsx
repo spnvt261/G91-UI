@@ -80,6 +80,18 @@ const HomePage = () => {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productError, setProductError] = useState<string | null>(null);
 
+  const handleScrollToSection = (sectionId: string) => {
+    const section = document.getElementById(sectionId);
+    if (!section) {
+      return;
+    }
+
+    window.scrollTo({
+      top: section.getBoundingClientRect().top + window.scrollY - 96,
+      behavior: "smooth",
+    });
+  };
+
   useEffect(() => {
     let alive = true;
 
@@ -146,9 +158,15 @@ const HomePage = () => {
 
           {screens.md ? (
             <Space size={24} className="landing-page__nav">
-              <a href="#services">Dịch vụ</a>
-              <a href="#featured-products">Sản phẩm nổi bật</a>
-              <a href="#company-contact">Liên hệ</a>
+              <button type="button" className="landing-page__nav-link" onClick={() => handleScrollToSection("services")}>
+                Dịch vụ
+              </button>
+              <button type="button" className="landing-page__nav-link" onClick={() => handleScrollToSection("featured-products")}>
+                Sản phẩm nổi bật
+              </button>
+              <button type="button" className="landing-page__nav-link" onClick={() => handleScrollToSection("company-contact")}>
+                Liên hệ
+              </button>
             </Space>
           ) : null}
 
@@ -180,12 +198,6 @@ const HomePage = () => {
             <Row gutter={[32, 32]} align="middle">
               <Col xs={24} xl={14}>
                 <Space direction="vertical" size={20} className="landing-page__hero-copy">
-                  <Space wrap>
-                    <Tag color="blue">Guest</Tag>
-                    <Tag color="gold">Customer</Tag>
-                    <Tag color="cyan">Ant Design UI</Tag>
-                  </Space>
-
                   <Typography.Title level={1} className="landing-page__hero-title">
                     Nền tảng giới thiệu dịch vụ và điều hướng giao dịch cho khách hàng thép doanh nghiệp.
                   </Typography.Title>
@@ -216,27 +228,6 @@ const HomePage = () => {
                       </>
                     )}
                   </Space>
-
-                  <Row gutter={[12, 12]}>
-                    <Col xs={24} md={8}>
-                      <Card bordered={false} className="landing-page__metric-card">
-                        <Typography.Text type="secondary">Quyền truy cập</Typography.Text>
-                        <Typography.Title level={4}>Guest / Customer</Typography.Title>
-                      </Card>
-                    </Col>
-                    <Col xs={24} md={8}>
-                      <Card bordered={false} className="landing-page__metric-card">
-                        <Typography.Text type="secondary">Mục tiêu</Typography.Text>
-                        <Typography.Title level={4}>Giới thiệu dịch vụ</Typography.Title>
-                      </Card>
-                    </Col>
-                    <Col xs={24} md={8}>
-                      <Card bordered={false} className="landing-page__metric-card">
-                        <Typography.Text type="secondary">Điều hướng</Typography.Text>
-                        <Typography.Title level={4}>Đăng ký / Đăng nhập</Typography.Title>
-                      </Card>
-                    </Col>
-                  </Row>
                 </Space>
               </Col>
 

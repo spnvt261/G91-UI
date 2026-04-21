@@ -1,20 +1,20 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { CheckCircleOutlined, LockOutlined, LoginOutlined, MailOutlined, SafetyOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, HomeOutlined, LockOutlined, LoginOutlined, MailOutlined, SafetyOutlined } from "@ant-design/icons";
 import { Button, Form, Input, Space, Typography } from "antd";
 import AuthFormCard from "../../components/auth/AuthFormCard";
 import AuthHeroPanel from "../../components/auth/AuthHeroPanel";
 import AuthInlineStatus, { type AuthInlineStatusValue } from "../../components/auth/AuthInlineStatus";
 import AuthPageShell from "../../components/auth/AuthPageShell";
 import { ApiClientError } from "../../apiConfig/axiosConfig";
+import { getDefaultRouteByRole } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import { authService } from "../../services/auth/auth.service";
 import { loginSuccess } from "../../store/authSlice";
 import type { AppDispatch } from "../../store";
 import { persistAuthSession } from "../../utils/authSession";
-import { getDefaultRouteByRole } from "../../const/authz.const";
 import { getErrorMessage } from "../shared/page.utils";
 
 interface LoginFormValues {
@@ -83,7 +83,7 @@ const LoginPage = () => {
     <AuthPageShell
       sidePanel={
         <AuthHeroPanel
-          eyebrow="Không gian làm việc 0"
+          eyebrow="Không gian làm việc số"
           title="Quản lý dữ liệu tập trung, bảo mật theo vai trò"
           description="Đăng nhập để theo dõi tiến độ, phối hợp phòng ban và kiểm soát toàn bộ quy trình vận hành trong một giao diện thống nhất."
           highlights={[
@@ -119,6 +119,12 @@ const LoginPage = () => {
               Chưa xác thực email?{" "}
               <Link to={ROUTE_URL.VERIFY_REGISTRATION} className="auth-footer-links__secondary">
                 Nhập mã xác thực
+              </Link>
+            </Typography.Text>
+            <Typography.Text className="auth-footer-links__text">
+              <Link to={ROUTE_URL.HOME} className="auth-footer-links__secondary">
+                <HomeOutlined style={{ marginRight: 6 }} />
+                Về trang chủ
               </Link>
             </Typography.Text>
           </Space>
