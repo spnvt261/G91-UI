@@ -28,6 +28,30 @@ type RecordPaymentFormValues = {
 const CASH_LIMIT = 50_000_000;
 const CUSTOMER_PAGE_SIZE = 100;
 
+const formatMoneyInput = (value: string | number | undefined | null) => {
+  if (value == null || value === "") {
+    return "";
+  }
+
+  const normalized = typeof value === "number" ? value : Number(String(value).replace(/[^\d.-]/g, ""));
+  if (!Number.isFinite(normalized)) {
+    return "";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 0,
+  }).format(normalized);
+};
+
+const parseMoneyInput = (value: string | undefined) => {
+  if (!value) {
+    return 0;
+  }
+
+  const parsed = Number(value.replace(/[^\d.-]/g, ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
 const RecordPaymentPage = () => {
   const navigate = useNavigate();
   const { id: preselectedInvoiceId } = useParams();
@@ -48,6 +72,7 @@ const RecordPaymentPage = () => {
 
   const totalAllocated = useMemo(() => Object.values(allocations).reduce((sum, value) => sum + Number(value || 0), 0), [allocations]);
   const unallocatedBalance = paymentAmount - totalAllocated;
+  const hasAllocationOverflow = totalAllocated - paymentAmount > 1;
 
   const loadCustomers = useCallback(async () => {
     try {
@@ -230,12 +255,29 @@ const RecordPaymentPage = () => {
                     return Promise.reject(new Error("Số tiền phân bổ vượt quá số còn lại của hóa đơn."));
                   }
 
+                  const currentAllocations = form.getFieldValue("allocations") ?? {};
+                  const totalAllocationAmount = Object.values(currentAllocations).reduce<number>((sum, item) => sum + Number(item ?? 0), 0);
+                  const currentPaymentAmount = Number(form.getFieldValue("amount") ?? 0);
+
+                  if (totalAllocationAmount - currentPaymentAmount > 1) {
+                    return Promise.reject(new Error("Tổng tiền đã phân bổ không được lớn hơn tổng tiền thanh toán."));
+                  }
+
                   return Promise.resolve();
                 },
               },
             ]}
           >
-            <InputNumber min={0} max={row.remainingAmount} className="w-full" step={1000} addonAfter="VNĐ" placeholder="0" />
+            <InputNumber
+              min={0}
+              max={row.remainingAmount}
+              className="w-full"
+              step={1000}
+              addonAfter="VNĐ"
+              placeholder="0"
+              formatter={formatMoneyInput}
+              parser={parseMoneyInput}
+            />
           </Form.Item>
         ),
       },
@@ -256,8 +298,8 @@ const RecordPaymentPage = () => {
       return;
     }
 
-    if (Math.abs(values.amount - totalAllocated) > 1) {
-      notify("Tổng số tiền đã phân bổ phải bằng số tiền thanh toán.", "warning");
+    if (totalAllocated - values.amount > 1) {
+      notify("Tổng tiền đã phân bổ không được lớn hơn tổng tiền thanh toán.", "warning");
       return;
     }
 
@@ -355,11 +397,31 @@ const RecordPaymentPage = () => {
                         rules={[
                           { required: true, message: "Vui lòng nhập số tiền thanh toán." },
                           {
-                            validator: (_, value) => (Number(value ?? 0) > 0 ? Promise.resolve() : Promise.reject(new Error("Số tiền phải lớn hơn 0."))),
+                            validator: (_, value) => {
+                              if (Number(value ?? 0) <= 0) {
+                                return Promise.reject(new Error("Số tiền phải lớn hơn 0."));
+                              }
+
+                              const currentAllocations = form.getFieldValue("allocations") ?? {};
+                              const totalAllocationAmount = Object.values(currentAllocations).reduce<number>((sum, item) => sum + Number(item ?? 0), 0);
+                              if (totalAllocationAmount - Number(value ?? 0) > 1) {
+                                return Promise.reject(new Error("Tổng tiền đã phân bổ không được lớn hơn tổng tiền thanh toán."));
+                              }
+
+                              return Promise.resolve();
+                            },
                           },
                         ]}
                       >
-                        <InputNumber min={1} className="w-full" step={1000} addonAfter="VNĐ" placeholder="0" />
+                        <InputNumber
+                          min={1}
+                          className="w-full"
+                          step={1000}
+                          addonAfter="VNĐ"
+                          placeholder="0"
+                          formatter={formatMoneyInput}
+                          parser={parseMoneyInput}
+                        />
                       </Form.Item>
                     </Col>
                     <Col xs={24} md={8}>
@@ -438,22 +500,31 @@ const RecordPaymentPage = () => {
                     </Space>
                     <Space style={{ width: "100%", justifyContent: "space-between" }}>
                       <Typography.Text>Tổng tiền đã phân bổ</Typography.Text>
-                      <Typography.Text strong>{toCurrency(totalAllocated)}</Typography.Text>
+                      <Typography.Text strong style={{ color: hasAllocationOverflow ? "#d4380d" : undefined }}>{toCurrency(totalAllocated)}</Typography.Text>
                     </Space>
                     <Space style={{ width: "100%", justifyContent: "space-between" }}>
                       <Typography.Text>Số dư chưa phân bổ</Typography.Text>
-                      <Typography.Text strong style={{ color: unallocatedBalance === 0 ? "#16a34a" : "#d4380d" }}>
+                      <Typography.Text strong style={{ color: hasAllocationOverflow ? "#d4380d" : unallocatedBalance === 0 ? "#16a34a" : "#1d4ed8" }}>
                         {toCurrency(unallocatedBalance)}
                       </Typography.Text>
                     </Space>
                   </Space>
-                  {unallocatedBalance !== 0 ? (
+                  {hasAllocationOverflow ? (
                     <Alert
                       style={{ marginTop: 12 }}
                       type="warning"
                       showIcon
-                      message="Số dư chưa phân bổ chưa bằng 0."
-                      description="Vui lòng điều chỉnh số tiền phân bổ để tổng phân bổ khớp với số tiền thanh toán."
+                      message="Tổng tiền phân bổ đang vượt quá tổng tiền thanh toán."
+                      description="Vui lòng giảm phân bổ hoặc tăng số tiền thanh toán để form vượt qua validate."
+                    />
+                  ) : null}
+                  {!hasAllocationOverflow && unallocatedBalance > 0 ? (
+                    <Alert
+                      style={{ marginTop: 12 }}
+                      type="info"
+                      showIcon
+                      message="Vẫn còn số dư chưa phân bổ."
+                      description="Form vẫn hợp lệ nếu tổng tiền đã phân bổ không vượt quá tổng tiền thanh toán."
                     />
                   ) : null}
                 </Card>
