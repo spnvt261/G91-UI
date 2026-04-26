@@ -60,6 +60,25 @@ const companyContacts = [
   },
 ];
 
+type ProductDefaultVisualProps = {
+  variant?: "hero" | "card";
+};
+
+const ProductDefaultVisual = ({ variant = "card" }: ProductDefaultVisualProps) => (
+  <div className={`landing-page__product-default landing-page__product-default--${variant}`} role="img" aria-label="Ảnh sản phẩm đang cập nhật">
+    <div className="landing-page__product-default-mark">G90</div>
+    <div className="landing-page__product-default-stack" aria-hidden="true">
+      <span />
+      <span />
+      <span />
+    </div>
+    <div className="landing-page__product-default-caption">
+      <Typography.Text>Ảnh đang cập nhật</Typography.Text>
+      <Typography.Text type="secondary">Vật tư thép công nghiệp</Typography.Text>
+    </div>
+  </div>
+);
+
 const HomePage = () => {
   const navigate = useNavigate();
   const screens = Grid.useBreakpoint();
@@ -229,12 +248,11 @@ const HomePage = () => {
                         src={featuredHeroProduct.mainImage}
                         alt={featuredHeroProduct.productName}
                         preview={false}
+                        fallback={<ProductDefaultVisual variant="hero" />}
                         style={{ height: 340, width: "100%", objectFit: "cover" }}
                       />
                     ) : (
-                      <div className="landing-page__hero-placeholder">
-                        <ShoppingOutlined />
-                      </div>
+                      <ProductDefaultVisual variant="hero" />
                     )}
 
                     <div className="landing-page__hero-product-meta">
@@ -345,12 +363,11 @@ const HomePage = () => {
                               src={product.mainImage}
                               alt={product.productName}
                               preview={false}
+                              fallback={<ProductDefaultVisual />}
                               style={{ height: 210, width: "100%", objectFit: "cover" }}
                             />
                           ) : (
-                            <div className="landing-page__product-placeholder">
-                              <ShoppingOutlined />
-                            </div>
+                            <ProductDefaultVisual />
                           )
                         }
                         styles={{ body: { padding: 18 } }}
