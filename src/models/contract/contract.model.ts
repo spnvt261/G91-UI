@@ -57,19 +57,40 @@ export interface ContractModel {
   status: ContractStatus;
   approvalStatus?: string;
   approvalTier?: string;
+  pendingAction?: string;
+  approvalRequestedAt?: string;
+  approvalDueAt?: string;
   requiresApproval?: boolean;
   depositPercentage?: number;
   depositAmount?: number;
   creditLimitSnapshot?: number;
   currentDebtSnapshot?: number;
+  projectedDebt?: number;
+  availableCredit?: number;
   confidentialityNote?: string;
   approvalRequest?: {
+    approvalId?: string;
+    approvalType?: string;
+    approvalTier?: string;
+    status?: string;
+    pendingAction?: string;
     requestedBy?: string;
     requestedAt?: string;
-    reason?: string;
+    dueAt?: string;
     comment?: string;
   };
   reviewInsights?: string[];
+  reviewInsightDetails?: {
+    customerHistoryMonths?: number;
+    creditRiskLevel?: string;
+    priceChangePercent?: number;
+    creditLimit?: number;
+    currentDebt?: number;
+    projectedDebt?: number;
+    availableCredit?: number;
+    profitabilityNote?: string;
+    actionRecommendation?: string;
+  };
   documents?: Array<{
     id: string;
     name?: string;
@@ -128,13 +149,8 @@ export interface ContractFromQuotationResponseData {
   };
 }
 
-export interface ContractApprovalRequest {
-  comment?: string;
-}
-
 export interface ContractApprovalDecisionRequest {
   comment?: string;
-  reason?: string;
 }
 
 export interface ContractTrackEvent {
@@ -216,6 +232,50 @@ export interface ContractListResponseData {
   };
 }
 
+export interface PendingContractApprovalListQuery {
+  keyword?: string;
+  customerId?: string;
+  pendingAction?: string;
+  approvalTier?: string;
+  requestedFrom?: string;
+  requestedTo?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  page?: number;
+  pageSize?: number;
+  sortBy?: "approvalRequestedAt" | "totalAmount" | "contractNumber" | "submittedAt";
+  sortDir?: "asc" | "desc";
+}
+
+export interface PendingContractApprovalListResponseData {
+  items: Array<{
+    contractId: string;
+    contractNumber?: string;
+    customerId?: string;
+    customerName?: string;
+    totalAmount: number;
+    approvalStatus?: string;
+    approvalTier?: string;
+    pendingAction?: string;
+    requestedBy?: string;
+    requestedAt?: string;
+    dueAt?: string;
+    submittedAt?: string;
+  }>;
+  pagination: PaginationMeta;
+  filters?: {
+    keyword?: string;
+    customerId?: string;
+    pendingAction?: string;
+    approvalTier?: string;
+    minAmount?: number;
+    maxAmount?: number;
+    requestedFrom?: string;
+    requestedTo?: string;
+  };
+  totalPending: number;
+}
+
 export interface ContractDetailResponseData {
   contract: {
     id: string;
@@ -262,6 +322,49 @@ export interface ContractDetailResponseData {
     id: string;
     quotationNumber?: string;
     status?: string;
+  };
+  approval?: {
+    requiresApproval?: boolean;
+    approvalStatus?: string;
+    approvalTier?: string;
+    pendingAction?: string;
+    requestedAt?: string;
+    dueAt?: string;
+    decidedBy?: string;
+    decidedAt?: string;
+  };
+  credit?: {
+    creditLimit?: number;
+    currentDebt?: number;
+    projectedDebt?: number;
+    availableCredit?: number;
+  };
+}
+
+export interface ContractApprovalReviewResponseData {
+  detail: ContractDetailResponseData;
+  approvalRequest?: {
+    approvalId?: string;
+    approvalType?: string;
+    approvalTier?: string;
+    status?: string;
+    pendingAction?: string;
+    requestedBy?: string;
+    requestedAt?: string;
+    dueAt?: string;
+    comment?: string;
+  };
+  insights?: {
+    approvalReasons?: string[];
+    customerHistoryMonths?: number;
+    creditRiskLevel?: string;
+    priceChangePercent?: number;
+    creditLimit?: number;
+    currentDebt?: number;
+    projectedDebt?: number;
+    availableCredit?: number;
+    profitabilityNote?: string;
+    actionRecommendation?: string;
   };
 }
 
