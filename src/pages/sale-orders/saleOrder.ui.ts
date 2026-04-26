@@ -41,52 +41,91 @@ const TRACKING_EVENT_LABELS: Record<string, string> = {
   DEBT_SETTLED: "Xác nhận quyết toán công nợ",
 };
 
+const SALE_ORDER_TEXT_LABELS: Record<string, string> = {
+  SUBMITTED: "Đã gửi đơn",
+  PROCESSING: "Đang xử lý",
+  PROCESSING_STARTED: "Bắt đầu xử lý",
+  RESERVED: "Đã dự trữ",
+  RESERVE: "Dự trữ hàng",
+  PICKED: "Đã soạn hàng",
+  PICK: "Soạn hàng",
+  DISPATCHED: "Đã xuất giao",
+  DISPATCH: "Xuất giao",
+  SHIPPED: "Đã xuất giao",
+  IN_TRANSIT: "Đang vận chuyển",
+  DELIVERED: "Đã giao hàng",
+  DELIVER: "Giao hàng",
+  COMPLETED: "Hoàn tất",
+  COMPLETE: "Hoàn tất",
+  CANCELLED: "Đã hủy",
+  INVOICE: "Hóa đơn",
+  CREATE_INVOICE: "Tạo hóa đơn",
+  INVOICE_CREATED: "Đã tạo hóa đơn",
+  PAYMENT: "Thanh toán",
+  PAYMENT_RECORDED: "Đã ghi nhận thanh toán",
+  DEBT_SETTLED: "Đã quyết toán công nợ",
+  SETTLEMENT: "Quyết toán công nợ",
+  RECEIPT: "Biên nhận thanh toán",
+  DRAFT: "Nháp",
+  ISSUED: "Đã phát hành",
+  PARTIALLY_PAID: "Đã thanh toán một phần",
+  PAID: "Đã thanh toán",
+  OVERDUE: "Quá hạn",
+  VOID: "Đã hủy hiệu lực",
+  CUSTOMER_REQUEST: "Khách hàng yêu cầu",
+  PRICE_DISPUTE: "Tranh chấp giá",
+  INVENTORY_SHORTAGE: "Thiếu tồn kho",
+  CREDIT_RISK: "Rủi ro tín dụng",
+  DATA_ERROR: "Sai dữ liệu",
+  OTHER: "Khác",
+};
+
 export const SALE_ORDER_FLOW_STEPS: SaleOrderFlowStepMeta[] = [
   {
     key: "SUBMITTED",
-    label: "Submitted",
+    label: "Đã gửi đơn",
     owner: "WAREHOUSE",
-    description: "Hợp đồng đã SUBMITTED và trở thành đơn bán (saleOrderId = contractId).",
+    description: "Hợp đồng đã được gửi thực hiện và trở thành đơn bán.",
   },
   {
     key: "RESERVED",
-    label: "Reserve",
+    label: "Dự trữ hàng",
     owner: "WAREHOUSE",
     description: "Kho xác nhận dự trữ đủ tồn kho cho đơn bán.",
   },
   {
     key: "PICKED",
-    label: "Pick",
+    label: "Soạn hàng",
     owner: "WAREHOUSE",
     description: "Kho soạn hàng theo số lượng đơn bán.",
   },
   {
     key: "DISPATCHED",
-    label: "Dispatch",
+    label: "Xuất giao",
     owner: "WAREHOUSE",
     description: "Kho xuất giao và chuyển trạng thái vận chuyển.",
   },
   {
     key: "DELIVERED",
-    label: "Delivered",
+    label: "Giao hàng",
     owner: "WAREHOUSE",
     description: "Kho xác nhận đã giao đủ.",
   },
   {
     key: "INVOICE_CREATED",
-    label: "Create Invoice",
+    label: "Tạo hóa đơn",
     owner: "ACCOUNTANT",
     description: "Kế toán phát hành hóa đơn từ đơn bán đã giao.",
   },
   {
     key: "PAYMENT_RECORDED",
-    label: "Record Payment",
+    label: "Ghi nhận thanh toán",
     owner: "ACCOUNTANT",
     description: "Kế toán ghi nhận thanh toán và phân bổ theo hóa đơn.",
   },
   {
     key: "DEBT_SETTLED",
-    label: "Confirm Debt Settlement",
+    label: "Quyết toán công nợ",
     owner: "ACCOUNTANT",
     description: "Kế toán xác nhận quyết toán công nợ khách hàng.",
   },
@@ -133,19 +172,19 @@ export const getNextFulfillmentAction = (
 ): { key: "reserve" | "pick" | "dispatch" | "deliver"; label: string; successMessage: string } | null => {
   const current = normalizeSaleOrderStatus(status);
   if (current === "SUBMITTED" || current === "PROCESSING") {
-    return { key: "reserve", label: "Reserve", successMessage: "Đã chuyển đơn bán sang bước Reserve." };
+    return { key: "reserve", label: "Dự trữ hàng", successMessage: "Đã chuyển đơn bán sang bước dự trữ hàng." };
   }
 
   if (current === "RESERVED") {
-    return { key: "pick", label: "Pick", successMessage: "Đã chuyển đơn bán sang bước Pick." };
+    return { key: "pick", label: "Soạn hàng", successMessage: "Đã chuyển đơn bán sang bước soạn hàng." };
   }
 
   if (current === "PICKED") {
-    return { key: "dispatch", label: "Dispatch", successMessage: "Đã chuyển đơn bán sang bước Dispatch." };
+    return { key: "dispatch", label: "Xuất giao", successMessage: "Đã chuyển đơn bán sang bước xuất giao." };
   }
 
   if (current === "IN_TRANSIT") {
-    return { key: "deliver", label: "Delivered", successMessage: "Đã xác nhận Delivered cho đơn bán." };
+    return { key: "deliver", label: "Giao hàng", successMessage: "Đã xác nhận giao hàng cho đơn bán." };
   }
 
   return null;
@@ -155,7 +194,7 @@ export const getSaleOrderStatusMeta = (status?: SaleOrderStatus): SaleOrderStatu
   const normalized = normalizeSaleOrderStatus(status);
   return (
     STATUS_META[normalized] ?? {
-      label: normalized || "Chưa cập nhật",
+      label: normalized ? translateSaleOrderText(normalized, "Trạng thái khác") : "Chưa cập nhật",
       tagColor: "default",
       badgeStatus: "default",
     }
@@ -190,6 +229,25 @@ export const formatSaleOrderDateTime = (value?: string, fallback = "Chưa cập 
 
 export const resolveSaleOrderNumber = (id?: string, saleOrderNumber?: string) => saleOrderNumber || id || "Chưa có mã đơn bán";
 
+export const translateSaleOrderText = (value?: string, fallback = "Chưa cập nhật"): string => {
+  const raw = String(value ?? "").trim();
+  if (!raw) {
+    return fallback;
+  }
+
+  const normalized = raw.toUpperCase().replace(/[\s-]+/g, "_");
+  const mapped = SALE_ORDER_TEXT_LABELS[normalized] ?? TRACKING_EVENT_LABELS[normalized];
+  if (mapped) {
+    return mapped;
+  }
+
+  if (/^[A-Z0-9_]+$/.test(normalized)) {
+    return fallback;
+  }
+
+  return raw;
+};
+
 export const toSaleOrderTransitionErrorMessage = (message: string): string => {
   const normalized = message.trim().toLowerCase();
 
@@ -205,14 +263,18 @@ export const toSaleOrderTransitionErrorMessage = (message: string): string => {
     return "Đơn bán chưa đáp ứng điều kiện xuất kho/giao hàng để thực hiện bước tiếp theo.";
   }
 
+  if (/^[A-Za-z0-9_./: -]+$/.test(message)) {
+    return "Không thể thực hiện thao tác với đơn bán. Vui lòng kiểm tra điều kiện nghiệp vụ và thử lại.";
+  }
+
   return message;
 };
 
 export const getTimelineEventLabel = (eventType?: string, title?: string): string => {
   const normalized = normalizeSaleOrderStatus(eventType);
   if (title?.trim()) {
-    return title;
+    return translateSaleOrderText(title, "Cập nhật đơn bán");
   }
 
-  return TRACKING_EVENT_LABELS[normalized] ?? (normalized || "Cập nhật đơn bán");
+  return TRACKING_EVENT_LABELS[normalized] ?? translateSaleOrderText(normalized, "Cập nhật đơn bán");
 };

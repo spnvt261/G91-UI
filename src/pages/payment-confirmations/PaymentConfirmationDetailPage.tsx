@@ -142,12 +142,12 @@ const PaymentConfirmationDetailPage = () => {
       }
 
       if (latest.status !== "PENDING_REVIEW") {
-        notify("Request không còn ở trạng thái chờ duyệt.", "warning");
+        notify("Yêu cầu không còn ở trạng thái chờ duyệt.", "warning");
         return;
       }
 
       if (values.confirmedAmount > latest.invoiceOutstandingAmount) {
-        confirmForm.setFields([{ name: "confirmedAmount", errors: ["Số tiền xác nhận vượt outstanding amount hiện tại của hóa đơn."] }]);
+        confirmForm.setFields([{ name: "confirmedAmount", errors: ["Số tiền xác nhận vượt dư nợ hiện tại của hóa đơn."] }]);
         return;
       }
 
@@ -157,7 +157,7 @@ const PaymentConfirmationDetailPage = () => {
       });
 
       confirmForm.resetFields();
-      notify("Xác nhận request thành công.", "success");
+      notify("Xác nhận yêu cầu thành công.", "success");
       emitPaymentConfirmationChanged({ invoiceId: latest.invoiceId, requestId: latest.id });
       await loadDetail();
     } catch (error) {
@@ -166,7 +166,7 @@ const PaymentConfirmationDetailPage = () => {
       }
 
       applyFieldErrors(confirmForm, error);
-      notify(getErrorMessage(error, "Không thể xác nhận request."), "error");
+      notify(getErrorMessage(error, "Không thể xác nhận yêu cầu."), "error");
     } finally {
       setActionLoading(null);
     }
@@ -187,7 +187,7 @@ const PaymentConfirmationDetailPage = () => {
       }
 
       if (latest.status !== "PENDING_REVIEW") {
-        notify("Request không còn ở trạng thái chờ duyệt.", "warning");
+        notify("Yêu cầu không còn ở trạng thái chờ duyệt.", "warning");
         return;
       }
 
@@ -196,7 +196,7 @@ const PaymentConfirmationDetailPage = () => {
       });
 
       rejectForm.resetFields();
-      notify("Từ chối request thành công.", "success");
+      notify("Từ chối yêu cầu thành công.", "success");
       emitPaymentConfirmationChanged({ invoiceId: latest.invoiceId, requestId: latest.id });
       await loadDetail();
     } catch (error) {
@@ -205,7 +205,7 @@ const PaymentConfirmationDetailPage = () => {
       }
 
       applyFieldErrors(rejectForm, error);
-      notify(getErrorMessage(error, "Không thể từ chối request."), "error");
+      notify(getErrorMessage(error, "Không thể từ chối yêu cầu."), "error");
     } finally {
       setActionLoading(null);
     }
@@ -221,7 +221,7 @@ const PaymentConfirmationDetailPage = () => {
         color: "blue",
         children: (
           <Space direction="vertical" size={2}>
-            <Typography.Text strong>Created</Typography.Text>
+            <Typography.Text strong>Đã tạo</Typography.Text>
             <Typography.Text type="secondary">{formatPaymentConfirmationDateTime(request.createdAt)}</Typography.Text>
           </Space>
         ),
@@ -230,8 +230,8 @@ const PaymentConfirmationDetailPage = () => {
         color: request.status === "PENDING_REVIEW" ? "blue" : "gray",
         children: (
           <Space direction="vertical" size={2}>
-            <Typography.Text strong>Pending review</Typography.Text>
-            <Typography.Text type="secondary">{request.status === "PENDING_REVIEW" ? "Đang chờ reviewer xử lý" : "Đã rời trạng thái pending"}</Typography.Text>
+            <Typography.Text strong>Chờ duyệt</Typography.Text>
+            <Typography.Text type="secondary">{request.status === "PENDING_REVIEW" ? "Đang chờ người duyệt xử lý" : "Đã rời trạng thái chờ duyệt"}</Typography.Text>
           </Space>
         ),
       },
@@ -240,7 +240,7 @@ const PaymentConfirmationDetailPage = () => {
             color: "green",
             children: (
               <Space direction="vertical" size={2}>
-                <Typography.Text strong>Confirmed</Typography.Text>
+                <Typography.Text strong>Đã xác nhận</Typography.Text>
                 <Typography.Text type="secondary">{formatPaymentConfirmationDateTime(request.reviewedAt)}</Typography.Text>
               </Space>
             ),
@@ -251,7 +251,7 @@ const PaymentConfirmationDetailPage = () => {
             color: "red",
             children: (
               <Space direction="vertical" size={2}>
-                <Typography.Text strong>Rejected</Typography.Text>
+                <Typography.Text strong>Đã từ chối</Typography.Text>
                 <Typography.Text type="secondary">{formatPaymentConfirmationDateTime(request.reviewedAt)}</Typography.Text>
               </Space>
             ),
@@ -270,13 +270,13 @@ const PaymentConfirmationDetailPage = () => {
       header={
         <ListScreenHeaderTemplate
           title={request?.invoiceNumber ? `Yêu cầu xác nhận ${request.invoiceNumber}` : "Chi tiết yêu cầu xác nhận thanh toán"}
-          subtitle="Theo dõi thông tin request, trạng thái review và toàn bộ dữ liệu hóa đơn mới nhất mà backend trả về."
+          subtitle="Theo dõi thông tin yêu cầu, trạng thái duyệt và toàn bộ dữ liệu hóa đơn mới nhất mà máy chủ trả về."
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
                 { label: "Trang chủ" },
                 canReview ? { label: "Xác nhận chuyển khoản", url: ROUTE_URL.PAYMENT_CONFIRMATION_LIST } : { label: "Hóa đơn", url: ROUTE_URL.INVOICE_LIST },
-                { label: "Chi tiết request" },
+                { label: "Chi tiết yêu cầu" },
               ]}
             />
           }
@@ -293,7 +293,7 @@ const PaymentConfirmationDetailPage = () => {
               ) : null}
               {canOpenPaymentDetail && request?.paymentId ? (
                 <Button type="primary" onClick={() => navigate(ROUTE_URL.PAYMENT_DETAIL.replace(":id", request.paymentId ?? ""))}>
-                  Mở payment
+                  Mở thanh toán
                 </Button>
               ) : null}
             </Space>
@@ -304,8 +304,8 @@ const PaymentConfirmationDetailPage = () => {
         !id ? (
           <Result
             status="warning"
-            title="Không tìm thấy mã request"
-            subTitle="Đường dẫn hiện tại không chứa request id hợp lệ."
+            title="Không tìm thấy mã yêu cầu"
+            subTitle="Đường dẫn hiện tại không chứa mã yêu cầu hợp lệ."
             extra={
               <Button type="primary" onClick={() => navigate(backTarget)}>
                 Quay lại
@@ -314,11 +314,11 @@ const PaymentConfirmationDetailPage = () => {
           />
         ) : (
           <Space direction="vertical" size={16} style={{ width: "100%" }}>
-            {detailError ? <Alert type="error" showIcon message="Không thể tải chi tiết request." description={detailError} /> : null}
+            {detailError ? <Alert type="error" showIcon message="Không thể tải chi tiết yêu cầu." description={detailError} /> : null}
 
             {!loading && !request ? (
               <Card>
-                <Empty description="Không có dữ liệu request để hiển thị." />
+                <Empty description="Không có dữ liệu yêu cầu để hiển thị." />
               </Card>
             ) : null}
 
@@ -326,48 +326,48 @@ const PaymentConfirmationDetailPage = () => {
               <>
                 <Row gutter={[16, 16]}>
                   <Col xs={24} lg={12}>
-                    <Card title="Request summary">
+                    <Card title="Tóm tắt yêu cầu">
                       <Descriptions column={1} size="small" colon={false}>
-                        <Descriptions.Item label="Request id">{request.id}</Descriptions.Item>
+                        <Descriptions.Item label="Mã yêu cầu">{request.id}</Descriptions.Item>
                         <Descriptions.Item label="Trạng thái">
                           <PaymentConfirmationStatusTag status={request.status} />
                         </Descriptions.Item>
-                        <Descriptions.Item label="Invoice number">{request.invoiceNumber || request.invoiceId}</Descriptions.Item>
-                        <Descriptions.Item label="Customer">{request.customerName || "Chưa cập nhật"}</Descriptions.Item>
-                        <Descriptions.Item label="Requested amount">{formatPaymentConfirmationAmountWithCurrency(request.requestedAmount)}</Descriptions.Item>
-                        <Descriptions.Item label="Confirmed amount">{formatPaymentConfirmationAmountWithCurrency(request.confirmedAmount, "-")}</Descriptions.Item>
-                        <Descriptions.Item label="Payment id">{request.paymentId || "-"}</Descriptions.Item>
-                        <Descriptions.Item label="Created by">{request.createdBy || "-"}</Descriptions.Item>
-                        <Descriptions.Item label="Reviewed by">{request.reviewedBy || "-"}</Descriptions.Item>
-                        <Descriptions.Item label="Reviewed at">{formatPaymentConfirmationDateTime(request.reviewedAt, "-")}</Descriptions.Item>
+                        <Descriptions.Item label="Số hóa đơn">{request.invoiceNumber || request.invoiceId}</Descriptions.Item>
+                        <Descriptions.Item label="Khách hàng">{request.customerName || "Chưa cập nhật"}</Descriptions.Item>
+                        <Descriptions.Item label="Số tiền yêu cầu">{formatPaymentConfirmationAmountWithCurrency(request.requestedAmount)}</Descriptions.Item>
+                        <Descriptions.Item label="Số tiền xác nhận">{formatPaymentConfirmationAmountWithCurrency(request.confirmedAmount, "-")}</Descriptions.Item>
+                        <Descriptions.Item label="Mã thanh toán">{request.paymentId || "-"}</Descriptions.Item>
+                        <Descriptions.Item label="Người tạo">{request.createdBy || "-"}</Descriptions.Item>
+                        <Descriptions.Item label="Người duyệt">{request.reviewedBy || "-"}</Descriptions.Item>
+                        <Descriptions.Item label="Duyệt lúc">{formatPaymentConfirmationDateTime(request.reviewedAt, "-")}</Descriptions.Item>
                       </Descriptions>
                     </Card>
                   </Col>
                   <Col xs={24} lg={12}>
-                    <Card title="Invoice summary hiện tại">
+                    <Card title="Tóm tắt hóa đơn hiện tại">
                       <Descriptions column={1} size="small" colon={false}>
-                        <Descriptions.Item label="Invoice status">
+                        <Descriptions.Item label="Trạng thái hóa đơn">
                           {request.invoiceStatus ? <InvoiceStatusTag status={request.invoiceStatus} /> : "-"}
                         </Descriptions.Item>
-                        <Descriptions.Item label="Grand total">{formatPaymentConfirmationAmountWithCurrency(request.invoiceGrandTotal)}</Descriptions.Item>
-                        <Descriptions.Item label="Paid amount">{formatPaymentConfirmationAmountWithCurrency(request.invoicePaidAmount)}</Descriptions.Item>
-                        <Descriptions.Item label="Outstanding amount">
+                        <Descriptions.Item label="Tổng tiền">{formatPaymentConfirmationAmountWithCurrency(request.invoiceGrandTotal)}</Descriptions.Item>
+                        <Descriptions.Item label="Đã thanh toán">{formatPaymentConfirmationAmountWithCurrency(request.invoicePaidAmount)}</Descriptions.Item>
+                        <Descriptions.Item label="Còn phải thu">
                           <Typography.Text strong>{formatPaymentConfirmationAmountWithCurrency(request.invoiceOutstandingAmount)}</Typography.Text>
                         </Descriptions.Item>
-                        <Descriptions.Item label="Last sync">{formatPaymentConfirmationDateTime(request.updatedAt ?? request.createdAt)}</Descriptions.Item>
+                        <Descriptions.Item label="Đồng bộ lần cuối">{formatPaymentConfirmationDateTime(request.updatedAt ?? request.createdAt)}</Descriptions.Item>
                       </Descriptions>
                     </Card>
                   </Col>
                 </Row>
 
-                <Card title="Transfer information">
+                <Card title="Thông tin chuyển khoản">
                   <Descriptions column={{ xs: 1, md: 2 }} size="small" colon={false}>
-                    <Descriptions.Item label="Transfer time">{formatPaymentConfirmationDateTime(request.transferTime)}</Descriptions.Item>
-                    <Descriptions.Item label="Reference code">{request.referenceCode || "-"}</Descriptions.Item>
-                    <Descriptions.Item label="Sender bank">{request.senderBankName || "-"}</Descriptions.Item>
-                    <Descriptions.Item label="Sender account name">{request.senderAccountName || "-"}</Descriptions.Item>
-                    <Descriptions.Item label="Sender account no">{request.senderAccountNo || "-"}</Descriptions.Item>
-                    <Descriptions.Item label="Proof URL">
+                    <Descriptions.Item label="Thời gian chuyển khoản">{formatPaymentConfirmationDateTime(request.transferTime)}</Descriptions.Item>
+                    <Descriptions.Item label="Mã tham chiếu">{request.referenceCode || "-"}</Descriptions.Item>
+                    <Descriptions.Item label="Ngân hàng người gửi">{request.senderBankName || "-"}</Descriptions.Item>
+                    <Descriptions.Item label="Tên tài khoản người gửi">{request.senderAccountName || "-"}</Descriptions.Item>
+                    <Descriptions.Item label="Số tài khoản người gửi">{request.senderAccountNo || "-"}</Descriptions.Item>
+                    <Descriptions.Item label="Đường dẫn chứng từ">
                       {request.proofDocumentUrl ? (
                         <Typography.Link href={request.proofDocumentUrl} target="_blank" rel="noreferrer">
                           {request.proofDocumentUrl}
@@ -376,40 +376,40 @@ const PaymentConfirmationDetailPage = () => {
                         "Chưa cung cấp"
                       )}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Customer note" span={2}>
+                    <Descriptions.Item label="Ghi chú khách hàng" span={2}>
                       {request.note || "Không có ghi chú"}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Review note" span={2}>
-                      {request.reviewNote || "Chưa có ghi chú review"}
+                    <Descriptions.Item label="Ghi chú duyệt" span={2}>
+                      {request.reviewNote || "Chưa có ghi chú duyệt"}
                     </Descriptions.Item>
                   </Descriptions>
                 </Card>
 
-                <Card title="Timeline">
+                <Card title="Tiến trình">
                   <Timeline items={timelineItems} />
                 </Card>
 
                 {canReview ? (
-                  <Card title="Review action panel">
+                  <Card title="Bảng thao tác duyệt">
                     <Space direction="vertical" size={16} style={{ width: "100%" }}>
                       <Alert
                         type={reviewDisabled ? "warning" : "info"}
                         showIcon
                         message={
                           reviewDisabled
-                            ? "Request không còn ở trạng thái PENDING_REVIEW. Các action đã bị khóa."
-                            : `Outstanding amount hiện tại: ${formatPaymentConfirmationAmountWithCurrency(request.invoiceOutstandingAmount)}`
+                            ? "Yêu cầu không còn ở trạng thái chờ duyệt. Các thao tác đã bị khóa."
+                            : `Dư nợ hiện tại: ${formatPaymentConfirmationAmountWithCurrency(request.invoiceOutstandingAmount)}`
                         }
-                        description={!reviewDisabled ? "Frontend sẽ reload request detail ngay trước khi submit để tránh chênh lệch outstanding amount." : undefined}
+                        description={!reviewDisabled ? "Giao diện sẽ tải lại chi tiết yêu cầu ngay trước khi gửi để tránh chênh lệch dư nợ." : undefined}
                       />
 
                       <Row gutter={[16, 16]}>
                         <Col xs={24} xl={12}>
-                          <Card size="small" title="Confirm request">
+                          <Card size="small" title="Xác nhận yêu cầu">
                             <Form<ConfirmFormValues> form={confirmForm} layout="vertical" disabled={reviewDisabled || actionLoading !== null}>
                               <Form.Item
                                 name="confirmedAmount"
-                                label="Confirmed amount"
+                                label="Số tiền xác nhận"
                                 rules={[
                                   { required: true, message: "Vui lòng nhập số tiền xác nhận." },
                                   {
@@ -424,7 +424,7 @@ const PaymentConfirmationDetailPage = () => {
                                       }
 
                                       if (request && amount > request.invoiceOutstandingAmount) {
-                                        return Promise.reject(new Error("Số tiền xác nhận vượt outstanding amount hiện tại."));
+                                        return Promise.reject(new Error("Số tiền xác nhận vượt dư nợ hiện tại."));
                                       }
 
                                       return Promise.resolve();
@@ -434,7 +434,7 @@ const PaymentConfirmationDetailPage = () => {
                               >
                                 <InputNumber className="w-full" min={0.01} precision={2} step={0.01} addonAfter="VND" />
                               </Form.Item>
-                              <Form.Item name="reviewNote" label="Review note" rules={[{ max: 1000, message: "Review note tối đa 1000 ký tự." }]}>
+                              <Form.Item name="reviewNote" label="Ghi chú duyệt" rules={[{ max: 1000, message: "Ghi chú duyệt tối đa 1000 ký tự." }]}>
                                 <Input.TextArea rows={4} maxLength={1000} showCount />
                               </Form.Item>
                               <Button
@@ -444,17 +444,17 @@ const PaymentConfirmationDetailPage = () => {
                                 onClick={() => void handleConfirm()}
                                 disabled={reviewDisabled}
                               >
-                                Confirm
+                                Xác nhận
                               </Button>
                             </Form>
                           </Card>
                         </Col>
                         <Col xs={24} xl={12}>
-                          <Card size="small" title="Reject request">
+                          <Card size="small" title="Từ chối yêu cầu">
                             <Form<RejectFormValues> form={rejectForm} layout="vertical" disabled={reviewDisabled || actionLoading !== null}>
                               <Form.Item
                                 name="reason"
-                                label="Reason"
+                                label="Lý do"
                                 rules={[
                                   { required: true, message: "Vui lòng nhập lý do từ chối." },
                                   { max: 1000, message: "Lý do từ chối tối đa 1000 ký tự." },
@@ -469,7 +469,7 @@ const PaymentConfirmationDetailPage = () => {
                                 onClick={() => void handleReject()}
                                 disabled={reviewDisabled}
                               >
-                                Reject
+                                Từ chối
                               </Button>
                             </Form>
                           </Card>

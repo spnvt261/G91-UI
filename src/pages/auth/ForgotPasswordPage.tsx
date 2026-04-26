@@ -58,12 +58,12 @@ const ForgotPasswordPage = () => {
         <AuthHeroPanel
           eyebrow="Khôi phục quyền truy cập"
           title="Đổi mật khẩu nhanh, không gián đoạn công việc"
-          description="Chỉ cần nhập email đã đăng ký, hệ thống sẽ gửi hướng dẫn đặt lại mật khẩu để bạn truy cập lại tài khoản an toàn."
+          description="Chỉ cần nhập thư điện tử đã đăng ký, hệ thống sẽ gửi hướng dẫn đặt lại mật khẩu để bạn truy cập lại tài khoản an toàn."
           highlights={[
             {
               icon: <SafetyOutlined />,
               title: "Quy trình bảo mật",
-              description: "Liên kết khôi phục chỉ gửi đến email đã đăng ký và có thời hạn sử dụng.",
+              description: "Liên kết khôi phục chỉ gửi đến thư điện tử đã đăng ký và có thời hạn sử dụng.",
             },
             {
               icon: <CheckCircleOutlined />,
@@ -77,9 +77,9 @@ const ForgotPasswordPage = () => {
       <AuthFormCard
         eyebrow="Hỗ trợ tài khoản"
         title="Quên mật khẩu"
-        description="Nhập email đã đăng ký để nhận liên kết đặt lại mật khẩu."
+        description="Nhập thư điện tử đã đăng ký để nhận liên kết đặt lại mật khẩu."
         icon={<LockOutlined />}
-        extraTop={<Alert showIcon type="info" message="Nếu email hợp lệ, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu trong vài phút." />}
+        extraTop={<Alert showIcon type="info" message="Nếu địa chỉ hợp lệ, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu trong vài phút." />}
         footer={
           <Typography.Text className="auth-footer-links__text">
             Nhớ lại mật khẩu rồi?{" "}
@@ -93,7 +93,7 @@ const ForgotPasswordPage = () => {
           <Result
             status="success"
             title="Yêu cầu đã được gửi"
-            subTitle={`Nếu email ${submittedEmail} tồn tại trong hệ thống, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu.`}
+            subTitle={`Nếu địa chỉ ${submittedEmail} tồn tại trong hệ thống, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu.`}
             extra={
               <div className="auth-result-actions">
                 <Link to={ROUTE_URL.LOGIN}>
@@ -118,14 +118,14 @@ const ForgotPasswordPage = () => {
 
             <Form form={form} layout="vertical" onFinish={handleSubmit} requiredMark={false} autoComplete="off" disabled={loading}>
               <Form.Item
-                label="Email đăng ký"
+                label="Thư điện tử đăng ký"
                 name="email"
                 rules={[
-                  { required: true, message: "Vui lòng nhập email." },
-                  { type: "email", message: "Email không đúng định dạng." },
+                  { required: true, message: "Vui lòng nhập địa chỉ thư điện tử." },
+                  { type: "email", message: "Địa chỉ thư điện tử không đúng định dạng." },
                 ]}
               >
-                <Input size="large" prefix={<MailOutlined />} placeholder="email@congty.com" />
+                <Input size="large" prefix={<MailOutlined />} placeholder="ten@congty.vn" />
               </Form.Item>
 
               <Button type="primary" htmlType="submit" size="large" loading={loading} block className="auth-primary-btn">

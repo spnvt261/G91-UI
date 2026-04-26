@@ -98,7 +98,7 @@ export const validatePromotionForm = (values: PromotionFormValues): PromotionFor
   }
 
   if (values.priority != null && values.priority < 0) {
-    errors.priority = "Priority phải lớn hơn hoặc bằng 0.";
+    errors.priority = "Độ ưu tiên phải lớn hơn hoặc bằng 0.";
   }
 
   if (values.description.trim().length > 1000) {

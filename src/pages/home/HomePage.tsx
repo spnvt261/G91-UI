@@ -25,7 +25,7 @@ const FEATURED_PRODUCTS_LIMIT = 6;
 const serviceItems = [
   {
     icon: <ShoppingOutlined />,
-    title: "Catalog rõ ràng",
+    title: "Danh mục rõ ràng",
     description: "Thông số, hình ảnh và trạng thái sản phẩm được trình bày gọn.",
   },
   {
@@ -48,13 +48,13 @@ const companyContacts = [
   },
   {
     icon: <PhoneOutlined />,
-    label: "Hotline",
+    label: "Đường dây nóng",
     value: "1900 9091",
     href: "tel:19009091",
   },
   {
     icon: <MailOutlined />,
-    label: "Email",
+    label: "Thư điện tử",
     value: "hello@g90steel.vn",
     href: "mailto:hello@g90steel.vn",
   },
@@ -166,7 +166,7 @@ const HomePage = () => {
             </Avatar>
             <div>
               <Typography.Title level={5} className="landing-page__brand-title">
-                G90 Steel
+                Thép G90
               </Typography.Title>
               <Typography.Text className="landing-page__brand-subtitle">Vật tư thép công nghiệp</Typography.Text>
             </div>
@@ -189,7 +189,7 @@ const HomePage = () => {
           <Space wrap size={10}>
             {isCustomerSession ? (
               <>
-                <Button onClick={() => navigate(ROUTE_URL.PRODUCT_LIST)}>Catalog</Button>
+                <Button onClick={() => navigate(ROUTE_URL.PRODUCT_LIST)}>Danh mục</Button>
                 <Button type="primary" icon={<ArrowRightOutlined />} onClick={() => navigate(ROUTE_URL.QUOTATION_LIST)}>
                   Báo giá
                 </Button>
@@ -214,9 +214,9 @@ const HomePage = () => {
             <Row gutter={[32, 28]} align="middle">
               <Col xs={24} lg={13}>
                 <Space direction="vertical" size={18} className="landing-page__hero-copy">
-                  <Typography.Text className="landing-page__section-eyebrow">G90 Steel</Typography.Text>
+                  <Typography.Text className="landing-page__section-eyebrow">Thép G90</Typography.Text>
                   <Typography.Title level={1} className="landing-page__hero-title">
-                    Catalog thép và báo giá gọn trong một hệ thống.
+                    Danh mục thép và báo giá gọn trong một hệ thống.
                   </Typography.Title>
                   <Typography.Paragraph className="landing-page__hero-description">
                     Xem sản phẩm, đăng ký tài khoản và gửi yêu cầu báo giá khi sẵn sàng.
@@ -229,7 +229,7 @@ const HomePage = () => {
                           Mở báo giá
                         </Button>
                         <Button size="large" onClick={() => navigate(ROUTE_URL.PRODUCT_LIST)}>
-                          Xem catalog
+                          Xem danh mục
                         </Button>
                       </>
                     ) : (
@@ -267,7 +267,7 @@ const HomePage = () => {
                         {featuredHeroProduct?.productName || "Danh mục đang cập nhật"}
                       </Typography.Title>
                       <Space wrap size={8}>
-                        <Tag>{featuredHeroProduct?.type || "Catalog"}</Tag>
+                        <Tag>{featuredHeroProduct?.type || "Danh mục"}</Tag>
                         <Tag>{featuredHeroProduct?.size || "Quy cách"}</Tag>
                       </Space>
                     </div>
@@ -280,7 +280,7 @@ const HomePage = () => {
                     </div>
                     <div>
                       <Typography.Title level={4}>24/7</Typography.Title>
-                      <Typography.Text>Catalog trực tuyến</Typography.Text>
+                      <Typography.Text>Danh mục trực tuyến</Typography.Text>
                     </div>
                     <div>
                       <Typography.Title level={4}>3</Typography.Title>
@@ -426,7 +426,7 @@ const HomePage = () => {
                         <Button type="primary" icon={<ArrowRightOutlined />} onClick={() => navigate(ROUTE_URL.QUOTATION_LIST)}>
                           Báo giá
                         </Button>
-                        <Button onClick={() => navigate(ROUTE_URL.PRODUCT_LIST)}>Catalog</Button>
+                        <Button onClick={() => navigate(ROUTE_URL.PRODUCT_LIST)}>Danh mục</Button>
                       </>
                     ) : (
                       <>
@@ -451,10 +451,10 @@ const HomePage = () => {
           <Row gutter={[24, 20]} align="top">
             <Col xs={24} lg={10}>
               <Typography.Title level={4} className="landing-page__footer-title">
-                G90 Steel
+                Thép G90
               </Typography.Title>
               <Typography.Paragraph className="landing-page__footer-description">
-                Catalog và báo giá vật tư thép cho khách hàng doanh nghiệp.
+                Danh mục và báo giá vật tư thép cho khách hàng doanh nghiệp.
               </Typography.Paragraph>
             </Col>
 

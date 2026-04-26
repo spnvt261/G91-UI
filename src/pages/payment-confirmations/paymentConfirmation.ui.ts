@@ -43,7 +43,7 @@ export const getPaymentConfirmationStatusMeta = (status?: PaymentConfirmationSta
   const normalized = String(status ?? "PENDING_REVIEW").trim().toUpperCase();
   return (
     PAYMENT_CONFIRMATION_STATUS_META[normalized] ?? {
-      label: normalized,
+      label: "Trạng thái khác",
       tagColor: "default",
       badgeStatus: "default",
     }

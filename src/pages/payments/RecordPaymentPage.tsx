@@ -515,7 +515,7 @@ const RecordPaymentPage = () => {
                       type="warning"
                       showIcon
                       message="Tổng tiền phân bổ đang vượt quá tổng tiền thanh toán."
-                      description="Vui lòng giảm phân bổ hoặc tăng số tiền thanh toán để form vượt qua validate."
+                      description="Vui lòng giảm phân bổ hoặc tăng số tiền thanh toán để biểu mẫu hợp lệ."
                     />
                   ) : null}
                   {!hasAllocationOverflow && unallocatedBalance > 0 ? (
@@ -524,7 +524,7 @@ const RecordPaymentPage = () => {
                       type="info"
                       showIcon
                       message="Vẫn còn số dư chưa phân bổ."
-                      description="Form vẫn hợp lệ nếu tổng tiền đã phân bổ không vượt quá tổng tiền thanh toán."
+                      description="Biểu mẫu vẫn hợp lệ nếu tổng tiền đã phân bổ không vượt quá tổng tiền thanh toán."
                     />
                   ) : null}
                 </Card>

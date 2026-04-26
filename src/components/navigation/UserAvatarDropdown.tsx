@@ -44,7 +44,7 @@ const UserAvatarDropdown = () => {
       await authService.logout();
       notify("Đăng xuất thành công.", "success");
     } catch {
-      notify("Không thể gọi API đăng xuất, hệ thống sẽ đăng xuất cục bộ.", "warning");
+      notify("Không thể gọi dịch vụ đăng xuất, hệ thống sẽ đăng xuất cục bộ.", "warning");
     } finally {
       clearAuthSession();
       dispatch(logoutAction());

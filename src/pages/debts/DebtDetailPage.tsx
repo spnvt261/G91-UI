@@ -266,7 +266,7 @@ const DebtDetailPage = () => {
         dataIndex: "channel",
         key: "channel",
         width: 120,
-        render: () => "Email",
+        render: () => "Thư điện tử",
       },
       {
         title: "Hóa đơn",
@@ -648,8 +648,8 @@ const DebtDetailPage = () => {
             type="info"
             showIcon
             style={{ marginBottom: 12 }}
-            message="Kênh gửi nhắc nợ hiện tại: Email"
-            description="Hệ thống backend hiện chỉ hỗ trợ kênh Email cho nghiệp vụ nhắc nợ."
+            message="Kênh gửi nhắc nợ hiện tại: thư điện tử"
+            description="Hệ thống máy chủ hiện chỉ hỗ trợ kênh thư điện tử cho nghiệp vụ nhắc nợ."
           />
           <Form.Item
             label="Loại nhắc nợ"
@@ -665,7 +665,7 @@ const DebtDetailPage = () => {
             />
           </Form.Item>
           <Form.Item label="Kênh gửi" name="channel">
-            <Select value="EMAIL" options={[{ value: "EMAIL", label: "Email" }]} disabled />
+            <Select value="EMAIL" options={[{ value: "EMAIL", label: "Thư điện tử" }]} disabled />
           </Form.Item>
           <Form.Item
             label="Chọn hóa đơn quá hạn cần nhắc"
@@ -691,7 +691,7 @@ const DebtDetailPage = () => {
             </Checkbox.Group>
           </Form.Item>
           <Form.Item label="Nội dung nhắc nợ" name="message" rules={[{ max: 1000, message: "Nội dung tối đa 1000 ký tự." }]}>
-            <Input.TextArea rows={4} maxLength={1000} showCount placeholder="Nhập nội dung nhắc nợ gửi qua email." />
+            <Input.TextArea rows={4} maxLength={1000} showCount placeholder="Nhập nội dung nhắc nợ gửi qua thư điện tử." />
           </Form.Item>
           <Form.Item label="Ghi chú nội bộ" name="note" rules={[{ max: 1000, message: "Ghi chú tối đa 1000 ký tự." }]}>
             <Input.TextArea rows={3} maxLength={1000} showCount placeholder="Ghi chú thêm cho lần gửi nhắc nợ này." />

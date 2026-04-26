@@ -161,14 +161,14 @@ const PaymentConfirmationListPage = () => {
         render: (value) => <PaymentConfirmationStatusTag status={value} />,
       },
       {
-        title: "Reviewed at",
+        title: "Duyệt lúc",
         dataIndex: "reviewedAt",
         key: "reviewedAt",
         width: 170,
         render: (value?: string) => formatPaymentConfirmationDateTime(value, "-"),
       },
       {
-        title: "Payment id",
+        title: "Mã thanh toán",
         dataIndex: "paymentId",
         key: "paymentId",
         width: 160,
@@ -191,7 +191,7 @@ const PaymentConfirmationListPage = () => {
             ) : null}
             {canOpenPaymentDetail && record.paymentId ? (
               <Button size="small" onClick={() => navigate(ROUTE_URL.PAYMENT_DETAIL.replace(":id", record.paymentId ?? ""))}>
-                Payment
+                Thanh toán
               </Button>
             ) : null}
           </Space>
@@ -207,7 +207,7 @@ const PaymentConfirmationListPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Yêu cầu xác nhận chuyển khoản"
-          subtitle="Danh sách reviewer dành cho kế toán và chủ doanh nghiệp để xác nhận hoặc từ chối yêu cầu khách hàng đã chuyển khoản."
+          subtitle="Danh sách dành cho kế toán và chủ doanh nghiệp để xác nhận hoặc từ chối yêu cầu khách hàng đã chuyển khoản."
           breadcrumb={<CustomBreadcrumb breadcrumbs={[{ label: "Trang chủ" }, { label: "Xác nhận chuyển khoản" }]} />}
           actions={
             <Button icon={<ReloadOutlined />} onClick={() => void loadList()} loading={loading}>
@@ -221,7 +221,7 @@ const PaymentConfirmationListPage = () => {
           <Row gutter={[16, 16]}>
             <Col xs={24} md={8}>
               <Card>
-                <Typography.Text type="secondary">Request trong trang hiện tại</Typography.Text>
+                <Typography.Text type="secondary">Yêu cầu trong trang hiện tại</Typography.Text>
                 <Typography.Title level={3} style={{ margin: 0 }}>
                   {summary.total}
                 </Typography.Title>
@@ -252,7 +252,7 @@ const PaymentConfirmationListPage = () => {
                   <Input.Search
                     allowClear
                     value={keywordInput}
-                    placeholder="Tìm theo invoice number, customer, reference code"
+                    placeholder="Tìm theo số hóa đơn, khách hàng, mã tham chiếu"
                     enterButton="Tìm"
                     onChange={(event) => setKeywordInput(event.target.value)}
                     onSearch={(value) => {
@@ -277,7 +277,7 @@ const PaymentConfirmationListPage = () => {
                 <Col xs={24} sm={12} lg={4}>
                   <Input
                     value={invoiceIdInput}
-                    placeholder="Invoice id"
+                    placeholder="Mã hóa đơn"
                     onChange={(event) => setInvoiceIdInput(event.target.value)}
                     onBlur={() => {
                       setInvoiceId(invoiceIdInput.trim());
@@ -292,7 +292,7 @@ const PaymentConfirmationListPage = () => {
                 <Col xs={24} sm={12} lg={4}>
                   <Input
                     value={customerIdInput}
-                    placeholder="Customer id"
+                    placeholder="Mã khách hàng"
                     onChange={(event) => setCustomerIdInput(event.target.value)}
                     onBlur={() => {
                       setCustomerId(customerIdInput.trim());
@@ -335,11 +335,11 @@ const PaymentConfirmationListPage = () => {
                 Đặt lại bộ lọc
               </Button>
 
-              {listError ? <Alert type="error" showIcon message="Không thể tải danh sách request." description={listError} /> : null}
+              {listError ? <Alert type="error" showIcon message="Không thể tải danh sách yêu cầu." description={listError} /> : null}
 
               <Table<PaymentConfirmationRequestModel>
                 rowKey="id"
-                loading={{ spinning: loading, tip: "Đang tải danh sách request..." }}
+                loading={{ spinning: loading, tip: "Đang tải danh sách yêu cầu..." }}
                 columns={columns}
                 dataSource={items}
                 pagination={{
@@ -347,7 +347,7 @@ const PaymentConfirmationListPage = () => {
                   pageSize,
                   total: totalItems,
                   showSizeChanger: true,
-                  showTotal: (total, range) => `${range[0]}-${range[1]} trên ${total} request`,
+                  showTotal: (total, range) => `${range[0]}-${range[1]} trên ${total} yêu cầu`,
                 }}
                 onChange={(pagination) => {
                   setPage(pagination.current ?? 1);
@@ -356,7 +356,7 @@ const PaymentConfirmationListPage = () => {
                 scroll={{ x: 1750 }}
                 locale={{
                   emptyText: (
-                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có request phù hợp với bộ lọc hiện tại." />
+                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có yêu cầu phù hợp với bộ lọc hiện tại." />
                   ),
                 }}
               />

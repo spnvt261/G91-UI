@@ -42,7 +42,7 @@ const SaleOrderTimelinePage = () => {
       const response = await saleOrderService.getTimeline(id);
       setTimeline(response);
     } catch (timelineError) {
-      const message = getErrorMessage(timelineError, "Không thể tải timeline đơn bán.");
+      const message = getErrorMessage(timelineError, "Không thể tải tiến trình đơn bán.");
       setError(message);
       notify(message, "error");
     } finally {
@@ -115,14 +115,14 @@ const SaleOrderTimelinePage = () => {
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Timeline"
-          subtitle="Theo dõi mốc Submitted → Fulfillment kho → Hóa đơn/Thanh toán/Công nợ kế toán."
+          title="Tiến trình"
+          subtitle="Theo dõi các mốc xử lý kho, hóa đơn, thanh toán và công nợ kế toán."
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
                 { label: "Trang chủ" },
                 { label: "Đơn bán", url: ROUTE_URL.SALE_ORDER_LIST },
-                { label: "Timeline" },
+                { label: "Tiến trình" },
               ]}
             />
           }
@@ -141,7 +141,7 @@ const SaleOrderTimelinePage = () => {
       body={
         <Space direction="vertical" size={16} style={{ width: "100%" }}>
           {!id ? <Alert type="warning" showIcon message="Không tìm thấy mã đơn bán trên đường dẫn." /> : null}
-          {error ? <Alert type="error" showIcon message="Không thể tải timeline đơn bán." description={error} /> : null}
+          {error ? <Alert type="error" showIcon message="Không thể tải tiến trình đơn bán." description={error} /> : null}
 
           <Card loading={loading}>
             <Space direction="vertical" size={8} style={{ width: "100%" }}>
@@ -150,7 +150,7 @@ const SaleOrderTimelinePage = () => {
             </Space>
           </Card>
 
-          <Card loading={loading} title="Timeline">
+          <Card loading={loading} title="Tiến trình">
             <Steps direction="vertical" current={-1} items={flowStepItems} />
           </Card>
         </Space>

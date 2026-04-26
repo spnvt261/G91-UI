@@ -31,24 +31,24 @@ const StockConfigTable = () => {
   return (
     <section className="rounded-lg bg-white p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-800">Stock Configuration</h3>
+        <h3 className="text-lg font-semibold text-slate-800">Cấu hình tồn kho</h3>
         <button
           type="button"
           className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
           onClick={() => setRows((prev) => [...prev, createEmptyRow(Date.now())])}
         >
-          Add Row
+          Thêm dòng
         </button>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="bg-slate-50 text-slate-600">
             <tr>
-              <th className="px-3 py-2 text-left">Batch Code</th>
-              <th className="px-3 py-2 text-left">Production Date</th>
-              <th className="px-3 py-2 text-left">Weight</th>
-              <th className="px-3 py-2 text-left">Stock Quantity</th>
-              <th className="px-3 py-2 text-left">Action</th>
+              <th className="px-3 py-2 text-left">Mã lô</th>
+              <th className="px-3 py-2 text-left">Ngày sản xuất</th>
+              <th className="px-3 py-2 text-left">Khối lượng</th>
+              <th className="px-3 py-2 text-left">Số lượng tồn</th>
+              <th className="px-3 py-2 text-left">Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -91,7 +91,7 @@ const StockConfigTable = () => {
                     onClick={() => setRows((prev) => prev.filter((item) => item.id !== row.id))}
                     disabled={rows.length === 1}
                   >
-                    Remove
+                    Xóa
                   </button>
                 </td>
               </tr>
@@ -99,7 +99,7 @@ const StockConfigTable = () => {
           </tbody>
         </table>
       </div>
-      <p className="mt-3 text-right text-sm text-slate-600">Total quantity: {totalQuantity}</p>
+      <p className="mt-3 text-right text-sm text-slate-600">Tổng số lượng: {totalQuantity}</p>
     </section>
   );
 };

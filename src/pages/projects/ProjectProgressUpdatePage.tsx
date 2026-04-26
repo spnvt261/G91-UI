@@ -137,7 +137,7 @@ const ProjectProgressUpdatePage = () => {
         form.setFields([
           {
             name: ["evidenceDocuments"],
-            errors: ["Tiến độ này cần minh chứng. Vui lòng thêm ít nhất 1 tài liệu có tên file và URL."],
+            errors: ["Tiến độ này cần minh chứng. Vui lòng thêm ít nhất 1 tài liệu có tên tệp và đường dẫn."],
           },
         ]);
       }
@@ -211,7 +211,7 @@ const ProjectProgressUpdatePage = () => {
 
           <ProjectFormSection
             title="Minh chứng tiến độ"
-            description="Nếu tiến độ chạm mốc milestone pending, backend sẽ yêu cầu ít nhất một tài liệu minh chứng."
+            description="Nếu tiến độ chạm mốc đang chờ, máy chủ sẽ yêu cầu ít nhất một tài liệu minh chứng."
           >
             <Form.List name="evidenceDocuments">
               {(fields, { add, remove }) => (
@@ -230,11 +230,11 @@ const ProjectProgressUpdatePage = () => {
                       </Col>
                       <Col xs={24} md={6}>
                         <Form.Item
-                          label="Tên file"
+                          label="Tên tệp"
                           name={[field.name, "fileName"]}
                           rules={[
-                            { required: true, message: "Nhập tên file." },
-                            { max: 255, message: "Tên file tối đa 255 ký tự." },
+                            { required: true, message: "Nhập tên tệp." },
+                            { max: 255, message: "Tên tệp tối đa 255 ký tự." },
                           ]}
                         >
                           <Input placeholder="bien-ban-nghiem-thu.pdf" />
@@ -242,14 +242,14 @@ const ProjectProgressUpdatePage = () => {
                       </Col>
                       <Col xs={24} md={9}>
                         <Form.Item
-                          label="URL file"
+                          label="Đường dẫn tệp"
                           name={[field.name, "fileUrl"]}
                           rules={[
-                            { required: true, message: "Nhập URL file." },
-                            { max: 500, message: "URL file tối đa 500 ký tự." },
+                            { required: true, message: "Nhập đường dẫn tệp." },
+                            { max: 500, message: "Đường dẫn tệp tối đa 500 ký tự." },
                           ]}
                         >
-                          <Input placeholder="https://..." />
+                          <Input placeholder="Nhập đường dẫn tài liệu" />
                         </Form.Item>
                       </Col>
                       <Col xs={24} md={3}>
@@ -261,9 +261,9 @@ const ProjectProgressUpdatePage = () => {
                         <Form.Item
                           label="Content-Type (tùy chọn)"
                           name={[field.name, "contentType"]}
-                          rules={[{ max: 100, message: "Content-Type tối đa 100 ký tự." }]}
+                          rules={[{ max: 100, message: "Loại nội dung tối đa 100 ký tự." }]}
                         >
-                          <Input placeholder="application/pdf" />
+                          <Input placeholder="Ví dụ: tệp PDF" />
                         </Form.Item>
                       </Col>
                     </Row>

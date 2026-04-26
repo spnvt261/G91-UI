@@ -131,7 +131,7 @@ const PriceListItemsTable = ({
         },
       },
       {
-        title: "Rule",
+        title: "Quy tắc",
         dataIndex: "pricingRuleType",
         key: "pricingRuleType",
         width: 140,

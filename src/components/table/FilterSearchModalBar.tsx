@@ -140,7 +140,7 @@ const FilterSearchModalBar = ({
   searchValue,
   onSearchChange,
   onSearchReset,
-  searchPlaceholder = "Search",
+  searchPlaceholder = "Tìm kiếm",
   searchClassName = "w-full md:w-[230px]",
   modalTitle = "Bộ lọc",
   filters,

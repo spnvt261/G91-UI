@@ -239,7 +239,7 @@ const UserProfilePage = () => {
                     <Typography.Title level={3} className="!mb-0">
                       {profile.fullName || "Chưa cập nhật tên"}
                     </Typography.Title>
-                    <Typography.Text type="secondary">{profile.email || "Chưa có email"}</Typography.Text>
+                    <Typography.Text type="secondary">{profile.email || "Chưa có thư điện tử"}</Typography.Text>
                     <Space wrap>
                       <Tag color="blue">{ROLE_LABELS[profile.role]}</Tag>
                       <Tag color={STATUS_META[profile.status].tagColor}>{STATUS_META[profile.status].label}</Tag>
@@ -304,7 +304,7 @@ const UserProfilePage = () => {
                             </Form.Item>
                           </Col>
                           <Col xs={24} md={12}>
-                            <Form.Item label="Email">
+                            <Form.Item label="Thư điện tử">
                               <Input size="large" value={profile.email} disabled />
                             </Form.Item>
                           </Col>
@@ -347,7 +347,7 @@ const UserProfilePage = () => {
                     <Card title="Thông tin cá nhân" bordered={false} className="shadow-sm">
                       <Descriptions column={1} size="middle" colon={false}>
                         <Descriptions.Item label="Họ và tên">{profile.fullName || "Chưa cập nhật"}</Descriptions.Item>
-                        <Descriptions.Item label="Email">{profile.email || "Chưa cập nhật"}</Descriptions.Item>
+                        <Descriptions.Item label="Thư điện tử">{profile.email || "Chưa cập nhật"}</Descriptions.Item>
                       </Descriptions>
                     </Card>
 

@@ -170,12 +170,12 @@ const ResetPasswordPage = () => {
     <AuthHeroPanel
       eyebrow="Đặt lại mật khẩu"
       title="Kiểm tra liên kết trước khi cập nhật mật khẩu mới"
-      description="Trang này chỉ cho phép tiếp tục khi liên kết trong email còn hợp lệ. Sau khi xác thực xong, bạn có thể đặt mật khẩu mới và đăng nhập lại ngay."
+      description="Trang này chỉ cho phép tiếp tục khi liên kết trong thư điện tử còn hợp lệ. Sau khi xác thực xong, bạn có thể đặt mật khẩu mới và đăng nhập lại ngay."
       highlights={[
         {
           icon: <SafetyOutlined />,
           title: "Liên kết có thời hạn",
-          description: "Hệ thống xác thực liên kết trước khi hiển thị form để tránh dùng liên kết hết hạn hoặc đã sử dụng.",
+          description: "Hệ thống xác thực liên kết trước khi hiển thị biểu mẫu để tránh dùng liên kết hết hạn hoặc đã sử dụng.",
         },
         {
           icon: <CheckCircleOutlined />,
@@ -251,7 +251,7 @@ const ResetPasswordPage = () => {
       <AuthFormCard
         eyebrow="Thiết lập mật khẩu mới"
         title="Đặt lại mật khẩu"
-        description="Hệ thống sẽ xác thực liên kết từ email trước khi cho phép bạn đặt mật khẩu mới."
+        description="Hệ thống sẽ xác thực liên kết từ thư điện tử trước khi cho phép bạn đặt mật khẩu mới."
         icon={<LockOutlined />}
         extraTop={null}
         footer={
@@ -278,7 +278,7 @@ const ResetPasswordPage = () => {
           <Result
             status="info"
             title="Đang xác thực liên kết"
-            subTitle="Hệ thống đang kiểm tra đường dẫn từ email trước khi hiển thị form đổi mật khẩu."
+            subTitle="Hệ thống đang kiểm tra đường dẫn từ thư điện tử trước khi hiển thị biểu mẫu đổi mật khẩu."
           />
         ) : validationState === "invalid" ? (
           <Result

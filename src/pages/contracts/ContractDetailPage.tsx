@@ -284,7 +284,7 @@ const ContractDetailPage = () => {
                 setEmailModalOpen(true);
               }}
             >
-              Gửi email tài liệu
+              Gửi tài liệu qua thư điện tử
             </Button>
           </Space>
         ),
@@ -752,11 +752,11 @@ const ContractDetailPage = () => {
       </Modal>
 
       <Modal
-        title="Gửi email tài liệu hợp đồng"
+        title="Gửi tài liệu hợp đồng qua thư điện tử"
         open={emailModalOpen}
         onCancel={() => (actionLoading === "email-doc" ? undefined : setEmailModalOpen(false))}
         onOk={() => emailForm.submit()}
-        okText="Gửi email tài liệu"
+        okText="Gửi tài liệu"
         cancelText="Đóng"
         okButtonProps={{ loading: actionLoading === "email-doc", icon: <MailOutlined /> }}
       >
@@ -777,7 +777,7 @@ const ContractDetailPage = () => {
                   .filter(Boolean);
 
                 if (recipients.length === 0) {
-                  throw new Error("Vui lòng nhập ít nhất một email người nhận.");
+                  throw new Error("Vui lòng nhập ít nhất một địa chỉ thư điện tử người nhận.");
                 }
 
                 await contractService.emailDocument(id, values.documentId, {
@@ -787,8 +787,8 @@ const ContractDetailPage = () => {
                 });
                 setEmailModalOpen(false);
               },
-              "Đã gửi email tài liệu hợp đồng.",
-              "Không thể gửi email tài liệu hợp đồng.",
+              "Đã gửi tài liệu hợp đồng qua thư điện tử.",
+              "Không thể gửi tài liệu hợp đồng qua thư điện tử.",
             )
           }
         >
@@ -800,14 +800,14 @@ const ContractDetailPage = () => {
               }))}
             />
           </Form.Item>
-          <Form.Item label="Email người nhận" name="recipients" rules={[{ required: true, message: "Vui lòng nhập email người nhận." }]}>
-            <Input placeholder="Nhập nhiều email cách nhau bằng dấu phẩy" />
+          <Form.Item label="Thư điện tử người nhận" name="recipients" rules={[{ required: true, message: "Vui lòng nhập địa chỉ thư điện tử người nhận." }]}>
+            <Input placeholder="Nhập nhiều địa chỉ cách nhau bằng dấu phẩy" />
           </Form.Item>
-          <Form.Item label="Tiêu đề email" name="subject">
-            <Input placeholder="Tiêu đề email tài liệu hợp đồng" />
+          <Form.Item label="Tiêu đề thư" name="subject">
+            <Input placeholder="Tiêu đề thư gửi tài liệu hợp đồng" />
           </Form.Item>
-          <Form.Item label="Nội dung email" name="message">
-            <Input.TextArea rows={4} placeholder="Nhập nội dung email gửi tài liệu." />
+          <Form.Item label="Nội dung thư" name="message">
+            <Input.TextArea rows={4} placeholder="Nhập nội dung thư gửi tài liệu." />
           </Form.Item>
         </Form>
       </Modal>

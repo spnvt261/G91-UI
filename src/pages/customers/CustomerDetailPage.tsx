@@ -137,7 +137,7 @@ const CustomerDetailPage = () => {
     () => [
       { key: "contactPerson", label: "Người liên hệ", value: displayCustomerText(customer?.contactPerson) },
       { key: "phone", label: "Số điện thoại", value: displayCustomerText(customer?.phone) },
-      { key: "email", label: "Email", value: displayCustomerText(customer?.email) },
+      { key: "email", label: "Thư điện tử", value: displayCustomerText(customer?.email) },
     ],
     [customer],
   );
@@ -268,7 +268,7 @@ const CustomerDetailPage = () => {
                             {displayCustomerText(customer.companyName)}
                           </Typography.Title>
                           <Typography.Text type="secondary">Người liên hệ: {displayCustomerText(customer.contactPerson)}</Typography.Text>
-                          <Typography.Text type="secondary">Email: {displayCustomerText(customer.email)}</Typography.Text>
+                          <Typography.Text type="secondary">Thư điện tử: {displayCustomerText(customer.email)}</Typography.Text>
                           <Typography.Text type="secondary">Điện thoại: {displayCustomerText(customer.phone)}</Typography.Text>
                         </Space>
                       </Space>

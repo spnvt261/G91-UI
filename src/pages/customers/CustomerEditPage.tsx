@@ -246,13 +246,13 @@ const CustomerEditPage = () => {
                     <Col xs={24} md={8}>
                       <Form.Item
                         name="email"
-                        label="Email"
+                        label="Thư điện tử"
                         rules={[
-                          { type: "email", message: "Email không đúng định dạng." },
-                          { max: 255, message: "Email tối đa 255 ký tự." },
+                          { type: "email", message: "Địa chỉ thư điện tử không đúng định dạng." },
+                          { max: 255, message: "Địa chỉ thư điện tử tối đa 255 ký tự." },
                         ]}
                       >
-                        <Input placeholder="contact@g91.com" />
+                        <Input placeholder="lienhe@g91.vn" />
                       </Form.Item>
                     </Col>
                   </Row>

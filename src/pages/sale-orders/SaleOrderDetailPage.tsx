@@ -47,6 +47,7 @@ import {
   SALE_ORDER_CANCELLATION_REASON_OPTIONS,
   SALE_ORDER_FLOW_STEPS,
   toSaleOrderTransitionErrorMessage,
+  translateSaleOrderText,
 } from "./saleOrder.ui";
 
 type FulfillmentAction =
@@ -87,32 +88,32 @@ const ACTION_META: Record<
   { title: string; okText: string; success: string; fallback: string }
 > = {
   reserve: {
-    title: "Xác nhận Reserve (Dự trữ)",
-    okText: "Reserve",
-    success: "Đã Reserve đơn bán.",
-    fallback: "Không thể Reserve đơn bán.",
+    title: "Xác nhận dự trữ hàng",
+    okText: "Dự trữ hàng",
+    success: "Đã dự trữ hàng cho đơn bán.",
+    fallback: "Không thể dự trữ hàng cho đơn bán.",
   },
   pick: {
-    title: "Xác nhận Pick (Soạn hàng)",
-    okText: "Pick",
-    success: "Đã Pick đơn bán.",
-    fallback: "Không thể Pick đơn bán.",
+    title: "Xác nhận soạn hàng",
+    okText: "Soạn hàng",
+    success: "Đã soạn hàng cho đơn bán.",
+    fallback: "Không thể soạn hàng cho đơn bán.",
   },
   dispatch: {
-    title: "Xác nhận Dispatch (Xuất giao)",
-    okText: "Dispatch",
-    success: "Đã Dispatch đơn bán.",
-    fallback: "Không thể Dispatch đơn bán.",
+    title: "Xác nhận xuất giao",
+    okText: "Xuất giao",
+    success: "Đã xuất giao đơn bán.",
+    fallback: "Không thể xuất giao đơn bán.",
   },
   deliver: {
-    title: "Xác nhận Delivered (Đã giao)",
-    okText: "Delivered",
-    success: "Đã xác nhận Delivered.",
-    fallback: "Không thể xác nhận Delivered.",
+    title: "Xác nhận đã giao hàng",
+    okText: "Đã giao hàng",
+    success: "Đã xác nhận giao hàng.",
+    fallback: "Không thể xác nhận giao hàng.",
   },
   complete: {
-    title: "Xác nhận Complete (Hoàn tất)",
-    okText: "Complete",
+    title: "Xác nhận hoàn tất",
+    okText: "Hoàn tất",
     success: "Đã hoàn tất đơn bán.",
     fallback: "Không thể hoàn tất đơn bán.",
   },
@@ -547,7 +548,7 @@ const SaleOrderDetailPage = () => {
         title: "Trạng thái",
         dataIndex: "status",
         key: "status",
-        render: (value?: string) => value || "Chưa cập nhật",
+        render: (value?: string) => translateSaleOrderText(value),
       },
       {
         title: "Tổng tiền",
@@ -590,7 +591,7 @@ const SaleOrderDetailPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Chi tiết đơn bán"
-          subtitle="Flow chuẩn: Submitted → Reserve → Pick → Dispatch → Delivered → Invoice → Payment/Debt."
+          subtitle="Luồng chuẩn: gửi đơn, dự trữ hàng, soạn hàng, xuất giao, giao hàng, lập hóa đơn, thanh toán và công nợ."
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
@@ -620,7 +621,7 @@ const SaleOrderDetailPage = () => {
                 }
                 disabled={!id}
               >
-                Mở timeline
+                Mở tiến trình
               </Button>
             </Space>
           }
@@ -687,7 +688,7 @@ const SaleOrderDetailPage = () => {
                 <Descriptions.Item label="Mã hợp đồng">
                   {detail.header.contractNumber || contractId || "-"}
                 </Descriptions.Item>
-                <Descriptions.Item label="saleOrderId = contractId">{`${detail.header.id} = ${contractId || "?"}`}</Descriptions.Item>
+                <Descriptions.Item label="Mã đơn bán trùng mã hợp đồng">{`${detail.header.id} = ${contractId || "?"}`}</Descriptions.Item>
                 <Descriptions.Item label="Hợp đồng nguồn">
                   {contractId ? (
                     <Button
@@ -745,7 +746,7 @@ const SaleOrderDetailPage = () => {
             />
           </Card>
 
-          <Card loading={loading} title="Inventory issue liên quan">
+          <Card loading={loading} title="Giao dịch xuất kho liên quan">
             <Table
               rowKey={(row, index) => row.transactionId || `issue-${index}`}
               columns={inventoryColumns}
@@ -835,13 +836,13 @@ const SaleOrderDetailPage = () => {
             </Card>
           ) : null}
 
-          <Card loading={loading} title="Timeline nghiệp vụ">
+          <Card loading={loading} title="Tiến trình nghiệp vụ">
             <Space direction="vertical" size={12} style={{ width: "100%" }}>
               <Steps direction="vertical" current={-1} items={flowItems} />
               {timelineItems.length === 0 ? (
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description="Chưa có timeline."
+                  description="Chưa có dữ liệu tiến trình."
                 />
               ) : (
                 <Timeline
@@ -868,7 +869,7 @@ const SaleOrderDetailPage = () => {
           </Card>
 
           {!isCustomer && canFulfillment ? (
-            <Card title="Thao tác fulfillment (Kho)">
+            <Card title="Thao tác xử lý kho">
               <Space direction="vertical" size={10}>
                 <Alert
                   type="info"
@@ -885,7 +886,7 @@ const SaleOrderDetailPage = () => {
                   </Button>
                 ) : (
                   <Typography.Text type="secondary">
-                    Không có thao tác fulfillment hợp lệ.
+                    Không có thao tác xử lý kho hợp lệ.
                   </Typography.Text>
                 )}
               </Space>
@@ -898,7 +899,7 @@ const SaleOrderDetailPage = () => {
             canTrackDebt ||
             canComplete ||
             canCancel) ? (
-            <Card title="Chuyển sang kế toán sau Delivered">
+            <Card title="Chuyển sang kế toán sau khi đã giao hàng">
               <Space direction="vertical" size={12}>
                 <Alert
                   type={deliveredGate ? "success" : "warning"}
@@ -906,7 +907,7 @@ const SaleOrderDetailPage = () => {
                   message={
                     deliveredGate
                       ? "Đơn đã đủ điều kiện bước kế toán."
-                      : "CTA kế toán sẽ bật sau khi đơn đạt Delivered."
+                      : "Nút thao tác kế toán sẽ bật sau khi đơn đã giao hàng."
                   }
                 />
                 <Space wrap>
@@ -960,7 +961,7 @@ const SaleOrderDetailPage = () => {
                       loading={loadingAction === "complete"}
                       onClick={() => openActionModal("complete")}
                     >
-                      Complete
+                      Hoàn tất
                     </Button>
                   ) : null}
                   {canCancel ? (

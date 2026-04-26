@@ -450,7 +450,7 @@ const InvoiceFormPage = ({ mode }: InvoiceFormPageProps) => {
                           <Typography.Text>{toCurrency(totals.adjustment)}</Typography.Text>
                         </Space>
                         <Space style={{ width: "100%", justifyContent: "space-between" }}>
-                          <Typography.Text>VAT tham chiếu (10%)</Typography.Text>
+                          <Typography.Text>Thuế GTGT tham chiếu (10%)</Typography.Text>
                           <Typography.Text>{toCurrency(totals.vat)}</Typography.Text>
                         </Space>
                         <Divider className="!my-2" />

@@ -60,7 +60,7 @@ export const getInvoiceStatusMeta = (status?: InvoiceStatus): InvoiceStatusMeta 
   const normalized = String(status ?? "DRAFT").trim().toUpperCase();
   return (
     INVOICE_STATUS_META[normalized] ?? {
-      label: normalized,
+      label: "Trạng thái khác",
       tagColor: "default",
       badgeStatus: "default",
     }

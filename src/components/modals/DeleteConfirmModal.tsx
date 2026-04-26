@@ -4,14 +4,14 @@ interface DeleteConfirmModalProps extends Omit<ConfirmModalProps, "title" | "lab
   itemName?: string;
 }
 
-const DeleteConfirmModal = ({ itemName = "this item", ...props }: DeleteConfirmModalProps) => {
+const DeleteConfirmModal = ({ itemName = "mục này", ...props }: DeleteConfirmModalProps) => {
   return (
     <ConfirmModal
       {...props}
-      title="Delete product"
-      label={`Are you sure you want to delete ${itemName}?`}
-      confirmText="Delete"
-      cancelText="Cancel"
+      title="Xóa sản phẩm"
+      label={`Bạn có chắc chắn muốn xóa ${itemName}?`}
+      confirmText="Xóa"
+      cancelText="Hủy"
     />
   );
 };

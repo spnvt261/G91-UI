@@ -56,7 +56,7 @@ const ProductCreatePage = () => {
       setUploadingImages(true);
       const imageUrls = await productService.uploadImages(files);
       if (!imageUrls.length) {
-        notify("Không nhận được URL ảnh từ hệ thống upload.", "warning");
+        notify("Không nhận được đường dẫn ảnh từ hệ thống tải lên.", "warning");
         return;
       }
 

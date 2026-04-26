@@ -182,8 +182,8 @@ const InventoryHistoryPage = () => {
         key: "references",
         render: (_, row) => (
           <Space direction="vertical" size={0}>
-            <Typography.Text type="secondary">{row.relatedOrderId ? `Order: ${row.relatedOrderId}` : "Order: -"}</Typography.Text>
-            <Typography.Text type="secondary">{row.relatedProjectId ? `Project: ${row.relatedProjectId}` : "Project: -"}</Typography.Text>
+            <Typography.Text type="secondary">{row.relatedOrderId ? `Đơn hàng: ${row.relatedOrderId}` : "Đơn hàng: -"}</Typography.Text>
+            <Typography.Text type="secondary">{row.relatedProjectId ? `Dự án: ${row.relatedProjectId}` : "Dự án: -"}</Typography.Text>
           </Space>
         ),
       },

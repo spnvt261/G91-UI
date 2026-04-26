@@ -199,7 +199,7 @@ const ContractApprovalDetailPage = () => {
                     }
                   />
                 ) : (
-                  <Alert type="info" showIcon message="Không có cảnh báo bổ sung từ backend." />
+                  <Alert type="info" showIcon message="Không có cảnh báo bổ sung từ máy chủ." />
                 )}
 
                 {contract.approvalRequest ? (

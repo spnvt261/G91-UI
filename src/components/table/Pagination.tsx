@@ -11,7 +11,7 @@ const Pagination = ({ page, pageSize, total, onChange }: PaginationProps) => {
   return (
     <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 text-sm">
       <p className="text-slate-500">
-        Showing {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)} of {total}
+        Hiển thị {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)} trong {total}
       </p>
       <div className="flex items-center gap-2">
         <button
@@ -20,7 +20,7 @@ const Pagination = ({ page, pageSize, total, onChange }: PaginationProps) => {
           disabled={page <= 1}
           className="rounded-md border border-gray-200 px-3 py-1 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Previous
+          Trước
         </button>
         {Array.from({ length: totalPages }).map((_, index) => {
           const pageNumber = index + 1;
@@ -43,7 +43,7 @@ const Pagination = ({ page, pageSize, total, onChange }: PaginationProps) => {
           disabled={page >= totalPages}
           className="rounded-md border border-gray-200 px-3 py-1 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Next
+          Sau
         </button>
       </div>
     </div>

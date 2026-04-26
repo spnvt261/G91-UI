@@ -24,7 +24,7 @@ const TableFilterBar = ({ searchValue, onSearchChange, filters = [] }: TableFilt
         value={searchValue}
         onChange={(event) => onSearchChange(event.target.value)}
         resetSearch={() => onSearchChange("")}
-        placeHolder="Search"
+        placeHolder="Tìm kiếm"
       />
       {filters.map((filter) => (
         <div key={filter.key} className="w-full md:w-48">

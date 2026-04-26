@@ -14,10 +14,10 @@ export interface ConfirmModalProps {
 
 const ConfirmModal = ({
   open,
-  title = "Confirm",
-  label = "Are you sure?",
-  cancelText = "Cancel",
-  confirmText = "Confirm",
+  title = "Xác nhận",
+  label = "Bạn có chắc chắn muốn thực hiện thao tác này?",
+  cancelText = "Hủy",
+  confirmText = "Xác nhận",
   onCancel,
   onConfirm,
   disabledConfirm = false,

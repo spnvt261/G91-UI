@@ -15,20 +15,20 @@ const ERROR_MESSAGE_TRANSLATIONS: Record<string, string> = {
   "Request binding is invalid": "Ràng buộc của yêu cầu không hợp lệ.",
   "Multipart request is invalid": "Yêu cầu tải tệp không hợp lệ.",
   "Uploaded file is too large": "Tệp tải lên quá lớn.",
-  "HTTP method is not supported for this endpoint": "Phương thức HTTP không được hỗ trợ cho endpoint này.",
+  "HTTP method is not supported for this endpoint": "Phương thức truy cập không được hỗ trợ cho điểm truy cập này.",
   "Content type is not supported": "Định dạng nội dung không được hỗ trợ.",
   "Requested media type is not acceptable": "Định dạng phản hồi được yêu cầu không được hỗ trợ.",
-  "Endpoint not found": "Không tìm thấy endpoint.",
+  "Endpoint not found": "Không tìm thấy điểm truy cập.",
   "Authentication required": "Vui lòng đăng nhập để tiếp tục.",
   "Permission denied": "Bạn không có quyền thực hiện thao tác này.",
   "Permission denied for test": "Bạn không có quyền thực hiện thao tác này.",
   "Request cannot be processed": "Yêu cầu không thể xử lý.",
   "An unexpected error occurred": "Đã xảy ra lỗi không mong muốn.",
 
-  "Incorrect username or password": "Email hoặc mật khẩu không chính xác.",
-  "Email verification is required before login": "Tài khoản chưa được xác thực email trước khi đăng nhập.",
-  "Email already exists": "Email đã tồn tại.",
-  "Email must be unique": "Email đã được sử dụng.",
+  "Incorrect username or password": "Địa chỉ thư điện tử hoặc mật khẩu không chính xác.",
+  "Email verification is required before login": "Tài khoản chưa được xác thực địa chỉ thư điện tử trước khi đăng nhập.",
+  "Email already exists": "Địa chỉ thư điện tử đã tồn tại.",
+  "Email must be unique": "Địa chỉ thư điện tử đã được sử dụng.",
   "Current password is incorrect": "Mật khẩu hiện tại không chính xác.",
   "New password must be different from current password": "Mật khẩu mới phải khác mật khẩu hiện tại.",
   "Password confirmation does not match": "Mật khẩu xác nhận không khớp.",
@@ -36,7 +36,7 @@ const ERROR_MESSAGE_TRANSLATIONS: Record<string, string> = {
   "Verification code has expired": "Mã xác thực đã hết hạn.",
   "Verification code is invalid": "Mã xác thực không hợp lệ.",
   "The account has already been verified": "Tài khoản đã được xác thực.",
-  "No pending registration verification found for the provided email": "Không tìm thấy yêu cầu xác thực đang chờ cho email này.",
+  "No pending registration verification found for the provided email": "Không tìm thấy yêu cầu xác thực đang chờ cho địa chỉ thư điện tử này.",
 
   "User account not found": "Không tìm thấy tài khoản người dùng.",
   "Account not found": "Không tìm thấy tài khoản.",
@@ -48,8 +48,8 @@ const ERROR_MESSAGE_TRANSLATIONS: Record<string, string> = {
   "Customer profile must be ACTIVE": "Hồ sơ khách hàng phải đang hoạt động.",
   "Customer must be ACTIVE": "Khách hàng phải đang hoạt động.",
   "Customer must be ACTIVE before submission": "Khách hàng phải đang hoạt động trước khi gửi duyệt.",
-  "Email is required when creating portal account": "Email là bắt buộc khi tạo tài khoản portal.",
-  "Email is already used by another portal account": "Email đã được tài khoản portal khác sử dụng.",
+  "Email is required when creating portal account": "Địa chỉ thư điện tử là bắt buộc khi tạo tài khoản cổng thông tin.",
+  "Email is already used by another portal account": "Địa chỉ thư điện tử đã được tài khoản cổng thông tin khác sử dụng.",
 
   "Product not found": "Không tìm thấy sản phẩm.",
   "Product code already exists": "Mã sản phẩm đã tồn tại.",
@@ -64,7 +64,7 @@ const ERROR_MESSAGE_TRANSLATIONS: Record<string, string> = {
   "At least one image is required": "Vui lòng tải lên ít nhất một ảnh.",
   "Uploaded files must not be empty": "Tệp tải lên không được rỗng.",
   "Uploaded files must contain a valid extension": "Tệp tải lên phải có phần mở rộng hợp lệ.",
-  "Each image URL must not exceed 500 characters": "Mỗi URL ảnh không được vượt quá 500 ký tự.",
+  "Each image URL must not exceed 500 characters": "Mỗi đường dẫn ảnh không được vượt quá 500 ký tự.",
 
   "Price list not found": "Không tìm thấy bảng giá.",
   "Price list cannot be deleted because it is used by active orders": "Không thể xóa bảng giá vì đang được dùng bởi đơn hàng hoạt động.",
@@ -78,8 +78,8 @@ const ERROR_MESSAGE_TRANSLATIONS: Record<string, string> = {
   "Promotion cannot be deleted because it is applied to active orders": "Không thể xóa khuyến mãi vì đang áp dụng cho đơn hàng hoạt động.",
   "Discount value must be greater than 0": "Giá trị giảm giá phải lớn hơn 0.",
   "Percent discount must not exceed 100": "Phần trăm giảm giá không được vượt quá 100.",
-  "Status must be DRAFT, ACTIVE, or INACTIVE": "Trạng thái phải là DRAFT, ACTIVE hoặc INACTIVE.",
-  "Promotion type must be PERCENT or FIXED_AMOUNT": "Loại khuyến mãi phải là PERCENT hoặc FIXED_AMOUNT.",
+  "Status must be DRAFT, ACTIVE, or INACTIVE": "Trạng thái phải là nháp, đang hoạt động hoặc ngừng hoạt động.",
+  "Promotion type must be PERCENT or FIXED_AMOUNT": "Loại khuyến mãi phải là phần trăm hoặc số tiền cố định.",
   "Duplicate customer group is not allowed": "Không được chọn trùng nhóm khách hàng.",
 
   "Quotation not found": "Không tìm thấy báo giá.",
@@ -156,9 +156,9 @@ const ERROR_MESSAGE_TRANSLATIONS: Record<string, string> = {
   "Allocated invoice is already fully paid": "Hóa đơn được phân bổ đã được thanh toán đủ.",
   "Duplicate invoice allocation is not allowed": "Không được phân bổ trùng hóa đơn.",
   "Allocation total must equal payment amount": "Tổng phân bổ phải bằng số tiền thanh toán.",
-  "Payment allocation must follow FIFO across open invoices": "Phân bổ thanh toán phải theo FIFO trên các hóa đơn còn mở.",
-  "Only CONFIRMED payment status is supported": "Chỉ hỗ trợ trạng thái thanh toán CONFIRMED.",
-  "Cash payments over 50,000,000 VND require dual approval and are not supported in this API": "Thanh toán tiền mặt trên 50.000.000 VND cần duyệt hai cấp và chưa được hỗ trợ trong API này.",
+  "Payment allocation must follow FIFO across open invoices": "Phân bổ thanh toán phải ưu tiên các hóa đơn cũ trước.",
+  "Only CONFIRMED payment status is supported": "Chỉ hỗ trợ trạng thái thanh toán đã xác nhận.",
+  "Cash payments over 50,000,000 VND require dual approval and are not supported in this API": "Thanh toán tiền mặt trên 50.000.000 VND cần duyệt hai cấp và chưa được hỗ trợ trong dịch vụ này.",
 
   "Project not found": "Không tìm thấy dự án.",
   "Project milestone not found": "Không tìm thấy mốc dự án.",
@@ -186,11 +186,11 @@ const ERROR_MESSAGE_TRANSLATIONS: Record<string, string> = {
   "Backup warehouse must be different from primary warehouse": "Kho dự phòng phải khác kho chính.",
   "Linked contract not found": "Không tìm thấy hợp đồng liên kết.",
   "Linked contract must belong to the same customer": "Hợp đồng liên kết phải thuộc cùng khách hàng.",
-  "New project status must be DRAFT, ACTIVE, or ON_HOLD": "Trạng thái dự án mới phải là DRAFT, ACTIVE hoặc ON_HOLD.",
-  "Use dedicated APIs to close or archive a project": "Vui lòng dùng API riêng để đóng hoặc lưu trữ dự án.",
+  "New project status must be DRAFT, ACTIVE, or ON_HOLD": "Trạng thái dự án mới phải là nháp, đang hoạt động hoặc tạm dừng.",
+  "Use dedicated APIs to close or archive a project": "Vui lòng dùng chức năng riêng để đóng hoặc lưu trữ dự án.",
   "Invalid project status": "Trạng thái dự án không hợp lệ.",
   "Invalid document type": "Loại tài liệu không hợp lệ.",
-  "Progress status COMPLETED requires 100% progress": "Trạng thái COMPLETED yêu cầu tiến độ đạt 100%.",
+  "Progress status COMPLETED requires 100% progress": "Trạng thái hoàn thành yêu cầu tiến độ đạt 100%.",
   "Invalid progress status": "Trạng thái tiến độ không hợp lệ.",
   "Change reason is required when progress decreases": "Vui lòng nhập lý do khi tiến độ giảm.",
   "Progress percent must be between 0 and 100": "Phần trăm tiến độ phải từ 0 đến 100.",
@@ -201,10 +201,10 @@ const ERROR_MESSAGE_TRANSLATIONS: Record<string, string> = {
   "Resulting stock cannot be negative": "Tồn kho sau điều chỉnh không được âm.",
   "adjustmentQuantity must not be zero": "Số lượng điều chỉnh không được bằng 0.",
   "reason or note is required": "Vui lòng nhập lý do hoặc ghi chú.",
-  "transactionType must be RECEIPT, ISSUE, or ADJUSTMENT": "Loại giao dịch phải là RECEIPT, ISSUE hoặc ADJUSTMENT.",
+  "transactionType must be RECEIPT, ISSUE, or ADJUSTMENT": "Loại giao dịch phải là nhập kho, xuất kho hoặc điều chỉnh.",
 
   "Customer has no open invoices": "Khách hàng không có hóa đơn đang mở.",
-  "Customer does not have a valid email address": "Khách hàng chưa có địa chỉ email hợp lệ.",
+  "Customer does not have a valid email address": "Khách hàng chưa có địa chỉ thư điện tử hợp lệ.",
   "Reminder can only be sent for overdue invoices": "Chỉ có thể gửi nhắc nợ cho hóa đơn quá hạn.",
   "Outstanding balance must be zero before settlement can be confirmed": "Dư nợ phải bằng 0 trước khi xác nhận quyết toán.",
   "All related invoices must be fully paid before settlement confirmation": "Tất cả hóa đơn liên quan phải được thanh toán đủ trước khi xác nhận quyết toán.",
@@ -244,9 +244,9 @@ const ERROR_CODE_TRANSLATIONS: Record<string, string> = {
   VALIDATION_ERROR: "Dữ liệu gửi lên không hợp lệ.",
   UNAUTHORIZED: "Vui lòng đăng nhập để tiếp tục.",
   FORBIDDEN: "Bạn không có quyền thực hiện thao tác này.",
-  INVALID_CREDENTIALS: "Email hoặc mật khẩu không chính xác.",
-  EMAIL_VERIFICATION_REQUIRED: "Tài khoản chưa được xác thực email trước khi đăng nhập.",
-  EMAIL_ALREADY_EXISTS: "Email đã tồn tại.",
+  INVALID_CREDENTIALS: "Địa chỉ thư điện tử hoặc mật khẩu không chính xác.",
+  EMAIL_VERIFICATION_REQUIRED: "Tài khoản chưa được xác thực địa chỉ thư điện tử trước khi đăng nhập.",
+  EMAIL_ALREADY_EXISTS: "Địa chỉ thư điện tử đã tồn tại.",
   CURRENT_PASSWORD_INCORRECT: "Mật khẩu hiện tại không chính xác.",
   PASSWORD_MISMATCH: "Mật khẩu xác nhận không khớp.",
   INVALID_RESET_TOKEN: "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.",
@@ -254,15 +254,15 @@ const ERROR_CODE_TRANSLATIONS: Record<string, string> = {
   PRODUCT_CODE_ALREADY_EXISTS: "Mã sản phẩm đã tồn tại.",
   INSUFFICIENT_INVENTORY: "Không đủ tồn kho khả dụng.",
   PAYLOAD_TOO_LARGE: "Tệp tải lên quá lớn.",
-  METHOD_NOT_ALLOWED: "Phương thức HTTP không được hỗ trợ cho endpoint này.",
+  METHOD_NOT_ALLOWED: "Phương thức truy cập không được hỗ trợ cho điểm truy cập này.",
   UNSUPPORTED_MEDIA_TYPE: "Định dạng nội dung không được hỗ trợ.",
   NOT_ACCEPTABLE: "Định dạng phản hồi được yêu cầu không được hỗ trợ.",
-  ENDPOINT_NOT_FOUND: "Không tìm thấy endpoint.",
+  ENDPOINT_NOT_FOUND: "Không tìm thấy điểm truy cập.",
   INTERNAL_SERVER_ERROR: "Đã xảy ra lỗi không mong muốn.",
 };
 
 const FIELD_LABELS: Record<string, string> = {
-  accept: "Header Accept",
+  accept: "Thông tin chấp nhận",
   accountId: "Tài khoản",
   actualSpend: "Chi phí thực tế",
   address: "Địa chỉ",
@@ -305,9 +305,9 @@ const FIELD_LABELS: Record<string, string> = {
   description: "Mô tả",
   discountValue: "Giá trị giảm giá",
   documentType: "Loại tài liệu",
-  documentUrl: "URL tài liệu",
+  documentUrl: "Đường dẫn tài liệu",
   dueDate: "Ngày đến hạn",
-  email: "Email",
+  email: "Thư điện tử",
   endDate: "Ngày kết thúc",
   eventFrom: "Thời gian sự kiện từ",
   eventStatus: "Trạng thái sự kiện",
@@ -315,10 +315,10 @@ const FIELD_LABELS: Record<string, string> = {
   eventType: "Loại sự kiện",
   evidenceDocuments: "Tài liệu minh chứng",
   fileName: "Tên tệp",
-  fileUrl: "URL tệp",
+  fileUrl: "Đường dẫn tệp",
   files: "Tệp",
   fullName: "Họ và tên",
-  imageUrls: "URL ảnh",
+  imageUrls: "Đường dẫn ảnh",
   invoiceId: "Hóa đơn",
   invoiceIds: "Hóa đơn",
   issueDate: "Ngày phát hành",
@@ -362,7 +362,7 @@ const FIELD_LABELS: Record<string, string> = {
   quotationId: "Báo giá",
   reason: "Lý do",
   receiptDate: "Ngày nhập kho",
-  recipientEmail: "Email người nhận",
+  recipientEmail: "Thư điện tử người nhận",
   referenceNo: "Mã tham chiếu",
   referenceWeight: "Khối lượng tham chiếu",
   relatedOrderId: "Đơn hàng liên quan",
@@ -383,7 +383,7 @@ const FIELD_LABELS: Record<string, string> = {
   supplierName: "Nhà cung cấp",
   taxCode: "Mã số thuế",
   thickness: "Độ dày",
-  token: "Token",
+  token: "Mã xác thực",
   totalAmount: "Tổng tiền",
   trackingNumber: "Mã vận chuyển",
   transactionType: "Loại giao dịch",
@@ -427,9 +427,9 @@ const SUBJECT_TRANSLATIONS: Record<string, string> = {
   Description: "Mô tả",
   "Discount value": "Giá trị giảm giá",
   "Document type": "Loại tài liệu",
-  Email: "Email",
+  Email: "Thư điện tử",
   "End date": "Ngày kết thúc",
-  "File URL": "URL tệp",
+  "File URL": "Đường dẫn tệp",
   "File name": "Tên tệp",
   "Full name": "Họ và tên",
   "Invoice ID": "Hóa đơn",
@@ -476,7 +476,7 @@ const SUBJECT_TRANSLATIONS: Record<string, string> = {
   Status: "Trạng thái",
   "Tax code": "Mã số thuế",
   Thickness: "Độ dày",
-  Token: "Token",
+  Token: "Mã xác thực",
   Type: "Loại",
   Unit: "Đơn vị",
   "Unit price": "Đơn giá",
@@ -575,6 +575,23 @@ const translateRolePhrase = (value: string) =>
 
 const translateActionPhrase = (value: string) => ACTION_TRANSLATIONS[value] ?? value;
 
+const TECHNICAL_VALUE_TRANSLATIONS: Record<string, string> = {
+  ACTIVE: "đang hoạt động",
+  ADJUSTMENT: "điều chỉnh",
+  COMPLETED: "hoàn thành",
+  CONFIRMED: "đã xác nhận",
+  DRAFT: "nháp",
+  FIXED_AMOUNT: "số tiền cố định",
+  INACTIVE: "ngừng hoạt động",
+  ISSUE: "xuất kho",
+  ON_HOLD: "tạm dừng",
+  PERCENT: "phần trăm",
+  RECEIPT: "nhập kho",
+};
+
+const translateTechnicalValues = (value: string) =>
+  value.replace(/\b[A-Z][A-Z0-9_]*\b/g, (match) => TECHNICAL_VALUE_TRANSLATIONS[match] ?? match.toLowerCase().replace(/_/g, " "));
+
 const translatePatternMessage = (message: string, context: ErrorMessageContext): string | undefined => {
   let match = /^Request failed with status code (\d+)$/.exec(message);
   if (match) {
@@ -588,7 +605,7 @@ const translatePatternMessage = (message: string, context: ErrorMessageContext):
 
   match = /^Account is (.+) and cannot login$/.exec(message);
   if (match) {
-    return `Tài khoản đang ở trạng thái ${match[1]} nên không thể đăng nhập.`;
+    return `Tài khoản đang ở trạng thái ${translateTechnicalValues(match[1])} nên không thể đăng nhập.`;
   }
 
   match = /^Please wait (\d+) seconds before requesting another verification code$/.exec(message);
@@ -643,7 +660,7 @@ const translatePatternMessage = (message: string, context: ErrorMessageContext):
 
   match = /^Required role is not configured: (.+)$/.exec(message);
   if (match) {
-    return `Vai trò bắt buộc chưa được cấu hình: ${match[1]}.`;
+    return `Vai trò bắt buộc chưa được cấu hình: ${translateTechnicalValues(match[1])}.`;
   }
 
   match = /^(.+) is required$/.exec(message);
@@ -778,7 +795,7 @@ const translatePatternMessage = (message: string, context: ErrorMessageContext):
 
   match = /^(.+) must be one of (.+)$/.exec(message);
   if (match) {
-    return `${translateSubject(match[1], context.field)} phải là một trong: ${translateList(match[2])}.`;
+    return `${translateSubject(match[1], context.field)} phải là một trong: ${translateTechnicalValues(translateList(match[2]))}.`;
   }
 
   match = /^At least one (.+) is required$/.exec(message);
@@ -813,12 +830,12 @@ const translatePatternMessage = (message: string, context: ErrorMessageContext):
 
   match = /^(.+) cannot be (.+)$/.exec(message);
   if (match) {
-    return `${translateSubject(match[1], context.field)} không thể ${match[2]}.`;
+    return `${translateSubject(match[1], context.field)} không thể ${translateTechnicalValues(match[2])}.`;
   }
 
   match = /^(.+) can only be (.+)$/.exec(message);
   if (match) {
-    return `${translateSubject(match[1], context.field)} chỉ có thể ${match[2]}.`;
+    return `${translateSubject(match[1], context.field)} chỉ có thể ${translateTechnicalValues(match[2])}.`;
   }
 
   return undefined;
@@ -842,6 +859,10 @@ export const translateErrorMessage = (message: string, context: ErrorMessageCont
 
   if (context.code && normalizedMessage === context.code) {
     return ERROR_CODE_TRANSLATIONS[context.code] ?? normalizedMessage;
+  }
+
+  if (/\b[A-Za-z]{3,}\b/.test(normalizedMessage) && !/[À-ỹ]/.test(normalizedMessage)) {
+    return "Đã xảy ra lỗi. Vui lòng thử lại hoặc liên hệ quản trị viên.";
   }
 
   return normalizedMessage;

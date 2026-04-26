@@ -37,7 +37,7 @@ const getStatusMeta = (status: string): { color: string; label: string; riskLeve
 
   return {
     color: "default",
-    label: status || "Chưa phân loại",
+    label: "Chưa phân loại",
     riskLevel: "warning",
   };
 };

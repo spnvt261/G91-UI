@@ -4,7 +4,7 @@ import type { ApiResponse } from "../../models/common/api.model";
 import { translateErrorMessage } from "../../services/error-message.utils";
 import { extractApiErrorMessage, extractFieldErrors, isApiResponse } from "../../services/service.utils";
 
-export const getErrorMessage = (error: unknown, fallback = "Something went wrong") => {
+export const getErrorMessage = (error: unknown, fallback = "Đã xảy ra lỗi. Vui lòng thử lại.") => {
   if (error instanceof ApiClientError && error.message) {
     return error.message;
   }

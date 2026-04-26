@@ -109,12 +109,12 @@ const DashboardReportPage = () => {
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ReportPageHeader
-          title="Dashboard báo cáo điều hành"
+          title="Bảng điều hành báo cáo"
           subtitle="Tổng quan đa chiều về doanh thu, hợp đồng, đơn hàng và công nợ để hỗ trợ quyết định cấp cao."
           breadcrumbItems={[
             { label: "Trang chủ", url: ROUTE_URL.DASHBOARD },
             { label: "Báo cáo", url: ROUTE_URL.REPORT_DASHBOARD },
-            { label: "Dashboard" },
+            { label: "Bảng điều hành" },
           ]}
           actions={
             <Button icon={<ReloadOutlined />} loading={loading} onClick={() => void loadDashboard()}>
@@ -129,7 +129,7 @@ const DashboardReportPage = () => {
             <Alert
               showIcon
               type="error"
-              message="Không thể tải dữ liệu dashboard báo cáo."
+              message="Không thể tải dữ liệu bảng điều hành báo cáo."
               description={pageError}
               closable
               onClose={() => setPageError(null)}

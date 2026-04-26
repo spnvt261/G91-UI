@@ -121,10 +121,10 @@ const VerifyRegistrationPage = () => {
         <AuthHeroPanel
           eyebrow="Xác minh tài khoản"
           title="Hoàn tất kích hoạt trong một bước ngắn"
-          description="Nhập email và mã xác thực để hoàn thành đăng ký. Sau khi xác minh thành công, bạn có thể đăng nhập và sử dụng hệ thống ngay."
+          description="Nhập thư điện tử và mã xác thực để hoàn thành đăng ký. Sau khi xác minh thành công, bạn có thể đăng nhập và sử dụng hệ thống ngay."
           steps={[
             { title: "Đăng ký", description: "Tạo thông tin tài khoản mới." },
-            { title: "Xác thực email", description: "Nhập mã gồm 5 ký tự được gửi qua email." },
+            { title: "Xác thực thư điện tử", description: "Nhập mã gồm 5 ký tự được gửi qua hộp thư." },
             { title: "Hoàn tất", description: "Đăng nhập và bắt đầu làm việc." },
           ]}
           currentStep={1}
@@ -132,7 +132,7 @@ const VerifyRegistrationPage = () => {
             {
               icon: <CheckCircleOutlined />,
               title: "Mã xác thực có thời hạn",
-              description: "Bạn có thể gửi lại mã mới nếu chưa nhận được email hoặc mã đã hết hạn.",
+              description: "Bạn có thể gửi lại mã mới nếu chưa nhận được thư hoặc mã đã hết hạn.",
             },
           ]}
         />
@@ -141,7 +141,7 @@ const VerifyRegistrationPage = () => {
       <AuthFormCard
         eyebrow="Bước 2 trong quy trình đăng ký"
         title="Xác thực tài khoản"
-        description="Điền đúng email đã đăng ký và mã xác thực để kích hoạt tài khoản của bạn."
+        description="Điền đúng thư điện tử đã đăng ký và mã xác thực để kích hoạt tài khoản của bạn."
         icon={<SafetyCertificateOutlined />}
         extraTop={
           expireMinutes !== null ? <Alert showIcon type="info" message={`Mã xác thực hiện có hiệu lực trong ${expireMinutes} phút.`} /> : null
@@ -180,14 +180,14 @@ const VerifyRegistrationPage = () => {
               disabled={verifyLoading || resendLoading}
             >
               <Form.Item
-                label="Email"
+                label="Thư điện tử"
                 name="email"
                 rules={[
-                  { required: true, message: "Vui lòng nhập email." },
-                  { type: "email", message: "Email không đúng định dạng." },
+                  { required: true, message: "Vui lòng nhập địa chỉ thư điện tử." },
+                  { type: "email", message: "Địa chỉ thư điện tử không đúng định dạng." },
                 ]}
               >
-                <Input size="large" placeholder="email@congty.com" prefix={<MailOutlined />} />
+                <Input size="large" placeholder="ten@congty.vn" prefix={<MailOutlined />} />
               </Form.Item>
 
               <Form.Item
@@ -202,7 +202,7 @@ const VerifyRegistrationPage = () => {
                 <Input size="large" placeholder="Ví dụ: ABCDE" prefix={<SafetyCertificateOutlined />} maxLength={5} />
               </Form.Item>
 
-              <Typography.Text className="auth-form-helper">Nếu chưa nhận được email, hãy kiểm tra mục thư rác trước khi gửi lại mã.</Typography.Text>
+              <Typography.Text className="auth-form-helper">Nếu chưa nhận được thư, hãy kiểm tra mục thư rác trước khi gửi lại mã.</Typography.Text>
 
               <Space direction="vertical" size={10} style={{ width: "100%", marginTop: 8 }}>
                 <Button type="primary" htmlType="submit" size="large" loading={verifyLoading} className="auth-primary-btn" block>

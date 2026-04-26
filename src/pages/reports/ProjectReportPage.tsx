@@ -31,7 +31,7 @@ const ProjectReportPage = () => {
         const projects = await reportService.getProjectReport();
         setRows(projects);
       } catch (err) {
-        notify(getErrorMessage(err, "Không thể load project report"), "error");
+        notify(getErrorMessage(err, "Không thể tải báo cáo dự án."), "error");
       } finally {
         setLoading(false);
       }
@@ -52,16 +52,16 @@ const ProjectReportPage = () => {
       bodyClassName="px-0 pb-0 pt-4"
       header={
         <ListScreenHeaderTemplate
-          title="Project Report"
+          title="Báo cáo dự án"
           actions={
-            canViewFinancialSummary ? <CustomButton label="Project Financial Summary" onClick={() => navigate(ROUTE_URL.REPORT_FINANCIAL)} /> : undefined
+            canViewFinancialSummary ? <CustomButton label="Tổng hợp tài chính dự án" onClick={() => navigate(ROUTE_URL.REPORT_FINANCIAL)} /> : undefined
           }
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[
-                { label: "Home" },
-                { label: "Reports", url: ROUTE_URL.REPORT_PROJECT },
-                { label: "Project" },
+                { label: "Trang chủ" },
+                { label: "Báo cáo", url: ROUTE_URL.REPORT_PROJECT },
+                { label: "Dự án" },
               ]}
             />
           }
@@ -72,10 +72,10 @@ const ProjectReportPage = () => {
           <TableFilterBar searchValue={keyword} onSearchChange={setKeyword} />
           <DataTable
             columns={[
-              { key: "projectId", header: "Project ID" },
-              { key: "projectName", header: "Project Name" },
-              { key: "progress", header: "Progress" },
-              { key: "status", header: "Status" },
+              { key: "projectId", header: "Mã dự án" },
+              { key: "projectName", header: "Tên dự án" },
+              { key: "progress", header: "Tiến độ" },
+              { key: "status", header: "Trạng thái" },
             ]}
             data={filteredRows}
           />
@@ -86,5 +86,4 @@ const ProjectReportPage = () => {
 };
 
 export default ProjectReportPage;
-
 

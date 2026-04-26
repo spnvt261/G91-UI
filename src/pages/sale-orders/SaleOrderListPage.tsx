@@ -135,7 +135,7 @@ const SaleOrderListPage = () => {
       },
       {
         key: "timeline",
-        label: "Xem timeline",
+        label: "Xem tiến trình",
         onClick: () =>
           navigate(
             ROUTE_URL.SALE_ORDER_TIMELINE.replace(":id", record.id),
@@ -146,7 +146,7 @@ const SaleOrderListPage = () => {
     if (canFulfillment && nextFulfillment) {
       actions.push({
         key: "fulfillment",
-        label: `Xử lý ${nextFulfillment.label}`,
+        label: `Thực hiện ${nextFulfillment.label.toLowerCase()}`,
         onClick: () =>
           navigate(
             ROUTE_URL.SALE_ORDER_DETAIL.replace(":id", record.id),
@@ -187,7 +187,7 @@ const SaleOrderListPage = () => {
               {resolveSaleOrderNumber(record.id, record.saleOrderNumber)}
             </Typography.Text>
             <Typography.Text type="secondary">
-              saleOrderId: {record.id}
+              Mã đơn bán: {record.id}
             </Typography.Text>
           </Space>
         ),
@@ -300,7 +300,7 @@ const SaleOrderListPage = () => {
       header={
         <ListScreenHeaderTemplate
           title="Danh sách đơn bán"
-          subtitle="Theo dõi đơn bán từ hợp đồng SUBMITTED đến fulfillment, hóa đơn, thanh toán và công nợ."
+          subtitle="Theo dõi đơn bán từ hợp đồng đã gửi thực hiện đến xử lý kho, hóa đơn, thanh toán và công nợ."
           breadcrumb={
             <CustomBreadcrumb
               breadcrumbs={[{ label: "Trang chủ" }, { label: "Đơn bán" }]}
@@ -343,7 +343,7 @@ const SaleOrderListPage = () => {
             <Col xs={24} md={8}>
               <Card>
                 <Typography.Text type="secondary">
-                  Đơn đang fulfillment
+                  Đơn đang xử lý kho
                 </Typography.Text>
                 <Typography.Title level={3} style={{ margin: 0 }}>
                   {

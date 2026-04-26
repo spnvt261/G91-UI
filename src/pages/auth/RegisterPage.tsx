@@ -38,7 +38,7 @@ const RegisterPage = () => {
       });
 
       const nextRoute = response.redirectTo || ROUTE_URL.VERIFY_REGISTRATION;
-      notify("Tạo tài khoản thành công. Vui lòng xác thực email để kích hoạt tài khoản.", "success");
+      notify("Tạo tài khoản thành công. Vui lòng xác thực thư điện tử để kích hoạt tài khoản.", "success");
       navigate(nextRoute, {
         state: {
           email: response.email || values.email.trim(),
@@ -73,14 +73,14 @@ const RegisterPage = () => {
         <AuthHeroPanel
           eyebrow="Bắt đầu trong vài phút"
           title="Hành trình onboarding rõ ràng và an tâm"
-          description="Bạn chỉ cần hoàn tất thông tin tài khoản, xác thực email và đăng nhập để bắt đầu sử dụng toàn bộ tiện ích của hệ thống G90."
+          description="Bạn chỉ cần hoàn tất thông tin tài khoản, xác thực thư điện tử và đăng nhập để bắt đầu sử dụng toàn bộ tiện ích của hệ thống G90."
           steps={[
-            { title: "Điền thông tin", description: "Nhập họ tên, email và mật khẩu mới." },
-            { title: "Xác thực email", description: "Nhập mã xác thực được gửi đến hộp thư." },
+            { title: "Điền thông tin", description: "Nhập họ tên, thư điện tử và mật khẩu mới." },
+            { title: "Xác thực thư điện tử", description: "Nhập mã xác thực được gửi đến hộp thư." },
             { title: "Bắt đầu sử dụng", description: "Đăng nhập và truy cập không gian làm việc." },
           ]}
           currentStep={0}
-          note="Email xác thực sẽ có thời hạn, bạn có thể gửi lại mã bất kỳ lúc nào."
+          note="Thư xác thực sẽ có thời hạn, bạn có thể gửi lại mã bất kỳ lúc nào."
         />
       }
     >
@@ -89,7 +89,7 @@ const RegisterPage = () => {
         title="Đăng ký"
         description="Tạo tài khoản để quản lý báo giá, hợp đồng, đơn hàng và các nghiệp vụ vận hành trên một nền tảng thống nhất."
         icon={<UserAddOutlined />}
-        extraTop={<Alert showIcon type="info" message="Sau khi đăng ký, bạn cần xác thực email để kích hoạt tài khoản." />}
+        extraTop={<Alert showIcon type="info" message="Sau khi đăng ký, bạn cần xác thực thư điện tử để kích hoạt tài khoản." />}
         footer={
           <Space direction="vertical" size={8} className="auth-footer-links">
             <Typography.Text className="auth-footer-links__text">
@@ -129,14 +129,14 @@ const RegisterPage = () => {
 
               <Col xs={24} md={12}>
                 <Form.Item
-                  label="Email"
+                  label="Thư điện tử"
                   name="email"
                   rules={[
-                    { required: true, message: "Vui lòng nhập email." },
-                    { type: "email", message: "Email không đúng định dạng." },
+                    { required: true, message: "Vui lòng nhập địa chỉ thư điện tử." },
+                    { type: "email", message: "Địa chỉ thư điện tử không đúng định dạng." },
                   ]}
                 >
-                  <Input size="large" placeholder="email@congty.com" prefix={<MailOutlined />} />
+                  <Input size="large" placeholder="ten@congty.vn" prefix={<MailOutlined />} />
                 </Form.Item>
               </Col>
             </Row>

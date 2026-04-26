@@ -209,7 +209,7 @@ const ProjectFinancialSummaryPage = () => {
                   </Row>
                   <Progress percent={marginProgress} showInfo={false} status={profitabilityMargin < 0 ? "exception" : "active"} />
                   <Typography.Text type="secondary">
-                    Biên lợi nhuận được backend tính theo công thức: (paymentsReceived - actualSpend) / paymentsReceived.
+                    Biên lợi nhuận được máy chủ tính theo công thức: (thanh toán đã nhận - chi phí thực tế) / thanh toán đã nhận.
                   </Typography.Text>
                 </Space>
               </Card>

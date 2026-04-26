@@ -641,12 +641,12 @@ const AccountListPage = () => {
             ]}
           />
 
-          <PageSectionCard title="Tìm kiếm và lọc" subtitle="Lọc nhanh theo vai trò, trạng thái hoặc tìm theo tên, email, mã tài khoản.">
+          <PageSectionCard title="Tìm kiếm và lọc" subtitle="Lọc nhanh theo vai trò, trạng thái hoặc tìm theo tên, thư điện tử, mã tài khoản.">
             <Row gutter={[12, 12]}>
               <Col xs={24} lg={12}>
                 <Input.Search
                   value={searchDraft}
-                  placeholder="Nhập tên, email hoặc mã tài khoản"
+                  placeholder="Nhập tên, thư điện tử hoặc mã tài khoản"
                   allowClear
                   enterButton="Tìm"
                   prefix={<SearchOutlined />}
@@ -786,14 +786,14 @@ const AccountListPage = () => {
                 </Col>
                 <Col xs={24} md={12}>
                   <Form.Item
-                    label="Email"
+                    label="Thư điện tử"
                     name="email"
                     rules={[
-                      { required: true, message: "Vui lòng nhập email." },
-                      { type: "email", message: "Email không hợp lệ." },
+                      { required: true, message: "Vui lòng nhập địa chỉ thư điện tử." },
+                      { type: "email", message: "Địa chỉ thư điện tử không hợp lệ." },
                     ]}
                   >
-                    <Input placeholder="user@example.com" disabled={formMode === "edit"} />
+                    <Input placeholder="ten@congty.vn" disabled={formMode === "edit"} />
                   </Form.Item>
                 </Col>
 
@@ -864,7 +864,7 @@ const AccountListPage = () => {
             {detailItem ? (
               <Space direction="vertical" size={16} style={{ width: "100%" }}>
                 <Descriptions column={1} bordered size="small" title={detailItem.fullName}>
-                  <Descriptions.Item label="Email">{detailItem.email}</Descriptions.Item>
+                  <Descriptions.Item label="Thư điện tử">{detailItem.email}</Descriptions.Item>
                   <Descriptions.Item label="Vai trò">
                     <AccountRoleTag role={detailItem.role} />
                   </Descriptions.Item>

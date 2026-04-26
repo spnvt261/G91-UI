@@ -208,24 +208,24 @@ const CustomerCreatePage = () => {
                 <Col xs={24} md={8}>
                   <Form.Item
                     name="email"
-                    label="Email"
+                    label="Thư điện tử"
                     dependencies={["createPortalAccount"]}
-                    extra={createPortalAccount ? "Email này sẽ được dùng để tạo tài khoản portal cho khách hàng." : undefined}
+                    extra={createPortalAccount ? "Địa chỉ này sẽ được dùng để tạo tài khoản cổng thông tin cho khách hàng." : undefined}
                     rules={[
-                      { type: "email", message: "Email không đúng định dạng." },
-                      { max: 255, message: "Email tối đa 255 ký tự." },
+                      { type: "email", message: "Địa chỉ thư điện tử không đúng định dạng." },
+                      { max: 255, message: "Địa chỉ thư điện tử tối đa 255 ký tự." },
                       () => ({
                         validator(_, value) {
                           if (!createPortalAccount || (typeof value === "string" && value.trim())) {
                             return Promise.resolve();
                           }
 
-                          return Promise.reject(new Error("Vui lòng nhập email khi bật tạo tài khoản portal."));
+                          return Promise.reject(new Error("Vui lòng nhập địa chỉ thư điện tử khi bật tạo tài khoản cổng thông tin."));
                         },
                       }),
                     ]}
                   >
-                    <Input placeholder="contact@g91.com" />
+                    <Input placeholder="lienhe@g91.vn" />
                   </Form.Item>
                 </Col>
               </Row>
@@ -270,10 +270,10 @@ const CustomerCreatePage = () => {
 
             <CustomerFormSection
               title="Thiết lập tài khoản"
-              description="Bật tùy chọn này nếu bạn muốn khách hàng có tài khoản truy cập portal ngay khi tạo hồ sơ."
+              description="Bật tùy chọn này nếu bạn muốn khách hàng có tài khoản truy cập cổng thông tin ngay khi tạo hồ sơ."
             >
               <Space direction="vertical" size={12} style={{ width: "100%" }}>
-                <Form.Item name="createPortalAccount" label="Tạo tài khoản portal cho khách hàng" valuePropName="checked" style={{ marginBottom: 0 }}>
+                <Form.Item name="createPortalAccount" label="Tạo tài khoản cổng thông tin cho khách hàng" valuePropName="checked" style={{ marginBottom: 0 }}>
                   <Switch checkedChildren="Bật" unCheckedChildren="Tắt" />
                 </Form.Item>
 
@@ -282,8 +282,8 @@ const CustomerCreatePage = () => {
                     type="success"
                     showIcon
                     icon={<InfoCircleOutlined />}
-                    message="Hệ thống sẽ tạo tài khoản portal sau khi lưu khách hàng."
-                    description="Vui lòng kiểm tra email liên hệ để đảm bảo khách hàng nhận được thông tin đăng nhập."
+                    message="Hệ thống sẽ tạo tài khoản cổng thông tin sau khi lưu khách hàng."
+                    description="Vui lòng kiểm tra thư điện tử liên hệ để đảm bảo khách hàng nhận được thông tin đăng nhập."
                   />
                 ) : (
                   <Typography.Text type="secondary">

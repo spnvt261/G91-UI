@@ -322,7 +322,7 @@ const CustomerListPage = () => {
                 <Row gutter={[12, 12]} align="middle">
                   <Col xs={24} lg={12}>
                     <Input.Search
-                      placeholder="Tìm theo tên công ty, mã khách hàng, email hoặc số điện thoại"
+                      placeholder="Tìm theo tên công ty, mã khách hàng, thư điện tử hoặc số điện thoại"
                       allowClear
                       enterButton="Tìm kiếm"
                       value={searchText}

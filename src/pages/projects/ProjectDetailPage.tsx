@@ -142,8 +142,8 @@ const ProjectDetailPage = () => {
         }
         await projectService.confirmMilestone(id, "Xác nhận nghiệm thu từ trang chi tiết dự án");
       },
-      "Đã xác nhận nghiệm thu milestone.",
-      "Không thể xác nhận milestone.",
+      "Đã xác nhận nghiệm thu mốc dự án.",
+      "Không thể xác nhận mốc dự án.",
     );
   };
 
@@ -232,7 +232,7 @@ const ProjectDetailPage = () => {
         subtitle={
           project
             ? `Mã: ${displayText(project.projectCode ?? project.code)} • Khách hàng: ${displayText(project.customerName ?? project.customerId)}`
-            : "Theo dõi tiến độ, milestone và điều kiện đóng dự án."
+            : "Theo dõi tiến độ, mốc nghiệm thu và điều kiện đóng dự án."
         }
         breadcrumbItems={[
           { title: <span className="cursor-pointer" onClick={() => navigate(ROUTE_URL.DASHBOARD)}>Trang chủ</span> },
@@ -267,7 +267,7 @@ const ProjectDetailPage = () => {
                 ) : null}
                 {canConfirmMilestone ? (
                   <Button onClick={() => void handleConfirmMilestone()} disabled={loadingAction}>
-                    Xác nhận milestone
+                    Xác nhận mốc
                   </Button>
                 ) : null}
               </Space>
@@ -349,8 +349,8 @@ const ProjectDetailPage = () => {
               )}
 
               <Descriptions column={{ xs: 1, md: 2, lg: 3 }} size="small" style={{ marginTop: 12 }}>
-                <Descriptions.Item label="Milestone đã xác nhận">{milestones.filter((milestone) => milestone.confirmedAt).length}</Descriptions.Item>
-                <Descriptions.Item label="Tổng milestone">{milestones.length}</Descriptions.Item>
+                <Descriptions.Item label="Mốc đã xác nhận">{milestones.filter((milestone) => milestone.confirmedAt).length}</Descriptions.Item>
+                <Descriptions.Item label="Tổng mốc">{milestones.length}</Descriptions.Item>
                 <Descriptions.Item label="Xác nhận khách hàng">{milestoneDone ? "Đã xác nhận" : "Chưa xác nhận"}</Descriptions.Item>
                 <Descriptions.Item label="Hợp đồng mở">{openContractCount}</Descriptions.Item>
                 <Descriptions.Item label="Hóa đơn mở">{openInvoiceCount}</Descriptions.Item>
@@ -358,14 +358,14 @@ const ProjectDetailPage = () => {
               </Descriptions>
             </Card>
 
-            <Card title="Danh sách milestone">
+            <Card title="Danh sách mốc nghiệm thu">
               <Table
                 rowKey={(row) => row.id}
                 columns={milestoneColumns}
                 dataSource={milestones}
                 pagination={false}
                 locale={{
-                  emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có dữ liệu milestone." />,
+                  emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có dữ liệu mốc nghiệm thu." />,
                 }}
               />
             </Card>
@@ -419,7 +419,7 @@ const ProjectDetailPage = () => {
               showIcon
               style={{ marginBottom: 12 }}
               message="Dự án chưa đủ điều kiện đóng."
-              description="Hệ thống có thể từ chối yêu cầu đóng dự án nếu chưa hoàn tất milestone, chưa có xác nhận khách hàng hoặc còn ràng buộc tài chính."
+              description="Hệ thống có thể từ chối yêu cầu đóng dự án nếu chưa hoàn tất mốc nghiệm thu, chưa có xác nhận khách hàng hoặc còn ràng buộc tài chính."
             />
           ) : null}
 

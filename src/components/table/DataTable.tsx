@@ -14,7 +14,7 @@ interface DataTableProps<T> {
   emptyText?: string;
 }
 
-const DataTable = <T extends object>({ columns, data, actions, emptyText = "No data found" }: DataTableProps<T>) => {
+const DataTable = <T extends object>({ columns, data, actions, emptyText = "Không có dữ liệu" }: DataTableProps<T>) => {
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
       <div className="overflow-x-auto">
@@ -26,7 +26,7 @@ const DataTable = <T extends object>({ columns, data, actions, emptyText = "No d
                   {column.header}
                 </th>
               ))}
-              {actions ? <th className="px-4 py-3 font-semibold">Actions</th> : null}
+              {actions ? <th className="px-4 py-3 font-semibold">Thao tác</th> : null}
             </tr>
           </thead>
           <tbody>

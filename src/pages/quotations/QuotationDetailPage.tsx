@@ -236,7 +236,7 @@ const QuotationDetailPage = () => {
                           <Descriptions.Item label="Mã khách hàng">{detail.customer?.id || "Chưa cập nhật"}</Descriptions.Item>
                           <Descriptions.Item label="Mã số thuế">{detail.customer?.taxCode || "Chưa cập nhật"}</Descriptions.Item>
                           <Descriptions.Item label="Người liên hệ">{detail.customer?.contactPerson || "Chưa cập nhật"}</Descriptions.Item>
-                          <Descriptions.Item label="Email">{detail.customer?.email || "Chưa cập nhật"}</Descriptions.Item>
+                          <Descriptions.Item label="Thư điện tử">{detail.customer?.email || "Chưa cập nhật"}</Descriptions.Item>
                           <Descriptions.Item label="Số điện thoại">{detail.customer?.phone || "Chưa cập nhật"}</Descriptions.Item>
                           <Descriptions.Item label="Dự án">{detail.project?.name || "Chưa gắn dự án"}</Descriptions.Item>
                           <Descriptions.Item label="Mã dự án">{detail.project?.projectCode || detail.project?.id || "Chưa cập nhật"}</Descriptions.Item>
@@ -270,11 +270,13 @@ const QuotationDetailPage = () => {
                           <Descriptions.Item label="Tổng cuối">
                             <Typography.Text strong>{formatQuotationCurrency(totalAmount)}</Typography.Text>
                           </Descriptions.Item>
-                          <Descriptions.Item label="Action flags">
+                          <Descriptions.Item label="Quyền thao tác">
                             <Space size={8} wrap>
-                              <Tag color={detail.actions?.customerCanEdit ? "blue" : "default"}>customerCanEdit: {detail.actions?.customerCanEdit ? "true" : "false"}</Tag>
+                              <Tag color={detail.actions?.customerCanEdit ? "blue" : "default"}>
+                                Khách hàng được chỉnh sửa: {detail.actions?.customerCanEdit ? "Có" : "Không"}
+                              </Tag>
                               <Tag color={detail.actions?.accountantCanCreateContract ? "green" : "default"}>
-                                accountantCanCreateContract: {detail.actions?.accountantCanCreateContract ? "true" : "false"}
+                                Kế toán được tạo hợp đồng: {detail.actions?.accountantCanCreateContract ? "Có" : "Không"}
                               </Tag>
                             </Space>
                           </Descriptions.Item>

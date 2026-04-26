@@ -32,7 +32,7 @@ const NotFoundPage = () => {
               <HomeOutlined style={{ fontSize: "3rem", color: "#666" }} />
             </div>
 
-            <h1 className="mb-2 text-3xl font-extrabold text-gray-700">Page not found</h1>
+            <h1 className="mb-2 text-3xl font-extrabold text-gray-700">Không tìm thấy trang</h1>
             <p className="mb-6 text-gray-500">
               Không tìm thấy trang bạn yêu cầu. Có thể đường dẫn sai hoặc trang đã được di chuyển.
             </p>
@@ -64,7 +64,7 @@ const NotFoundPage = () => {
             </div>
 
             <p className="mt-6 text-xs text-gray-400">
-              URL: <span className="break-all text-gray-500">{location.href}</span>
+              Đường dẫn: <span className="break-all text-gray-500">{location.href}</span>
             </p>
           </div>
         </div>

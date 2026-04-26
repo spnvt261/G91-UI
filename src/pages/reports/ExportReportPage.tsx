@@ -24,8 +24,8 @@ const ExportReportPage = () => {
           <Card bordered={false}>
             <Result
               status="info"
-              title="Tính năng xuất báo cáo đang trong giai đoạn tích hợp backend"
-              subTitle="Đội ngũ đang hoàn thiện API xuất file và cơ chế phân quyền tải xuống. Giao diện này mô phỏng đầy đủ các định dạng sẽ được hỗ trợ."
+              title="Tính năng xuất báo cáo đang trong giai đoạn tích hợp máy chủ"
+              subTitle="Đội ngũ đang hoàn thiện dịch vụ xuất tệp và cơ chế phân quyền tải xuống. Giao diện này mô phỏng đầy đủ các định dạng sẽ được hỗ trợ."
               extra={
                 <Tag icon={<InfoCircleOutlined />} color="processing">
                   Trạng thái: Sắp mở trong phiên bản tới
@@ -37,8 +37,8 @@ const ExportReportPage = () => {
           <Alert
             type="warning"
             showIcon
-            message="Chưa thể xuất file ở thời điểm hiện tại"
-            description="Các nút hành động đang được khóa tạm thời vì backend chưa cung cấp endpoint export chính thức. Khi hoàn tất, bạn có thể tải file trực tiếp từ trang này."
+            message="Chưa thể xuất tệp ở thời điểm hiện tại"
+            description="Các nút hành động đang được khóa tạm thời vì máy chủ chưa cung cấp điểm truy cập xuất báo cáo chính thức. Khi hoàn tất, bạn có thể tải tệp trực tiếp từ trang này."
           />
 
           <Row gutter={[16, 16]}>
@@ -48,7 +48,7 @@ const ExportReportPage = () => {
                 title="Báo cáo tổng hợp PDF"
                 description="Phù hợp gửi cấp quản lý với bố cục trang in rõ ràng, có phần tổng quan KPI và nhận định."
                 previewItems={["Trang bìa + thông tin kỳ báo cáo", "Tổng quan doanh thu, tồn kho, công nợ", "Bảng chi tiết có phân trang"]}
-                disabledReason="Backend export PDF chưa hoàn thành nên chưa thể tạo tệp."
+                disabledReason="Máy chủ chưa hoàn thành xuất PDF nên chưa thể tạo tệp."
                 icon={<FilePdfOutlined style={{ color: "#cf1322" }} />}
               />
             </Col>
@@ -58,7 +58,7 @@ const ExportReportPage = () => {
                 title="Báo cáo phân tích Excel"
                 description="Dành cho đội vận hành/tài chính cần lọc, đối soát và phân tích sâu theo từng cột dữ liệu."
                 previewItems={["Sheet tổng quan KPI", "Sheet doanh số theo kỳ", "Sheet tồn kho và trạng thái cảnh báo"]}
-                disabledReason="Backend export Excel chưa sẵn sàng để tạo dữ liệu động."
+                disabledReason="Máy chủ chưa sẵn sàng xuất Excel với dữ liệu động."
                 icon={<FileExcelOutlined style={{ color: "#389e0d" }} />}
               />
             </Col>
@@ -66,9 +66,9 @@ const ExportReportPage = () => {
               <ExportOptionCard
                 format="CSV"
                 title="Dữ liệu thô CSV"
-                description="Phục vụ tích hợp nhanh với BI tool hoặc xử lý tự động qua quy trình nội bộ."
-                previewItems={["Mỗi loại báo cáo một file riêng", "UTF-8, dấu phân cách chuẩn", "Tên cột tiếng Việt dễ hiểu"]}
-                disabledReason="Backend export CSV chưa bật endpoint tải xuống."
+                description="Phục vụ tích hợp nhanh với công cụ phân tích hoặc xử lý tự động qua quy trình nội bộ."
+                previewItems={["Mỗi loại báo cáo một tệp riêng", "UTF-8, dấu phân cách chuẩn", "Tên cột tiếng Việt dễ hiểu"]}
+                disabledReason="Máy chủ chưa bật điểm tải xuống CSV."
                 icon={<FileTextOutlined style={{ color: "#1677ff" }} />}
               />
             </Col>
@@ -85,8 +85,8 @@ const ExportReportPage = () => {
               <Descriptions.Item label="Tài chính">
                 Mã dự án, tiến độ, trạng thái, tổng công nợ liên quan.
               </Descriptions.Item>
-              <Descriptions.Item label="Định danh file">
-                <Typography.Text code>report-type_yyyyMMdd_HHmm</Typography.Text>
+              <Descriptions.Item label="Định danh tệp">
+                <Typography.Text code>loai-bao-cao_yyyyMMdd_HHmm</Typography.Text>
               </Descriptions.Item>
               <Descriptions.Item label="Chuẩn ngôn ngữ">Tiếng Việt đầy đủ dấu, đơn vị VND rõ ràng.</Descriptions.Item>
               <Descriptions.Item label="Phân quyền tải">
@@ -96,7 +96,7 @@ const ExportReportPage = () => {
           </Card>
 
           <Typography.Text type="secondary">
-            Trang này đóng vai trò roadmap UI cho tính năng export: giao diện đã sẵn sàng để kích hoạt ngay khi backend hoàn thiện.
+            Trang này đóng vai trò kế hoạch giao diện cho tính năng xuất báo cáo: giao diện đã sẵn sàng để kích hoạt ngay khi máy chủ hoàn thiện.
           </Typography.Text>
         </Space>
       }

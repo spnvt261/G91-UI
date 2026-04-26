@@ -104,7 +104,7 @@ const NotificationItem: React.FC<{
           type="button"
           onClick={startClose}
           className="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-          aria-label="Close notification"
+          aria-label="Đóng thông báo"
         >
           x
         </button>

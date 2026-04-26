@@ -15,7 +15,7 @@ const CustomSearchBar = ({
   value,
   onChange,
   resetSearch,
-  placeHolder = "Search...",
+  placeHolder = "Tìm kiếm...",
   classNameInput,
 }: Props) => {
   return (

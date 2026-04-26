@@ -156,7 +156,7 @@ const ProductFormSections = ({
             </Form.Item>
           </Col>
           <Col xs={24} md={14}>
-            <Form.Item label="Tải ảnh lên (upload-images)">
+            <Form.Item label="Tải ảnh lên">
               <Upload
                 multiple
                 accept="image/*"
@@ -186,14 +186,14 @@ const ProductFormSections = ({
           <Col xs={24}>
             <Form.Item
               label="Danh sách liên kết ảnh"
-              help={errors.imageUrlsText ?? "Nhập mỗi liên kết trên một dòng hoặc phân tách bằng dấu phẩy. Chấp nhận /uploads/... hoặc URL bắt đầu bằng http/https."}
+              help={errors.imageUrlsText ?? "Nhập mỗi liên kết trên một dòng hoặc phân tách bằng dấu phẩy. Chấp nhận đường dẫn nội bộ hoặc liên kết bắt đầu bằng http/https."}
               validateStatus={errors.imageUrlsText ? "error" : undefined}
             >
               <Input.TextArea
                 rows={4}
                 value={values.imageUrlsText}
                 onChange={(event) => onFieldChange("imageUrlsText", event.target.value)}
-                placeholder={"/uploads/products/anh-1.jpg\nhttps://example.com/anh-2.jpg"}
+                placeholder={"https://ten-mien.vn/anh-1.jpg\nhttps://ten-mien.vn/anh-2.jpg"}
                 disabled={disabled}
               />
             </Form.Item>

@@ -95,17 +95,17 @@ const LoginPage = () => {
             {
               icon: <CheckCircleOutlined />,
               title: "Luồng thao tác rõ ràng",
-              description: "Form gọn, trạng thái phản hồi rõ, giúp đăng nhập nhanh và ít sai sót.",
+              description: "Biểu mẫu gọn, trạng thái phản hồi rõ, giúp đăng nhập nhanh và ít sai sót.",
             },
           ]}
-          note="Mẹo: nếu chưa kích hoạt email, bạn có thể xác thực tài khoản ngay từ trang này."
+          note="Mẹo: nếu chưa kích hoạt thư điện tử, bạn có thể xác thực tài khoản ngay từ trang này."
         />
       }
     >
       <AuthFormCard
         eyebrow="Chào mừng bạn quay lại"
         title="Đăng nhập"
-        description="Nhập email và mật khẩu để truy cập hệ thống điều hành doanh nghiệp G90."
+        description="Nhập thư điện tử và mật khẩu để truy cập hệ thống điều hành doanh nghiệp G90."
         icon={<LoginOutlined />}
         footer={
           <Space direction="vertical" size={8} className="auth-footer-links">
@@ -116,7 +116,7 @@ const LoginPage = () => {
               </Link>
             </Typography.Text>
             <Typography.Text className="auth-footer-links__text">
-              Chưa xác thực email?{" "}
+              Chưa xác thực thư điện tử?{" "}
               <Link to={ROUTE_URL.VERIFY_REGISTRATION} className="auth-footer-links__secondary">
                 Nhập mã xác thực
               </Link>
@@ -135,14 +135,14 @@ const LoginPage = () => {
 
           <Form form={form} layout="vertical" onFinish={handleSubmit} requiredMark={false} autoComplete="off" disabled={loading}>
             <Form.Item
-              label="Email"
+              label="Thư điện tử"
               name="email"
               rules={[
-                { required: true, message: "Vui lòng nhập email." },
-                { type: "email", message: "Email không đúng định dạng." },
+                { required: true, message: "Vui lòng nhập địa chỉ thư điện tử." },
+                { type: "email", message: "Địa chỉ thư điện tử không đúng định dạng." },
               ]}
             >
-              <Input size="large" placeholder="email@congty.com" prefix={<MailOutlined />} />
+              <Input size="large" placeholder="ten@congty.vn" prefix={<MailOutlined />} />
             </Form.Item>
 
             <Form.Item

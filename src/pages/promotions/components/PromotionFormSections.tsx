@@ -259,7 +259,7 @@ const PromotionFormSections = ({
           </Col>
 
           <Col xs={24} md={8}>
-            <Form.Item label="Priority" validateStatus={errors.priority ? "error" : ""} help={errors.priority}>
+            <Form.Item label="Độ ưu tiên" validateStatus={errors.priority ? "error" : ""} help={errors.priority}>
               <InputNumber
                 className="w-full"
                 min={0}

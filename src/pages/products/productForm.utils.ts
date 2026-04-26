@@ -140,7 +140,7 @@ export const validateProductForm = (values: ProductFormValues): ProductFormError
 
   const imageUrls = parseImageUrls(values.imageUrlsText);
   if (imageUrls.some((item) => !isValidImageReference(item))) {
-    errors.imageUrlsText = "Mỗi URL ảnh phải là đường dẫn /uploads/... hoặc URL http/https hợp lệ.";
+    errors.imageUrlsText = "Mỗi liên kết ảnh phải là đường dẫn nội bộ hoặc liên kết http/https hợp lệ.";
   }
 
   return errors;

@@ -200,7 +200,7 @@ const InvoiceDetailPage = () => {
   const requestColumns = useMemo<ColumnsType<PaymentConfirmationRequestModel>>(
     () => [
       {
-        title: "Requested amount",
+        title: "Số tiền yêu cầu",
         dataIndex: "requestedAmount",
         key: "requestedAmount",
         width: 170,
@@ -208,35 +208,35 @@ const InvoiceDetailPage = () => {
         render: (value?: number) => <Typography.Text strong>{formatPaymentConfirmationAmountWithCurrency(value)}</Typography.Text>,
       },
       {
-        title: "Transfer time",
+        title: "Thời gian chuyển khoản",
         dataIndex: "transferTime",
         key: "transferTime",
         width: 170,
         render: (value?: string) => formatPaymentConfirmationDateTime(value),
       },
       {
-        title: "Reference code",
+        title: "Mã tham chiếu",
         dataIndex: "referenceCode",
         key: "referenceCode",
         width: 160,
         render: (value?: string) => value || "-",
       },
       {
-        title: "Status",
+        title: "Trạng thái",
         dataIndex: "status",
         key: "status",
         width: 140,
         render: (value) => <PaymentConfirmationStatusTag status={value} />,
       },
       {
-        title: "Reviewed at",
+        title: "Duyệt lúc",
         dataIndex: "reviewedAt",
         key: "reviewedAt",
         width: 170,
         render: (value?: string) => formatPaymentConfirmationDateTime(value, "-"),
       },
       {
-        title: "Payment id",
+        title: "Mã thanh toán",
         dataIndex: "paymentId",
         key: "paymentId",
         width: 160,
@@ -327,7 +327,7 @@ const InvoiceDetailPage = () => {
     }
 
     if (hasPendingReview) {
-      notify("Hóa đơn đã có request đang chờ duyệt.", "warning");
+      notify("Hóa đơn đã có yêu cầu đang chờ duyệt.", "warning");
       return;
     }
 
@@ -460,7 +460,7 @@ const InvoiceDetailPage = () => {
                   <Descriptions column={{ xs: 1, md: 3 }} size="small" colon={false}>
                     <Descriptions.Item label="Tạm tính">{toCurrency(invoice.subtotalAmount)}</Descriptions.Item>
                     <Descriptions.Item label="Điều chỉnh">{toCurrency(invoice.adjustmentAmount)}</Descriptions.Item>
-                    <Descriptions.Item label="VAT">{toCurrency(invoice.vatAmount)}</Descriptions.Item>
+                    <Descriptions.Item label="Thuế GTGT">{toCurrency(invoice.vatAmount)}</Descriptions.Item>
                     <Descriptions.Item label="Tổng tiền">{toCurrency(invoice.grandTotal)}</Descriptions.Item>
                     <Descriptions.Item label="Đã thu">{toCurrency(invoice.paidAmount)}</Descriptions.Item>
                     <Descriptions.Item label="Còn phải thu">{toCurrency(invoice.outstandingAmount)}</Descriptions.Item>
@@ -479,18 +479,18 @@ const InvoiceDetailPage = () => {
                 >
                   <Space direction="vertical" size={16} style={{ width: "100%" }}>
                     <Descriptions column={{ xs: 1, md: 2, lg: 3 }} size="small" colon={false}>
-                      <Descriptions.Item label="Invoice number">{resolveInvoiceNumber(invoice.id, invoice.invoiceNumber)}</Descriptions.Item>
-                      <Descriptions.Item label="Customer name">{invoice.customerName || "Chưa cập nhật"}</Descriptions.Item>
-                      <Descriptions.Item label="Invoice status"><InvoiceStatusTag status={invoice.status} /></Descriptions.Item>
-                      <Descriptions.Item label="Grand total">{formatPaymentConfirmationAmountWithCurrency(invoice.grandTotal)}</Descriptions.Item>
-                      <Descriptions.Item label="Paid amount">{formatPaymentConfirmationAmountWithCurrency(invoice.paidAmount)}</Descriptions.Item>
-                      <Descriptions.Item label="Outstanding amount">
+                      <Descriptions.Item label="Số hóa đơn">{resolveInvoiceNumber(invoice.id, invoice.invoiceNumber)}</Descriptions.Item>
+                      <Descriptions.Item label="Tên khách hàng">{invoice.customerName || "Chưa cập nhật"}</Descriptions.Item>
+                      <Descriptions.Item label="Trạng thái hóa đơn"><InvoiceStatusTag status={invoice.status} /></Descriptions.Item>
+                      <Descriptions.Item label="Tổng tiền">{formatPaymentConfirmationAmountWithCurrency(invoice.grandTotal)}</Descriptions.Item>
+                      <Descriptions.Item label="Đã thanh toán">{formatPaymentConfirmationAmountWithCurrency(invoice.paidAmount)}</Descriptions.Item>
+                      <Descriptions.Item label="Còn phải thu">
                         <Typography.Text strong>{formatPaymentConfirmationAmountWithCurrency(invoice.outstandingAmount)}</Typography.Text>
                       </Descriptions.Item>
                     </Descriptions>
 
                     {isCustomer && hasPendingReview ? (
-                      <Alert type="warning" showIcon message="Hóa đơn đang có request PENDING_REVIEW nên chưa thể gửi request mới." />
+                      <Alert type="warning" showIcon message="Hóa đơn đang có yêu cầu chờ duyệt nên chưa thể gửi yêu cầu mới." />
                     ) : null}
 
                     {!invoiceAllowsPaymentConfirmation ? (
@@ -498,7 +498,7 @@ const InvoiceDetailPage = () => {
                         type="info"
                         showIcon
                         message="Hóa đơn này hiện không đủ điều kiện để gửi xác nhận thanh toán."
-                        description="Chỉ cho phép tạo request khi invoice ở trạng thái ISSUED hoặc PARTIALLY_PAID và outstanding amount lớn hơn 0."
+                        description="Chỉ cho phép tạo yêu cầu khi hóa đơn đã phát hành hoặc đã thanh toán một phần và số tiền còn phải thu lớn hơn 0."
                       />
                     ) : (
                       <>
@@ -510,15 +510,15 @@ const InvoiceDetailPage = () => {
                           <Col xs={24} lg={14}>
                             <Card size="small" title="Hướng dẫn chuyển khoản" loading={paymentInstructionLoading && !paymentInstruction}>
                               <Descriptions column={1} size="small" colon={false}>
-                                <Descriptions.Item label="Bank name">{paymentInstruction?.bankName || "Chưa cập nhật"}</Descriptions.Item>
-                                <Descriptions.Item label="Account name">{paymentInstruction?.bankAccountName || "Chưa cập nhật"}</Descriptions.Item>
-                                <Descriptions.Item label="Account number">{paymentInstruction?.bankAccountNo || "Chưa cập nhật"}</Descriptions.Item>
-                                <Descriptions.Item label="Transfer content">
+                                <Descriptions.Item label="Tên ngân hàng">{paymentInstruction?.bankName || "Chưa cập nhật"}</Descriptions.Item>
+                                <Descriptions.Item label="Tên tài khoản">{paymentInstruction?.bankAccountName || "Chưa cập nhật"}</Descriptions.Item>
+                                <Descriptions.Item label="Số tài khoản">{paymentInstruction?.bankAccountNo || "Chưa cập nhật"}</Descriptions.Item>
+                                <Descriptions.Item label="Nội dung chuyển khoản">
                                   <Space wrap>
                                     <Typography.Text code>{paymentInstruction?.transferContent || "Chưa cập nhật"}</Typography.Text>
                                     {paymentInstruction?.transferContent ? (
                                       <Button icon={<CopyOutlined />} onClick={() => void handleCopyTransferContent()}>
-                                        Copy
+                                        Sao chép
                                       </Button>
                                     ) : null}
                                   </Space>
@@ -527,7 +527,7 @@ const InvoiceDetailPage = () => {
                             </Card>
                           </Col>
                           <Col xs={24} lg={10}>
-                            <Card size="small" title="QR code" loading={paymentInstructionLoading && !paymentInstruction}>
+                            <Card size="small" title="Mã QR" loading={paymentInstructionLoading && !paymentInstruction}>
                               <Space direction="vertical" align="center" style={{ width: "100%" }}>
                                 {paymentInstruction?.qrImageUrl ? (
                                   <Image src={paymentInstruction.qrImageUrl} alt="QR thanh toán" width={220} />
@@ -543,19 +543,19 @@ const InvoiceDetailPage = () => {
                       </>
                     )}
 
-                    <Card size="small" title="Lịch sử payment confirmation request">
+                    <Card size="small" title="Lịch sử yêu cầu xác nhận thanh toán">
                       <Space direction="vertical" size={12} style={{ width: "100%" }}>
-                        {requestError ? <Alert type="error" showIcon message="Không thể tải lịch sử request." description={requestError} /> : null}
+                        {requestError ? <Alert type="error" showIcon message="Không thể tải lịch sử yêu cầu." description={requestError} /> : null}
                         <Table<PaymentConfirmationRequestModel>
                           rowKey="id"
                           columns={requestColumns}
                           dataSource={requestItems}
-                          loading={{ spinning: requestLoading, tip: "Đang tải lịch sử request..." }}
+                          loading={{ spinning: requestLoading, tip: "Đang tải lịch sử yêu cầu..." }}
                           pagination={false}
                           scroll={{ x: 1100 }}
                           locale={{
                             emptyText: (
-                              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có request xác nhận thanh toán cho hóa đơn này." />
+                              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có yêu cầu xác nhận thanh toán cho hóa đơn này." />
                             ),
                           }}
                         />
@@ -613,7 +613,7 @@ const InvoiceDetailPage = () => {
             <Col xs={24} md={12}>
               <Form.Item
                 name="requestedAmount"
-                label="Requested amount"
+                label="Số tiền yêu cầu"
                 rules={[
                   { required: true, message: "Vui lòng nhập số tiền yêu cầu." },
                   {
@@ -628,7 +628,7 @@ const InvoiceDetailPage = () => {
                       }
 
                       if (invoice && amount > invoice.outstandingAmount) {
-                        return Promise.reject(new Error("Số tiền yêu cầu không được vượt outstanding amount."));
+                        return Promise.reject(new Error("Số tiền yêu cầu không được vượt số tiền còn phải thu."));
                       }
 
                       return Promise.resolve();
@@ -642,7 +642,7 @@ const InvoiceDetailPage = () => {
             <Col xs={24} md={12}>
               <Form.Item
                 name="transferTime"
-                label="Transfer time"
+                label="Thời gian chuyển khoản"
                 rules={[{ required: true, message: "Vui lòng chọn thời điểm chuyển khoản." }]}
               >
                 <DatePicker className="w-full" format="DD/MM/YYYY HH:mm" showTime={{ format: "HH:mm" }} />
@@ -651,7 +651,7 @@ const InvoiceDetailPage = () => {
             <Col xs={24} md={12}>
               <Form.Item
                 name="senderBankName"
-                label="Sender bank name"
+                label="Tên ngân hàng người gửi"
                 rules={[
                   { required: true, message: "Vui lòng nhập tên ngân hàng gửi." },
                   { max: 255, message: "Tên ngân hàng gửi tối đa 255 ký tự." },
@@ -663,7 +663,7 @@ const InvoiceDetailPage = () => {
             <Col xs={24} md={12}>
               <Form.Item
                 name="senderAccountName"
-                label="Sender account name"
+                label="Tên tài khoản người gửi"
                 rules={[
                   { required: true, message: "Vui lòng nhập tên tài khoản gửi." },
                   { max: 255, message: "Tên tài khoản gửi tối đa 255 ký tự." },
@@ -675,7 +675,7 @@ const InvoiceDetailPage = () => {
             <Col xs={24} md={12}>
               <Form.Item
                 name="senderAccountNo"
-                label="Sender account number"
+                label="Số tài khoản người gửi"
                 rules={[
                   { required: true, message: "Vui lòng nhập số tài khoản gửi." },
                   { max: 100, message: "Số tài khoản gửi tối đa 100 ký tự." },
@@ -687,7 +687,7 @@ const InvoiceDetailPage = () => {
             <Col xs={24} md={12}>
               <Form.Item
                 name="referenceCode"
-                label="Reference code"
+                label="Mã tham chiếu"
                 rules={[
                   { required: true, message: "Vui lòng nhập mã tham chiếu." },
                   { max: 100, message: "Mã tham chiếu tối đa 100 ký tự." },
@@ -699,17 +699,17 @@ const InvoiceDetailPage = () => {
             <Col xs={24}>
               <Form.Item
                 name="proofDocumentUrl"
-                label="Proof document URL"
+                label="Đường dẫn chứng từ"
                 rules={[
-                  { type: "url", message: "URL minh chứng không đúng định dạng." },
-                  { max: 1000, message: "Proof document URL tối đa 1000 ký tự." },
+                  { type: "url", message: "Đường dẫn minh chứng không đúng định dạng." },
+                  { max: 1000, message: "Đường dẫn chứng từ tối đa 1000 ký tự." },
                 ]}
               >
                 <Input maxLength={1000} />
               </Form.Item>
             </Col>
             <Col xs={24}>
-              <Form.Item name="note" label="Note" rules={[{ max: 1000, message: "Ghi chú tối đa 1000 ký tự." }]}>
+              <Form.Item name="note" label="Ghi chú" rules={[{ max: 1000, message: "Ghi chú tối đa 1000 ký tự." }]}>
                 <Input.TextArea rows={4} maxLength={1000} showCount />
               </Form.Item>
             </Col>
