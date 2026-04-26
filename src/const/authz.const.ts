@@ -148,6 +148,7 @@ export type AppAction =
 
 const AUTHENTICATED_ROLES: UserRole[] = ["CUSTOMER", "WAREHOUSE", "ACCOUNTANT", "OWNER"];
 const PRODUCT_VIEW_ROLES: UserRole[] = ["GUEST", "CUSTOMER", "WAREHOUSE", "OWNER"];
+const PRODUCT_DETAIL_VIEW_ROLES: UserRole[] = ["CUSTOMER", "WAREHOUSE", "OWNER"];
 const OWNER_ONLY: UserRole[] = ["OWNER"];
 const ACCOUNTANT_OWNER: UserRole[] = ["ACCOUNTANT", "OWNER"];
 const SALE_ORDER_INTERNAL: UserRole[] = ["WAREHOUSE", "ACCOUNTANT", "OWNER"];
@@ -166,7 +167,7 @@ const PERMISSION_ROLE_MAP: Record<PermissionKey, UserRole[]> = {
   "account.update": OWNER_ONLY,
   "account.deactivate": OWNER_ONLY,
   "product.view.list": PRODUCT_VIEW_ROLES,
-  "product.view.detail": PRODUCT_VIEW_ROLES,
+  "product.view.detail": PRODUCT_DETAIL_VIEW_ROLES,
   "product.filter": PRODUCT_VIEW_ROLES,
   "product.search": PRODUCT_VIEW_ROLES,
   "product.create": WAREHOUSE_ONLY,

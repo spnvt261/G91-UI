@@ -1,4 +1,4 @@
-import { EditOutlined, EllipsisOutlined, EyeOutlined, FileTextOutlined, DeleteOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined, EllipsisOutlined, EyeOutlined, FileTextOutlined } from "@ant-design/icons";
 import { Button, Card, Dropdown, Empty, Space, Typography } from "antd";
 import type { MenuProps } from "antd";
 import type { ProductModel } from "../../../models/product/product.model";
@@ -7,6 +7,7 @@ import ProductStatusTag from "./ProductStatusTag";
 
 interface ProductCatalogCardProps {
   product: ProductModel;
+  allowView: boolean;
   allowUpdate: boolean;
   allowDelete: boolean;
   showCreateQuotation: boolean;
@@ -17,8 +18,19 @@ interface ProductCatalogCardProps {
   onRequestQuotation: () => void;
 }
 
+interface ProductCatalogImageFallbackProps {
+  description: string;
+}
+
+const ProductCatalogImageFallback = ({ description }: ProductCatalogImageFallbackProps) => (
+  <div style={{ height: 220, display: "grid", placeItems: "center", background: "#f8fafc" }}>
+    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={description} />
+  </div>
+);
+
 const ProductCatalogCard = ({
   product,
+  allowView,
   allowUpdate,
   allowDelete,
   showCreateQuotation,
@@ -56,7 +68,7 @@ const ProductCatalogCard = ({
 
   return (
     <Card
-      hoverable
+      hoverable={allowView || allowUpdate || allowDelete || showCreateQuotation}
       bordered
       cover={
         product.mainImage ? (
@@ -65,12 +77,10 @@ const ProductCatalogCard = ({
             alt={product.productName}
             preview
             style={{ height: 220, objectFit: "cover" }}
-            fallback="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nNjQwJyBoZWlnaHQ9JzM2MCcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJz48cmVjdCB3aWR0aD0nNjQwJyBoZWlnaHQ9JzM2MCcgZmlsbD0nI2YxZjVmOScvPjx0ZXh0IHg9JzUwJScgeT0nNTAlJyBmaWxsPScjOTRhM2I4JyBmb250LXNpemU9JzI2JyB0ZXh0LWFuY2hvcj0nbWlkZGxlJz5LaMO0bmcgY+OzIOG6o25oPC90ZXh0Pjwvc3ZnPg=="
+            fallback={<ProductCatalogImageFallback description="Lỗi tải ảnh" />}
           />
         ) : (
-          <div style={{ height: 220, display: "grid", placeItems: "center", background: "#f8fafc" }}>
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có ảnh" />
-          </div>
+          <ProductCatalogImageFallback description="Chưa có ảnh" />
         )
       }
       styles={{ body: { padding: 16 } }}
@@ -87,16 +97,26 @@ const ProductCatalogCard = ({
         </Space>
 
         <Space direction="vertical" size={4} style={{ width: "100%" }}>
-          <Typography.Text>Loại: <Typography.Text strong>{product.type || "Chưa cập nhật"}</Typography.Text></Typography.Text>
-          <Typography.Text>Kích thước: <Typography.Text strong>{product.size || "Chưa cập nhật"}</Typography.Text></Typography.Text>
-          <Typography.Text>Độ dày: <Typography.Text strong>{product.thickness || "Chưa cập nhật"}</Typography.Text></Typography.Text>
-          <Typography.Text>Đơn vị: <Typography.Text strong>{product.unit || "Chưa cập nhật"}</Typography.Text></Typography.Text>
+          <Typography.Text>
+            Loại: <Typography.Text strong>{product.type || "Chưa cập nhật"}</Typography.Text>
+          </Typography.Text>
+          <Typography.Text>
+            Kích thước: <Typography.Text strong>{product.size || "Chưa cập nhật"}</Typography.Text>
+          </Typography.Text>
+          <Typography.Text>
+            Độ dày: <Typography.Text strong>{product.thickness || "Chưa cập nhật"}</Typography.Text>
+          </Typography.Text>
+          <Typography.Text>
+            Đơn vị: <Typography.Text strong>{product.unit || "Chưa cập nhật"}</Typography.Text>
+          </Typography.Text>
         </Space>
 
         <Space wrap>
-          <Button type="primary" icon={<EyeOutlined />} onClick={onView}>
-            Xem chi tiết
-          </Button>
+          {allowView ? (
+            <Button type="primary" icon={<EyeOutlined />} onClick={onView}>
+              Xem chi tiết
+            </Button>
+          ) : null}
 
           {showCreateQuotation ? (
             <Button icon={<FileTextOutlined />} onClick={onRequestQuotation}>

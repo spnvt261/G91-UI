@@ -62,10 +62,16 @@ const companyContacts = [
 
 type ProductDefaultVisualProps = {
   variant?: "hero" | "card";
+  title?: string;
+  description?: string;
 };
 
-const ProductDefaultVisual = ({ variant = "card" }: ProductDefaultVisualProps) => (
-  <div className={`landing-page__product-default landing-page__product-default--${variant}`} role="img" aria-label="Ảnh sản phẩm đang cập nhật">
+const ProductDefaultVisual = ({
+  variant = "card",
+  title = "Ảnh đang cập nhật",
+  description = "Vật tư thép công nghiệp",
+}: ProductDefaultVisualProps) => (
+  <div className={`landing-page__product-default landing-page__product-default--${variant}`} role="img" aria-label={title}>
     <div className="landing-page__product-default-mark">G90</div>
     <div className="landing-page__product-default-stack" aria-hidden="true">
       <span />
@@ -73,8 +79,8 @@ const ProductDefaultVisual = ({ variant = "card" }: ProductDefaultVisualProps) =
       <span />
     </div>
     <div className="landing-page__product-default-caption">
-      <Typography.Text>Ảnh đang cập nhật</Typography.Text>
-      <Typography.Text type="secondary">Vật tư thép công nghiệp</Typography.Text>
+      <Typography.Text>{title}</Typography.Text>
+      <Typography.Text type="secondary">{description}</Typography.Text>
     </div>
   </div>
 );
@@ -248,7 +254,7 @@ const HomePage = () => {
                         src={featuredHeroProduct.mainImage}
                         alt={featuredHeroProduct.productName}
                         preview={false}
-                        fallback={<ProductDefaultVisual variant="hero" />}
+                        fallback={<ProductDefaultVisual variant="hero" title="Lỗi tải ảnh" description="Không thể hiển thị ảnh sản phẩm" />}
                         style={{ height: 340, width: "100%", objectFit: "cover" }}
                       />
                     ) : (
@@ -355,7 +361,7 @@ const HomePage = () => {
                   {featuredProducts.map((product) => (
                     <Col key={product.id} xs={24} md={12} xl={8}>
                       <Card
-                        hoverable
+                        hoverable={isCustomerSession}
                         className="landing-page__product-card"
                         cover={
                           product.mainImage ? (
@@ -363,7 +369,7 @@ const HomePage = () => {
                               src={product.mainImage}
                               alt={product.productName}
                               preview={false}
-                              fallback={<ProductDefaultVisual />}
+                              fallback={<ProductDefaultVisual title="Lỗi tải ảnh" description="Không thể hiển thị ảnh sản phẩm" />}
                               style={{ height: 210, width: "100%", objectFit: "cover" }}
                             />
                           ) : (
@@ -386,9 +392,11 @@ const HomePage = () => {
                             <Tag>{product.thickness || "Độ dày"}</Tag>
                           </Space>
 
-                          <Button type="link" className="landing-page__product-link" onClick={() => navigate(ROUTE_URL.PRODUCT_DETAIL.replace(":id", product.id))}>
+                          {isCustomerSession ? (
+                            <Button type="link" className="landing-page__product-link" onClick={() => navigate(ROUTE_URL.PRODUCT_DETAIL.replace(":id", product.id))}>
                             Chi tiết
-                          </Button>
+                            </Button>
+                          ) : null}
                         </Space>
                       </Card>
                     </Col>

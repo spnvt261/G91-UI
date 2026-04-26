@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ListScreenHeaderTemplate from "../../components/templates/ListScreenHeaderTemplate";
 import NoResizeScreenTemplate from "../../components/templates/NoResizeScreenTemplate";
-import { canPerformAction } from "../../const/authz.const";
+import { canPerformAction, hasPermission } from "../../const/authz.const";
 import { ROUTE_URL } from "../../const/route_url.const";
 import { useNotify } from "../../context/notifyContext";
 import type { ProductModel } from "../../models/product/product.model";
@@ -54,6 +54,7 @@ const ProductListPage = () => {
   const navigate = useNavigate();
   const role = getStoredUserRole() ?? "GUEST";
   const allowCreate = canPerformAction(role, "product.create");
+  const allowViewDetail = hasPermission(role, "product.view.detail");
   const allowUpdate = canPerformAction(role, "product.update");
   const allowDelete = canPerformAction(role, "product.delete");
   const showCreateQuotation = canPerformAction(role, "quotation.create");
@@ -380,6 +381,7 @@ const ProductListPage = () => {
                   <Col key={item.id} xs={24} md={12} xl={8}>
                     <ProductCatalogCard
                       product={item}
+                      allowView={allowViewDetail}
                       allowUpdate={allowUpdate}
                       allowDelete={allowDelete}
                       showCreateQuotation={showCreateQuotation}
