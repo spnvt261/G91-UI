@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from "axios";
 import type { ApiResponse, ApiValidationErrorItem } from "../models/common/api.model";
+import { translateApiErrorItems } from "../services/error-message.utils";
 import { extractApiErrorMessage, extractFieldErrors, isApiResponse, isSuccessResponse, unwrapApiResponse } from "../services/service.utils";
 
 const MIN_REQUEST_DURATION_MS = 1000;
@@ -33,6 +34,16 @@ const api = axios.create({
 
 const getToken = () => localStorage.getItem("access_token");
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const createApiClientError = (payload: ApiResponse<unknown>, fallback: string) => {
+  const errors = translateApiErrorItems(payload.errors, payload.code);
+
+  return new ApiClientError(extractApiErrorMessage({ ...payload, errors }, fallback), {
+    code: payload.code,
+    errors,
+    fieldErrors: extractFieldErrors(errors),
+  });
+};
 
 const ensureMinimumRequestDuration = async (config?: RequestMetaConfig) => {
   const startedAt = config?.metadata?.requestStartedAt;
@@ -90,24 +101,14 @@ api.interceptors.response.use(
       return response;
     }
 
-    throw new ApiClientError(extractApiErrorMessage(payload, "Request failed"), {
-      code: payload.code,
-      errors: payload.errors,
-      fieldErrors: extractFieldErrors(payload.errors),
-    });
+    throw createApiClientError(payload, "Request failed");
   },
   async (error: AxiosError) => {
     await ensureMinimumRequestDuration(error.config as RequestMetaConfig | undefined);
 
     const payload = error.response?.data as ApiResponse<unknown> | undefined;
     if (isApiResponse(payload)) {
-      return Promise.reject(
-        new ApiClientError(extractApiErrorMessage(payload, error.message || "Request failed"), {
-          code: payload.code,
-          errors: payload.errors,
-          fieldErrors: extractFieldErrors(payload.errors),
-        }),
-      );
+      return Promise.reject(createApiClientError(payload, error.message || "Request failed"));
     }
 
     return Promise.reject(error);

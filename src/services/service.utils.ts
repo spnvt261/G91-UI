@@ -1,4 +1,5 @@
 import type { ApiResponse, ApiValidationErrorItem, PaginationMeta } from "../models/common/api.model";
+import { translateErrorMessage } from "./error-message.utils";
 
 type MaybeRecord = Record<string, unknown>;
 
@@ -9,7 +10,7 @@ export const isApiResponse = (value: unknown): value is ApiResponse<unknown> => 
     return false;
   }
 
-  return "code" in value && "message" in value && "data" in value;
+  return typeof value.code === "string" && typeof value.message === "string";
 };
 
 export const isSuccessResponse = (value: unknown): value is ApiResponse<unknown> & { code: "SUCCESS" } => {
@@ -41,7 +42,7 @@ export const extractFieldErrors = (errors?: ApiValidationErrorItem[]): Record<st
       result[key] = [];
     }
 
-    result[key].push(item.message);
+    result[key].push(translateErrorMessage(item.message, { field: item.field }));
     return result;
   }, {});
 };
@@ -60,24 +61,24 @@ export const extractApiErrorMessage = (payload: unknown, fallback = "Request fai
       return firstFieldMessage;
     }
 
-    return payload.message || fallback;
+    return translateErrorMessage(payload.message || fallback, { code: payload.code });
   }
 
   if (Array.isArray(payload)) {
-    return payload.map((item) => String(item)).join("; ") || fallback;
+    return payload.map((item) => translateErrorMessage(String(item))).join("; ") || fallback;
   }
 
   if (isObject(payload)) {
     if (typeof payload.message === "string" && payload.message.trim()) {
-      return payload.message;
+      return translateErrorMessage(payload.message);
     }
 
     if (typeof payload.error === "string" && payload.error.trim()) {
-      return payload.error;
+      return translateErrorMessage(payload.error);
     }
   }
 
-  return fallback;
+  return translateErrorMessage(fallback);
 };
 
 export const extractList = <T>(payload: unknown): T[] => {

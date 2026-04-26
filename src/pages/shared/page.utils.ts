@@ -1,6 +1,7 @@
 import axios from "axios";
 import { ApiClientError } from "../../apiConfig/axiosConfig";
 import type { ApiResponse } from "../../models/common/api.model";
+import { translateErrorMessage } from "../../services/error-message.utils";
 import { extractApiErrorMessage, extractFieldErrors, isApiResponse } from "../../services/service.utils";
 
 export const getErrorMessage = (error: unknown, fallback = "Something went wrong") => {
@@ -15,12 +16,12 @@ export const getErrorMessage = (error: unknown, fallback = "Something went wrong
     }
 
     if (error.message) {
-      return error.message;
+      return translateErrorMessage(error.message);
     }
   }
 
   if (error instanceof Error && error.message) {
-    return error.message;
+    return translateErrorMessage(error.message);
   }
 
   return fallback;
