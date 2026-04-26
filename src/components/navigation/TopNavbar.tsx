@@ -1,7 +1,6 @@
 import { Button, Layout, Space, Typography, Tooltip } from "antd";
 import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { useLocation } from "react-router-dom";
-import NotificationBell from "./NotificationBell";
 import UserAvatarDropdown from "./UserAvatarDropdown";
 import { getPageContextByPath } from "./AppBreadcrumb";
 
@@ -47,7 +46,6 @@ const TopNavbar = ({
         </div>
 
         <div className="app-top-navbar__right flex shrink-0 items-center gap-2">
-          <NotificationBell />
           <UserAvatarDropdown />
         </div>
       </div>
