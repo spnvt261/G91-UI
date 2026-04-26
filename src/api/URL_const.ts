@@ -15,6 +15,8 @@ export const API = {
     ME: "/api/users/me",
   },
 
+  DASHBOARD: "/api/dashboard",
+
   ACCOUNTS: {
     CREATE: "/api/accounts",
     LIST: "/api/accounts",
